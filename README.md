@@ -4,5 +4,5 @@ The Open Tournament project is a community-led effort to develop a game that wil
 
 * We are working towards a public demonstration with a more representative sample of features and content
 * We are also working on both an internal and external roadmap that we would feel more comfortable discussing!
-* This is a private repository with access available on request, for contributors
+* This is a private repository with access available on request, for contributors. Code is (c) 2019 Open Tournament Team
 * Additional discussion can be found on www.reddit.com/r/UnrealSeries
