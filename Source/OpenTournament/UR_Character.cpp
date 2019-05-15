@@ -215,7 +215,6 @@ void AUR_Character::Dodge(FVector DodgeDir, FVector DodgeCross)
         }
 
         URMovementComponent->PerformDodge(DodgeDir, DodgeCross);
-        OnDodge(GetActorLocation(), DodgeDir);
         return;
     }
 
