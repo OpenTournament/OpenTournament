@@ -8,18 +8,25 @@
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "OpenTournament.h"
 #include "UR_HealthComponent.h"
 #include "UR_CharacterMovementComponent.h"
-#include "Kismet/GameplayStatics.h"
+#include "UR_PlayerController.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Sets default values
-AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer)
-    : Super(ObjectInitializer.SetDefaultSubobjectClass<UUR_CharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
-    , FallDamageSpeedThreshold(2675.f)
+AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
+    Super(ObjectInitializer.SetDefaultSubobjectClass<UUR_CharacterMovementComponent>(ACharacter::CharacterMovementComponentName)),
+    FallDamageSpeedThreshold(2675.f),
+    EyeOffset(FVector(0.f, 0.f, 0.f)),
+    CrouchEyeOffset(EyeOffset),
+    TargetEyeOffset(EyeOffset),
+    EyeOffsetInterpRate(FVector(18.f, 9.f, 9.f)),
+    CrouchEyeOffsetInterpRate(12.f),
+    EyeOffsetDecayRate(FVector(7.f, 7.f, 7.f))
 {
     // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
@@ -144,6 +151,15 @@ void AUR_Character::CheckJumpInput(float DeltaTime)
                 OnJumped();
             }
         }
+    }
+}
+
+void AUR_Character::ClearJumpInput(float DeltaTime)
+{
+    Super::ClearJumpInput(DeltaTime);
+    if (URMovementComponent)
+    {
+        URMovementComponent->ClearDodgeInput();
     }
 }
 
