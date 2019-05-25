@@ -12,12 +12,12 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-UUR_PCInputDodgeComponent::UUR_PCInputDodgeComponent()
-    : MovementForwardAxis(0.0f)
-    , MovementStrafeAxis(0.0f)
-    , bRequestedKeyDodge(false)
-    , MaxDodgeClickThresholdTime(0.25f)
-    , KeyTapTime(FKeyTapTime())
+UUR_PCInputDodgeComponent::UUR_PCInputDodgeComponent() :
+    MovementForwardAxis(0.0f),
+    MovementStrafeAxis(0.0f),
+    bRequestedKeyDodge(false),
+    MaxDodgeClickThresholdTime(0.25f),
+    KeyTapTime(FKeyTapTime())
 {
     KeyTapTime.LastTapLeftTime = -10.f;
     KeyTapTime.LastTapRightTime = -10.f;
@@ -29,12 +29,16 @@ UUR_PCInputDodgeComponent::UUR_PCInputDodgeComponent()
 
 void UUR_PCInputDodgeComponent::BeginPlay()
 {
+    Super::BeginPlay();
+
     if (const auto OwningPC = Cast<AUR_PlayerController>(GetOwner()))
     {
         if (auto InputComponent = OwningPC->InputComponent)
         {
+            // Single Key Dodge Binding
             InputComponent->BindAction("KeyDodge", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnKeyDodge);
 
+            // Directional Key Bindings
             InputComponent->BindAction("TapLeft", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapLeft);
             InputComponent->BindAction("TapRight", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapRight);
             InputComponent->BindAction("TapForward", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapForward);
