@@ -125,8 +125,13 @@ public:
 
     /**
     * Override to handle playing Jump effects.
-     */
+    */
     virtual void CheckJumpInput(float DeltaTime) override;
+
+    /**
+    * Override to clear dodging input as well
+    */
+    virtual void ClearJumpInput(float DeltaTime) override;
 
     /**
     * Override to take Falling Damage 
