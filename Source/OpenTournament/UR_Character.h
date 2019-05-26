@@ -114,6 +114,32 @@ public:
     */
     virtual void MoveUp(const float InValue);
 
+    /**
+    * Tick - For playing Footstep effects
+    * @param DeltaTime tick time in seconds
+    */
+    void TickFootsteps(const float DeltaTime);
+
+    /**
+    * Play effects for footsteps
+    * @param WalkingSpeedPercentage current movement speed 
+    */
+    void PlayFootstepEffects(float WalkingSpeedPercentage) const;
+
+    /**
+    * Last Foostep Timestamp.
+    */
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Walk")
+    float FootstepTimestamp;
+
+    /**
+    * Foostep Time Interval 
+    */
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Walk")
+    float FootstepTimeIntervalBase;
+
+
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Jump & Crouch
 
