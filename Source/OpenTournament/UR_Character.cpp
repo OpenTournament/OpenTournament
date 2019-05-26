@@ -98,7 +98,7 @@ void AUR_Character::MoveForward(const float InValue)
         const FRotator ControlRotation = GetControlRotation();
         FRotator ForwardRotation = ControlRotation;
 
-        if (URMovementComponent != nullptr && URMovementComponent->Is3DMovementMode())
+        if (URMovementComponent != nullptr && !URMovementComponent->Is3DMovementMode())
         {
             ForwardRotation = FRotator(0, ControlRotation.Yaw, 0);
         }
