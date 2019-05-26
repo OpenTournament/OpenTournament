@@ -20,13 +20,8 @@
 // Sets default values
 AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer.SetDefaultSubobjectClass<UUR_CharacterMovementComponent>(ACharacter::CharacterMovementComponentName)),
-    FallDamageSpeedThreshold(2675.f),
-    EyeOffset(FVector(0.f, 0.f, 0.f)),
-    CrouchEyeOffset(EyeOffset),
-    TargetEyeOffset(EyeOffset),
-    EyeOffsetInterpRate(FVector(18.f, 9.f, 9.f)),
-    CrouchEyeOffsetInterpRate(12.f),
-    EyeOffsetDecayRate(FVector(7.f, 7.f, 7.f))
+    FootstepTimeIntervalBase(0.35f),
+    FallDamageSpeedThreshold(2675.f)
 {
     // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
@@ -77,13 +72,26 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Out
 void AUR_Character::BeginPlay()
 {
     Super::BeginPlay();
-    
 }
 
 void AUR_Character::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+    const float VelocityMagnitude = GetCharacterMovement()->Velocity.Size();
+    const float WalkingSpeedPercentage = GetCharacterMovement()->MaxWalkSpeed / VelocityMagnitude;
+    const float TimeSeconds = GetWorld()->TimeSeconds;
+    const float TimeSinceLastFootstep = TimeSeconds - FootstepTimestamp;
+
+    if (GetCharacterMovement()->MovementMode == MOVE_Walking)
+    {
+        if (VelocityMagnitude > 0.0f && TimeSinceLastFootstep > FootstepTimeIntervalBase * WalkingSpeedPercentage)
+        {
+            const float FootstepVolume = FMath::Clamp(0.2f, 1.f, WalkingSpeedPercentage);
+            UGameplayStatics::PlaySound2D(GetWorld(), FootstepSound, FootstepVolume, 1.f);
+            FootstepTimestamp = TimeSeconds;
+        }
+    }
 }
 
 void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
