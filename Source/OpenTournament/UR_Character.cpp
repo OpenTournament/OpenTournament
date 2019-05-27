@@ -94,16 +94,16 @@ void AUR_Character::MoveForward(const float InValue)
 {
     if (InValue != 0.0f)
     {
-        // find out which way is forward
         const FRotator ControlRotation = GetControlRotation();
         FRotator ForwardRotation = ControlRotation;
 
+        // If we aren't flying / swimming, our ForwardRotation should trim out pitch / roll values
         if (URMovementComponent != nullptr && !URMovementComponent->Is3DMovementMode())
         {
             ForwardRotation = FRotator(0, ControlRotation.Yaw, 0);
         }
 
-        // add movement in forward direction
+        // Move in the direction calculated by our ForwardRotation
         AddMovementInput(FRotationMatrix(ForwardRotation).GetUnitAxis(EAxis::X), InValue);
     }
 }
@@ -112,11 +112,11 @@ void AUR_Character::MoveRight(const float InValue)
 {
     if (InValue != 0.0f)
     {
-        // find out which way is right
+        // Strafing needs no Pitch, so just take our Control Rotation's Yaw
         const FRotator ControlRotation = GetControlRotation();
         const FRotator ForwardRotation(0, ControlRotation.Yaw, 0);
 
-        // add movement in right direction
+        // Add movement in the perpendicular Y axis
         AddMovementInput(FRotationMatrix(ForwardRotation).GetUnitAxis(EAxis::Y), InValue);
     }
 }
