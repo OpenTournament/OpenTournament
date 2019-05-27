@@ -161,6 +161,7 @@ void AUR_Character::CheckJumpInput(float DeltaTime)
     {
         URMovementComponent->CheckJumpInput(DeltaTime);
 
+        // If we reached this point and the flag indicating a jump is still set, then perform the jump effects
         if (bPressedJump)
         {
             if (JumpCurrentCount == 0)
