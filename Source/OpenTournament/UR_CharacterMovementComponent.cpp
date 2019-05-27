@@ -107,8 +107,10 @@ void UUR_CharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelT
     }
 }
 
-void UUR_CharacterMovementComponent::ProcessLanded(const FHitResult & Hit, float remainingTime, int32 Iterations)
+void UUR_CharacterMovementComponent::ProcessLanded(const FHitResult& Hit, float RemainingTime, int32 Iterations)
 {
+    Super::ProcessLanded(Hit, RemainingTime, Iterations);
+
     if (GetOwner())
     {
         if (bIsDodging)
@@ -116,8 +118,6 @@ void UUR_CharacterMovementComponent::ProcessLanded(const FHitResult & Hit, float
             Velocity *= DodgeLandingSpeedScale;
             DodgeResetTime = GetWorld()->TimeSeconds + DodgeResetInterval; // Get Server adjusted Time
         }
-
-        Super::ProcessLanded(Hit, remainingTime, Iterations);
 
         bIsDodging = false;
     }
