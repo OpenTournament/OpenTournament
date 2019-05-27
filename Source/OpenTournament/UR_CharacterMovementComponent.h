@@ -31,7 +31,7 @@ public:
 
     virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
 
-    virtual void ProcessLanded(const FHitResult& Hit, float remainingTime, int32 Iterations) override;
+    virtual void ProcessLanded(const FHitResult& Hit, float RemainingTime, int32 Iterations) override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     /// Utility
