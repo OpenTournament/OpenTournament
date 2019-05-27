@@ -153,7 +153,10 @@ void UUR_CharacterMovementComponent::CheckJumpInput(float DeltaTime)
     {
         if ((MovementMode == MOVE_Walking) || (MovementMode == MOVE_Falling))
         {
-            DoJump(CharacterOwner->bClientUpdating);
+            const auto bPerformedJump = DoJump(CharacterOwner->bClientUpdating);
+
+            // If we didn't perform a jump, reset the bPressedJump flag to prevent OnJump effects
+            CharacterOwner->bPressedJump = bPerformedJump;
         }
         else if ((MovementMode == MOVE_Swimming) && CanDodge())
         {
@@ -208,6 +211,19 @@ void UUR_CharacterMovementComponent::CheckJumpInput(float DeltaTime)
             }
         }
     }
+}
+
+bool UUR_CharacterMovementComponent::DoJump(bool bReplayingMoves)
+{
+    if (CharacterOwner && CharacterOwner->CanJump())
+    {
+        auto bIsFallingAndMultiJumpCapable = IsFalling() ? CharacterOwner->JumpMaxCount > 1 : Super::DoJump(bReplayingMoves);
+        if (bIsFallingAndMultiJumpCapable)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool UUR_CharacterMovementComponent::CanDodge()

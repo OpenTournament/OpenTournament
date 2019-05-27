@@ -73,6 +73,11 @@ public:
     */
     void CheckJumpInput(float DeltaTime);
 
+    /**
+    * Do Jump
+    */
+    virtual bool DoJump(bool bReplayingMoves) override;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Dodge
 
