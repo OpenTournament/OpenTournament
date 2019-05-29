@@ -217,7 +217,7 @@ bool UUR_CharacterMovementComponent::DoJump(bool bReplayingMoves)
 {
     if (CharacterOwner && CharacterOwner->CanJump())
     {
-        auto bIsFallingAndMultiJumpCapable = IsFalling() ? CharacterOwner->JumpMaxCount > 1 : Super::DoJump(bReplayingMoves);
+        const auto bIsFallingAndMultiJumpCapable = IsFalling() ? CharacterOwner->JumpMaxCount > 1 : Super::DoJump(bReplayingMoves);
         if (bIsFallingAndMultiJumpCapable)
         {
             return true;
