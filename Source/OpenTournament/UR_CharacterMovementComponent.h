@@ -33,6 +33,11 @@ public:
 
     virtual void ProcessLanded(const FHitResult& Hit, float RemainingTime, int32 Iterations) override;
 
+    /**
+    * Handle velocity transformation behavior related to Slope Boosting
+    */
+    virtual FVector HandleSlopeBoosting(const FVector& SlideResult, const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     /// Utility
 
@@ -96,7 +101,6 @@ public:
     */
     virtual void ClearDodgeInput();
 
-    /** True during a dodge. */
     /**
     * Flag. Are we dodging?
     */
@@ -137,6 +141,39 @@ public:
     * Flag used to indicate dodge directionality, indicates a pending dodge
     */
     EDodgeDirection DodgeDirection;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Slope Dodging
+
+    /**
+    * Can this character SlopeBoost
+    */
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Dodging|SlopeBoost")
+    bool bCanSlopeBoost;
+
+    /**
+    * Threshold beyond which we receive SlopeBoost assistance
+    */
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Dodging|SlopeBoost")
+    float SlopeBoostAssistVelocityZThreshold;
+
+    /**
+    * Scale of Velocity for SlopeBoost assistance
+    */
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Dodging|SlopeBoost")
+    float SlopeBoostScale;
+
+    /**
+    * This Z for the Hit is considered a slope
+    */
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Dodging|SlopeBoost")
+    float SlopeImpactNormalZ;
+
+    /**
+    * Impact Point must be greater than this to slide
+    */
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Dodging|SlopeBoost")
+    float SlopeSlideRadiusScale;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Wall Dodge @! TODO implement walldodging

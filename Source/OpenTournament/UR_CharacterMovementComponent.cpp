@@ -13,15 +13,31 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-UUR_CharacterMovementComponent::UUR_CharacterMovementComponent(const class FObjectInitializer& ObjectInitializer)
-    : Super(ObjectInitializer)
-    , bIsDodging(false)
-    , DodgeResetTime(0.0f)
-    , DodgeResetInterval(0.35f)
-    , DodgeImpulseHorizontal(1500.f)
-    , DodgeImpulseVertical(525.f)
-    , DodgeLandingSpeedScale(0.1f)
+UUR_CharacterMovementComponent::UUR_CharacterMovementComponent(const class FObjectInitializer& ObjectInitializer) :
+    Super(ObjectInitializer),
+    bIsDodging(false),
+    DodgeResetTime(0.0f),
+    DodgeResetInterval(0.35f),
+    DodgeImpulseHorizontal(1500.f),
+    DodgeImpulseVertical(525.f),
+    DodgeLandingSpeedScale(0.1f),
+    bCanSlopeBoost(true),
+    SlopeBoostAssistVelocityZThreshold(8.f),
+    SlopeBoostScale(1.15f),
+    SlopeImpactNormalZ(0.2f),
+    SlopeSlideRadiusScale(1.0f)
 {
+
+    MaxWalkSpeed = 1000.f;
+    MaxWalkSpeedCrouched = 400.f;
+    MaxSwimSpeed = 600.f;
+    JumpZVelocity = 812.5f;
+    GroundFriction = 8.f;
+    BrakingDecelerationWalking = 5120.f;
+    AirControl = 0.35f;
+    MaxAcceleration = 5120.f;
+    MaxStepHeight = 62.5f; // U1 & UT
+
     // Unreal Movement Settings
     // GroundSpeed
     // DodgeImpulseHorizontal(1500.f)
@@ -29,8 +45,8 @@ UUR_CharacterMovementComponent::UUR_CharacterMovementComponent(const class FObje
     // DodgeLandingSpeedScale(0.1f)
 
     // Unreal Tournament Movement Settings
-    // GroundSpeed = 1200
-    // AirSpeed = 1200
+    // GroundSpeed = 1000
+    // AirSpeed = 1000
     // AccelRate = 2048 (? units)
     // AirControl 0.35
 
@@ -121,6 +137,46 @@ void UUR_CharacterMovementComponent::ProcessLanded(const FHitResult& Hit, float 
 
         bIsDodging = false;
     }
+}
+
+FVector UUR_CharacterMovementComponent::HandleSlopeBoosting(const FVector& SlideResult, const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const
+{
+    FVector Result = SlideResult;
+
+    // prevent boosting up slopes
+    if (Result.Z > 0.f)
+    {
+        float PawnRadius = -1.f;
+        float PawnHalfHeight = -1.f;
+        CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleSize(PawnRadius, PawnHalfHeight);
+        if (Delta.Z < 0.f && (Hit.ImpactNormal.Z < 0.08f)) // MAX_STEP_SIDE_Z = 0.08
+        {
+            // We were moving downward, but a slide was going to send us upward. We want to aim
+            // straight down for the next move to make sure we get the most upward-facing opposing normal.
+            Result = FVector(0.f, 0.f, Delta.Z);
+        }
+        else if (bCanSlopeBoost && (((CharacterOwner->GetActorLocation() - Hit.ImpactPoint).Size2D() > SlopeSlideRadiusScale * PawnRadius) || (Hit.ImpactNormal.Z > SlopeImpactNormalZ)))
+        {
+            if (Result.Z > Delta.Z*Time)
+            {
+                if (Result.Z > 0.f)
+                {
+                    // @! TODO : This is a first pass. Re-evaluate later
+                    const float MaxVelocityZ = FMath::Max(SlopeBoostAssistVelocityZThreshold, Result.Z);
+                    const float ScaledVelocityZ = 1.f - ((MaxVelocityZ - Result.Z) / MaxVelocityZ);
+                    const float ClampedVelocityZ = FMath::Clamp(ScaledVelocityZ, 0.f, 1.f);
+                    const float SlopeScale = FMath::Lerp(1.f, SlopeBoostScale, ClampedVelocityZ);
+
+                    Result.Z = FMath::Max(Result.Z * SlopeScale, Delta.Z*Time);
+                }
+                else
+                {
+                    Result.Z = FMath::Max(Result.Z * 1.f, Delta.Z*Time);
+                }
+            }
+        }
+    }
+    return Result;
 }
 
 float UUR_CharacterMovementComponent::UpdateTimeStampAndDeltaTime(float DeltaTime, FNetworkPredictionData_Client_Character * ClientData)
