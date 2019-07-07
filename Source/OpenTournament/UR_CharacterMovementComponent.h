@@ -11,6 +11,16 @@
 
 #include "UR_CharacterMovementComponent.generated.h"
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+UENUM(BlueprintType)
+enum class EWallDodgeBehavior : uint8
+{
+    WD_DisallowSurface,
+    WD_RequiresSurface
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -26,6 +36,55 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     UUR_CharacterMovementComponent(const class FObjectInitializer& ObjectInitializer);
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    /// Setup
+
+    /**
+    * Setup Movement Properties based on Desired Defaults (e.g. Generation)
+    */
+    void SetupMovementProperties();
+
+    /**
+    * Generation 0 Movement Properties & Behaviors - Using 2.5x Unit Scale
+    */
+    void SetupMovementPropertiesGeneration0();
+
+    /**
+    * Generation 1 Movement Properties & Behaviors - Using 2.5x Unit Scale
+    */
+    void SetupMovementPropertiesGeneration1();
+
+    /**
+    * Generation 2 Movement Properties & Behaviors - Using 2.5x Unit Scale
+    */
+    void SetupMovementPropertiesGeneration2();
+
+    /**
+    * Generation 2 Movement Properties & Behaviors - Using @UNKNOWN Unit Scale
+    */
+    void SetupMovementPropertiesGeneration2_Scaled();
+
+    /**
+    * Generation 3 Movement Properties & Behaviors - Using 2.5x Unit Scale
+    */
+    void SetupMovementPropertiesGeneration3();
+
+    /**
+    * Generation 3 Movement Properties & Behaviors - Using @UNKNOWN Unit Scale
+    */
+    void SetupMovementPropertiesGeneration3_Scaled();
+
+    /**
+    * Generation 4 Movement Properties & Behaviors - Using 2.5x Unit Scale
+    */
+    void SetupMovementPropertiesGeneration4();
+
+    /**
+    * Generation 4 Movement Properties & Behaviors - Using @UNKNOWN Unit Scale
+    */
+    void SetupMovementPropertiesGeneration4_Scaled();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -176,7 +235,67 @@ public:
     float SlopeSlideRadiusScale;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-    // Wall Dodge @! TODO implement walldodging
+    // Wall Dodging 
+
+    /**
+    * Can we WallDodge?
+    */
+    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dodging|WallDodge")
+    bool bCanWallDodge;
+
+    /**
+    * Do we require a special surface to WallDodge?
+    */
+    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dodging|WallDodge")
+    EWallDodgeBehavior WallDodgeBehavior;
+
+    /**
+    * Distance to trace for Wall Dodges
+    */
+    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dodging|WallDodge")
+    float WallDodgeTraceDistance;
+
+    /**
+    * Minimum normal of wall dodge from wall
+    */
+    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dodging|WallDodge")
+    float WallDodgeMinimumNormal;
+
+    /**
+    * Wall Dodge impulse in XY plane
+    */
+    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dodging|WallDodge")
+    float WallDodgeImpulseHorizontal;
+
+    /**
+    * Vertical impulse for first wall dodge.
+    */
+    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dodging|WallDodge")
+    float WallDodgeImpulseVertical;
+
+    /**
+    * Time interval after a WallDodge when another may be attempted
+    */
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Dodging")
+    float WallDodgeResetInterval;
+
+    /**
+    * Whether the player can BoostDodge (retain Z velocity from jump while walldodging)
+    */
+    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dodging|WallDodge")
+    bool bCanBoostDodge;
+
+    /**
+    * Speed at which performing a WallDodge will inherit, rather than reset, our current VelocityZ 
+    */
+    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dodging|WallDodge")
+    float WallDodgeVelocityZPreservationThreshold;
+
+    /**
+    * Velocity 
+    */
+    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dodging|WallDodge")
+    float WallDodgeFallingVelocityCancellationThreshold;
 
     /**
     * Current number of current walldodges

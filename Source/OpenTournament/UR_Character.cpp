@@ -273,6 +273,18 @@ void AUR_Character::OnDodge_Implementation(const FVector& DodgeLocation, const F
     }
 }
 
+void AUR_Character::OnWallDodge_Implementation(const FVector& DodgeLocation, const FVector& DodgeDir)
+{
+    // @! TODO Effects
+    if (CharacterVoice.DodgeSound != nullptr)
+    {
+        if (Role == ROLE_Authority)
+        {
+            UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.DodgeSound, GetActorLocation(), GetActorRotation());
+        }
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator,
