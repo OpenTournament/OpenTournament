@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 
 #include "OpenTournament.h"
+#include "Interfaces/UR_WallDodgeSurfaceInterface.h"
 #include "UR_Character.h"
 #include "UR_PlayerController.h"
 
@@ -25,9 +26,20 @@ UUR_CharacterMovementComponent::UUR_CharacterMovementComponent(const class FObje
     SlopeBoostAssistVelocityZThreshold(8.f),
     SlopeBoostScale(1.15f),
     SlopeImpactNormalZ(0.2f),
-    SlopeSlideRadiusScale(1.0f)
+    SlopeSlideRadiusScale(1.0f),
+    bCanWallDodge(true),
+    WallDodgeBehavior(EWallDodgeBehavior::WD_DisallowSurface),
+    WallDodgeTraceDistance(54.5f),
+    WallDodgeMinimumNormal(0.5f),
+    WallDodgeImpulseHorizontal(1500.f),
+    WallDodgeImpulseVertical(525.f),
+    WallDodgeResetInterval(0.2f),
+    bCanBoostDodge(false),
+    WallDodgeVelocityZPreservationThreshold(-10000.f),
+    WallDodgeFallingVelocityCancellationThreshold(0.f),
+    CurrentWallDodgeCount(0),
+    MaxWallDodges(1)
 {
-
     MaxWalkSpeed = 1000.f;
     MaxWalkSpeedCrouched = 400.f;
     MaxSwimSpeed = 600.f;
@@ -36,20 +48,164 @@ UUR_CharacterMovementComponent::UUR_CharacterMovementComponent(const class FObje
     BrakingDecelerationWalking = 5120.f;
     AirControl = 0.35f;
     MaxAcceleration = 5120.f;
-    MaxStepHeight = 62.5f; // U1 & UT
+    MaxStepHeight = 62.5f;
+}
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void UUR_CharacterMovementComponent::SetupMovementProperties()
+{
+    // SWITCH
+}
+
+void UUR_CharacterMovementComponent::SetupMovementPropertiesGeneration0()
+{
     // Unreal Movement Settings
-    // GroundSpeed
-    // DodgeImpulseHorizontal(1500.f)
-    // DodgeImpulseVertical(400.f)
-    // DodgeLandingSpeedScale(0.1f)
+    GroundFriction = 8.f;
+    BrakingDecelerationWalking = 5120.f;
+    AirControl = 0.35f;
+    MaxAcceleration = 5120.f;
+    MaxStepHeight = 62.5f;
 
-    // Unreal Tournament Movement Settings
-    // GroundSpeed = 1000
-    // AirSpeed = 1000
-    // AccelRate = 2048 (? units)
-    // AirControl 0.35
+    MaxWalkSpeed = 1000.f;
+    MaxWalkSpeedCrouched = 400.f;
+    MaxSwimSpeed = 500.f;
+    JumpZVelocity = 812.5f;
 
+    DodgeResetInterval = 0.35f;
+    DodgeImpulseHorizontal = 1500.f;
+    DodgeImpulseVertical = 400.f;
+    DodgeLandingSpeedScale = 0.1f;
+
+    bCanSlopeBoost = true;
+    SlopeBoostAssistVelocityZThreshold = 8.f;
+    SlopeBoostScale = 1.15f;
+    SlopeImpactNormalZ = 0.2f;
+    SlopeSlideRadiusScale = 1.0f;
+
+    bCanWallDodge = true;
+    WallDodgeBehavior = EWallDodgeBehavior::WD_RequiresSurface;
+    WallDodgeTraceDistance = 54.5f;
+    WallDodgeMinimumNormal = 0.5f;
+    WallDodgeImpulseHorizontal = 1500.f;
+    WallDodgeImpulseVertical = 400.f;
+    WallDodgeResetInterval = 0.35f;
+    bCanBoostDodge = false;
+    WallDodgeVelocityZPreservationThreshold = -10000.f;
+    MaxWallDodges = 1;
+}
+
+void UUR_CharacterMovementComponent::SetupMovementPropertiesGeneration1()
+{
+    // UT99 Movement Settings
+    GroundFriction = 8.f;
+    BrakingDecelerationWalking = 5120.f;
+    AirControl = 0.35f;
+    MaxAcceleration = 5120.f;
+    MaxStepHeight = 62.5f;
+
+    MaxWalkSpeed = 1000.f;
+    MaxWalkSpeedCrouched = 400.f;
+    MaxSwimSpeed = 500.f;
+    JumpZVelocity = 812.5f;
+
+    DodgeResetInterval = 0.35f;
+    DodgeImpulseHorizontal = 1500.f;
+    DodgeImpulseVertical = 525.f;
+    DodgeLandingSpeedScale = 0.1f;
+
+    bCanSlopeBoost = true;
+    SlopeBoostAssistVelocityZThreshold = 8.f;
+    SlopeBoostScale = 1.15f;
+    SlopeImpactNormalZ = 0.2f;
+    SlopeSlideRadiusScale = 1.0f;
+
+    bCanWallDodge = true;
+    WallDodgeBehavior = EWallDodgeBehavior::WD_RequiresSurface;
+    WallDodgeTraceDistance = 54.5f;
+    WallDodgeMinimumNormal = 0.5f;
+    WallDodgeImpulseHorizontal = 1500.f;
+    WallDodgeImpulseVertical = 525.f;
+    WallDodgeResetInterval = 0.35f;
+    bCanBoostDodge = false;
+    WallDodgeVelocityZPreservationThreshold = -10000.f;
+    MaxWallDodges = 1;
+}
+
+void UUR_CharacterMovementComponent::SetupMovementPropertiesGeneration2()
+{
+    // UT2003 Movement Properties
+    GroundFriction = 8.f;
+    BrakingDecelerationWalking = 5120.f;
+    AirControl = 0.35f;
+    MaxAcceleration = 5120.f;
+    MaxStepHeight = 87.5f;
+
+    MaxWalkSpeed = 1100.f;
+    MaxWalkSpeedCrouched = 440.f;
+    MaxSwimSpeed = 550.f;
+    JumpZVelocity = 850.f;
+
+    bCanWallDodge = true;
+    WallDodgeBehavior = EWallDodgeBehavior::WD_DisallowSurface;
+    WallDodgeTraceDistance = 80.f; // Based on 32 unit trace from Radius to Wall, scaled by 2.5x
+    WallDodgeMinimumNormal = 0.5f;
+    WallDodgeImpulseHorizontal = 1500.f;
+    WallDodgeImpulseVertical = 525.f;
+    WallDodgeResetInterval = 0.35f;
+    bCanBoostDodge = true;
+    WallDodgeVelocityZPreservationThreshold = -250.f;
+    MaxWallDodges = 1;
+}
+
+void UUR_CharacterMovementComponent::SetupMovementPropertiesGeneration2_Scaled()
+{
+    // TODO
+}
+
+void UUR_CharacterMovementComponent::SetupMovementPropertiesGeneration3()
+{
+    // UT2004 Movement Properties
+    GroundFriction = 8.f;
+    BrakingDecelerationWalking = 5120.f;
+    AirControl = 0.35f;
+    MaxAcceleration = 5120.f;
+    MaxStepHeight = 87.5f;
+
+    MaxWalkSpeed = 1100.f;
+    MaxWalkSpeedCrouched = 440.f;
+    MaxSwimSpeed = 550.f;
+    JumpZVelocity = 850.f;
+
+    bCanWallDodge = true;
+    WallDodgeBehavior = EWallDodgeBehavior::WD_DisallowSurface;
+    WallDodgeTraceDistance = 80.f; // Based on 32 unit trace from Radius to Wall, scaled by 2.5x
+    WallDodgeMinimumNormal = 0.5f;
+    WallDodgeImpulseHorizontal = 1500.f;
+    WallDodgeImpulseVertical = 525.f;
+    WallDodgeResetInterval = 0.35f;
+    bCanBoostDodge = false;
+    WallDodgeVelocityZPreservationThreshold = -10000.f;
+    MaxWallDodges = 1;
+}
+
+void UUR_CharacterMovementComponent::SetupMovementPropertiesGeneration3_Scaled()
+{
+    // TODO
+}
+
+void UUR_CharacterMovementComponent::SetupMovementPropertiesGeneration4()
+{
+    // UT3
+
+    bCanBoostDodge = false;
+    WallDodgeVelocityZPreservationThreshold = -500.f;
+}
+
+void UUR_CharacterMovementComponent::SetupMovementPropertiesGeneration4_Scaled()
+{
+    // TODO
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -137,6 +293,7 @@ void UUR_CharacterMovementComponent::ProcessLanded(const FHitResult& Hit, float 
 
         bIsDodging = false;
     }
+    CurrentWallDodgeCount = 0;
 }
 
 FVector UUR_CharacterMovementComponent::HandleSlopeBoosting(const FVector& SlideResult, const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const
@@ -306,7 +463,7 @@ bool UUR_CharacterMovementComponent::PerformDodge(FVector &DodgeDir, FVector &Do
     if (IsMovingOnGround())
     {
         // @! TODO Functionalize to : PerformDodgeImpulse()
-        Velocity = DodgeImpulseHorizontal*DodgeDir + (Velocity | DodgeCross)*DodgeCross;
+        Velocity = DodgeImpulseHorizontal * DodgeDir + (Velocity | DodgeCross) * DodgeCross;
         Velocity.Z = 0.f;
         float SpeedXY = FMath::Min(Velocity.Size(), DodgeImpulseHorizontal); //
 
@@ -321,9 +478,91 @@ bool UUR_CharacterMovementComponent::PerformDodge(FVector &DodgeDir, FVector &Do
     }
     else if (IsFalling())
     {
-        if (CurrentWallDodgeCount < MaxWallDodges)
+        if (bCanWallDodge && CurrentWallDodgeCount < MaxWallDodges)
         {
-            // @! TODO Handle wall dodges
+            FVector TraceEnd = -1.f * DodgeDir;
+            float PawnCapsuleRadius = 0;
+            float PawnCapsuleHalfHeight = 0;
+            CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleSize(PawnCapsuleRadius, PawnCapsuleHalfHeight);
+
+            float TraceBoxSize = FMath::Min(0.25f * PawnCapsuleHalfHeight, 0.7f * PawnCapsuleRadius);
+            FVector TraceStart = CharacterOwner->GetActorLocation();
+            TraceStart.Z -= 0.5f * TraceBoxSize;
+            TraceEnd = TraceStart - (WallDodgeTraceDistance + PawnCapsuleRadius - 0.5f * TraceBoxSize) * DodgeDir;
+
+            static const FName DodgeTag = FName(TEXT("Dodge"));
+            FCollisionQueryParams QueryParams(DodgeTag, false, CharacterOwner);
+            FHitResult HitResult;
+            const bool bBlockingHit = GetWorld()->SweepSingleByChannel(HitResult, TraceStart, TraceEnd, FQuat::Identity, UpdatedComponent->GetCollisionObjectType(), FCollisionShape::MakeSphere(TraceBoxSize), QueryParams);
+
+            if (!bBlockingHit)
+            {
+                return false;
+            }
+
+            // Is our HitActor using the WallDodgeSurface interface?
+            // We use "ImplementsInterface" method because it may be implemented in Blueprint
+            if (HitResult.Actor != nullptr && HitResult.Actor->GetClass()->ImplementsInterface(UUR_WallDodgeSurfaceInterface::StaticClass()))
+            {
+                // Invoke the interface function to determine if WallDodging is permitted
+                if (!IUR_WallDodgeSurfaceInterface::Execute_IsWallDodgePermitted(HitResult.Actor.Get()))
+                {
+                    // TODO Event Hook for effects?
+                    return false;
+                }
+
+                // TODO Allow modification of WallDodge by the surface (distance, dodge count, etc)
+            }
+            else if (WallDodgeBehavior == EWallDodgeBehavior::WD_RequiresSurface)
+            {
+                return false;
+            }
+
+            // We got a blocking hit
+            if ((HitResult.ImpactNormal | DodgeDir) < WallDodgeMinimumNormal)
+            {
+                // clamp dodge direction based on wall normal
+                FVector ForwardDir = (HitResult.ImpactNormal ^ FVector(0.f, 0.f, 1.f)).GetSafeNormal();
+                if ((ForwardDir | DodgeDir) < 0.f)
+                {
+                    ForwardDir *= -1.f;
+                }
+                DodgeDir = HitResult.ImpactNormal * WallDodgeMinimumNormal * WallDodgeMinimumNormal + ForwardDir * (1.f - WallDodgeMinimumNormal * WallDodgeMinimumNormal);
+                DodgeDir = DodgeDir.GetSafeNormal();
+                FVector NewDodgeCross = (DodgeDir ^ FVector(0.f, 0.f, 1.f)).GetSafeNormal();
+                DodgeCross = ((NewDodgeCross | DodgeCross) < 0.f) ? -1.f * NewDodgeCross : NewDodgeCross;
+            }
+
+            DodgeResetTime = GetWorld()->TimeSeconds + WallDodgeResetInterval;
+            CurrentWallDodgeCount++;
+
+            // TODO Falling Damage
+            // TakeFallingDamage();
+
+            const float CurrentVelocityZ = Velocity.Z;
+            float CachedVelocityZ = 0.f;
+            if (CurrentVelocityZ < -1 * WallDodgeImpulseVertical * 0.5)
+            {
+                CachedVelocityZ += CurrentVelocityZ + (WallDodgeImpulseVertical * 0.5);
+            }
+
+            if (bCanBoostDodge || CurrentVelocityZ < WallDodgeVelocityZPreservationThreshold)
+            {
+                CachedVelocityZ = CurrentVelocityZ + WallDodgeImpulseVertical;
+            }
+            else
+            {
+                CachedVelocityZ = WallDodgeImpulseVertical;
+            }
+
+            Velocity = WallDodgeImpulseHorizontal * DodgeDir + (Velocity | DodgeCross) * DodgeCross;
+            Velocity.Z = 0.f;
+            float SpeedXY = FMath::Min(Velocity.Size(), WallDodgeImpulseHorizontal);
+
+            Velocity = SpeedXY * Velocity.GetSafeNormal();
+            Velocity.Z = CachedVelocityZ;
+
+            URCharacterOwner->OnWallDodge(URCharacterOwner->GetActorLocation(), Velocity);
         }
         
     }

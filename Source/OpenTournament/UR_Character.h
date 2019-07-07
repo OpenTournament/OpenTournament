@@ -203,10 +203,17 @@ public:
     void OnDodge(const FVector& DodgeLocation, const FVector& DodgeDir);
 
     /**
-    * Blueprint override for dodge handling. Return true if
+    * Hook for sounds / effects OnWallDodge
+    */
+    UFUNCTION(BlueprintNativeEvent)
+    void OnWallDodge(const FVector& DodgeLocation, const FVector& DodgeDir);
+
+    /**
+    * Blueprint override for dodge handling. Return true if so
     */
     UFUNCTION(BlueprintImplementableEvent)
     bool DodgeOverride(const FVector& DodgeDir, const FVector& DodgeCross);
+
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Health & Damage
