@@ -39,4 +39,7 @@ public:
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "HUD")
     class UTexture2D* CrosshairTex;
+
+protected:
+    void DrawCrosshair();
 };
