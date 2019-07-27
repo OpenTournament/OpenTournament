@@ -18,6 +18,10 @@
 		{
 			"Name": "OculusVR",
 			"Enabled": false
+		},
+		{
+		    "Name": "GameplayAbilities",
+		    "Enabled": true
 		}
 	]
 }
