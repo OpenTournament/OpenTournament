@@ -48,10 +48,41 @@ Saved
 
 OpenTournament.VC.db
 Saved/
-Content/StarterContent
 DerivedDataCache/
 Binaries/
 Intermediate/
 Build/
 .vs/
 OpenTournament\.sln
+Source/LastSaved
+Config/DefaultEditorPerProjectUserSettings.ini
+
+# Remove Source Files Installed from Asset Packs
+SourceFiles/InPlace
+SourceFiles/RootMotion
+
+# Remove UE4 Asset Packs
+AutomotiveMaterials.png
+ParticleToolkitVol1.png
+Content/StarterContent
+Content/FirstPerson
+Content/FirstPersonCPP
+Content/NecrosUtilityMatPack
+Content/Overview.umap
+Content/UrbanMaterialPack
+Content/HumanVocalizations
+Content/ProtoCharacters
+Content/PrototypeWeap
+Content/SciFiWeapLight
+Content/SciFiWeapDark
+Content/AdvancedLocomotionV3
+Content/AnimStarterPack
+Content/RollsAndDodges
+Content/Scifikitbash
+Content/GT_Free2019
+Content/AdvancedMagicFX13
+Content/AutomotiveMaterials
+Content/FXVarietyPack
+Content/VFX_Toolkit_V1
+Content/GameJamKit
+Content/UFOGameDemo
