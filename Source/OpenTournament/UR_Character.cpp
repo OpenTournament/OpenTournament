@@ -63,8 +63,10 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AUR_Character::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
     DOREPLIFETIME(AUR_Character, HealthComponent);
 }
 
