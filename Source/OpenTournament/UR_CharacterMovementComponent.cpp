@@ -235,14 +235,18 @@ void UUR_CharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelT
             }
         }
 
+        // If we are a client we might have received an update from the server.
+        if (bIsClient)
+        {
+            ClientUpdatePositionAfterServerUpdate();
+        }
+
         // Allow root motion to move characters that have no controller.
         if (CharacterOwner->IsLocallyControlled() || bRunPhysicsWithNoController || (!CharacterOwner->Controller && CharacterOwner->IsPlayingRootMotion()))
         {
             FNetworkPredictionData_Client_Character* ClientData = ((CharacterOwner->Role < ROLE_Authority) && (GetNetMode() == NM_Client)) ? GetPredictionData_Client_Character() : nullptr;
             if (ClientData)
             {
-                // Update our delta time for physics simulation.
-                DeltaTime = UpdateTimeStampAndDeltaTime(DeltaTime, ClientData);
                 CurrentServerMoveTime = ClientData->CurrentTimeStamp;
             }
             else
@@ -275,7 +279,19 @@ void UUR_CharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelT
             // otherwise the object will move on intermediate frames and we won't follow it.
             MaybeUpdateBasedMovement(DeltaTime);
             SaveBaseLocation();
+
+            // Smooth on listen server for local view of remote clients. We may receive updates at a rate different than our own tick rate.
+            if (!bNetworkSmoothingComplete && IsNetMode(NM_ListenServer))
+            {
+                SmoothClientPosition(DeltaTime);
+            }
         }
+    }
+    else if (CharacterOwner->Role == ROLE_SimulatedProxy)
+    {
+        AdjustProxyCapsuleSize();
+        SimulatedTick(DeltaTime);
+        CharacterOwner->RecalculateBaseEyeHeight();
     }
 }
 
@@ -334,18 +350,6 @@ FVector UUR_CharacterMovementComponent::HandleSlopeBoosting(const FVector& Slide
         }
     }
     return Result;
-}
-
-float UUR_CharacterMovementComponent::UpdateTimeStampAndDeltaTime(float DeltaTime, FNetworkPredictionData_Client_Character * ClientData)
-{
-    const float UnModifiedTimeStamp = ClientData->CurrentTimeStamp + DeltaTime;
-    DeltaTime = ClientData->UpdateTimeStampAndDeltaTime(DeltaTime, *CharacterOwner, *this);
-    if (ClientData->CurrentTimeStamp < UnModifiedTimeStamp)
-    {
-        // client timestamp rolled over, so roll over our movement timers
-        AdjustMovementTimers(UnModifiedTimeStamp - ClientData->CurrentTimeStamp);
-    }
-    return DeltaTime;
 }
 
 void UUR_CharacterMovementComponent::AdjustMovementTimers(float Adjustment)
