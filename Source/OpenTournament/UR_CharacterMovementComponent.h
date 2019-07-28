@@ -109,11 +109,6 @@ public:
     }
 
     /**
-    * Custom handling for timestamp & delta time updates.
-    */
-    virtual float UpdateTimeStampAndDeltaTime(float DeltaTime, FNetworkPredictionData_Client_Character* ClientData);
-
-    /**
     * Adjust movement timers if timestamp was reset
     */
     void AdjustMovementTimers(float Adjustment);
