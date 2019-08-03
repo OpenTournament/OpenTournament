@@ -65,6 +65,7 @@ SourceFiles/RootMotion
 AutomotiveMaterials.png
 ParticleToolkitVol1.png
 FootstepsSoundV2.png
+MissionNotificationSys.png
 Content/*
 
 #Exclude All Base Level Content Except OpenTournament Directory
