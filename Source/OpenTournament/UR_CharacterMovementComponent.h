@@ -7,8 +7,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-#include <UR_Type_DodgeDirection.h>
-
 #include "UR_CharacterMovementComponent.generated.h"
 
 
@@ -190,11 +188,6 @@ public:
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dodging")
     float DodgeLandingSpeedScale;
-
-    /**
-    * Flag used to indicate dodge directionality, indicates a pending dodge
-    */
-    EDodgeDirection DodgeDirection;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Slope Dodging

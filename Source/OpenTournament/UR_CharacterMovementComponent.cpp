@@ -53,7 +53,6 @@ UUR_CharacterMovementComponent::UUR_CharacterMovementComponent(const class FObje
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 void UUR_CharacterMovementComponent::SetupMovementProperties()
 {
     // SWITCH
@@ -366,24 +365,25 @@ bool UUR_CharacterMovementComponent::CanJump()
 
 void UUR_CharacterMovementComponent::CheckJumpInput(float DeltaTime)
 {
-    if (CharacterOwner && CharacterOwner->bPressedJump)
+    AUR_Character* URCharacterOwner = Cast<AUR_Character>(CharacterOwner);
+    if (URCharacterOwner)
     {
-        if ((MovementMode == MOVE_Walking) || (MovementMode == MOVE_Falling))
+        EDodgeDirection DodgeDirection = URCharacterOwner->DodgeDirection;
+        if (CharacterOwner->bPressedJump)
         {
-            const auto bPerformedJump = DoJump(CharacterOwner->bClientUpdating);
+            if ((MovementMode == MOVE_Walking) || (MovementMode == MOVE_Falling))
+            {
+                const auto bPerformedJump = DoJump(CharacterOwner->bClientUpdating);
 
-            // If we didn't perform a jump, reset the bPressedJump flag to prevent OnJump effects
-            CharacterOwner->bPressedJump = bPerformedJump;
+                // If we didn't perform a jump, reset the bPressedJump flag to prevent OnJump effects
+                CharacterOwner->bPressedJump = bPerformedJump;
+            }
+            else if ((MovementMode == MOVE_Swimming) && CanDodge())
+            {
+                // @! TODO edge of water jump
+            }
         }
-        else if ((MovementMode == MOVE_Swimming) && CanDodge())
-        {
-            // @! TODO edge of water jump
-        }
-    }
-    else if (DodgeDirection != EDodgeDirection::DD_None)
-    {
-        AUR_Character* URCharacterOwner = Cast<AUR_Character>(CharacterOwner);
-        if (URCharacterOwner)
+        else if (DodgeDirection != EDodgeDirection::DD_None)
         {
             // Standard Dodges
             if (!(DodgeDirection == EDodgeDirection::DD_Up || DodgeDirection == EDodgeDirection::DD_Down))
@@ -596,5 +596,9 @@ bool UUR_CharacterMovementComponent::PerformDodge(FVector &DodgeDir, FVector &Do
 
 void UUR_CharacterMovementComponent::ClearDodgeInput()
 {
-    DodgeDirection = EDodgeDirection::DD_None;
+    AUR_Character* URCharacterOwner = Cast<AUR_Character>(CharacterOwner);
+    if (URCharacterOwner)
+    {
+        URCharacterOwner->DodgeDirection = EDodgeDirection::DD_None;
+    }
 }

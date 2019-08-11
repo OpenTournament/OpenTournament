@@ -7,6 +7,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 
+#include <UR_Type_DodgeDirection.h>
+
 #include "UR_Character.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -175,6 +177,12 @@ public:
     // Dodge
 
     /**
+    * Flag used to indicate dodge directionality, indicates a pending dodge
+    */
+    UPROPERTY(Replicated, BlueprintReadOnly, VisibleAnywhere, Category = "Dodging")
+    EDodgeDirection DodgeDirection;
+
+    /**
     * Is this Character capable of dodging?
     */
     UFUNCTION(BlueprintNativeEvent, Category = "Character|Dodge")
@@ -214,6 +222,12 @@ public:
     */
     UFUNCTION(BlueprintImplementableEvent)
     bool DodgeOverride(const FVector& DodgeDir, const FVector& DodgeCross);
+
+    /**
+    * Temporary - Server update the DodgeDirection
+    */
+    UFUNCTION(Server, Reliable, WithValidation)
+    void ServerSetDodgeDirection(const EDodgeDirection InDodgeDirection);
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
