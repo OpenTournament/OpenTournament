@@ -74,30 +74,22 @@ void UUR_PCInputDodgeComponent::SetKeyDodgeInputDirection() const
     {
         if (const auto Character = Cast<AUR_Character>(OwningPC->GetCharacter()))
         {
-            const auto MovementComponent = Character->URMovementComponent;
-
-            if (MovementComponent != nullptr && !OwningPC->IsMoveInputIgnored())
+            // Read cached MovementAxes to determine KeyDodge direction. Default to Forward
+            if (MovementStrafeAxis > 0.5f)
             {
-                // Zero out KeyDodge directionality
-                MovementComponent->DodgeDirection = EDodgeDirection::DD_None;
-
-                // Read cached MovementAxes to determine KeyDodge direction. Default to Forward
-                if (MovementStrafeAxis > 0.5f)
-                {
-                    MovementComponent->DodgeDirection = EDodgeDirection::DD_Right;
-                }
-                else if (MovementStrafeAxis < -0.5f)
-                {
-                    MovementComponent->DodgeDirection = EDodgeDirection::DD_Left;
-                }
-                else if (MovementForwardAxis < 0.f)
-                {
-                    MovementComponent->DodgeDirection = EDodgeDirection::DD_Backward;
-                }
-                else
-                {
-                    MovementComponent->DodgeDirection = EDodgeDirection::DD_Forward;
-                }
+                Character->ServerSetDodgeDirection(EDodgeDirection::DD_Right);
+            }
+            else if (MovementStrafeAxis < -0.5f)
+            {
+                Character->ServerSetDodgeDirection(EDodgeDirection::DD_Left);
+            }
+            else if (MovementForwardAxis < 0.f)
+            {
+                Character->ServerSetDodgeDirection(EDodgeDirection::DD_Backward);
+            }
+            else
+            {
+                Character->ServerSetDodgeDirection(EDodgeDirection::DD_Forward);
             }
         }
     }
@@ -204,13 +196,9 @@ void UUR_PCInputDodgeComponent::SetTapDodgeInputDirection(const float LastTapTim
     {
         if (const auto Character = Cast<AUR_Character>(OwningPC->GetCharacter()))
         {
-            const auto MovementComponent = Character->URMovementComponent;
-            if (MovementComponent != nullptr && !OwningPC->IsMoveInputIgnored())
+            if (GetWorld()->GetTimeSeconds() - LastTapTime < MaxClickTime)
             {
-                if (GetWorld()->GetTimeSeconds() - LastTapTime < MaxClickTime)
-                {
-                    MovementComponent->DodgeDirection = DodgeDirection;
-                }
+                Character->ServerSetDodgeDirection(DodgeDirection);
             }
         }
     }

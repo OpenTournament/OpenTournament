@@ -68,6 +68,7 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(AUR_Character, HealthComponent);
+    DOREPLIFETIME(AUR_Character, DodgeDirection);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -261,6 +262,12 @@ void AUR_Character::Dodge(FVector DodgeDir, FVector DodgeCross)
     {
         URMovementComponent->ClearDodgeInput();
     }
+}
+
+bool AUR_Character::ServerSetDodgeDirection_Validate(const EDodgeDirection InDodgeDirection) { return true; }
+void AUR_Character::ServerSetDodgeDirection_Implementation(const EDodgeDirection InDodgeDirection)
+{
+    DodgeDirection = InDodgeDirection;
 }
 
 void AUR_Character::OnDodge_Implementation(const FVector& DodgeLocation, const FVector& DodgeDir)
