@@ -31,7 +31,9 @@ void AUR_HUD::DrawHUD()
 void AUR_HUD::DrawCrosshair()
 {
     if (CrosshairTex == nullptr)
+    {
         return;
+    }
 
     // find center of the Canvas
     const FVector2D Center(Canvas->ClipX * 0.5f, Canvas->ClipY * 0.5f);
