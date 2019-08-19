@@ -39,7 +39,7 @@ package:
     - schedules           # only archive when started at a specific schedule -TEST-
   script:
     - echo "Adding build to the artifacts"
-    - Start-Process "cmd.exe" "/c C:\BuildScripts\Archive.bat"
+    - call C:\BuildScripts\Archive.bat
   artifacts:
     paths:
       - PROJECT_NAME.zip
