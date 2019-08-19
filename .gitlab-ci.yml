@@ -4,6 +4,9 @@ variables:
 
 stages:
   - preperations
+  - compile
+  - build
+  - cook
   - package
 
 preperations:
