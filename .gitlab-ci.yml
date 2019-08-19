@@ -1,6 +1,6 @@
 variables:
   GIT_STRATEGY: none        # we disable fetch, clone or checkout for every job
-  GIT_CHECKOUT: "true"     # as we only want to checkout and fetch in the preperation stage
+  GIT_CHECKOUT: "false"     # as we only want to checkout and fetch in the preperation stage
 
 stages:
   - preperations
