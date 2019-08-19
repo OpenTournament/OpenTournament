@@ -12,7 +12,7 @@ preperations:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
   script:
-    - "C:\UE\UE_4.22\Engine\Binaries\DotNET\UnrealBuildTool.exe -projectfiles -project="%CI_PROJECT_DIR%\OpenTournament.uproject" -game -rocket -progress"
+    - call C:\BuildScripts\StartBuild.bat
 
 package:
   stage: package
