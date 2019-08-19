@@ -1,0 +1,46 @@
+variables:
+  GIT_STRATEGY: none        # we disable fetch, clone or checkout for every job
+  GIT_CHECKOUT: "false"     # as we only want to checkout and fetch in the preperation stage
+
+stages:
+  - preperations
+  - compile
+  - build
+  - cook
+  - package
+
+preperations:
+  stage: preperations
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_CHECKOUT: "true"
+  script:
+    - call "C:\BuildScripts\StartBuild.bat"
+
+compile:
+  stage: compile
+  script:
+    - call "C:\BuildScripts\CompileScripts.bat"
+
+build:
+  stage: build
+  script:
+    - call "C:\BuildScripts\BuildFiles.bat"
+
+cook:
+  stage: cook
+  script: 
+    - call "C:\BuildScripts\CookProject.bat"
+
+package:
+  stage: package
+  only:
+    - web                 # only archive when started through the web interface
+    - schedules           # only archive when started at a specific schedule
+  script:
+    - echo "Adding build to the artifacts"
+    - call C:\BuildScripts\Archive.bat
+  artifacts:
+    paths:
+      - PROJECT_NAME.zip
+    expire_in: 5 days
