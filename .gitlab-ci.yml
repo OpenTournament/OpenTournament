@@ -36,7 +36,7 @@ package:
   stage: package
   only:
     - web                 # only archive when started through the web interface
-    - schedules           # only archive when started at a specific schedule -TEST-
+    - schedules           # only archive when started at a specific schedule
   script:
     - echo "Adding build to the artifacts"
     - call C:\BuildScripts\Archive.bat
