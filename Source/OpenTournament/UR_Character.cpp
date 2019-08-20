@@ -9,9 +9,11 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine.h"
 
 #include "OpenTournament.h"
 #include "UR_HealthComponent.h"
+#include "UR_InventoryComponent.h"
 #include "UR_CharacterMovementComponent.h"
 #include "UR_PlayerController.h"
 
@@ -36,6 +38,7 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     URMovementComponent->bUseFlatBaseForFloorChecks = true;
 
     HealthComponent = Cast<UUR_HealthComponent>(CreateDefaultSubobject<UUR_HealthComponent>(TEXT("HealthComponent")));
+	InventoryComponent = Cast<UUR_InventoryComponent>(CreateDefaultSubobject<UUR_InventoryComponent>(TEXT("InventoryComponent")));
 
     // Create a CameraComponent	
     CharacterCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
@@ -52,13 +55,8 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     MeshFirstPerson->RelativeRotation = FRotator(1.9f, -19.19f, 5.2f);
     MeshFirstPerson->RelativeLocation = FVector(-0.5f, -4.4f, -155.7f);
 
-    // Create a gun mesh component
-    MeshWeapon = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshWeapon"));
-    MeshWeapon->SetOnlyOwnerSee(true);			// only the owning player will see this mesh
-    MeshWeapon->bCastDynamicShadow = false;
-    MeshWeapon->CastShadow = false;
-    MeshWeapon->SetupAttachment(MeshFirstPerson, TEXT("GripPoint"));
-    //FP_Gun->SetupAttachment(RootComponent);
+
+	WeaponAttachPoint = "GripPoint";
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,6 +66,7 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(AUR_Character, HealthComponent);
+	DOREPLIFETIME(AUR_Character, InventoryComponent);
     DOREPLIFETIME(AUR_Character, DodgeDirection);
 }
 
@@ -89,6 +88,19 @@ void AUR_Character::Tick(float DeltaTime)
 void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+
+	PlayerInputComponent->BindAction("Pickup", IE_Pressed, this, &AUR_Character::BeginPickup);
+	PlayerInputComponent->BindAction("Pickup", IE_Released, this, &AUR_Character::EndPickup);
+
+	PlayerInputComponent->BindAction("ShowInventory", IE_Pressed, this, &AUR_Character::ShowInventory);
+
+	PlayerInputComponent->BindAction("ARifle", IE_Pressed, this, &AUR_Character::SelectWeapon1);
+	PlayerInputComponent->BindAction("Shotgun", IE_Pressed, this, &AUR_Character::SelectWeapon2);
+	PlayerInputComponent->BindAction("RLauncher", IE_Pressed, this, &AUR_Character::SelectWeapon3);
+	PlayerInputComponent->BindAction("GLauncher", IE_Pressed, this, &AUR_Character::SelectWeapon4);
+
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +169,16 @@ void AUR_Character::PlayFootstepEffects(const float WalkingSpeedPercentage) cons
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void AUR_Character::WeaponSelect(int32 number) {
+	InventoryComponent->SelectWeapon(number);
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 void AUR_Character::CheckJumpInput(float DeltaTime)
 {
@@ -310,4 +332,72 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     }
 
     return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void AUR_Character::BeginPickup()
+{
+	bIsPickingUp = true;
+}
+
+void AUR_Character::EndPickup() 
+{
+	bIsPickingUp = false;
+}
+
+void AUR_Character::SelectWeapon1()
+{
+	FString name;
+	name = "Assault Rifle";
+	InventoryComponent->SelectWeapon(1);
+}
+
+void AUR_Character::SelectWeapon2()
+{
+	FString name;
+	name = "Shotgun";
+	InventoryComponent->SelectWeapon(2);
+}
+
+void AUR_Character::SelectWeapon3()
+{
+	FString name;
+	name = "Rocket Launcher";
+	InventoryComponent->SelectWeapon(3);
+}
+
+void AUR_Character::SelectWeapon4()
+{
+	FString name;
+	name = "Grenade Launcher";
+	InventoryComponent->SelectWeapon(4);
+}
+
+void AUR_Character::ShowInventory() 
+{
+	InventoryComponent->ShowInventory();
+}
+
+FName AUR_Character::GetWeaponAttachPoint() const
+{
+	return WeaponAttachPoint;
+}
+
+USkeletalMeshComponent* AUR_Character::GetPawnMesh() const
+{
+	return MeshFirstPerson;
+}
+
+USkeletalMeshComponent* AUR_Character::GetSpecifcPawnMesh(bool WantFirstPerson) const
+{
+	return MeshFirstPerson;
+
+}
+
+bool AUR_Character::IsFirstPerson() const
+{
+	return Controller && Controller->IsLocalPlayerController();
 }

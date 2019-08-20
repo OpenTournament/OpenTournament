@@ -14,6 +14,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 class UUR_HealthComponent;
+class UUR_InventoryComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -54,6 +55,11 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
+	bool bIsPickingUp = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Assets")
+		USkeletalMesh* AlternateMeshAsset;
+
     /**
     * First person Camera
     */
@@ -66,12 +72,28 @@ public:
     UPROPERTY(VisibleDefaultsOnly, Category = "Mesh")
     class USkeletalMeshComponent* MeshFirstPerson;
 
+
+
     /**
     * Weapon first-person mesh (seen only by self).
     * @! TODO Inventory driven 
     */
     UPROPERTY(VisibleDefaultsOnly, Category = "Mesh")
     class USkeletalMeshComponent* MeshWeapon;
+
+	/**
+* Weapon first-person mesh (seen only by self).
+* @! TODO Inventory driven
+*/
+	UPROPERTY(VisibleDefaultsOnly, Category = "Mesh")
+		class USkeletalMeshComponent* MeshWeapon2;
+
+	/**
+* Weapon first-person mesh (seen only by self).
+* @! TODO Inventory driven
+*/
+	UPROPERTY(VisibleDefaultsOnly, Category = "Mesh")
+		class USkeletalMeshComponent* MeshWeapon3;
 
     /**
     * Audio content for Movement etc.
@@ -95,6 +117,16 @@ public:
 
     UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Character")
     TSubclassOf<UUR_CharacterMovementComponent> MovementComponentClass;
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
+	//Weapon select
+	void WeaponSelect(int32 number);
+
+	template<int32 number>
+	void WeaponSelect() {
+		WeaponSelect(number);
+	}
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Axis movement
@@ -240,9 +272,59 @@ public:
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Health")
     UUR_HealthComponent* HealthComponent;
 
+	/**
+	* Inventory Component
+	*/
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
+	UUR_InventoryComponent* InventoryComponent;
+
     /**
     * Take Damage override.
     */
     virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+protected:
+	void BeginPickup();
+
+	void EndPickup();
+
+	void SelectWeapon1();
+	void SelectWeapon2();
+	void SelectWeapon3();
+	void SelectWeapon4();
+
+	
+	void ShowInventory();
+
+	//TO BE CLEANED ___________________________________________________________________________
+	//_________________________________________________________________________________________
+	//_________________________________________________________________________________________
+	//_________________________________________________________________________________________
+	//_________________________________________________________________________________________
+	//_________________________________________________________________________________________
+	//_________________________________________________________________________________________
+
+	//Weapon related:
+	private:
+
+	/** pawn mesh: 1st person view */
+	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+	USkeletalMeshComponent* Mesh1P;
+	protected:
+
+	/** socket or bone name for attaching weapon mesh */
+	UPROPERTY(EditDefaultsOnly, Category = Inventory)
+	FName WeaponAttachPoint;
+
+	public:
+	/** get weapon attach point */
+	FName GetWeaponAttachPoint() const;
+
+
+	USkeletalMeshComponent * GetPawnMesh() const;
+
+	USkeletalMeshComponent * GetSpecifcPawnMesh(bool WantFirstPerson) const;
+
+	bool IsFirstPerson() const;
 
 };
