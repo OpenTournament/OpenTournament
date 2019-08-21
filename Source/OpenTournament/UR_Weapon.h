@@ -140,7 +140,7 @@ public:
 	/** set the weapon's owning pawn */
 	void SetOwningPawn(AUR_Character* AURCharacter);
 
-	private:
+	protected:
 
 	/** weapon mesh: 1st person view */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)

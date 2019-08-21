@@ -10,14 +10,7 @@
 // Sets default values
 AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	Mesh1P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh1P"));
-	RootComponent = Mesh1P;
-
-
-	Mesh3P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh3P"));
-	Mesh3P->SetupAttachment(Mesh1P);
-
-	PrimaryActorTick.bCanEverTick = true;
+	
 
 	Tbox = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
 	Tbox->SetGenerateOverlapEvents(true);
@@ -28,6 +21,14 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer) : Super(Obje
 
 	SM_TBox = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Box Mesh"));
 	SM_TBox->AttachTo(RootComponent);
+	
+	Mesh1P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh1P"));
+	Mesh1P->AttachTo(RootComponent);
+
+	Mesh3P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh3P"));
+	Mesh3P->SetupAttachment(Mesh1P);
+
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 // Called when the game starts or when spawned
