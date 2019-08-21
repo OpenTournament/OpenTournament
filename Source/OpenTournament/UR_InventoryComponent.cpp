@@ -72,7 +72,20 @@ int32 UUR_InventoryComponent::SelectWeapon(int number)
 				name = weapon->WeaponName;
 				weapon->AttachMeshToPawn();
 				ActiveWeapon = weapon;
-
+			}
+			else if (number == 5 && weapon->WeaponName == "Sniper Rifle")
+			{
+				result = 5;
+				name = weapon->WeaponName;
+				weapon->AttachMeshToPawn();
+				ActiveWeapon = weapon;
+			}
+			else if (number == 0 && weapon->WeaponName == "Pistol")
+			{
+				result = 0;
+				name = weapon->WeaponName;
+				weapon->AttachMeshToPawn();
+				ActiveWeapon = weapon;
 			}
 			else {
 				weapon->DetachMeshFromPawn();

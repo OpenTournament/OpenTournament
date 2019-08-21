@@ -288,10 +288,13 @@ protected:
 
 	void EndPickup();
 
+	//these are to be improved later on
+	void SelectWeapon0();
 	void SelectWeapon1();
 	void SelectWeapon2();
 	void SelectWeapon3();
 	void SelectWeapon4();
+	void SelectWeapon5();
 
 	
 	void ShowInventory();

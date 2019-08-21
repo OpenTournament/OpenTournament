@@ -99,6 +99,8 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Shotgun", IE_Pressed, this, &AUR_Character::SelectWeapon2);
 	PlayerInputComponent->BindAction("RLauncher", IE_Pressed, this, &AUR_Character::SelectWeapon3);
 	PlayerInputComponent->BindAction("GLauncher", IE_Pressed, this, &AUR_Character::SelectWeapon4);
+	PlayerInputComponent->BindAction("SRifle", IE_Pressed, this, &AUR_Character::SelectWeapon5);
+	PlayerInputComponent->BindAction("Pistol", IE_Pressed, this, &AUR_Character::SelectWeapon0);
 
 
 }
@@ -374,6 +376,20 @@ void AUR_Character::SelectWeapon4()
 	FString name;
 	name = "Grenade Launcher";
 	InventoryComponent->SelectWeapon(4);
+}
+
+void AUR_Character::SelectWeapon5()
+{
+	FString name;
+	name = "Sniper Rifle";
+	InventoryComponent->SelectWeapon(5);
+}
+
+void AUR_Character::SelectWeapon0()
+{
+	FString name;
+	name = "Pistol";
+	InventoryComponent->SelectWeapon(0);
 }
 
 void AUR_Character::ShowInventory() 
