@@ -79,6 +79,7 @@ public:
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
 	AUR_Character* PlayerController;
 
 	UShapeComponent* Tbox;

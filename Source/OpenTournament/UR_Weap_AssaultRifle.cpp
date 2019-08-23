@@ -11,7 +11,6 @@ AUR_Weap_AssaultRifle::AUR_Weap_AssaultRifle(const FObjectInitializer& ObjectIni
 	Mesh1P->SetSkeletalMesh(helper);
 	WeaponName = "Assault Rifle";
 	ProjectileClass = AUR_Projectile_Assault::StaticClass();
-	
 }
 
 void AUR_Weap_AssaultRifle::Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation,FActorSpawnParameters SpawnParams)

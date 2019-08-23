@@ -14,7 +14,7 @@ AUR_Projectile_Shotgun::AUR_Projectile_Shotgun(const FObjectInitializer& ObjectI
 	Particles->SetRelativeLocation(FVector::ZeroVector);
 	Particles->AttachTo(RootComponent);
 
-	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_AssaultRifle_Tracer_Dark.P_AssaultRifle_Tracer_Dark'"));
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_Shotgun_Tracer_Light.P_Shotgun_Tracer_Light'"));
 
 	Particles->SetTemplate(ParticlesInAssets.Object);
 }

@@ -11,12 +11,10 @@ AUR_Weap_SniperRifle::AUR_Weap_SniperRifle(const FObjectInitializer& ObjectIniti
 	Mesh1P->SetSkeletalMesh(helper);
 	WeaponName = "Sniper Rifle";
 	ProjectileClass = AUR_Projectile::StaticClass();
-
 }
 
 void AUR_Weap_SniperRifle::Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams)
 {
-
 	AUR_Projectile* Projectile = World->SpawnActor<AUR_Projectile>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
 	if (Projectile)
 	{

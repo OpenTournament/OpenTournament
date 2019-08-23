@@ -20,12 +20,10 @@ class OPENTOURNAMENT_API AUR_Weap_SniperRifle : public AUR_Weapon
 {
 	GENERATED_BODY()
 
-		// Sets default values for this actor's properties
-		AUR_Weap_SniperRifle(const FObjectInitializer& ObjectInitializer);
+	// Sets default values for this actor's properties
+	AUR_Weap_SniperRifle(const FObjectInitializer& ObjectInitializer);
 
 	TSubclassOf<class AUR_Projectile> ProjectileClass;
-
-
 
 	virtual void Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams) override;
 

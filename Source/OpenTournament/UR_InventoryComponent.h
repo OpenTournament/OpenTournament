@@ -39,7 +39,6 @@ public:
 	AUR_Weapon * ActiveWeapon;
 
 	void Add(AUR_Weapon* weapon);
-
 	void Add(AUR_Ammo* ammo);
 
 

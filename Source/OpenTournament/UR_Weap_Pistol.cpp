@@ -11,7 +11,6 @@ AUR_Weap_Pistol::AUR_Weap_Pistol(const FObjectInitializer& ObjectInitializer) : 
 	Mesh1P->SetSkeletalMesh(helper);
 	WeaponName = "Pistol";
 	ProjectileClass = AUR_Projectile::StaticClass();
-
 }
 
 void AUR_Weap_Pistol::Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams)
