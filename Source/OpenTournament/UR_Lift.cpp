@@ -17,8 +17,8 @@ AUR_Lift::AUR_Lift(const FObjectInitializer& ObjectInitializer) : Super(ObjectIn
 
 	BaseTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("Collider"));
 	BaseTrigger->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-	BaseTrigger->SetBoxExtent(FVector(50, 50, 10));
-	BaseTrigger->SetRelativeLocation(FVector(0, 0, 10));
+	BaseTrigger->SetBoxExtent(FVector(50, 50, 30));
+	BaseTrigger->SetRelativeLocation(FVector(0, 0, 30));
 
 	BaseTrigger->SetGenerateOverlapEvents(true);
 	BaseTrigger->OnComponentBeginOverlap.AddDynamic(this, &AUR_Lift::OnTriggerEnter);
@@ -51,14 +51,20 @@ void AUR_Lift::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrim
 
 	bIsTriggered = true;
 	actorsOnTrigger.AddUnique(Other);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString(TEXT("Lift entered")));
+
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("[LIFT] Entered lift %s"), *GetName()));
 }
 
 void AUR_Lift::OnTriggerExit(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	actorsOnTrigger.Remove(Other);
 	bIsTriggered = actorsOnTrigger.Num() > 0;
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString(bIsTriggered ? TEXT("Lift not empty") : TEXT("Lift empty")));
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("[LIFT] Exited lift %s"), *GetName()));
+
+	if(bIsTriggered)
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("[LIFT] Lift %s is not empty"), *GetName()));
 }
 
 void AUR_Lift::MoveToStartPosition()
@@ -69,7 +75,7 @@ void AUR_Lift::MoveToStartPosition()
 	info.UUID = 1;
 	info.Linkage = 1;
 	UKismetSystemLibrary::MoveComponentTo(RootComponent, startLocation, FRotator::ZeroRotator, EaseOut, EaseIn, TravelDuration, true, EMoveComponentAction::Type::Move, info);
-	
+
 	liftState = ELiftState::Moving;
 }
 
