@@ -16,6 +16,9 @@
 #include "UR_InventoryComponent.h"
 #include "UR_CharacterMovementComponent.h"
 #include "UR_PlayerController.h"
+#include "UR_Projectile.h"
+#include "UR_Projectile_Assault.h"
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -103,6 +106,10 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Pistol", IE_Pressed, this, &AUR_Character::SelectWeapon0);
 
 
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AUR_Character::BeginFire);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AUR_Character::EndFire);
+
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +184,53 @@ void AUR_Character::WeaponSelect(int32 number) {
 	InventoryComponent->SelectWeapon(number);
 }
 
+void AUR_Character::BeginFire()
+{ 
+	isFiring = true;
+	Fire();
+}
 
+void AUR_Character::EndFire() {
+	isFiring = false;
+}
+
+
+void AUR_Character::Fire()
+{
+	if (isFiring) {
+		if (InventoryComponent->ActiveWeapon != NULL) {
+			if (InventoryComponent->ActiveWeapon->ProjectileClass)
+			{
+
+				GetActorEyesViewPoint(InventoryComponent->ActiveWeapon->Location, InventoryComponent->ActiveWeapon->Rotation);
+				FVector MuzzleLocation = InventoryComponent->ActiveWeapon->Location + FTransform(InventoryComponent->ActiveWeapon->Rotation).TransformVector(MuzzleOffset);
+				FRotator MuzzleRotation = InventoryComponent->ActiveWeapon->Rotation;
+
+				UWorld* World = GetWorld();
+				if (World)
+				{
+					FActorSpawnParameters SpawnParams;
+					SpawnParams.Owner = this;
+					SpawnParams.Instigator = Instigator;
+					//if (InventoryComponent->ActiveWeapon->WeaponName == "Assault Rifle") {
+					InventoryComponent->ActiveWeapon->Fire(World, MuzzleLocation, MuzzleRotation, SpawnParams);
+					/*}
+					else {
+						AUR_Projectile* Projectile = World->SpawnActor<AUR_Projectile>(InventoryComponent->ActiveWeapon->ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
+						if (Projectile)
+						{
+							// Set the projectile's initial trajectory.
+							FVector Direction = MuzzleRotation.Vector();
+							Projectile->FireAt(Direction);
+						}
+					}*/
+				}
+			}
+		}
+		else
+			GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Yellow, FString::Printf(TEXT("NO WEAPON SELECTED!")));
+	}
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -412,6 +465,7 @@ USkeletalMeshComponent* AUR_Character::GetSpecifcPawnMesh(bool WantFirstPerson) 
 	return MeshFirstPerson;
 
 }
+
 
 bool AUR_Character::IsFirstPerson() const
 {

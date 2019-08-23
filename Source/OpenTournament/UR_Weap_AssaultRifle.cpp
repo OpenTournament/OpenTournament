@@ -10,4 +10,18 @@ AUR_Weap_AssaultRifle::AUR_Weap_AssaultRifle(const FObjectInitializer& ObjectIni
 	USkeletalMesh* helper = newAsset.Object;
 	Mesh1P->SetSkeletalMesh(helper);
 	WeaponName = "Assault Rifle";
+	ProjectileClass = AUR_Projectile_Assault::StaticClass();
+	
+}
+
+void AUR_Weap_AssaultRifle::Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation,FActorSpawnParameters SpawnParams)
+{
+	AUR_Projectile_Assault* Projectile = World->SpawnActor<AUR_Projectile_Assault>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
+
+	if (Projectile)
+	{
+		// Set the projectile's initial trajectory.
+		FVector Direction = MuzzleRotation.Vector();
+		Projectile->FireAt(Direction);
+	}
 }

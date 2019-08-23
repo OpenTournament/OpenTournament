@@ -10,4 +10,17 @@ AUR_Weap_GrenadeLauncher::AUR_Weap_GrenadeLauncher(const FObjectInitializer& Obj
 	USkeletalMesh* helper = newAsset.Object;
 	Mesh1P->SetSkeletalMesh(helper);
 	WeaponName = "Grenade Launcher";
+	ProjectileClass = AUR_Projectile_Grenade::StaticClass();
+
+}
+
+void AUR_Weap_GrenadeLauncher::Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams)
+{
+	AUR_Projectile_Grenade* Projectile = World->SpawnActor<AUR_Projectile_Grenade>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
+	if (Projectile)
+	{
+		// Set the projectile's initial trajectory.
+		FVector Direction = MuzzleRotation.Vector();
+		Projectile->FireAt(Direction);
+	}
 }
