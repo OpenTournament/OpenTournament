@@ -39,11 +39,31 @@ void AUR_Ammo::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (PlayerController != NULL)
+	{
+		if (bItemIsWithinRange)
+		{
+			Pickup();
+		}
+	}
+}
+
+void AUR_Ammo::Pickup()
+{
+	PlayerController->InventoryComponent->Add(this);
+	Destroy();
+}
+
+void AUR_Ammo::GetPlayer(AActor* Player)
+{
+	PlayerController = Cast<AUR_Character>(Player);
 }
 
 void AUR_Ammo::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	bItemIsWithinRange = true;
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("HI this is ammo")));
+	GetPlayer(Other);
 }
 
 void AUR_Ammo::OnTriggerExit(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)

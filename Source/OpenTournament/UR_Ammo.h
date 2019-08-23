@@ -27,6 +27,14 @@ public:
 	UPROPERTY(EditAnywhere)
 	FString AmmoName = FString(TEXT(""));
 
+	AUR_Character* PlayerController;
+
+	bool bItemIsWithinRange = false;
+
+	void Pickup();
+
+	void GetPlayer(AActor* Player);
+
 
 	UPROPERTY(EditAnywhere)
 		UStaticMeshComponent* SM_TBox;

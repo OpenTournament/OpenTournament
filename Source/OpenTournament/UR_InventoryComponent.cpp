@@ -26,13 +26,25 @@ void UUR_InventoryComponent::Add(AUR_Weapon* weapon)
 		GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Blue, FString::Printf(TEXT("You already have the %s"), *weapon->WeaponName));
 }
 
+void UUR_InventoryComponent::Add(AUR_Ammo* ammo)
+{
+	InventoryA.Add(ammo);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You picked the %s"), *ammo->AmmoName));
+}
+
 
 void UUR_InventoryComponent::ShowInventory()
 {
 	for (auto& weapon : InventoryW)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Weapons in inventory: %s"), *FString(*weapon->WeaponName));
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Weapons in inventory: %s"), *weapon->WeaponName));
 	}
+
+	for (auto& ammo : InventoryA)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Ammo in inventory: %s"), *ammo->AmmoName));
+	}
+
 }
 
 int32 UUR_InventoryComponent::SelectWeapon(int number)
