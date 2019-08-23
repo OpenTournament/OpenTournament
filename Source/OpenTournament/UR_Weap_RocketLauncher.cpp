@@ -19,8 +19,10 @@ void AUR_Weap_RocketLauncher::Fire(UWorld* World, FVector MuzzleLocation, FRotat
 	AUR_Projectile_Rocket* Projectile = World->SpawnActor<AUR_Projectile_Rocket>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
 	if (Projectile)
 	{
+
 		// Set the projectile's initial trajectory.
 		FVector Direction = MuzzleRotation.Vector();
 		Projectile->FireAt(Direction);
+
 	}
 }
