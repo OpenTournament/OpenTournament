@@ -32,7 +32,6 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 	ConstructorHelpers::FObjectFinder<UStaticMesh> newAsset(TEXT("StaticMesh'/Game/FirstPerson/Meshes/FirstPersonProjectileMesh.FirstPersonProjectileMesh'"));
 	UStaticMesh* helper = newAsset.Object;
 	ProjMesh->SetStaticMesh(helper);
-	
 
 }
 
@@ -40,14 +39,12 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 void AUR_Projectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
 void AUR_Projectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void AUR_Projectile::FireAt(const FVector& ShootDirection)

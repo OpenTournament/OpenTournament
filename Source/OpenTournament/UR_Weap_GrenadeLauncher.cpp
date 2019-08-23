@@ -11,7 +11,6 @@ AUR_Weap_GrenadeLauncher::AUR_Weap_GrenadeLauncher(const FObjectInitializer& Obj
 	Mesh1P->SetSkeletalMesh(helper);
 	WeaponName = "Grenade Launcher";
 	ProjectileClass = AUR_Projectile_Grenade::StaticClass();
-
 }
 
 void AUR_Weap_GrenadeLauncher::Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams)

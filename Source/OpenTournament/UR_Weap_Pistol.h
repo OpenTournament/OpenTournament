@@ -20,8 +20,8 @@ class OPENTOURNAMENT_API AUR_Weap_Pistol : public AUR_Weapon
 {
 	GENERATED_BODY()
 
-		// Sets default values for this actor's properties
-		AUR_Weap_Pistol(const FObjectInitializer& ObjectInitializer);
+	// Sets default values for this actor's properties
+	AUR_Weap_Pistol(const FObjectInitializer& ObjectInitializer);
 
 	TSubclassOf<class AUR_Projectile> ProjectileClass;
 

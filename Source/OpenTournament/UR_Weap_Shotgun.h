@@ -20,11 +20,10 @@ class OPENTOURNAMENT_API AUR_Weap_Shotgun : public AUR_Weapon
 {
 	GENERATED_BODY()
 
-		// Sets default values for this actor's properties
-		AUR_Weap_Shotgun(const FObjectInitializer& ObjectInitializer);
+	// Sets default values for this actor's properties
+	AUR_Weap_Shotgun(const FObjectInitializer& ObjectInitializer);
 
 	TSubclassOf<class AUR_Projectile_Shotgun> ProjectileClass;
 
 	virtual void Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams) override;
-
 };

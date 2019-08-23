@@ -11,7 +11,6 @@ AUR_Weap_RocketLauncher::AUR_Weap_RocketLauncher(const FObjectInitializer& Objec
 	Mesh1P->SetSkeletalMesh(helper);
 	WeaponName = "Rocket Launcher";
 	ProjectileClass = AUR_Projectile_Rocket::StaticClass();
-
 }
 
 void AUR_Weap_RocketLauncher::Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams)
@@ -19,8 +18,6 @@ void AUR_Weap_RocketLauncher::Fire(UWorld* World, FVector MuzzleLocation, FRotat
 	AUR_Projectile_Rocket* Projectile = World->SpawnActor<AUR_Projectile_Rocket>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
 	if (Projectile)
 	{
-
-		// Set the projectile's initial trajectory.
 		FVector Direction = MuzzleRotation.Vector();
 		Projectile->FireAt(Direction);
 

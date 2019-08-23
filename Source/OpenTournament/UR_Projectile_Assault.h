@@ -20,8 +20,8 @@ class OPENTOURNAMENT_API AUR_Projectile_Assault : public AUR_Projectile
 {
 	GENERATED_BODY()
 
-		// Sets default values for this actor's properties
-		AUR_Projectile_Assault(const FObjectInitializer& ObjectInitializer);
+	// Sets default values for this actor's properties
+	AUR_Projectile_Assault(const FObjectInitializer& ObjectInitializer);
 	class UParticleSystemComponent* Particles;
 
 };

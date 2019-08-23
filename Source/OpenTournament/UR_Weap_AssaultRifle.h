@@ -19,10 +19,9 @@ class OPENTOURNAMENT_API AUR_Weap_AssaultRifle : public AUR_Weapon
 {
 	GENERATED_BODY()
 
-		// Sets default values for this actor's properties
-		AUR_Weap_AssaultRifle(const FObjectInitializer& ObjectInitializer);
+	AUR_Weap_AssaultRifle(const FObjectInitializer& ObjectInitializer);
 
-		TSubclassOf<class AUR_Projectile_Assault> ProjectileClass;
+	TSubclassOf<class AUR_Projectile_Assault> ProjectileClass;
 
-		virtual void Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams) override;
+	virtual void Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams) override;
 };

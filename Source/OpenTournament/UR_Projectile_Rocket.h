@@ -19,9 +19,9 @@ class OPENTOURNAMENT_API AUR_Projectile_Rocket : public AUR_Projectile
 {
 	GENERATED_BODY()
 
-		// Sets default values for this actor's properties
-		AUR_Projectile_Rocket(const FObjectInitializer& ObjectInitializer);
+	// Sets default values for this actor's properties
+	AUR_Projectile_Rocket(const FObjectInitializer& ObjectInitializer);
 
-		class UParticleSystemComponent* Particles;
+	class UParticleSystemComponent* Particles;
 
 };
