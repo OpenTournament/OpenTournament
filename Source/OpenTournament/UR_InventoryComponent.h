@@ -10,6 +10,8 @@
 
 #include "OpenTournament.h"
 #include "UR_Weapon.h"
+#include "UR_Ammo.h"
+
 
 #include "UR_InventoryComponent.generated.h"
 
@@ -33,9 +35,13 @@ public:
     UUR_InventoryComponent();
 
 	TArray<AUR_Weapon*> InventoryW;
+	TArray<AUR_Ammo*> InventoryA;
 	AUR_Weapon * ActiveWeapon;
 
 	void Add(AUR_Weapon* weapon);
+
+	void Add(AUR_Ammo* ammo);
+
 
 	void ShowInventory();
 
