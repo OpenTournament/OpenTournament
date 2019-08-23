@@ -47,6 +47,7 @@ public:
 
 	int32 SelectWeapon(int number);
 
-	
+	AUR_Weapon * SelectWeaponG(int number);
+
     
 };

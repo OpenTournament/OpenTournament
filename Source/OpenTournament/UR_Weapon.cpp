@@ -28,6 +28,8 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer) : Super(Obje
 	Mesh3P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh3P"));
 	Mesh3P->SetupAttachment(Mesh1P);
 
+	ProjectileClass = AUR_Projectile::StaticClass();
+
 	PrimaryActorTick.bCanEverTick = true;
 }
 
@@ -88,6 +90,8 @@ void AUR_Weapon::Pickup()
 	PlayerController->InventoryComponent->Add(this);
 	//Destroy();
 }
+
+
 
 void AUR_Weapon::GetPlayer(AActor* Player)
 {

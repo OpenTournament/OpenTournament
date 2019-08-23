@@ -9,6 +9,7 @@
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "UR_Character.h"
+#include "UR_Projectile.h"
 #include "Engine/Canvas.h" // for FCanvasIcon
 
 #include "UR_Weapon.generated.h"
@@ -70,6 +71,8 @@ class OPENTOURNAMENT_API AUR_Weapon : public AActor
 	bool CanFire() const;
 
 
+
+
 public:	
 	// Sets default values for this actor's properties
 	AUR_Weapon(const FObjectInitializer & ObjectInitializer);
@@ -86,7 +89,15 @@ public:
 	UPROPERTY(EditAnywhere)
 	FString WeaponName = FString(TEXT(""));
 
+	TSubclassOf<class AUR_Projectile> ProjectileClass;
+
+	FVector Location;
+	FRotator Rotation;
+
 	void Pickup();
+
+	virtual void Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams) {};
+
 
 	void setEquipped(bool eq);
 

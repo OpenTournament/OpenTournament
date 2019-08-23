@@ -61,6 +61,7 @@ int32 UUR_InventoryComponent::SelectWeapon(int number)
 				name = weapon->WeaponName;
 				weapon->AttachMeshToPawn();
 				ActiveWeapon = weapon;
+				weapon->setEquipped(true);
 			}
 			else if (number == 2 && weapon->WeaponName == "Shotgun")
 			{
@@ -68,7 +69,7 @@ int32 UUR_InventoryComponent::SelectWeapon(int number)
 				name = weapon->WeaponName;
 				weapon->AttachMeshToPawn();
 				ActiveWeapon = weapon;
-
+				weapon->setEquipped(true);
 			}
 			else if (number == 3 && weapon->WeaponName == "Rocket Launcher")
 			{
@@ -76,7 +77,7 @@ int32 UUR_InventoryComponent::SelectWeapon(int number)
 				name = weapon->WeaponName;
 				weapon->AttachMeshToPawn();
 				ActiveWeapon = weapon;
-
+				weapon->setEquipped(true);
 			}
 			else if (number == 4 && weapon->WeaponName == "Grenade Launcher")
 			{
@@ -84,6 +85,7 @@ int32 UUR_InventoryComponent::SelectWeapon(int number)
 				name = weapon->WeaponName;
 				weapon->AttachMeshToPawn();
 				ActiveWeapon = weapon;
+				weapon->setEquipped(true);
 			}
 			else if (number == 5 && weapon->WeaponName == "Sniper Rifle")
 			{
@@ -91,6 +93,7 @@ int32 UUR_InventoryComponent::SelectWeapon(int number)
 				name = weapon->WeaponName;
 				weapon->AttachMeshToPawn();
 				ActiveWeapon = weapon;
+				weapon->setEquipped(true);
 			}
 			else if (number == 0 && weapon->WeaponName == "Pistol")
 			{
@@ -98,6 +101,7 @@ int32 UUR_InventoryComponent::SelectWeapon(int number)
 				name = weapon->WeaponName;
 				weapon->AttachMeshToPawn();
 				ActiveWeapon = weapon;
+				weapon->setEquipped(true);
 			}
 			else {
 				weapon->DetachMeshFromPawn();
@@ -106,4 +110,69 @@ int32 UUR_InventoryComponent::SelectWeapon(int number)
 	
 	GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Yellow, FString::Printf(TEXT("Weapon name -> %s \n"), *name));
 	return result;
+}
+
+AUR_Weapon * UUR_InventoryComponent::SelectWeaponG(int number)
+{
+
+	FString name = "null weapon";
+	int32 result = 0;
+
+	for (auto& weapon : InventoryW)
+	{
+		if (number == 1 && weapon->WeaponName == "Assault Rifle")
+		{
+			result = 1;
+			name = weapon->WeaponName;
+			weapon->AttachMeshToPawn();
+			ActiveWeapon = weapon;
+			weapon->setEquipped(true);
+		}
+		else if (number == 2 && weapon->WeaponName == "Shotgun")
+		{
+			result = 2;
+			name = weapon->WeaponName;
+			weapon->AttachMeshToPawn();
+			ActiveWeapon = weapon;
+			weapon->setEquipped(true);
+		}
+		else if (number == 3 && weapon->WeaponName == "Rocket Launcher")
+		{
+			result = 3;
+			name = weapon->WeaponName;
+			weapon->AttachMeshToPawn();
+			ActiveWeapon = weapon;
+			weapon->setEquipped(true);
+		}
+		else if (number == 4 && weapon->WeaponName == "Grenade Launcher")
+		{
+			result = 4;
+			name = weapon->WeaponName;
+			weapon->AttachMeshToPawn();
+			ActiveWeapon = weapon;
+			weapon->setEquipped(true);
+		}
+		else if (number == 5 && weapon->WeaponName == "Sniper Rifle")
+		{
+			result = 5;
+			name = weapon->WeaponName;
+			weapon->AttachMeshToPawn();
+			ActiveWeapon = weapon;
+			weapon->setEquipped(true);
+		}
+		else if (number == 0 && weapon->WeaponName == "Pistol")
+		{
+			result = 0;
+			name = weapon->WeaponName;
+			weapon->AttachMeshToPawn();
+			ActiveWeapon = weapon;
+			weapon->setEquipped(true);
+		}
+		else {
+			weapon->DetachMeshFromPawn();
+		}
+	}
+
+	GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Yellow, FString::Printf(TEXT("Weapon name -> %s \n"), *name));
+	return ActiveWeapon;
 }

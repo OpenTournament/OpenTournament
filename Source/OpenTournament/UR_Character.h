@@ -57,6 +57,11 @@ public:
 
 	bool bIsPickingUp = false;
 
+	bool isFiring = false;
+
+	void BeginFire();
+	void EndFire();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Assets")
 		USkeletalMesh* AlternateMeshAsset;
 
@@ -71,29 +76,6 @@ public:
     */
     UPROPERTY(VisibleDefaultsOnly, Category = "Mesh")
     class USkeletalMeshComponent* MeshFirstPerson;
-
-
-
-    /**
-    * Weapon first-person mesh (seen only by self).
-    * @! TODO Inventory driven 
-    */
-    UPROPERTY(VisibleDefaultsOnly, Category = "Mesh")
-    class USkeletalMeshComponent* MeshWeapon;
-
-	/**
-* Weapon first-person mesh (seen only by self).
-* @! TODO Inventory driven
-*/
-	UPROPERTY(VisibleDefaultsOnly, Category = "Mesh")
-		class USkeletalMeshComponent* MeshWeapon2;
-
-	/**
-* Weapon first-person mesh (seen only by self).
-* @! TODO Inventory driven
-*/
-	UPROPERTY(VisibleDefaultsOnly, Category = "Mesh")
-		class USkeletalMeshComponent* MeshWeapon3;
 
     /**
     * Audio content for Movement etc.
@@ -118,6 +100,11 @@ public:
     UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Character")
     TSubclassOf<UUR_CharacterMovementComponent> MovementComponentClass;
 
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game")
+	FVector MuzzleOffset;
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//Weapon select
@@ -127,6 +114,10 @@ public:
 	void WeaponSelect() {
 		WeaponSelect(number);
 	}
+
+
+	UFUNCTION()
+		void Fire();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Axis movement
@@ -322,7 +313,6 @@ protected:
 	public:
 	/** get weapon attach point */
 	FName GetWeaponAttachPoint() const;
-
 
 	USkeletalMeshComponent * GetPawnMesh() const;
 
