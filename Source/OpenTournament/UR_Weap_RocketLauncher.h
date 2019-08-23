@@ -25,6 +25,7 @@ class OPENTOURNAMENT_API AUR_Weap_RocketLauncher : public AUR_Weapon
 	AUR_Weap_RocketLauncher(const FObjectInitializer& ObjectInitializer);
 
 	TSubclassOf<class AUR_Projectile_Rocket> ProjectileClass;
+	class UParticleSystemComponent* Particles;
 
 
 	virtual void Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams) override;

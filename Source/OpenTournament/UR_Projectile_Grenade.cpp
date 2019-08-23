@@ -9,4 +9,12 @@ AUR_Projectile_Grenade::AUR_Projectile_Grenade(const FObjectInitializer& ObjectI
 	ConstructorHelpers::FObjectFinder<UStaticMesh> newAsset(TEXT("StaticMesh'/Game/SciFiWeapDark/Weapons/Darkness_GrenadeLauncher_Ammo.Darkness_GrenadeLauncher_Ammo'"));
 	UStaticMesh* helper = newAsset.Object;
 	ProjMesh->SetStaticMesh(helper);
+
+	Particles = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Particles"));
+	Particles->SetRelativeLocation(FVector::ZeroVector);
+	Particles->AttachTo(RootComponent);
+
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_RocketLauncher_Trail_Light.P_RocketLauncher_Trail_Light'"));
+
+	Particles->SetTemplate(ParticlesInAssets.Object);
 }

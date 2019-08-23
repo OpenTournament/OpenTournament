@@ -9,4 +9,12 @@ AUR_Projectile_Assault::AUR_Projectile_Assault(const FObjectInitializer& ObjectI
 	ConstructorHelpers::FObjectFinder<UStaticMesh> newAsset(TEXT("StaticMesh'/Game/SciFiWeapDark/Weapons/Darkness_AssaultRifle_Ammo.Darkness_AssaultRifle_Ammo'"));
 	UStaticMesh* helper = newAsset.Object;
 	ProjMesh->SetStaticMesh(helper);
+
+	Particles = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Particles"));
+	Particles->SetRelativeLocation(FVector::ZeroVector);
+	Particles->AttachTo(RootComponent);
+
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_AssaultRifle_Tracer_Dark.P_AssaultRifle_Tracer_Dark'"));
+
+	Particles->SetTemplate(ParticlesInAssets.Object);
 }
