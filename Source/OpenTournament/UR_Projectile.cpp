@@ -31,21 +31,7 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 	ConstructorHelpers::FObjectFinder<UStaticMesh> newAsset(TEXT("StaticMesh'/Game/FirstPerson/Meshes/FirstPersonProjectileMesh.FirstPersonProjectileMesh'"));
 	UStaticMesh* helper = newAsset.Object;
 	ProjMesh->SetStaticMesh(helper);
-	CollisionComponent->OnComponentHit.AddDynamic(this, &AUR_Projectile::OnHit);
 
-}
-
-void AUR_Projectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
-{
-	/*Particles = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Particles"));
-	Particles->SetRelativeLocation(FVector::ZeroVector);
-	Particles->AttachTo(RootComponent);
-
-	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_RocketLauncher_Explosion_Dark.P_RocketLauncher_Explosion_Dark'"));*/
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("IMPACT!")));
-
-	//Particles->SetTemplate(ParticlesInAssets.Object);
-	Destroy();
 }
 
 // Called when the game starts or when spawned

@@ -28,6 +28,7 @@ AUR_Projectile_Rocket::AUR_Projectile_Rocket(const FObjectInitializer& ObjectIni
 void AUR_Projectile_Rocket::BeginPlay()
 {
 	Super::BeginPlay();
+	CollisionComponent->OnComponentHit.AddDynamic(this, &AUR_Projectile_Rocket::OnHit);
 	CollisionComponent->SetGenerateOverlapEvents(true);
 }
 
@@ -35,7 +36,7 @@ void AUR_Projectile_Rocket::OnHit(UPrimitiveComponent* HitComponent, AActor* Oth
 {
 	Particles->SetTemplate(explosion);
 	ProjMesh->DestroyComponent();
-	DestroyAfter(2);
+	DestroyAfter(3);
 }
 
 
