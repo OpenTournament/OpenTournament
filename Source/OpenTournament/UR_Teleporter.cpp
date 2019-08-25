@@ -2,7 +2,6 @@
 
 #include "UR_Teleporter.h"
 #include "Engine.h"
-#include "UR_Character.h"
 
 // Sets default values
 AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -42,30 +41,75 @@ void AUR_Teleporter::Tick(float DeltaTime)
 
 void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	AUR_Character* character = Cast<AUR_Character>(Other);
+	if (character == nullptr) // not a player entering the teleporter
+		return;
+
 	// TODO(Pedro): we should store the "teleporting" state in the MovementComponent of the actor in order to query it here
 	bool isTeleporting = (bFromSweep == false);
 
-	AUR_Character* OtherCharacter = Cast<AUR_Character>(Other);
-	if (OtherCharacter == nullptr) // not a player entering the teleporter
-		return;
-
 	if(isTeleporting)
 	{
-		FRotator controllerRotation = OtherCharacter->Controller->GetControlRotation();
-
-		// Rotate yaw of the player to face the EnterRotation angle
-		OtherCharacter->Controller->SetControlRotation(FRotator(controllerRotation.Pitch, EnterRotation, controllerRotation.Roll));
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Teleported to %s."), *GetName()));
 		return;
 	}
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Entered teleporter %s."), *GetName()));
 
-	if(DestinationTeleporter == nullptr)
-	{
+	if(PerformTeleport(character)) 
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Teleported to %s."), *GetName()));
+	else
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString(TEXT("[TELEPORTER] Destination not set.")));
-		return;
+}
+
+float AUR_Teleporter::GetExitHeading()
+{
+	return FMath::RadiansToDegrees(FMath::Atan2(ExitVector.Y, ExitVector.X));
+}
+
+bool AUR_Teleporter::PerformTeleport(AUR_Character* character)
+{
+	if (DestinationTeleporter == nullptr)
+		return false;
+
+	auto characterVelocityVector = character->GetVelocity();
+
+	// Move character to destination teleporter
+	character->SetActorLocation(DestinationTeleporter->GetActorLocation());
+
+	auto characterMovement = character->GetMovementComponent();
+	auto characterController = character->GetController();
+
+	FRotator controllerRotation = characterController->GetControlRotation();
+
+	characterMovement->StopMovementImmediately();
+
+	// Rotate heading of the player to face the ExitDirection vector
+	if (DestinationTeleporter->ExitRotationType == EExitRotation::Relative)
+	{
+		auto actorForwardVector = character->GetActorForwardVector();
+
+		auto actorVelocityVectorNorm = characterVelocityVector;
+		actorVelocityVectorNorm.Z = 0;
+		actorVelocityVectorNorm.Normalize();
+
+		auto velocityHeading = FMath::RadiansToDegrees(actorVelocityVectorNorm.HeadingAngle());
+		auto forwardHeading = FMath::RadiansToDegrees(actorForwardVector.HeadingAngle());
+		auto finalForwardHeading = forwardHeading + this->GetExitHeading() - DestinationTeleporter->GetExitHeading();
+
+		characterController->SetControlRotation(FRotator(controllerRotation.Pitch, finalForwardHeading, controllerRotation.Roll));
+	}
+	else
+	{
+		characterController->SetControlRotation(FRotator(controllerRotation.Pitch, DestinationTeleporter->GetExitHeading(), controllerRotation.Roll));
 	}
 
-	Other->SetActorLocation(DestinationTeleporter->GetActorLocation());
+	// Rotate velocity vector relative to the destination teleporter exit heading
+	if (KeepMomentum)
+	{
+		auto finalVelocity = characterVelocityVector.RotateAngleAxis(this->GetExitHeading() - DestinationTeleporter->GetExitHeading(), FVector::UpVector);
+		character->LaunchCharacter(finalVelocity, false, false);
+	}
+
+	return true;
 }
