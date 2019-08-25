@@ -20,11 +20,10 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer) : Super(Obje
 	RootComponent = Tbox;
 
 	SM_TBox = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Box Mesh"));
-	SM_TBox->AttachTo(RootComponent);
+	SM_TBox->SetupAttachment(RootComponent);
 	
 	Mesh1P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh1P"));
-	Mesh1P->AttachTo(RootComponent);
-
+	Mesh1P->SetupAttachment(RootComponent);
 	Mesh3P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh3P"));
 	Mesh3P->SetupAttachment(Mesh1P);
 

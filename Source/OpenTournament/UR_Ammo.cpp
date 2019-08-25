@@ -19,10 +19,10 @@ AUR_Ammo::AUR_Ammo(const FObjectInitializer& ObjectInitializer) : Super(ObjectIn
 	RootComponent = Tbox;
 
 	SM_TBox = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Box Mesh"));
-	SM_TBox->AttachTo(RootComponent);
+	SM_TBox->SetupAttachment(RootComponent);
 
 	AmmoMesh = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("AmmoMesh1"));
-	AmmoMesh->AttachTo(RootComponent);
+	AmmoMesh->SetupAttachment(RootComponent);
 
 	PrimaryActorTick.bCanEverTick = true;
 }

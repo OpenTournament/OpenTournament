@@ -12,7 +12,7 @@ AUR_Projectile_Assault::AUR_Projectile_Assault(const FObjectInitializer& ObjectI
 
 	Particles = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Particles"));
 	Particles->SetRelativeLocation(FVector::ZeroVector);
-	Particles->AttachTo(RootComponent);
+	Particles->SetupAttachment(RootComponent);
 
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_AssaultRifle_Tracer_Dark.P_AssaultRifle_Tracer_Dark'"));
 
