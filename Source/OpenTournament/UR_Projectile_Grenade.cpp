@@ -29,6 +29,7 @@ AUR_Projectile_Grenade::AUR_Projectile_Grenade(const FObjectInitializer& ObjectI
 void AUR_Projectile_Grenade::BeginPlay()
 {
 	Super::BeginPlay();
+	CollisionComponent->OnComponentHit.AddDynamic(this, &AUR_Projectile_Grenade::OnHit);
 	CollisionComponent->SetGenerateOverlapEvents(true);
 	ProjectileMovementComponent->ProjectileGravityScale = 1;
 
