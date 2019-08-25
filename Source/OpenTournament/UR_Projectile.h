@@ -9,6 +9,8 @@
 #include "Components/ShapeComponent.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "ConstructorHelpers.h"
+#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "GameFramework/Actor.h"
 #include "ConstructorHelpers.h"
 
@@ -34,10 +36,12 @@ protected:
 	UPROPERTY(EditAnywhere)
 		UStaticMeshComponent* SM_TBox;
 
+	class UParticleSystemComponent* Particles;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
 	// Sphere collision component.
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 		USphereComponent* CollisionComponent;
@@ -47,5 +51,7 @@ public:
 		UProjectileMovementComponent* ProjectileMovementComponent;
 
 	void FireAt(const FVector& ShootDirection);
+
+	void DestroyAfter(int delay);
 
 };

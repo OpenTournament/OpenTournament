@@ -24,4 +24,11 @@ class OPENTOURNAMENT_API AUR_Projectile_Rocket : public AUR_Projectile
 
 	class UParticleSystemComponent* Particles;
 
+	UParticleSystem* trail;
+	UParticleSystem* explosion;
+
+	UFUNCTION(BlueprintCallable, Category = "Projectile")
+	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
+
+	void BeginPlay();
 };

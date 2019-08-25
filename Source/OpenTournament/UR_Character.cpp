@@ -60,6 +60,7 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 
 
 	WeaponAttachPoint = "GripPoint";
+	
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

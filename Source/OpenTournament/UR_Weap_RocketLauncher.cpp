@@ -23,3 +23,8 @@ void AUR_Weap_RocketLauncher::Fire(UWorld* World, FVector MuzzleLocation, FRotat
 
 	}
 }
+
+void AUR_Weap_RocketLauncher::BeginPlay()
+{
+	Super::BeginPlay();
+}

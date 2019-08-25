@@ -11,7 +11,8 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 	PrimaryActorTick.bCanEverTick = true;
 
 	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
-	CollisionComponent->InitSphereRadius(1.0f);
+	CollisionComponent->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
+	CollisionComponent->InitSphereRadius(15.0f);
 	RootComponent = CollisionComponent;
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
@@ -20,8 +21,6 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 	ProjectileMovementComponent->MaxSpeed = 5000.0f;
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 	ProjectileMovementComponent->bShouldBounce = true;
-	ProjectileMovementComponent->Bounciness = 0.3f;
-	CollisionComponent->SetEnableGravity(false);
 
 	SM_TBox = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Box Mesh"));
 	SM_TBox->AttachTo(RootComponent);
@@ -32,13 +31,29 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 	ConstructorHelpers::FObjectFinder<UStaticMesh> newAsset(TEXT("StaticMesh'/Game/FirstPerson/Meshes/FirstPersonProjectileMesh.FirstPersonProjectileMesh'"));
 	UStaticMesh* helper = newAsset.Object;
 	ProjMesh->SetStaticMesh(helper);
+	CollisionComponent->OnComponentHit.AddDynamic(this, &AUR_Projectile::OnHit);
 
+}
+
+void AUR_Projectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
+{
+	/*Particles = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Particles"));
+	Particles->SetRelativeLocation(FVector::ZeroVector);
+	Particles->AttachTo(RootComponent);
+
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_RocketLauncher_Explosion_Dark.P_RocketLauncher_Explosion_Dark'"));*/
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("IMPACT!")));
+
+	//Particles->SetTemplate(ParticlesInAssets.Object);
+	Destroy();
 }
 
 // Called when the game starts or when spawned
 void AUR_Projectile::BeginPlay()
 {
 	Super::BeginPlay();
+	ProjectileMovementComponent->ProjectileGravityScale = 0;
+	CollisionComponent->SetGenerateOverlapEvents(true);
 }
 
 // Called every frame
@@ -50,5 +65,11 @@ void AUR_Projectile::Tick(float DeltaTime)
 void AUR_Projectile::FireAt(const FVector& ShootDirection)
 {
 	ProjectileMovementComponent->Velocity = ShootDirection * ProjectileMovementComponent->InitialSpeed;
+}
+
+void AUR_Projectile::DestroyAfter(int delay)
+{
+	SetActorEnableCollision(false);
+	SetLifeSpan(2);
 }
 

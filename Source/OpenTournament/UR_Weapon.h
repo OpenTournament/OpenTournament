@@ -117,6 +117,9 @@ public:
 	/** attaches weapon mesh to pawn's mesh */
 	void AttachMeshToPawn();
 
+	/** attaches weapon object to pawn */
+	void AttachWeaponToPawn();
+
 	/** detaches weapon mesh from pawn */
 	void DetachMeshFromPawn();
 
