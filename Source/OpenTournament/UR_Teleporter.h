@@ -5,7 +5,15 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
+#include "UR_Character.h"
 #include "UR_Teleporter.generated.h"
+
+UENUM()
+enum class EExitRotation : uint8
+{
+	Relative,
+	Fixed
+};
 
 UCLASS()
 class OPENTOURNAMENT_API AUR_Teleporter : public AActor
@@ -16,12 +24,17 @@ public:
 	// Sets default values for this actor's properties
 	AUR_Teleporter(const FObjectInitializer& ObjectInitializer);
 
-
-	UPROPERTY(EditAnywhere, Category = "Teleporter")
+	UPROPERTY(EditAnywhere, Category = "Exit Properties")
 	AUR_Teleporter* DestinationTeleporter;
 
-	UPROPERTY(EditAnywhere, Category = "Teleporter", meta = (UIMin = "0.0", UIMax = "360.0"))
-	float EnterRotation;
+	UPROPERTY(EditAnywhere, Category = "Exit Properties")
+	EExitRotation ExitRotationType = EExitRotation::Relative;
+
+	UPROPERTY(EditAnywhere, Category = "Exit Properties")
+	FVector2D ExitVector;
+
+	UPROPERTY(EditAnywhere, Category = "Exit Properties")
+	bool KeepMomentum = true;
 
 	UPROPERTY(VisibleAnywhere, Category = "Mesh")
 	UStaticMeshComponent* BaseMeshComponent;
@@ -36,6 +49,10 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	float GetExitHeading();
+
+	bool PerformTeleport(AUR_Character* character);
 
 	UFUNCTION()
 	void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
