@@ -13,7 +13,7 @@ AUR_Projectile_Rocket::AUR_Projectile_Rocket(const FObjectInitializer& ObjectIni
 
 	Particles = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Particles"));
 	Particles->SetRelativeLocation(FVector::ZeroVector);
-	Particles->AttachTo(RootComponent);
+	Particles->SetupAttachment(RootComponent);
 
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_RocketLauncher_Trail_Dark.P_RocketLauncher_Trail_Dark'"));
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssetsExp(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_RocketLauncher_Explosion_Dark.P_RocketLauncher_Explosion_Dark'"));

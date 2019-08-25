@@ -12,7 +12,7 @@ AUR_Projectile_Grenade::AUR_Projectile_Grenade(const FObjectInitializer& ObjectI
 
 	Particles = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Particles"));
 	Particles->SetRelativeLocation(FVector::ZeroVector);
-	Particles->AttachTo(RootComponent);
+	Particles->SetupAttachment(RootComponent);
 
 
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_RocketLauncher_Trail_Light.P_RocketLauncher_Trail_Light'"));
@@ -39,7 +39,7 @@ void AUR_Projectile_Grenade::OnHit(UPrimitiveComponent* HitComponent, AActor* Ot
 {
 	Particles->SetTemplate(explosion);
 	ProjMesh->DestroyComponent();
-	DestroyAfter(2);
+	DestroyAfter(3);
 }
 
 

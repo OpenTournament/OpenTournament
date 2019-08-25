@@ -12,7 +12,7 @@ AUR_Projectile_Shotgun::AUR_Projectile_Shotgun(const FObjectInitializer& ObjectI
 
 	Particles = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Particles"));
 	Particles->SetRelativeLocation(FVector::ZeroVector);
-	Particles->AttachTo(RootComponent);
+	Particles->SetupAttachment(RootComponent);
 
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_Shotgun_Tracer_Light.P_Shotgun_Tracer_Light'"));
 

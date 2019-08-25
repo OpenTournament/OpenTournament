@@ -23,10 +23,10 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 	ProjectileMovementComponent->bShouldBounce = true;
 
 	SM_TBox = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Box Mesh"));
-	SM_TBox->AttachTo(RootComponent);
+	SM_TBox->SetupAttachment(RootComponent);
 
 	ProjMesh = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("ProjMesh1"));
-	ProjMesh->AttachTo(RootComponent);
+	ProjMesh->SetupAttachment(RootComponent);
 
 	ConstructorHelpers::FObjectFinder<UStaticMesh> newAsset(TEXT("StaticMesh'/Game/FirstPerson/Meshes/FirstPersonProjectileMesh.FirstPersonProjectileMesh'"));
 	UStaticMesh* helper = newAsset.Object;
