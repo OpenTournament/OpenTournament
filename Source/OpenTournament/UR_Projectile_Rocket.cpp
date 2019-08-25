@@ -2,6 +2,7 @@
 
 
 #include "UR_Projectile_Rocket.h"
+#include "Engine.h"
 
 // Sets default values
 AUR_Projectile_Rocket::AUR_Projectile_Rocket(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -15,6 +16,29 @@ AUR_Projectile_Rocket::AUR_Projectile_Rocket(const FObjectInitializer& ObjectIni
 	Particles->AttachTo(RootComponent);
 
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_RocketLauncher_Trail_Dark.P_RocketLauncher_Trail_Dark'"));
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssetsExp(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_RocketLauncher_Explosion_Dark.P_RocketLauncher_Explosion_Dark'"));
+	
+	trail = ParticlesInAssets.Object;
+	explosion = ParticlesInAssetsExp.Object;
 
-	Particles->SetTemplate(ParticlesInAssets.Object);
+	Particles->SetTemplate(trail);
 }
+
+// Called when the game starts or when spawned
+void AUR_Projectile_Rocket::BeginPlay()
+{
+	Super::BeginPlay();
+	CollisionComponent->SetGenerateOverlapEvents(true);
+}
+
+void AUR_Projectile_Rocket::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
+{
+	Particles->SetTemplate(explosion);
+	ProjMesh->DestroyComponent();
+	DestroyAfter(2);
+}
+
+
+
+
+

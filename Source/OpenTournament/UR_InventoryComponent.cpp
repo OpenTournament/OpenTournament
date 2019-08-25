@@ -49,10 +49,8 @@ void UUR_InventoryComponent::ShowInventory()
 
 int32 UUR_InventoryComponent::SelectWeapon(int number)
 {
-
 	FString name = "null weapon";
 	int32 result = 0;
-
 		for (auto& weapon : InventoryW)
 		{
 			if (number == 1 && weapon->WeaponName == "Assault Rifle") 
@@ -105,6 +103,7 @@ int32 UUR_InventoryComponent::SelectWeapon(int number)
 			}
 			else {
 				weapon->DetachMeshFromPawn();
+				weapon->setEquipped(false);
 			}
 		}
 	
@@ -170,6 +169,7 @@ AUR_Weapon * UUR_InventoryComponent::SelectWeaponG(int number)
 		}
 		else {
 			weapon->DetachMeshFromPawn();
+			weapon->setEquipped(false);
 		}
 	}
 

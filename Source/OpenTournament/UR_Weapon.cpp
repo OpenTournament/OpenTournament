@@ -88,6 +88,7 @@ void AUR_Weapon::UseAmmo()
 void AUR_Weapon::Pickup()
 {
 	PlayerController->InventoryComponent->Add(this);
+	AttachWeaponToPawn();
 	//Destroy();
 }
 
@@ -141,6 +142,8 @@ void AUR_Weapon::SetOwningPawn(AUR_Character * AURCharacter)
 
 void AUR_Weapon::AttachMeshToPawn()
 {
+	this->SetActorHiddenInGame(false);
+
 	if (PlayerController)
 	{
 		// Remove and hide both first and third person meshes
@@ -165,6 +168,26 @@ void AUR_Weapon::AttachMeshToPawn()
 			UseWeaponMesh->SetHiddenInGame(false);
 		}
 	}
+}
+
+void AUR_Weapon::AttachWeaponToPawn()
+{
+	if (PlayerController)
+	{
+		// For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
+		FName AttachPoint = PlayerController->GetWeaponAttachPoint();
+		if (PlayerController->IsLocallyControlled() == true)
+		{
+			USkeletalMeshComponent* PawnMesh = PlayerController->GetSpecifcPawnMesh(true);
+			this->AttachToComponent(PawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+		}
+		else
+		{
+			USkeletalMeshComponent* UsePawnMesh = PlayerController->GetPawnMesh();
+			this->AttachToComponent(UsePawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+		}
+	}
+	this->SetActorHiddenInGame(true);
 }
 
 void AUR_Weapon::DetachMeshFromPawn()
