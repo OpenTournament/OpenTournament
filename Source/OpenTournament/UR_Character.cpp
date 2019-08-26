@@ -79,13 +79,14 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 void AUR_Character::BeginPlay()
 {
     Super::BeginPlay();
-    
+	HealthComponent->SetHealth(100);
 }
 
 void AUR_Character::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
+	if (HealthComponent->Health <= 0)
+		Destroy(); //to be replaced with Dead state and respawnability
     TickFootsteps(DeltaTime);
 }
 
@@ -330,6 +331,9 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     {
         HealthComponent->ChangeHealth(-1 * Damage);
     }
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2")));
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - DAMAGE -: %f"), Damage));
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - Remaining Health -: %d"), HealthComponent->Health));
 
     return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 }
