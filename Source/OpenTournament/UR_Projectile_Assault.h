@@ -24,4 +24,12 @@ class OPENTOURNAMENT_API AUR_Projectile_Assault : public AUR_Projectile
 	AUR_Projectile_Assault(const FObjectInitializer& ObjectInitializer);
 	class UParticleSystemComponent* Particles;
 
+	UParticleSystem* trail;
+	UParticleSystem* impact;
+
+	UFUNCTION(BlueprintCallable, Category = "Projectile")
+	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
+
+	void BeginPlay();
+
 };

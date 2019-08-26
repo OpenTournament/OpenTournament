@@ -2,6 +2,8 @@
 
 
 #include "UR_Projectile_Grenade.h"
+#include "Engine.h"
+
 
 // Sets default values
 AUR_Projectile_Grenade::AUR_Projectile_Grenade(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -38,6 +40,8 @@ void AUR_Projectile_Grenade::BeginPlay()
 void AUR_Projectile_Grenade::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
 {
 	Particles->SetTemplate(explosion);
+	OtherActor->TakeDamage(80, FDamageEvent::FDamageEvent(), NULL, this);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event by GRENADE LAUNCHER 1")));
 	ProjMesh->DestroyComponent();
 	DestroyAfter(3);
 }

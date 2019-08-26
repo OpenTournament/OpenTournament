@@ -34,7 +34,10 @@ void AUR_Projectile_Rocket::BeginPlay()
 
 void AUR_Projectile_Rocket::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
 {
+	
 	Particles->SetTemplate(explosion);
+	OtherActor->TakeDamage(100, FDamageEvent::FDamageEvent() , NULL, this);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event ROCKET LAUNCHER")));
 	ProjMesh->DestroyComponent();
 	DestroyAfter(3);
 }

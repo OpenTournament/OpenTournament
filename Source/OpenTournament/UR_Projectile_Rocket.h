@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "ConstructorHelpers.h"
 #include "UR_Projectile.h"
+#include "UR_Character.h"
+#include "UR_PlayerController.h"
 #include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "UR_Projectile_Rocket.generated.h"
 
