@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "ConstructorHelpers.h"
 #include "UR_Weapon.h"
-#include "UR_Projectile.h"
+#include "UR_Projectile_Sniper.h"
 
 #include "UR_Weap_SniperRifle.generated.h"
 

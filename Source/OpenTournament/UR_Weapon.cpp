@@ -171,6 +171,8 @@ void AUR_Weapon::AttachMeshToPawn()
 
 void AUR_Weapon::AttachWeaponToPawn()
 {
+	this->SetActorHiddenInGame(true);
+
 	if (PlayerController)
 	{
 		// For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.

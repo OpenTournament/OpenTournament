@@ -20,7 +20,17 @@ class OPENTOURNAMENT_API AUR_Projectile_Sniper : public AUR_Projectile
 {
 	GENERATED_BODY()
 
-		// Sets default values for this actor's properties
-		AUR_Projectile_Sniper(const FObjectInitializer& ObjectInitializer);
+	// Sets default values for this actor's properties
+	AUR_Projectile_Sniper(const FObjectInitializer& ObjectInitializer);
+	class UParticleSystemComponent* Particles;
 
+
+	UParticleSystem* trail;
+	UParticleSystem* impact;
+
+
+	UFUNCTION(BlueprintCallable, Category = "Projectile")
+		void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
+
+	void BeginPlay();
 };
