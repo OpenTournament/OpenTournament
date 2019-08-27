@@ -29,8 +29,15 @@ class OPENTOURNAMENT_API AUR_Projectile_Rocket : public AUR_Projectile
 	UParticleSystem* trail;
 	UParticleSystem* explosion;
 
+	// Sphere collision component.
+	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
+	USphereComponent* ExplosionComponent;
+
 	UFUNCTION(BlueprintCallable, Category = "Projectile")
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
+
+	void DamageNearActors();
+
 
 	void BeginPlay();
 };

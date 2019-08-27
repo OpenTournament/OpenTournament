@@ -172,6 +172,7 @@ void AUR_Weapon::AttachMeshToPawn()
 void AUR_Weapon::AttachWeaponToPawn()
 {
 	this->SetActorHiddenInGame(true);
+	Tbox->SetGenerateOverlapEvents(false);
 
 	if (PlayerController)
 	{
