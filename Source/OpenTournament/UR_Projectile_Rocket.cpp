@@ -60,8 +60,8 @@ void AUR_Projectile_Rocket::DamageNearActors() {
 		FVector a = ExplosionComponent->GetComponentLocation();
 		FVector b = actor->GetActorLocation();
 		distance_centers = FVector::Distance(a, b);
-		float aoeDamageValue = distance_centers / 5;
-		actor->TakeDamage(distance_centers / 20, FDamageEvent::FDamageEvent(), NULL, this);
+		float aoeDamageValue = 10000 / distance_centers; //WIP values
+		actor->TakeDamage(aoeDamageValue, FDamageEvent::FDamageEvent(), NULL, this);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Damage Event AOE on Actor - DAMAGE %f with distance %f"), aoeDamageValue, distance_centers));
 	}
 }
