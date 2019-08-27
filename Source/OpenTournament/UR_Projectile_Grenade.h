@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "ConstructorHelpers.h"
 #include "UR_Projectile.h"
+#include "UR_Character.h"
 #include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 
 #include "UR_Projectile_Grenade.generated.h"
@@ -28,9 +29,13 @@ class OPENTOURNAMENT_API AUR_Projectile_Grenade : public AUR_Projectile
 	UParticleSystem* trail;
 	UParticleSystem* explosion;
 
+	// Sphere collision component.
+	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
+		USphereComponent* ExplosionComponent;
+
 	UFUNCTION(BlueprintCallable, Category = "Projectile")
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
-
+	void DamageNearActors();
 	void BeginPlay();
 
 };
