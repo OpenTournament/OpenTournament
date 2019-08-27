@@ -65,8 +65,8 @@ void AUR_Projectile_Grenade::DamageNearActors() {
 		FVector a = ExplosionComponent->GetComponentLocation();
 		FVector b = actor->GetActorLocation();
 		distance_centers = FVector::Distance(a, b);
-		float aoeDamageValue = distance_centers / 7;
-		actor->TakeDamage(distance_centers / 20, FDamageEvent::FDamageEvent(), NULL, this);
+		float aoeDamageValue = 9000 / distance_centers;;
+		actor->TakeDamage(aoeDamageValue, FDamageEvent::FDamageEvent(), NULL, this);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Damage Event AOE GRENADE on Actor - DAMAGE %f with distance %f"), aoeDamageValue, distance_centers));
 	}
 }
