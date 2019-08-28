@@ -4,57 +4,58 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/BoxComponent.h"
-#include "UR_Character.h"
 #include "UR_Teleporter.generated.h"
+
+class UCapsuleComponent;
+class UStaticMeshComponent;
 
 UENUM()
 enum class EExitRotation : uint8
 {
-	Relative,
-	Fixed
+    Relative,
+    Fixed
 };
 
 UCLASS()
 class OPENTOURNAMENT_API AUR_Teleporter : public AActor
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
-	AUR_Teleporter(const FObjectInitializer& ObjectInitializer);
+    // Sets default values for this actor's properties
+    AUR_Teleporter(const FObjectInitializer& ObjectInitializer);
 
-	UPROPERTY(EditAnywhere, Category = "Exit Properties")
-	AUR_Teleporter* DestinationTeleporter;
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exit Properties")
+    AUR_Teleporter* DestinationTeleporter;
 
-	UPROPERTY(EditAnywhere, Category = "Exit Properties")
-	EExitRotation ExitRotationType = EExitRotation::Relative;
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exit Properties")
+    EExitRotation ExitRotationType = EExitRotation::Relative;
 
-	UPROPERTY(EditAnywhere, Category = "Exit Properties")
-	FVector2D ExitVector;
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exit Properties")
+    FVector2D ExitVector;
 
-	UPROPERTY(EditAnywhere, Category = "Exit Properties")
-	bool KeepMomentum = true;
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exit Properties")
+    bool KeepMomentum = true;
 
-	UPROPERTY(VisibleAnywhere, Category = "Mesh")
-	UStaticMeshComponent* BaseMeshComponent;
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Mesh")
+    UStaticMeshComponent* BaseMeshComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Mesh")
-	UBoxComponent* BaseTrigger;
+    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Capsule")
+    UCapsuleComponent* BaseCapsule;
+
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+    // Called when the game starts or when spawned
+    virtual void BeginPlay() override;
 
 public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+    // Called every frame
+    virtual void Tick(float DeltaTime) override;
 
-	float GetExitHeading();
+    float GetExitHeading();
 
-	bool PerformTeleport(AUR_Character* character);
+    bool PerformTeleport(AActor* TargetActor);
 
-	UFUNCTION()
-	void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
+    UFUNCTION()
+    void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };
