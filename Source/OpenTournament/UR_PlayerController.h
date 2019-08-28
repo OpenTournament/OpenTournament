@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UR_PlayerInput.h"
 #include "GameFramework/PlayerController.h"
 
 #include "UR_PlayerController.generated.h"
@@ -58,6 +59,9 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "UnrealRemake|PlayerController|Music")
     void SetMusicVolume(float MusicVolume);
+
+	UFUNCTION(BlueprintCallable, Category = "UnrealRemake|PlayerController|Input")
+	UUR_PlayerInput* GetPlayerInput();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
