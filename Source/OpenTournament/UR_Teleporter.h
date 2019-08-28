@@ -4,57 +4,89 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/BoxComponent.h"
-#include "UR_Character.h"
 #include "UR_Teleporter.generated.h"
+
+class UArrowComponent;
+class UAudioComponent;
+class UCapsuleComponent;
+class UStaticMeshComponent;
 
 UENUM()
 enum class EExitRotation : uint8
 {
-	Relative,
-	Fixed
+    Relative,
+    Fixed
 };
 
 UCLASS()
 class OPENTOURNAMENT_API AUR_Teleporter : public AActor
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
-	AUR_Teleporter(const FObjectInitializer& ObjectInitializer);
+    // Sets default values for this actor's properties
+    AUR_Teleporter(const FObjectInitializer& ObjectInitializer);
 
-	UPROPERTY(EditAnywhere, Category = "Exit Properties")
-	AUR_Teleporter* DestinationTeleporter;
+    /*
+    * Static Mesh Component - Teleporter Base
+    */
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Mesh")
+    UStaticMeshComponent* BaseMeshComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Exit Properties")
-	EExitRotation ExitRotationType = EExitRotation::Relative;
+    /*
+    * Capsule Component - Active Teleport Region
+    */
+    UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Capsule")
+    UCapsuleComponent* BaseCapsule;
 
-	UPROPERTY(EditAnywhere, Category = "Exit Properties")
-	FVector2D ExitVector;
+    /*
+    * Audio Component
+    */
+    UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Audio")
+    UAudioComponent* AudioComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Exit Properties")
-	bool KeepMomentum = true;
+    /*
+    * Arrow Component
+    */
+    UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Arrow")
+    UArrowComponent* ArrowComponent;
 
-	UPROPERTY(VisibleAnywhere, Category = "Mesh")
-	UStaticMeshComponent* BaseMeshComponent;
+    /*
+    * ParticleSystem Component
+    */
+    UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Particle")
+    UParticleSystemComponent* ParticleSystemComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Mesh")
-	UBoxComponent* BaseTrigger;
+
+    /*
+    * Destination of Teleport - May be another Teleporter, TargetPoint, etc.
+    */
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exit Properties")
+    AActor* DestinationActor;
+
+    /*
+    * Does our teleport force us into a new rotation, or is it relative to our DestinationActor's rotation?
+    */
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exit Properties")
+    EExitRotation ExitRotationType = EExitRotation::Relative;
+
+    /*
+    * Do Actors teleported retain their velocity?
+    */
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exit Properties")
+    bool bKeepMomentum = true;
+
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+    // Called when the game starts or when spawned
+    virtual void BeginPlay() override;
 
 public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+    // Called every frame
+    virtual void Tick(float DeltaTime) override;
 
-	float GetExitHeading();
+    bool PerformTeleport(AActor* TargetActor);
 
-	bool PerformTeleport(AUR_Character* character);
-
-	UFUNCTION()
-	void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
+    UFUNCTION()
+    void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };
