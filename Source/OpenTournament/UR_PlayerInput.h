@@ -14,4 +14,12 @@ class OPENTOURNAMENT_API UUR_PlayerInput : public UPlayerInput
 {
 	GENERATED_BODY()
 	
+public:
+	//UPROPERTY(config)
+	//TArray<struct FInputActionKeyMapping> ActionMappings;
+
+	void SayHello();
+
+	UFUNCTION(BlueprintCallable, Category="UnrealRemake|UR_PlayerInput")
+	void SetActionKeyMappingKey(const FInputActionKeyMapping ActionKeyMapping, FKey Key);
 };
