@@ -11,6 +11,13 @@ AUR_Weap_RocketLauncher::AUR_Weap_RocketLauncher(const FObjectInitializer& Objec
 	Mesh1P->SetSkeletalMesh(helper);
 	WeaponName = "Rocket Launcher";
 	ProjectileClass = AUR_Projectile_Rocket::StaticClass();
+
+	ConstructorHelpers::FObjectFinder<USoundCue> newAssetSound(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/RocketLauncher/RocketLauncher_Lower_Cue.RocketLauncher_Lower_Cue'"));
+	USoundCue* helperSound;
+	helperSound = newAssetSound.Object;
+	Sound->SetSound(helperSound);
+
+
 }
 
 void AUR_Weap_RocketLauncher::Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams)

@@ -10,4 +10,9 @@ AUR_Ammo_Assault::AUR_Ammo_Assault(const FObjectInitializer& ObjectInitializer) 
 	UStaticMesh* helper = newAsset.Object;
 	AmmoMesh->SetStaticMesh(helper);
 	AmmoName = "Assault";
+
+	ConstructorHelpers::FObjectFinder<USoundCue> newAssetSound(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/SniperRifle/SniperRifle_AmmoPickup_Cue.SniperRifle_AmmoPickup_Cue'"));
+	USoundCue* helperSound;
+	helperSound = newAssetSound.Object;
+	Sound->SetSound(helperSound);
 }

@@ -90,6 +90,10 @@ public:
 	UPROPERTY(EditAnywhere)
 	FString WeaponName = FString(TEXT(""));
 
+	UAudioComponent* Sound;
+	UAudioComponent* SoundFire;
+
+
 	TSubclassOf<class AUR_Projectile> ProjectileClass;
 
 	FVector Location;

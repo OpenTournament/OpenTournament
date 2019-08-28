@@ -28,6 +28,12 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 	ProjMesh = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("ProjMesh1"));
 	ProjMesh->SetupAttachment(RootComponent);
 
+	SoundFire = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("SoundFire"));
+	SoundFire->SetupAttachment(RootComponent);
+
+	SoundHit = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("SoundHit"));
+	SoundHit->SetupAttachment(RootComponent);
+
 	ConstructorHelpers::FObjectFinder<UStaticMesh> newAsset(TEXT("StaticMesh'/Game/FirstPerson/Meshes/FirstPersonProjectileMesh.FirstPersonProjectileMesh'"));
 	UStaticMesh* helper = newAsset.Object;
 	ProjMesh->SetStaticMesh(helper);

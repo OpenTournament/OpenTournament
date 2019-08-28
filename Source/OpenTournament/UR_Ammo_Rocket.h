@@ -5,7 +5,9 @@
 #include "CoreMinimal.h"
 #include "ConstructorHelpers.h"
 #include "UR_Ammo.h"
+#include "GameFramework/Actor.h"
 #include "UR_Ammo_Rocket.generated.h"
+
 
 /**
  *

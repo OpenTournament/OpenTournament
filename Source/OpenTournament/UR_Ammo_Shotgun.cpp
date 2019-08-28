@@ -10,4 +10,9 @@ AUR_Ammo_Shotgun::AUR_Ammo_Shotgun(const FObjectInitializer& ObjectInitializer) 
 	UStaticMesh* helper = newAsset.Object;
 	AmmoMesh->SetStaticMesh(helper);
 	AmmoName = "Shotgun";
+
+	ConstructorHelpers::FObjectFinder<USoundCue> newAssetSound(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/Shotgun/Shotgun_AmmoPickup_Cue.Shotgun_AmmoPickup_Cue'"));
+	USoundCue* helperSound;
+	helperSound = newAssetSound.Object;
+	Sound->SetSound(helperSound);
 }

@@ -7,6 +7,7 @@
 #include "Components/ShapeComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/AudioComponent.h"
 #include "GameFramework/Actor.h"
 #include "UR_Character.h"
 #include "Engine/Canvas.h" // for FCanvasIcon
@@ -23,6 +24,7 @@ public:
 	AUR_Ammo(const FObjectInitializer& ObjectInitializer);
 
 	UShapeComponent* Tbox;
+	UAudioComponent* Sound;
 
 	UPROPERTY(EditAnywhere)
 	FString AmmoName = FString(TEXT(""));

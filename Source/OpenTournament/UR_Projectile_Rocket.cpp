@@ -23,9 +23,20 @@ AUR_Projectile_Rocket::AUR_Projectile_Rocket(const FObjectInitializer& ObjectIni
 
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_RocketLauncher_Trail_Dark.P_RocketLauncher_Trail_Dark'"));
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssetsExp(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_RocketLauncher_Explosion_Dark.P_RocketLauncher_Explosion_Dark'"));
-	
+	ConstructorHelpers::FObjectFinder<USoundCue> newAssetSoundFire(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/RocketLauncher/RocketLauncherA_Fire_Cue.RocketLauncherA_Fire_Cue'"));
+	ConstructorHelpers::FObjectFinder<USoundCue> newAssetSoundHit(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/RocketLauncher/RocketLauncher_Explosion_Cue.RocketLauncher_Explosion_Cue'"));
+
+
 	trail = ParticlesInAssets.Object;
 	explosion = ParticlesInAssetsExp.Object;
+
+	USoundCue* helperSoundFire;
+	helperSoundFire = newAssetSoundFire.Object;
+	SoundFire->SetSound(helperSoundFire);
+
+	USoundCue* helperSoundHit;
+	helperSoundHit = newAssetSoundHit.Object;
+	SoundHit->SetSound(helperSoundHit);
 
 	Particles->SetTemplate(trail);
 }
@@ -34,13 +45,20 @@ AUR_Projectile_Rocket::AUR_Projectile_Rocket(const FObjectInitializer& ObjectIni
 void AUR_Projectile_Rocket::BeginPlay()
 {
 	Super::BeginPlay();
+
 	CollisionComponent->OnComponentHit.AddDynamic(this, &AUR_Projectile_Rocket::OnHit);
 	ExplosionComponent->SetGenerateOverlapEvents(true);
 	CollisionComponent->SetGenerateOverlapEvents(true);
+
+	SoundFire->SetActive(true);
+	SoundHit->SetActive(false);
+	SoundFire = UGameplayStatics::SpawnSoundAtLocation(this, SoundFire->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
 }
 
 void AUR_Projectile_Rocket::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
 {
+	SoundHit->SetActive(true);
+	SoundFire = UGameplayStatics::SpawnSoundAtLocation(this, SoundHit->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
 	Particles->SetTemplate(explosion);
 	OtherActor->TakeDamage(100, FDamageEvent::FDamageEvent() , NULL, this);
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event ROCKET LAUNCHER")));

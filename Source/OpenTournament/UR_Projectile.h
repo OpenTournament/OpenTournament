@@ -36,7 +36,15 @@ protected:
 	UPROPERTY(EditAnywhere)
 		UStaticMeshComponent* SM_TBox;
 
-	class UParticleSystemComponent* Particles;
+	UPROPERTY(EditAnywhere)
+		class UParticleSystemComponent* Particles;
+
+	UPROPERTY(EditAnywhere)
+		UAudioComponent* SoundFire;
+
+	UPROPERTY(EditAnywhere)
+		UAudioComponent* SoundHit;
+
 
 public:	
 	// Called every frame

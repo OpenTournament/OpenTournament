@@ -25,7 +25,19 @@ AUR_Projectile_Grenade::AUR_Projectile_Grenade(const FObjectInitializer& ObjectI
 
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_RocketLauncher_Trail_Light.P_RocketLauncher_Trail_Light'"));
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssetsExp(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_RocketLauncher_Explosion_light.P_RocketLauncher_Explosion_Light'"));
+	ConstructorHelpers::FObjectFinder<USoundCue> newAssetSoundFire(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/GrenadeLauncher/GrenadeLauncherA_Fire_Cue.GrenadeLauncherA_Fire_Cue'"));
+	ConstructorHelpers::FObjectFinder<USoundCue> newAssetSoundHit(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/GrenadeLauncher/GrenadeLauncher_Explosion_Cue.GrenadeLauncher_Explosion_Cue'"));
 	
+	
+
+	USoundCue* helperSoundFire;
+	helperSoundFire = newAssetSoundFire.Object;
+	SoundFire->SetSound(helperSoundFire);
+
+	USoundCue* helperSoundHit;
+	helperSoundHit = newAssetSoundHit.Object;
+	SoundHit->SetSound(helperSoundHit);
+
 	trail = ParticlesInAssets.Object;
 	explosion = ParticlesInAssetsExp.Object;
 
@@ -42,11 +54,17 @@ void AUR_Projectile_Grenade::BeginPlay()
 	ProjectileMovementComponent->ProjectileGravityScale = 1;
 	ExplosionComponent->SetGenerateOverlapEvents(true);
 
+	SoundFire->SetActive(true);
+	SoundHit->SetActive(false);
+	SoundFire = UGameplayStatics::SpawnSoundAtLocation(this, SoundFire->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
+
 
 }
 
 void AUR_Projectile_Grenade::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
 {
+	SoundHit->SetActive(true);
+	SoundFire = UGameplayStatics::SpawnSoundAtLocation(this, SoundHit->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
 	Particles->SetTemplate(explosion);
 	OtherActor->TakeDamage(80, FDamageEvent::FDamageEvent(), NULL, this);
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event by GRENADE LAUNCHER 1")));

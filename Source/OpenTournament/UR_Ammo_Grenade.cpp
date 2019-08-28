@@ -10,4 +10,9 @@ AUR_Ammo_Grenade::AUR_Ammo_Grenade(const FObjectInitializer& ObjectInitializer) 
 	UStaticMesh* helper = newAsset.Object;
 	AmmoMesh->SetStaticMesh(helper);
 	AmmoName = "Grenade";
+
+	ConstructorHelpers::FObjectFinder<USoundCue> newAssetSound(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/GrenadeLauncher/GrenadeLauncher_AmmoPickup_Cue.GrenadeLauncher_AmmoPickup_Cue'"));
+	USoundCue* helperSound;
+	helperSound = newAssetSound.Object;
+	Sound->SetSound(helperSound);
 }
