@@ -66,13 +66,19 @@ void AUR_PlayerController::SetMusicVolume(float MusicVolume)
     }
 }
 
+UUR_PlayerInput* AUR_PlayerController::GetPlayerInput()
+{
+	return static_cast<UUR_PlayerInput*>(PlayerInput);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_PlayerController::InitInputSystem()
 {
     if (PlayerInput == nullptr)
     {
-        // PlayerInput = NewObject<UUTPlayerInput>(this, UUTPlayerInput::StaticClass());
+        PlayerInput = NewObject<UUR_PlayerInput>(this);
+		static_cast<UUR_PlayerInput*>(PlayerInput)->SayHello();
     }
 
     Super::InitInputSystem();
