@@ -1,115 +1,149 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "UR_Teleporter.h"
-#include "Engine.h"
+
+#include "Runtime/Engine/Classes/GameFramework/Controller.h"
+#include "Runtime/Engine/Classes/Components/ArrowComponent.h"
+#include "Runtime/Engine/Classes/Components/AudioComponent.h"
+#include "Runtime/Engine/Classes/Components/CapsuleComponent.h"
+#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
+#include "Runtime/Engine/Classes/Components/StaticMeshComponent.h"
+
+#include "UR_Character.h"
 
 // Sets default values
-AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
+    Super(ObjectInitializer),
+    DestinationActor(nullptr),
+    ExitRotationType(EExitRotation::Relative),
+    bKeepMomentum(true)
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+    PrimaryActorTick.bCanEverTick = true;
 
-	BaseMeshComponent = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("BaseMeshComponent"));
-	RootComponent = BaseMeshComponent;
+    BaseMeshComponent = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("BaseMeshComponent"));
+    SetRootComponent(BaseCapsule);
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> DefaultMesh(TEXT("StaticMesh'/Game/StarterContent/Architecture/SM_AssetPlatform.SM_AssetPlatform'"));
-	BaseMeshComponent->SetStaticMesh(DefaultMesh.Object);
+    // @! TODO : Attachment positioning is messed up, offset by some values. Resolve this
+    ArrowComponent = ObjectInitializer.CreateDefaultSubobject<UArrowComponent>(this, TEXT("ArrowComponent"));
+    ArrowComponent->SetupAttachment(RootComponent);
+    ArrowComponent->SetRelativeLocation(FVector{ 0.f, 0.f, 45.f });
 
-	BaseTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("Collider"));
-	BaseTrigger->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-	BaseTrigger->SetBoxExtent(FVector(60, 60, 100));
-	BaseTrigger->SetRelativeLocation(FVector(0, 0, 100));
+    AudioComponent = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("AudioComponent"));
+    AudioComponent->SetupAttachment(RootComponent);
+    ArrowComponent->SetRelativeLocation(FVector{ 0.f, 0.f, 45.f });
 
-	BaseTrigger->SetGenerateOverlapEvents(true);
-	BaseTrigger->OnComponentBeginOverlap.AddDynamic(this, &AUR_Teleporter::OnTriggerEnter);
+    ParticleSystemComponent = ObjectInitializer.CreateDefaultSubobject<UParticleSystemComponent>(this, TEXT("ParticleSystemComponent"));
+    ParticleSystemComponent->SetRelativeLocation(FVector{ 0.f, 0.f, 45.f });
 
+    BaseCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("BaseCapsule"));
+    BaseCapsule->SetCapsuleSize(45.f, 90.f, false);
+    ParticleSystemComponent->SetupAttachment(RootComponent);
+    BaseCapsule->SetRelativeLocation(FVector{ 0.f, 0.f, 90.f });
+    BaseCapsule->SetGenerateOverlapEvents(true);
+    BaseCapsule->OnComponentBeginOverlap.AddDynamic(this, &AUR_Teleporter::OnTriggerEnter);
 }
 
 // Called when the game starts or when spawned
 void AUR_Teleporter::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
 }
 
 // Called every frame
 void AUR_Teleporter::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
 }
 
 void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	AUR_Character* character = Cast<AUR_Character>(Other);
-	if (character == nullptr) // not a player entering the teleporter
-		return;
+    // @! TODO : Check to see if the component/actor overlapping here matches a LD-specifiable list of classes (e.g. if we want to teleport only characters, or if things such as projectiles, vehicles, etc. may also pass through)
+    AUR_Character* Character = Cast<AUR_Character>(Other);
+    if (Character == nullptr) // not a player entering the teleporter
+    {
+        return;
+    }
 
-	// TODO(Pedro): we should store the "teleporting" state in the MovementComponent of the actor in order to query it here
-	bool isTeleporting = (bFromSweep == false);
+    // TODO(Pedro): we should store the "teleporting" state in the MovementComponent of the actor in order to query it here
+    bool isTeleporting = (bFromSweep == false);
 
-	if(isTeleporting)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Teleported to %s."), *GetName()));
-		return;
-	}
+    if (isTeleporting)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Teleported to %s."), *GetName()));
+        return;
+    }
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Entered teleporter %s."), *GetName()));
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Entered teleporter %s."), *GetName()));
 
-	if(PerformTeleport(character)) 
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Teleported to %s."), *GetName()));
-	else
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString(TEXT("[TELEPORTER] Destination not set.")));
+    if (PerformTeleport(Character))
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Teleported to %s."), *GetName()));
+    }
+    else
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString(TEXT("[TELEPORTER] Destination not set.")));
+    }
 }
 
-float AUR_Teleporter::GetExitHeading()
+bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
 {
-	return FMath::RadiansToDegrees(FMath::Atan2(ExitVector.Y, ExitVector.X));
-}
+    if (DestinationActor == nullptr || TargetActor == nullptr)
+    {
+        return false;
+    }
 
-bool AUR_Teleporter::PerformTeleport(AUR_Character* character)
-{
-	if (DestinationTeleporter == nullptr)
-		return false;
+    AController* CharacterController{ nullptr };
+    FRotator TargetActorRotation{ FRotator::ZeroRotator };
+    FRotator DestinationRotation{ DestinationActor->GetActorRotation() };
+    FRotator DesiredRotation{ DestinationRotation };
 
-	auto characterVelocityVector = character->GetVelocity();
+    if (const auto TargetCharacter{ Cast<ACharacter>(TargetActor) })
+    {
+        CharacterController = TargetCharacter->GetController();
 
-	// Move character to destination teleporter
-	character->SetActorLocation(DestinationTeleporter->GetActorLocation());
+        if (CharacterController)
+        {
+            TargetActorRotation = CharacterController->GetControlRotation();
+        }
+    }
 
-	auto characterMovement = character->GetMovementComponent();
-	auto characterController = character->GetController();
+    // Move Actor to destination teleporter
+    TargetActor->SetActorLocation(DestinationActor->GetActorLocation());
 
-	FRotator controllerRotation = characterController->GetControlRotation();
+    // @! TODO Break out into GetDesiredRotation() function
+    // Find out Desired Rotation
+    if (ExitRotationType == EExitRotation::Relative)
+    {
+        DesiredRotation = TargetActorRotation + DestinationRotation;
+    }
+    else
+    {
+        DestinationRotation = TargetActorRotation;
+    }
 
-	characterMovement->StopMovementImmediately();
+    // Rotate the TargetActor to face the ExitDirection vector
+    if (CharacterController)
+    {
+        CharacterController->SetControlRotation(DesiredRotation);
+    }
+    else
+    {
+        TargetActor->SetActorRotation(DesiredRotation);
+    }
 
-	// Rotate heading of the player to face the ExitDirection vector
-	if (DestinationTeleporter->ExitRotationType == EExitRotation::Relative)
-	{
-		auto actorForwardVector = character->GetActorForwardVector();
+    // Rotate velocity vector relative to the destination teleporter exit heading
+    if (!bKeepMomentum)
+    {
+        TargetActor->GetRootComponent()->ComponentVelocity = FVector::ZeroVector;
+    }
+    else
+    {
+        // @! TODO Rotate existing TargetActor velocity around our new Rotation 
+        // TargetActor->GetRootComponent()->ComponentVelocity = ...
+    }
 
-		auto actorVelocityVectorNorm = characterVelocityVector;
-		actorVelocityVectorNorm.Z = 0;
-		actorVelocityVectorNorm.Normalize();
-
-		auto velocityHeading = FMath::RadiansToDegrees(actorVelocityVectorNorm.HeadingAngle());
-		auto forwardHeading = FMath::RadiansToDegrees(actorForwardVector.HeadingAngle());
-		auto finalForwardHeading = forwardHeading + this->GetExitHeading() - DestinationTeleporter->GetExitHeading();
-
-		characterController->SetControlRotation(FRotator(controllerRotation.Pitch, finalForwardHeading, controllerRotation.Roll));
-	}
-	else
-	{
-		characterController->SetControlRotation(FRotator(controllerRotation.Pitch, DestinationTeleporter->GetExitHeading(), controllerRotation.Roll));
-	}
-
-	// Rotate velocity vector relative to the destination teleporter exit heading
-	if (KeepMomentum)
-	{
-		auto finalVelocity = characterVelocityVector.RotateAngleAxis(this->GetExitHeading() - DestinationTeleporter->GetExitHeading(), FVector::UpVector);
-		character->LaunchCharacter(finalVelocity, false, false);
-	}
-
-	return true;
+    return true;
 }
