@@ -27,6 +27,9 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer) : Super(Obje
 	Mesh3P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh3P"));
 	Mesh3P->SetupAttachment(Mesh1P);
 
+	Sound = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("Sound"));
+	Sound->SetupAttachment(RootComponent);
+
 	ProjectileClass = AUR_Projectile::StaticClass();
 
 	PrimaryActorTick.bCanEverTick = true;
@@ -36,7 +39,7 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer) : Super(Obje
 void AUR_Weapon::BeginPlay()
 {
     Super::BeginPlay();
-    
+	Sound->SetActive(false);
 }
 
 // Called every frame
@@ -86,9 +89,10 @@ void AUR_Weapon::UseAmmo()
 
 void AUR_Weapon::Pickup()
 {
+	Sound->SetActive(true);
+	Sound = UGameplayStatics::SpawnSoundAtLocation(this, Sound->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
 	PlayerController->InventoryComponent->Add(this);
 	AttachWeaponToPawn();
-	//Destroy();
 }
 
 

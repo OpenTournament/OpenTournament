@@ -24,6 +24,9 @@ AUR_Ammo::AUR_Ammo(const FObjectInitializer& ObjectInitializer) : Super(ObjectIn
 	AmmoMesh = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("AmmoMesh1"));
 	AmmoMesh->SetupAttachment(RootComponent);
 
+	Sound = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("Sound"));
+	Sound->SetupAttachment(RootComponent);
+
 	PrimaryActorTick.bCanEverTick = true;
 }
 
@@ -31,7 +34,7 @@ AUR_Ammo::AUR_Ammo(const FObjectInitializer& ObjectInitializer) : Super(ObjectIn
 void AUR_Ammo::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	Sound->SetActive(false);
 }
 
 // Called every frame
@@ -50,6 +53,8 @@ void AUR_Ammo::Tick(float DeltaTime)
 
 void AUR_Ammo::Pickup()
 {
+	Sound->SetActive(true);
+	Sound = UGameplayStatics::SpawnSoundAtLocation(this, Sound->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
 	PlayerController->InventoryComponent->Add(this);
 	Destroy();
 }

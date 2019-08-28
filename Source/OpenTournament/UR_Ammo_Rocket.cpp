@@ -10,4 +10,9 @@ AUR_Ammo_Rocket::AUR_Ammo_Rocket(const FObjectInitializer& ObjectInitializer) : 
 	UStaticMesh* helper = newAsset.Object;
 	AmmoMesh->SetStaticMesh(helper);
 	AmmoName = "Rocket";
+
+	ConstructorHelpers::FObjectFinder<USoundCue> newAssetSound(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/RocketLauncher/RocketLauncher_AmmoPickup_Cue.RocketLauncher_AmmoPickup_Cue'"));
+	USoundCue* helperSound;
+	helperSound = newAssetSound.Object;
+	Sound->SetSound(helperSound);
 }

@@ -17,6 +17,18 @@ AUR_Projectile_Assault::AUR_Projectile_Assault(const FObjectInitializer& ObjectI
 
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_AssaultRifle_Tracer_Dark.P_AssaultRifle_Tracer_Dark'"));
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticlesInAssets2(TEXT("ParticleSystem'/Game/SciFiWeapDark/FX/Particles/P_Impact_Wood_Large_Dark.P_Impact_Wood_Large_Dark'"));
+	ConstructorHelpers::FObjectFinder<USoundCue> newAssetSoundFire(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/Rifle/RifleA_Fire_Cue.RifleA_Fire_Cue'"));
+	ConstructorHelpers::FObjectFinder<USoundCue> newAssetSoundHit(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/Rifle/Rifle_ImpactBody_Cue.Rifle_ImpactBody_Cue'"));
+
+
+
+	USoundCue* helperSoundFire;
+	helperSoundFire = newAssetSoundFire.Object;
+	SoundFire->SetSound(helperSoundFire);
+
+	USoundCue* helperSoundHit;
+	helperSoundHit = newAssetSoundHit.Object;
+	SoundHit->SetSound(helperSoundHit);
 
 	trail = ParticlesInAssets.Object;
 	impact = ParticlesInAssets2.Object;
@@ -31,10 +43,16 @@ void AUR_Projectile_Assault::BeginPlay()
 	Super::BeginPlay();
 	CollisionComponent->OnComponentHit.AddDynamic(this, &AUR_Projectile_Assault::OnHit);
 	CollisionComponent->SetGenerateOverlapEvents(true);
+
+	SoundFire->SetActive(true);
+	SoundHit->SetActive(false);
+	SoundFire = UGameplayStatics::SpawnSoundAtLocation(this, SoundFire->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
 }
 
 void AUR_Projectile_Assault::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
 {
+	SoundHit->SetActive(true);
+	SoundFire = UGameplayStatics::SpawnSoundAtLocation(this, SoundHit->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
 	Particles->SetTemplate(impact);
 	OtherActor->TakeDamage(5, FDamageEvent::FDamageEvent(), NULL, this);
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event by ASSAULT RIFLE 1")));

@@ -11,6 +11,16 @@ AUR_Weap_SniperRifle::AUR_Weap_SniperRifle(const FObjectInitializer& ObjectIniti
 	Mesh1P->SetSkeletalMesh(helper);
 	WeaponName = "Sniper Rifle";
 	ProjectileClass = AUR_Projectile_Sniper::StaticClass();
+
+	ConstructorHelpers::FObjectFinder<USoundCue> newAssetSound(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/SniperRifle/SniperRifle_Lower_Cue.SniperRifle_Lower_Cue'"));
+	USoundCue* helperSound;
+	helperSound = newAssetSound.Object;
+	Sound->SetSound(helperSound);
+
+	/*ConstructorHelpers::FObjectFinder<USoundCue> newAssetSoundFire(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/SniperRifle/SniperRifleA_Fire_Cue.SniperRifleA_Fire_Cue'"));
+	USoundCue* helperSoundFire;
+	helperSoundFire = newAssetSoundFire.Object;
+	SoundFire->SetSound(helperSoundFire);*/
 }
 
 void AUR_Weap_SniperRifle::Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams)
@@ -18,6 +28,8 @@ void AUR_Weap_SniperRifle::Fire(UWorld* World, FVector MuzzleLocation, FRotator 
 	AUR_Projectile_Sniper* Projectile = World->SpawnActor<AUR_Projectile_Sniper>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
 	if (Projectile)
 	{
+		/*SoundFire->SetActive(true);
+		SoundFire = UGameplayStatics::SpawnSoundAtLocation(this, Sound->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);*/
 		// Set the projectile's initial trajectory.
 		FVector Direction = MuzzleRotation.Vector();
 		Projectile->FireAt(Direction);
