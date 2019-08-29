@@ -14,6 +14,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 class UUR_HealthComponent;
+class UUR_ArmorComponent;
 class UUR_InventoryComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -267,6 +268,12 @@ public:
     */
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Health")
     UUR_HealthComponent* HealthComponent;
+
+	/**
+	* Armor Component
+	*/
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Armor")
+		UUR_ArmorComponent* ArmorComponent;
 
 	/**
 	* Inventory Component
