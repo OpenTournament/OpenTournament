@@ -78,7 +78,7 @@ void AUR_PlayerController::InitInputSystem()
     if (PlayerInput == nullptr)
     {
         PlayerInput = NewObject<UUR_PlayerInput>(this);
-		static_cast<UUR_PlayerInput*>(PlayerInput)->SayHello();
+		static_cast<UUR_PlayerInput*>(PlayerInput)->SetupActionMappings();
     }
 
     Super::InitInputSystem();
