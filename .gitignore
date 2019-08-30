@@ -71,3 +71,4 @@ Content/*
 #Exclude All Base Level Content Except OpenTournament Directory
 !Content/OpenTournament
 
+/Content/OpenTournament/Blueprints/BP_TestControlMenu.uasset
