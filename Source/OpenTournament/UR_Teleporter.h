@@ -10,6 +10,7 @@ class UArrowComponent;
 class UAudioComponent;
 class UCapsuleComponent;
 class UStaticMeshComponent;
+class UParticleSystemComponent;
 
 UENUM()
 enum class EExitRotation : uint8
@@ -30,50 +31,50 @@ public:
     /*
     * Static Mesh Component - Teleporter Base
     */
-    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Mesh")
-    UStaticMeshComponent* BaseMeshComponent;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
+    UStaticMeshComponent* MeshComponent;
 
     /*
     * Capsule Component - Active Teleport Region
     */
-    UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Capsule")
-    UCapsuleComponent* BaseCapsule;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
+    UCapsuleComponent* CapsuleComponent;
 
     /*
     * Audio Component
     */
-    UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Audio")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
     UAudioComponent* AudioComponent;
 
     /*
     * Arrow Component
     */
-    UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Arrow")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
     UArrowComponent* ArrowComponent;
 
     /*
     * ParticleSystem Component
     */
-    UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Particle")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
     UParticleSystemComponent* ParticleSystemComponent;
 
 
     /*
     * Destination of Teleport - May be another Teleporter, TargetPoint, etc.
     */
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exit Properties")
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Teleporter")
     AActor* DestinationActor;
 
     /*
     * Does our teleport force us into a new rotation, or is it relative to our DestinationActor's rotation?
     */
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exit Properties")
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Teleporter")
     EExitRotation ExitRotationType = EExitRotation::Relative;
 
     /*
     * Do Actors teleported retain their velocity?
     */
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exit Properties")
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Teleporter")
     bool bKeepMomentum = true;
 
 
