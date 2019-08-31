@@ -2,14 +2,18 @@
 
 #include "UR_Teleporter.h"
 
-#include "Runtime/Engine/Classes/GameFramework/Controller.h"
+#include "Runtime/Engine/Classes/Engine/Engine.h"
 #include "Runtime/Engine/Classes/Components/ArrowComponent.h"
 #include "Runtime/Engine/Classes/Components/AudioComponent.h"
 #include "Runtime/Engine/Classes/Components/CapsuleComponent.h"
-#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "Runtime/Engine/Classes/Components/StaticMeshComponent.h"
+#include "Runtime/Engine/Classes/GameFramework/Actor.h"
+#include "Runtime/Engine/Classes/GameFramework/Controller.h"
+#include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 
 #include "UR_Character.h"
+#include "UR_CharacterMovementComponent.h"
 
 // Sets default values
 AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
@@ -30,9 +34,10 @@ AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMeshComponent"));
     MeshComponent->SetupAttachment(RootComponent);
 
-    // @! TODO : Attachment positioning is messed up, offset by some values. Resolve this
+#if WITH_EDITORONLY_DATA
     ArrowComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowComponent"));
     ArrowComponent->SetupAttachment(CapsuleComponent);
+#endif
 
     AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
     AudioComponent->SetupAttachment(CapsuleComponent);
@@ -108,19 +113,14 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
         }
     }
 
+    // Play effects associated with teleportation
+    PlayTeleportEffects();
+
     // Move Actor to destination teleporter
     TargetActor->SetActorLocation(DestinationActor->GetActorLocation());
 
-    // @! TODO Break out into GetDesiredRotation() function
     // Find out Desired Rotation
-    if (ExitRotationType == EExitRotation::Relative)
-    {
-        DesiredRotation = TargetActorRotation + RelativeDestinationRotation;
-    }
-    else
-    {
-        DestinationRotation = TargetActorRotation;
-    }
+    GetDesiredRotation(DesiredRotation, TargetActorRotation, RelativeDestinationRotation);
 
     // Rotate the TargetActor to face the ExitDirection vector
     if (CharacterController)
@@ -136,12 +136,55 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
     if (!bKeepMomentum)
     {
         TargetActor->GetRootComponent()->ComponentVelocity = FVector::ZeroVector;
+
+        if (AUR_Character* TargetCharacter = Cast<AUR_Character>(TargetActor))
+        {
+            TargetCharacter->GetMovementComponent()->Velocity = FVector::ZeroVector;
+        }
     }
     else
     {
-        // @! TODO Rotate existing TargetActor velocity around our new Rotation 
-        // TargetActor->GetRootComponent()->ComponentVelocity = ...
+        FVector ForwardVector{ TargetActor->GetActorForwardVector() };
+
+        if (AUR_Character* TargetCharacter = Cast<AUR_Character>(TargetActor))
+        {
+            if (UCharacterMovementComponent* CharacterMovement = TargetCharacter->GetCharacterMovement())
+            {
+                FVector MovementAngleVector{ ForwardVector - CharacterMovement->Velocity.Normalize() };
+                CharacterMovement->Velocity = CharacterMovement->Velocity.RotateAngleAxis( MovementAngleVector.Rotation().Yaw, DesiredRotation.Vector());
+            }
+        }
+        else
+        {
+            FVector MovementAngleVector{ ForwardVector - TargetActor->GetVelocity().Normalize() };
+            TargetActor->GetRootComponent()->ComponentVelocity = TargetActor->GetVelocity().RotateAngleAxis( MovementAngleVector.Rotation().Yaw, DesiredRotation.Vector());
+        }
     }
 
     return true;
+}
+
+void AUR_Teleporter::PlayTeleportEffects_Implementation()
+{
+    if (TeleportOutSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportOutSound, GetActorLocation());
+    }
+
+    if (TeleportInSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportInSound, DestinationActor->GetActorLocation());
+    }
+}
+
+void AUR_Teleporter::GetDesiredRotation(FRotator& DesiredRotation, const FRotator& TargetActorRotation, const FRotator& RelativeDestinationRotation)
+{
+    if (ExitRotationType == EExitRotation::Relative)
+    {
+        DesiredRotation = TargetActorRotation + RelativeDestinationRotation;
+    }
+    else
+    {
+        DesiredRotation = TargetActorRotation;
+    }
 }
