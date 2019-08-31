@@ -19,29 +19,26 @@ AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
     bKeepMomentum(true)
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-    PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bCanEverTick = false;
 
-    BaseMeshComponent = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("BaseMeshComponent"));
-    SetRootComponent(BaseCapsule);
+    CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
+    CapsuleComponent->SetCapsuleSize(45.f, 90.f, false);
+    SetRootComponent(CapsuleComponent);
+    CapsuleComponent->SetGenerateOverlapEvents(true);
+    CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Teleporter::OnTriggerEnter);
+
+    MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMeshComponent"));
+    MeshComponent->SetupAttachment(RootComponent);
 
     // @! TODO : Attachment positioning is messed up, offset by some values. Resolve this
-    ArrowComponent = ObjectInitializer.CreateDefaultSubobject<UArrowComponent>(this, TEXT("ArrowComponent"));
-    ArrowComponent->SetupAttachment(RootComponent);
-    ArrowComponent->SetRelativeLocation(FVector{ 0.f, 0.f, 45.f });
+    ArrowComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowComponent"));
+    ArrowComponent->SetupAttachment(CapsuleComponent);
 
-    AudioComponent = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("AudioComponent"));
-    AudioComponent->SetupAttachment(RootComponent);
-    ArrowComponent->SetRelativeLocation(FVector{ 0.f, 0.f, 45.f });
+    AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+    AudioComponent->SetupAttachment(CapsuleComponent);
 
-    ParticleSystemComponent = ObjectInitializer.CreateDefaultSubobject<UParticleSystemComponent>(this, TEXT("ParticleSystemComponent"));
-    ParticleSystemComponent->SetRelativeLocation(FVector{ 0.f, 0.f, 45.f });
-
-    BaseCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("BaseCapsule"));
-    BaseCapsule->SetCapsuleSize(45.f, 90.f, false);
+    ParticleSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleSystemComponent"));
     ParticleSystemComponent->SetupAttachment(RootComponent);
-    BaseCapsule->SetRelativeLocation(FVector{ 0.f, 0.f, 90.f });
-    BaseCapsule->SetGenerateOverlapEvents(true);
-    BaseCapsule->OnComponentBeginOverlap.AddDynamic(this, &AUR_Teleporter::OnTriggerEnter);
 }
 
 // Called when the game starts or when spawned
@@ -98,6 +95,7 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
     AController* CharacterController{ nullptr };
     FRotator TargetActorRotation{ FRotator::ZeroRotator };
     FRotator DestinationRotation{ DestinationActor->GetActorRotation() };
+    FRotator RelativeDestinationRotation{ GetActorRotation() - DestinationRotation };
     FRotator DesiredRotation{ DestinationRotation };
 
     if (const auto TargetCharacter{ Cast<ACharacter>(TargetActor) })
@@ -117,7 +115,7 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
     // Find out Desired Rotation
     if (ExitRotationType == EExitRotation::Relative)
     {
-        DesiredRotation = TargetActorRotation + DestinationRotation;
+        DesiredRotation = TargetActorRotation + RelativeDestinationRotation;
     }
     else
     {
