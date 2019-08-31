@@ -9,6 +9,7 @@
 class UArrowComponent;
 class UAudioComponent;
 class UCapsuleComponent;
+class USoundBase;
 class UStaticMeshComponent;
 class UParticleSystemComponent;
 
@@ -77,6 +78,18 @@ public:
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Teleporter")
     bool bKeepMomentum = true;
 
+    /**
+    * Actor teleports out
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Teleporter)
+    USoundBase* TeleportOutSound;
+
+    /**
+    * Actor teleports in
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Teleporter)
+    USoundBase* TeleportInSound;
+
 
 protected:
     // Called when the game starts or when spawned
@@ -87,6 +100,11 @@ public:
     virtual void Tick(float DeltaTime) override;
 
     bool PerformTeleport(AActor* TargetActor);
+
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Teleporter")
+    void PlayTeleportEffects();
+
+    void GetDesiredRotation(FRotator& DesiredRotation, const FRotator& TargetActorRotation, const FRotator& RelativeDestinationRotation);
 
     UFUNCTION()
     void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
