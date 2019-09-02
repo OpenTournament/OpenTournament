@@ -66,8 +66,19 @@ AutomotiveMaterials.png
 ParticleToolkitVol1.png
 FootstepsSoundV2.png
 MissionNotificationSys.png
-Content/*
+Content/FirstPerson/*
+Content/StarterContent/*
 
 #Exclude All Base Level Content Except OpenTournament Directory
 !Content/OpenTournament
 
+Source/OpenTournament/FP_FirstPerson/FP_FirstPersonHUD.cpp
+Source/OpenTournament/FP_FirstPerson/FP_FirstPersonGameMode.h
+Source/OpenTournament/FP_FirstPerson/FP_FirstPersonCharacter.cpp
+Source/OpenTournament/FP_FirstPerson/FP_FirstPersonHUD.h
+Source/OpenTournament/FP_FirstPerson/FP_FirstPersonGameMode.cpp
+Source/OpenTournament/FP_FirstPerson/FP_FirstPerson.h
+Source/OpenTournament/FP_FirstPerson/FP_FirstPersonCharacter.h
+Content/FirstPersonCPP/Maps/FirstPersonExampleMap.umap
+Content/FirstPersonCPP/Maps/DM-DeckScale.umap
+Content/FirstPersonCPP/Blueprints/FirstPersonCharacter.uasset

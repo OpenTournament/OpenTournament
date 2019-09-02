@@ -7,7 +7,10 @@
 		{
 			"Name": "OpenTournament",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
 		}
 	],
 	"Plugins": [
@@ -25,6 +28,22 @@
 		},
 		{
 			"Name": "Niagara",
+			"Enabled": true
+		},
+		{
+			"Name": "RuntimeTests",
+			"Enabled": true
+		},
+		{
+			"Name": "EditorTests",
+			"Enabled": true
+		},
+		{
+			"Name": "Gauntlet",
+			"Enabled": true
+		},
+		{
+			"Name": "FunctionalTestingEditor",
 			"Enabled": true
 		}
 	]
