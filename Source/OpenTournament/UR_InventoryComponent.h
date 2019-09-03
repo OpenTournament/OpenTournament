@@ -41,6 +41,10 @@ public:
 	void Add(AUR_Weapon* weapon);
 	void Add(AUR_Ammo* ammo);
 
+	void AmmoCountInInventory(AUR_Weapon* weapon);
+
+	void UpdateWeaponAmmo(AUR_Ammo* ammo);
+
 
 	void ShowInventory();
 

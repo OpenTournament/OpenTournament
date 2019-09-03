@@ -10,6 +10,7 @@
 #include "GameFramework/Actor.h"
 #include "UR_Character.h"
 #include "UR_Projectile.h"
+#include "Engine.h"
 #include "Engine/Canvas.h" // for FCanvasIcon
 
 #include "UR_Weapon.generated.h"
@@ -84,11 +85,16 @@ public:
 
 	UShapeComponent* Tbox;
 
+	int ammoCount;
+
 	UPROPERTY(EditAnywhere)
 	USkeletalMeshComponent* SM_TBox;
 
 	UPROPERTY(EditAnywhere)
 	FString WeaponName = FString(TEXT(""));
+
+	UPROPERTY(EditAnywhere)
+	FString AmmoName = FString(TEXT(""));
 
 	UAudioComponent* Sound;
 	UAudioComponent* SoundFire;
