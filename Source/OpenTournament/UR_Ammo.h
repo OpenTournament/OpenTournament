@@ -10,6 +10,7 @@
 #include "Components/AudioComponent.h"
 #include "GameFramework/Actor.h"
 #include "UR_Character.h"
+#include "Engine.h"
 #include "Engine/Canvas.h" // for FCanvasIcon
 
 #include "UR_Ammo.generated.h"
@@ -36,6 +37,8 @@ public:
 	void Pickup();
 
 	void GetPlayer(AActor* Player);
+
+	int amount;
 
 
 	UPROPERTY(EditAnywhere)

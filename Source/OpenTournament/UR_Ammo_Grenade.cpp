@@ -3,6 +3,7 @@
 
 #include "UR_Ammo_Grenade.h"
 
+
 // Sets default values
 AUR_Ammo_Grenade::AUR_Ammo_Grenade(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -15,4 +16,7 @@ AUR_Ammo_Grenade::AUR_Ammo_Grenade(const FObjectInitializer& ObjectInitializer) 
 	USoundCue* helperSound;
 	helperSound = newAssetSound.Object;
 	Sound->SetSound(helperSound);
+
+	amount = 10;
+
 }

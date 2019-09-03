@@ -21,6 +21,8 @@ void UUR_InventoryComponent::Add(AUR_Weapon* weapon)
 	if (!InventoryW.Contains(weapon)) {
 		InventoryW.Add(weapon);
 		GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Red, FString::Printf(TEXT("You picked the %s"), *weapon->WeaponName));
+		GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Blue, FString::Printf(TEXT("Weapon ammo count: %d"), weapon->ammoCount));
+		AmmoCountInInventory(weapon);
 	}
 	else 
 		GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Blue, FString::Printf(TEXT("You already have the %s"), *weapon->WeaponName));
@@ -28,8 +30,40 @@ void UUR_InventoryComponent::Add(AUR_Weapon* weapon)
 
 void UUR_InventoryComponent::Add(AUR_Ammo* ammo)
 {
-	InventoryA.Add(ammo);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You picked the %s"), *ammo->AmmoName));
+	/*if (InventoryA.Contains(ammo)) {
+		for (auto& ammo2 : InventoryA)
+		{
+			if (ammo2->AmmoName == *ammo->AmmoName) {
+				ammo2->amount += ammo->amount;
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, FString::Printf(TEXT("Added %s ammo. Current amount: %d"), *ammo2->AmmoName, ammo2->amount));
+			}
+		}
+	}
+	else {*/
+		InventoryA.Add(ammo);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You picked the %s"), *ammo->AmmoName));
+	//}
+		UpdateWeaponAmmo(ammo);
+}
+
+void UUR_InventoryComponent::AmmoCountInInventory(AUR_Weapon* weapon) 
+{
+	for (auto& ammo : InventoryA)
+	{
+		if (weapon->AmmoName == *ammo->AmmoName) {
+			weapon->ammoCount += ammo->amount;
+		}
+	}
+}
+
+void UUR_InventoryComponent::UpdateWeaponAmmo(AUR_Ammo* ammo) 
+{
+	for (auto& weapon : InventoryW)
+	{
+		if (weapon->AmmoName == *ammo->AmmoName) {
+			weapon->ammoCount += ammo->amount;
+		}
+	}
 }
 
 
@@ -37,7 +71,7 @@ void UUR_InventoryComponent::ShowInventory()
 {
 	for (auto& weapon : InventoryW)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Weapons in inventory: %s"), *weapon->WeaponName));
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Weapons in inventory: %s with Ammo Count: %d"), *weapon->WeaponName, weapon->ammoCount));
 	}
 
 	for (auto& ammo : InventoryA)

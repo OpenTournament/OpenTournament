@@ -17,22 +17,21 @@ AUR_Weap_AssaultRifle::AUR_Weap_AssaultRifle(const FObjectInitializer& ObjectIni
 	helperSound = newAssetSound.Object;
 	Sound->SetSound(helperSound);
 
-	/*ConstructorHelpers::FObjectFinder<USoundCue> newAssetSoundFire(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/Rifle/RifleA_Fire_Cue.RifleA_Fire_Cue'"));
-	USoundCue* helperSoundFire;
-	helperSoundFire = newAssetSoundFire.Object;
-	SoundFire->SetSound(helperSoundFire);*/
+	AmmoName = "Assault";
 }
 
 void AUR_Weap_AssaultRifle::Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation,FActorSpawnParameters SpawnParams)
 {
-	AUR_Projectile_Assault* Projectile = World->SpawnActor<AUR_Projectile_Assault>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
+	if (ammoCount > 0) {
+		AUR_Projectile_Assault* Projectile = World->SpawnActor<AUR_Projectile_Assault>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
 
-	if (Projectile)
-	{
-		/*SoundFire->SetActive(true);
-		SoundFire = UGameplayStatics::SpawnSoundAtLocation(this, Sound->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);*/
-		// Set the projectile's initial trajectory.
-		FVector Direction = MuzzleRotation.Vector();
-		Projectile->FireAt(Direction);
+		if (Projectile)
+		{
+			FVector Direction = MuzzleRotation.Vector();
+			Projectile->FireAt(Direction);
+			ammoCount--;
+		}
 	}
+	else
+		GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Red, FString::Printf(TEXT("NO AMMO LEFT FOR %s!"), *WeaponName));
 }
