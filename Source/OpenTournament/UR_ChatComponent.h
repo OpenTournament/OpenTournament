@@ -26,7 +26,27 @@ enum class EChatChannel : uint8
 */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FReceiveChatMessageSignature, const FString&, SenderName, const FString&, Message, EChatChannel, Channel, APlayerState*, SenderPS);
 
-
+/**
+* Component to make an entity chat-aware and chat-capable.
+*
+* Standard usage is for players, but it is designed to be useable by any Actor entity.
+*
+* For players/bots it should be owned by the Controller.
+* We don't want to replicate to anybody else than the player owner.
+*
+* Standard implementation flows as following :
+* - client types in message and press enter, calling Send() on client
+* - message is validated through Validate(), then sent to server via ServerSend()
+* - ServerSend() calls Send() (on server this time) which validates again, and forwards to Broadcast()
+* - Broadcast() iterates all registered chat components and calls Receive() when component ShouldReceive()
+* - Receive() then replicates through client RPC ClientReceive()
+*
+* For non-player entities you should set Replicates=false, specify FallbackOwnerName,
+* and adjust AntiSpamDelay sensibly.
+*
+* For example, a webadmin system could use it to interface chat,
+* without hacking in a fake spectator player/PRI like previous UT titles.
+*/
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class OPENTOURNAMENT_API UUR_ChatComponent : public UActorComponent
 {
@@ -40,20 +60,11 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	/**
-	* Standard implementation flows as following :
-	* - client types message and press enter, calling Send() on client
-	* - message is validated through Validate(), then sent to server via ServerSend()
-	* - ServerSend() calls Send() (on server this time) which validates again, and forwards to Broadcast()
-	* - Broadcast() iterates registered chat components and calls Receive() when component ShouldReceive()
-	* - Receive() replicates through client RPC ClientReceive()
-	*/
-
-	/**
 	* Cache to owner PlayerController if there is one.
 	* May be NULL for non-player entities.
 	*/
 	UPROPERTY(BlueprintReadOnly)
-	class APlayerController* OwnerPC;
+	class AController* OwnerController;
 
 	/**
 	* Sender name to use when we cannot resolve to a PlayerState object.

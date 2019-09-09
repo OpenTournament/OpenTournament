@@ -3,7 +3,7 @@
 
 #include "UR_ChatComponent.h"
 
-#include "GameFramework/PlayerController.h"
+#include "GameFramework/Controller.h"
 #include "GameFramework/PlayerState.h"
 #include "UR_GameModeBase.h"
 
@@ -12,7 +12,7 @@
 #include "UR_HealthComponent.h"
 
 UUR_ChatComponent::UUR_ChatComponent()
-	: OwnerPC(nullptr)
+	: OwnerController(nullptr)
 	, FallbackOwnerName(TEXT("THING"))
 	, AntiSpamDelay(1.f)
 	, LastSendTime(0)
@@ -26,7 +26,7 @@ void UUR_ChatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	OwnerPC = Cast<APlayerController>(GetOwner());
+	OwnerController = Cast<AController>(GetOwner());
 
 	AUR_GameModeBase* GM = GetWorld()->GetAuthGameMode<AUR_GameModeBase>();
 	if (GM)
@@ -68,7 +68,7 @@ void UUR_ChatComponent::ServerSend_Implementation(const FString& Message, EChatC
 FString UUR_ChatComponent::Validate_Implementation(const FString& Message, EChatChannel Channel)
 {
 	// anti spam
-	if (GetWorld()->RealTimeSeconds - LastSendTime < 1.f)
+	if (GetWorld()->RealTimeSeconds - LastSendTime < AntiSpamDelay)
 		return TEXT("");
 
 	// trim
@@ -86,7 +86,7 @@ void UUR_ChatComponent::Broadcast(const FString& Message, EChatChannel Channel)
 	// Fixup the channel in some cases
 	if (Channel == EChatChannel::Team)
 	{
-		if (OwnerPC && OwnerPC->PlayerState && OwnerPC->PlayerState->bOnlySpectator)
+		if (OwnerController && OwnerController->PlayerState && OwnerController->PlayerState->bOnlySpectator)
 		{
 			Channel = EChatChannel::Spec;
 		}
@@ -134,7 +134,7 @@ bool UUR_ChatComponent::ShouldReceive_Implementation(EChatChannel Channel, UUR_C
 		}
 
 		case EChatChannel::Spec:
-			return OwnerPC && OwnerPC->PlayerState && OwnerPC->PlayerState->bOnlySpectator;
+			return OwnerController && OwnerController->PlayerState && OwnerController->PlayerState->bOnlySpectator;
 
 		default:
 			return false;
@@ -153,15 +153,13 @@ void UUR_ChatComponent::Receive_Implementation(UUR_ChatComponent* Sender, const 
 
 FString UUR_ChatComponent::GetOwnerName_Implementation()
 {
-	if ( OwnerPC && OwnerPC->PlayerState )
-		return OwnerPC->PlayerState->GetPlayerName();
-
-	return FallbackOwnerName;
+	APlayerState* PS = GetPlayerState();
+	return PS ? PS->GetPlayerName() : FallbackOwnerName;
 }
 
 APlayerState* UUR_ChatComponent::GetPlayerState_Implementation()
 {
-	return OwnerPC ? OwnerPC->PlayerState : nullptr;
+	return OwnerController ? OwnerController->PlayerState : nullptr;
 }
 
 void UUR_ChatComponent::ClientReceive_Implementation(const FString& SenderName, const FString& Message, EChatChannel Channel, APlayerState* SenderPS)
@@ -194,9 +192,9 @@ FString UUR_ChatComponent::ProcessChatParameters_Implementation(const FString& O
 		Result.ReplaceInline(TEXT("%t"), *FString::Printf(TEXT("%02i:%02i"), FMath::FloorToInt(t / 60.f), FMath::RoundToInt(t) % 60));
 	}
 
-	if (OwnerPC)
+	if (OwnerController)
 	{
-		AUR_Character* Char = Cast<AUR_Character>(OwnerPC->GetCharacter());
+		AUR_Character* Char = Cast<AUR_Character>(OwnerController->GetCharacter());
 		if (Char)
 		{
 			Result.ReplaceInline(TEXT("%h"), *FString::Printf(TEXT("%i"), Char->HealthComponent->Health));

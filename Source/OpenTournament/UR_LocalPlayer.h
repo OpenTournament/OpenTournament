@@ -31,9 +31,9 @@ public:
 
 	/**
 	* Team index of message author, when we received the message.
-	* This is necessary so we can build accurate history, even after PlayerStates are no longer available.
+	* This is necessary so we can rebuild accurate history even when PlayerStates are no longer available.
 	* -1 is used for spectators
-	* -2 is used for other entites (not associated with a player state)
+	* -2 is used for other entities (not associated with a player state)
 	*/
 	UPROPERTY(BlueprintReadOnly)
 	int32 SenderTeamIdx;
@@ -49,6 +49,7 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+// not sure where to define this
 #define CHAT_HISTORY_MAX 1000
 
 /**
