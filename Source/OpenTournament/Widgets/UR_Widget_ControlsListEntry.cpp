@@ -6,22 +6,29 @@
 UUR_Widget_ControlsListEntry::UUR_Widget_ControlsListEntry(const FObjectInitializer& ObjectInitializer) :
 	Super(ObjectInitializer)
 {
-	//Super(ObjectInitializer);
+	IsSelectingKey = false;
+}
+
+void UUR_Widget_ControlsListEntry::OnEntryKeySelectorKeyChanged(FInputChord SelectedKey)
+{
+	AUR_PlayerController * PlayerController = static_cast<AUR_PlayerController*>(GetOwningPlayer());
+	UUR_PlayerInput * PlayerInput = static_cast<UUR_PlayerInput*>(PlayerController->GetPlayerInput());
+	UUR_Object_KeyBind * KeyBind = static_cast<UUR_Object_KeyBind*>(Item);
+
+	FInputActionKeyMapping KeyMapping(KeyBind->ActionName, SelectedKey.Key);
+
+	PlayerInput->ModifyActionKeyMapping(KeyBind->ActionName, KeyMapping);
+}
+
+void UUR_Widget_ControlsListEntry::OnEntryKeySelectorIsSelectingKeyChanged()
+{
+	IsSelectingKey = !IsSelectingKey;
 }
 
 void UUR_Widget_ControlsListEntry::NativeConstruct()
 {
 	Super::NativeConstruct();
-	EntryName->SetText(FText::FromString("Hello"));
-	if (Item != nullptr)
-	{
-		
-	}
-}
-
-void UUR_Widget_ControlsListEntry::OnEntryKeySelectorKeyChanged(FInputChord SelectedKey)
-{
-	//TODO: Add definition
+	EntryKeySelector->OnKeySelected.AddDynamic(this, UUR_Widget_ControlsListEntry::OnEntryKeySelectorKeyChanged);
 }
 
 void UUR_Widget_ControlsListEntry::SetListItemObjectInternal(UObject * InObject)

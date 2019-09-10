@@ -2,12 +2,15 @@
 
 #pragma once
 
+
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Components/TextBlock.h"
 #include "Components/InputKeySelector.h"
 #include "Data/UR_Object_KeyBind.h"
+#include "UR_PlayerController.h"
+#include "UR_PlayerInput.h"
 #include "UR_Widget_ControlsListEntry.generated.h"
 
 /**
@@ -32,9 +35,15 @@ public:
 	UFUNCTION()
 		void OnEntryKeySelectorKeyChanged(FInputChord SelectedKey);
 
+	UFUNCTION()
+		void OnEntryKeySelectorIsSelectingKeyChanged();
+
 	void NativeConstruct();
 	void SetListItemObjectInternal(UObject* InObject);
 
 private:
+	UPROPERTY(BlueprintReadOnly)
+	bool IsSelectingKey;
+
 	void UpdateEntry();
 };
