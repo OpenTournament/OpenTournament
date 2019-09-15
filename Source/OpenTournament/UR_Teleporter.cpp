@@ -1,19 +1,23 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Teleporter.h"
 
-#include "Runtime/Engine/Classes/Engine/Engine.h"
-#include "Runtime/Engine/Classes/Components/ArrowComponent.h"
-#include "Runtime/Engine/Classes/Components/AudioComponent.h"
-#include "Runtime/Engine/Classes/Components/CapsuleComponent.h"
-#include "Runtime/Engine/Classes/Components/StaticMeshComponent.h"
-#include "Runtime/Engine/Classes/GameFramework/Actor.h"
-#include "Runtime/Engine/Classes/GameFramework/Controller.h"
-#include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
-#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
+#include "Engine/Engine.h"
+#include "Components/ArrowComponent.h"
+#include "Components/AudioComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "GameFramework/Actor.h"
+#include "GameFramework/Controller.h"
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
 
 #include "UR_Character.h"
 #include "UR_CharacterMovementComponent.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Sets default values
 AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
@@ -188,3 +192,18 @@ void AUR_Teleporter::GetDesiredRotation(FRotator& DesiredRotation, const FRotato
         DesiredRotation = TargetActorRotation;
     }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if WITH_DEV_AUTOMATION_TESTS
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOpenTournamentTeleporterTest, "OpenTournament.Feature.Levels.LevelFeatures.Actor", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+
+bool FOpenTournamentTeleporterTest::RunTest(const FString& Parameters)
+{
+    // TODO : Automated Tests
+
+    return true;
+}
+
+#endif WITH_DEV_AUTOMATION_TESTS
