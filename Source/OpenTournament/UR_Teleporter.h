@@ -1,10 +1,14 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "UR_Teleporter.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 class UArrowComponent;
 class UAudioComponent;
@@ -13,12 +17,16 @@ class USoundBase;
 class UStaticMeshComponent;
 class UParticleSystemComponent;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 UENUM()
 enum class EExitRotation : uint8
 {
     Relative,
     Fixed
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 UCLASS()
 class OPENTOURNAMENT_API AUR_Teleporter : public AActor
@@ -81,21 +89,18 @@ public:
     /**
     * Actor teleports out
     */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Teleporter)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleporter")
     USoundBase* TeleportOutSound;
 
     /**
     * Actor teleports in
     */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Teleporter)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleporter")
     USoundBase* TeleportInSound;
 
-
-protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
-public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
