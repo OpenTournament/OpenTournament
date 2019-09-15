@@ -8,3 +8,13 @@
 
 AUR_GameModeBase::AUR_GameModeBase(){}
 
+void AUR_GameModeBase::RegisterChatComponent(UUR_ChatComponent* Comp)
+{
+	if (Comp)
+		ChatComponents.AddUnique(Comp);
+}
+
+void AUR_GameModeBase::UnregisterChatComponent(UUR_ChatComponent* Comp)
+{
+	ChatComponents.Remove(Comp);
+}
