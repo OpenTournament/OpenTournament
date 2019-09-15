@@ -17,6 +17,8 @@
 #include "Components/AudioComponent.h"
 #include "UR_Character.h"
 #include "UR_PCInputDodgeComponent.h"
+#include "UR_ChatComponent.h"
+#include "UR_LocalPlayer.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -31,6 +33,11 @@ AUR_PlayerController::AUR_PlayerController()
 
     // @! TODO Should we add via BP instead ?
     InputDodgeComponent = CreateDefaultSubobject<UUR_PCInputDodgeComponent>(TEXT("InputDodgeComponent"));
+
+	ChatComponent = CreateDefaultSubobject<UUR_ChatComponent>(TEXT("ChatComponent"));
+	ChatComponent->FallbackOwnerName = TEXT("SOMEBODY");
+	ChatComponent->AntiSpamDelay = 1.f;
+	ChatComponent->OnReceiveChatMessage.AddUniqueDynamic(this, &AUR_PlayerController::OnReceiveChatMessage);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -227,4 +234,41 @@ void AUR_PlayerController::UnCrouch()
     {
         URCharacter->UnCrouch(false);
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_PlayerController::Say(const FString& Message)
+{
+	if (ChatComponent)
+		ChatComponent->Send(Message, EChatChannel::Say);
+}
+
+void AUR_PlayerController::TeamSay(const FString& Message)
+{
+	if (ChatComponent)
+		ChatComponent->Send(Message, EChatChannel::Team);
+}
+
+void AUR_PlayerController::OnReceiveChatMessage(const FString& SenderName, const FString& Message, EChatChannel Channel, APlayerState* SenderPS)
+{
+	UUR_LocalPlayer* LP = Cast<UUR_LocalPlayer>(GetLocalPlayer());
+	if (LP)
+	{
+		if (LP->ChatHistory.Num() >= CHAT_HISTORY_MAX)
+			LP->ChatHistory.RemoveAt(0, 1, false);
+
+		int32 AuthorTeamIdx = -2;
+		if (SenderPS)
+		{
+			if (SenderPS->bOnlySpectator)
+				AuthorTeamIdx = -1;
+			else
+				AuthorTeamIdx = 0;	//TODO: real author team index
+		}
+
+		int32 MessageTeamIdx = 0;	//TODO: real self team index
+
+		LP->ChatHistory.Add({ FDateTime::Now(), SenderName, Message, Channel, AuthorTeamIdx, MessageTeamIdx });
+	}
 }

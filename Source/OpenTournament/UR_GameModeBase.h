@@ -23,4 +23,15 @@ class OPENTOURNAMENT_API AUR_GameModeBase : public AGameMode
 public:
 
     AUR_GameModeBase();
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
+	TArray<class UUR_ChatComponent*> ChatComponents;
+
+	UFUNCTION(BlueprintCallable, Category = "Chat")
+	virtual void RegisterChatComponent(class UUR_ChatComponent* Comp);
+
+	UFUNCTION(BlueprintCallable, Category = "Chat")
+	virtual void UnregisterChatComponent(class UUR_ChatComponent* Comp);
+
 };
