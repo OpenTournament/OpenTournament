@@ -18,12 +18,6 @@ void UUR_PlayerInput::SetupActionMappings()
 	ForceRebuildingKeyMaps(false);
 }
 
-/*
-void UUR_PlayerInput::SetActionKeyMappingKey(FInputActionKeyMapping & ActionKeyMapping, FKey Key)
-{
-	ActionKeyMapping.Key = Key;
-}
-*/
 
 void UUR_PlayerInput::SetActionKeyMappingKey(const FInputActionKeyMapping ActionKeyMapping, FKey Key)
 {
@@ -48,6 +42,45 @@ void UUR_PlayerInput::ModifyActionKeyMapping(FName ActionName, const FInputActio
 	InputSettings->AddActionMapping(ModActionKeyMapping, true);
 
 	InputSettings->SaveKeyMappings();
+}
+
+bool UUR_PlayerInput::ModifyKeyMapping(FName MappingName, const FInputChord InputChord)
+{
+	UInputSettings * InputSettings = GetDefault<UInputSettings>()->GetInputSettings();
+	//Get action mappings and axis mappings
+	TArray<FInputActionKeyMapping> ActionMappings;
+	TArray<FInputAxisKeyMapping> AxisMappings;
+	InputSettings->GetActionMappingByName(MappingName, ActionMappings);
+	InputSettings->GetAxisMappingByName(MappingName, AxisMappings);
+	//If an action and axis have the same name, print an error and return early
+	if (ActionMappings.IsValidIndex(0) && AxisMappings.IsValidIndex(0))
+	{
+		UE_LOG(LogTemp, Error, TEXT("An axis and an action cannot have the same name!"));
+		return false;
+	}
+	//If there isn't an axis or action with the specified name, print an error and return early
+	if (!ActionMappings.IsValidIndex(0) && !AxisMappings.IsValidIndex(0))
+	{
+		UE_LOG(LogTemp, Error, TEXT("There isn't an axis or an action defined with that name!"));
+		return false;
+	}
+	//If ActionMappings has at least 1 element, change the key mapping for an action
+	if (ActionMappings.IsValidIndex(0))
+	{
+		InputSettings->RemoveActionMapping(ActionMappings[0], false);
+		ActionMappings[0].Key = InputChord.Key;
+		InputSettings->AddActionMapping(ActionMappings[0], true);
+	}
+	//Do the same, but for axis mappings
+	if (AxisMappings.IsValidIndex(0))
+	{
+		InputSettings->RemoveAxisMapping(AxisMappings[0], false);
+		AxisMappings[0].Key = InputChord.Key;
+		InputSettings->AddAxisMapping(AxisMappings[0], true);
+	}
+
+	InputSettings->SaveKeyMappings();
+	return true;
 }
 
 void UUR_PlayerInput::SaveMappings()
