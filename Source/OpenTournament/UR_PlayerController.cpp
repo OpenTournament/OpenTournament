@@ -68,7 +68,7 @@ void AUR_PlayerController::SetMusicVolume(float MusicVolume)
 
 UUR_PlayerInput* AUR_PlayerController::GetPlayerInput()
 {
-	return static_cast<UUR_PlayerInput*>(PlayerInput);
+	return Cast<UUR_PlayerInput>(PlayerInput);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
