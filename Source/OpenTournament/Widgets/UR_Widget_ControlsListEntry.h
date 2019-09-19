@@ -8,6 +8,7 @@
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Components/TextBlock.h"
 #include "Components/InputKeySelector.h"
+#include "Runtime/Core/Public/Misc/Paths.h"
 #include "Data/UR_Object_KeyBind.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerInput.h"
@@ -42,7 +43,7 @@ public:
 	void SetListItemObjectInternal(UObject* InObject);
 
 private:
-	UPROPERTY(BlueprintReadOnly)
+
 	bool IsSelectingKey;
 
 	void UpdateEntry();

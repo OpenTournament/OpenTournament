@@ -22,14 +22,26 @@ public:
 	UUR_Widget_KeyBindingMenu(const FObjectInitializer& ObjectInitializer);
 
 	UPROPERTY(meta = (BindWidget))
-		UButton * MyButton;
+		UButton * CloseButton;
 
 	UPROPERTY(meta = (BindWidget))
 		UListView * ControlsList;
 
 	UFUNCTION()
-		void OnMyButtonClicked();
+		void OnCloseButtonClicked();
 
 	UFUNCTION(BlueprintCallable, Category="UnrealRemake|UI")
 		void OpenMenu();
+
+	void NativeOnInitialized();
+
+private:
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FName> AxisNames;
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FName> ActionNames;
+
+	APlayerController * OwningPlayer;
+
+	void PopulateKeyBindingList();
 };
