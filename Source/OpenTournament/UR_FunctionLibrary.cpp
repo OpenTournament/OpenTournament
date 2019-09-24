@@ -44,3 +44,31 @@ int32 UUR_FunctionLibrary::GetPlayerStateValue(APlayerController* PlayerControll
     }
     return outValue;
 }
+
+FColor UUR_FunctionLibrary::GetPlayerDisplayTextColor(APlayerState* PS)
+{
+	if (!PS)
+	{
+		return FColorList::Green;
+	}
+	else if (PS->bOnlySpectator)
+	{
+		return GetSpectatorDisplayTextColor();
+	}
+	else
+	{
+		AUR_PlayerState* URPS = Cast<AUR_PlayerState>(PS);
+		if (URPS)
+		{
+			//TODO: if team game, return team color, something like URPS->Team->GetDisplayTextColor();
+
+			//TODO: if non team game, return player's color ? if any ? or white ?
+
+			return FColorList::Red;
+		}
+		else
+		{
+			return FColorList::Green;	//???
+		}
+	}
+}

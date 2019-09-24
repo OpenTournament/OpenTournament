@@ -21,6 +21,12 @@ enum class EChatChannel : uint8;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+* Event dispatcher for system messages.
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FReceiveSystemMessageSignature, const FString&, Message);
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * 
@@ -40,6 +46,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     virtual void BeginPlay() override;
+	virtual void SetPlayer(UPlayer* InPlayer) override;
     virtual void InitInputSystem() override;
     virtual void SetupInputComponent() override;
     virtual void ProcessPlayerInput(const float DeltaTime, const bool bGamePaused) override;
@@ -171,10 +178,21 @@ public:
 	virtual void TeamSay(const FString& Message);
 
 	/**
-	* Receive messages to forward them to ChatHistory in LocalPlayer.
+	* Override ClientMessage to use our systems.
 	*/
-	UFUNCTION()
-	virtual void OnReceiveChatMessage(const FString& SenderName, const FString& Message, EChatChannel Channel, APlayerState* SenderPS);
+	virtual void ClientMessage_Implementation(const FString& S, FName Type = NAME_None, float MsgLifeTime = 0.f) override;
+
+	/**
+	* Event dispatcher for receiving a system message.
+	*/
+	UPROPERTY(BlueprintAssignable)
+	FReceiveSystemMessageSignature OnReceiveSystemMessage;
+
+	/**
+	* Test method.
+	*/
+	UFUNCTION(Exec)
+	virtual void TestMsg(const FString& Text) { ClientMessage(Text); }
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 };
