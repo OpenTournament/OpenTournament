@@ -29,10 +29,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UnrealRemake|UR_PlayerInput")
 		void ModifyActionKeyMapping(FName ActionName, const FInputActionKeyMapping ModActionKeyMapping);
 
-	//Modify a key mapping for an action or axis
-	//returns true if the key mapping could be modified succesfully, otherwise returns false
+   /*Modify a key mapping for an action or axis
+	returns true if the key mapping was modified succesfully, otherwise returns false
+	*/
 	bool ModifyKeyMapping(FName MappingName, const FInputChord InputChord);
+
+	void PostInitProperties();
 
 	UFUNCTION(BlueprintCallable, Category = "UnrealRemake|UR_PlayerInput")
 	void SaveMappings();
+
+private:
+	UInputSettings * InputSettings;
+
+	void RemapAction(FInputActionKeyMapping ActionKeyMapping, const FKey Key);
+	void RemapAxis(FInputAxisKeyMapping AxisKeyMapping, const FKey Key);
 };
