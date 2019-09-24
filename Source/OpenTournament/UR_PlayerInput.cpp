@@ -34,7 +34,6 @@ void UUR_PlayerInput::SetActionKeyMappingKey(const FInputActionKeyMapping Action
 
 void UUR_PlayerInput::ModifyActionKeyMapping(FName ActionName, const FInputActionKeyMapping ModActionKeyMapping)
 {
-	UInputSettings * InputSettings = GetDefault<UInputSettings>()->GetInputSettings();
 	TArray<FInputActionKeyMapping> ActionMappings;
 	InputSettings->GetActionMappingByName(ActionName, ActionMappings);
 
@@ -46,7 +45,6 @@ void UUR_PlayerInput::ModifyActionKeyMapping(FName ActionName, const FInputActio
 
 bool UUR_PlayerInput::ModifyKeyMapping(FName MappingName, const FInputChord InputChord)
 {
-	UInputSettings * InputSettings = GetDefault<UInputSettings>()->GetInputSettings();
 	//Get action mappings and axis mappings
 	TArray<FInputActionKeyMapping> ActionMappings;
 	TArray<FInputAxisKeyMapping> AxisMappings;
@@ -67,20 +65,22 @@ bool UUR_PlayerInput::ModifyKeyMapping(FName MappingName, const FInputChord Inpu
 	//If ActionMappings has at least 1 element, change the key mapping for an action
 	if (ActionMappings.IsValidIndex(0))
 	{
-		InputSettings->RemoveActionMapping(ActionMappings[0], false);
-		ActionMappings[0].Key = InputChord.Key;
-		InputSettings->AddActionMapping(ActionMappings[0], true);
+		RemapAction(ActionMappings[0], InputChord.Key);
 	}
 	//Do the same, but for axis mappings
 	if (AxisMappings.IsValidIndex(0))
 	{
-		InputSettings->RemoveAxisMapping(AxisMappings[0], false);
-		AxisMappings[0].Key = InputChord.Key;
-		InputSettings->AddAxisMapping(AxisMappings[0], true);
+		RemapAxis(AxisMappings[0], InputChord.Key);
 	}
 
 	InputSettings->SaveKeyMappings();
 	return true;
+}
+
+void UUR_PlayerInput::PostInitProperties()
+{
+	Super::PostInitProperties();
+	InputSettings = GetDefault<UInputSettings>()->GetInputSettings();
 }
 
 void UUR_PlayerInput::SaveMappings()
@@ -91,4 +91,31 @@ void UUR_PlayerInput::SaveMappings()
 
 	PlayerActionMappings = ActionMappings;
 	SaveConfig();
+}
+
+/*
+Remap the given action to the given key
+*/
+void UUR_PlayerInput::RemapAction(FInputActionKeyMapping ActionKeyMapping, const FKey Key)
+{
+	InputSettings->RemoveActionMapping(ActionKeyMapping, false);
+	ActionKeyMapping.Key = Key;
+	InputSettings->AddActionMapping(ActionKeyMapping, true);
+}
+
+/*
+Remap the given axis to the given key
+This will also map a corresponding Tap action to the given axis (ex: MoveForward and TapForward)
+*/
+void UUR_PlayerInput::RemapAxis(FInputAxisKeyMapping AxisKeyMapping, const FKey Key)
+{
+	FString AxisString = AxisKeyMapping.AxisName.ToString();
+	FString TapActionString = AxisString.Replace(TEXT("Move"), TEXT("Tap"));
+	FInputActionKeyMapping TapActionMapping = FInputActionKeyMapping(FName(*TapActionString), AxisKeyMapping.Key);
+	InputSettings->RemoveAxisMapping(AxisKeyMapping, false);
+	InputSettings->RemoveActionMapping(TapActionMapping, false);
+	AxisKeyMapping.Key = Key;
+	TapActionMapping.Key = Key;
+	InputSettings->AddAxisMapping(AxisKeyMapping, false);
+	InputSettings->AddActionMapping(TapActionMapping, true);
 }
