@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "UR_WidgetChatHistory.generated.h"
+#include "UR_WidgetMessageHistory.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class OPENTOURNAMENT_API UUR_WidgetChatHistory : public UUserWidget
+class OPENTOURNAMENT_API UUR_WidgetMessageHistory : public UUserWidget
 {
 	GENERATED_BODY()
 	

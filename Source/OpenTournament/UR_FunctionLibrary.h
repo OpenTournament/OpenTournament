@@ -48,4 +48,24 @@ public:
         }
         return enumPtr->GetNameByValue(static_cast<int64>(Value)).ToString();
     }
+
+
+	/**
+	* Resolve the text color a player should be written with.
+	* Used for chat, death messages... [insert more]
+	* Use to keep consistency around interfaces.
+	* Especially considering that later on, players might have :
+	* - customizeable team colors
+	* - customizeable self color in non team games
+	*/
+	UFUNCTION(BlueprintPure)
+	static FColor GetPlayerDisplayTextColor(APlayerState* PS);
+
+
+	/**
+	* Text color for spectators.
+	* Use to keep consistency around interfaces.
+	*/
+	UFUNCTION(BlueprintPure)
+	static FColor GetSpectatorDisplayTextColor() { return FColorList::Gold; }
 };
