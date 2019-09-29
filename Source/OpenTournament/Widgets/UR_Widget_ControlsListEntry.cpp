@@ -56,6 +56,7 @@ void UUR_Widget_ControlsListEntry::SetListItemObjectInternal(UObject * InObject)
 void UUR_Widget_ControlsListEntry::UpdateEntry()
 {
 	UUR_Object_KeyBind* KeyBind = Cast<UUR_Object_KeyBind>(Item);
-	EntryName->SetText(FText::FromName((KeyBind->ActionName)));
+	//EntryName->SetText(FText::FromName((KeyBind->ActionName)));
+	EntryName->SetText(FText::FromStringTable("/Game/OpenTournament/StringTables/ST_KeyBindingNames.ST_KeyBindingNames", KeyBind->ActionName.ToString()));
 	EntryKeySelector->SetSelectedKey(FInputChord(KeyBind->Key));
 }
