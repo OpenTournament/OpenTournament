@@ -16,6 +16,9 @@ class UAudioComponent;
 class AUR_Character;
 class UUR_PCInputDodgeComponent;
 
+class UUR_ChatComponent;
+enum class EChatChannel : uint8;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -149,4 +152,29 @@ public:
     virtual void UnCrouch();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+	UPROPERTY(BlueprintReadOnly)
+	UUR_ChatComponent* ChatComponent;
+
+	/**
+	* Command to send chat message to match channel.
+	*/
+	UFUNCTION(Exec)
+	virtual void Say(const FString& Message);
+
+	/**
+	* Command to send chat message to team channel.
+	* In non-team gamemodes, should fallback to match channel.
+	* In spectator, should use spectator channel.
+	*/
+	UFUNCTION(Exec)
+	virtual void TeamSay(const FString& Message);
+
+	/**
+	* Receive messages to forward them to ChatHistory in LocalPlayer.
+	*/
+	UFUNCTION()
+	virtual void OnReceiveChatMessage(const FString& SenderName, const FString& Message, EChatChannel Channel, APlayerState* SenderPS);
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
 };
