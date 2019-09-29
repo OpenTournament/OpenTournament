@@ -6,6 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "Widgets/UR_Widget_BaseMenu.h"
 
 #include "UR_GameModeBase.generated.h"
 
@@ -23,4 +24,14 @@ class OPENTOURNAMENT_API AUR_GameModeBase : public AGameMode
 public:
 
     AUR_GameModeBase();
+
+	UFUNCTION(Exec)
+	void OpenControlsMenu();
+
+protected:
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUR_Widget_BaseMenu> KeyBindingMenu;
+
+	UUR_Widget_BaseMenu * ControlsMenu;
 };

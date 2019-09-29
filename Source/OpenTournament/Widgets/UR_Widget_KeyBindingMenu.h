@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "Widgets/UR_Widget_BaseMenu.h"
 #include "Components/Button.h"
 #include "Components/ListView.h"
 #include "UR_PlayerController.h"
@@ -14,7 +14,7 @@
  * 
  */
 UCLASS()
-class OPENTOURNAMENT_API UUR_Widget_KeyBindingMenu : public UUserWidget
+class OPENTOURNAMENT_API UUR_Widget_KeyBindingMenu : public UUR_Widget_BaseMenu
 {
 	GENERATED_BODY()
 	
