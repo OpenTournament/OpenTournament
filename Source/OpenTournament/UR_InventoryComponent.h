@@ -34,22 +34,30 @@ public:
 
     UUR_InventoryComponent();
 
+	UPROPERTY(EditAnywhere, Category = "InventoryComponent")
 	TArray<AUR_Weapon*> InventoryW;
+
+	UPROPERTY(EditAnywhere, Category = "InventoryComponent")
 	TArray<AUR_Ammo*> InventoryA;
+
+	UPROPERTY(EditAnywhere, Category = "InventoryComponent")
 	AUR_Weapon * ActiveWeapon;
 
 	void Add(AUR_Weapon* weapon);
+
 	void Add(AUR_Ammo* ammo);
 
 	void AmmoCountInInventory(AUR_Weapon* weapon);
 
 	void UpdateWeaponAmmo(AUR_Ammo* ammo);
 
-
+	UFUNCTION()
 	void ShowInventory();
 
+	UFUNCTION()
 	int32 SelectWeapon(int number);
 
+	UFUNCTION()
 	AUR_Weapon * SelectWeaponG(int number);
 
     

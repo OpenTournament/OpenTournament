@@ -23,12 +23,18 @@ public:
 	// Sets default values for this actor's properties
 	AUR_Armor(const FObjectInitializer& ObjectInitializer);
 
+	UPROPERTY(EditAnywhere)
 	UShapeComponent* Tbox;
+
+	UPROPERTY(EditAnywhere)
 	UAudioComponent* Sound;
 
+	UPROPERTY(EditAnywhere)
 	AUR_Character* PlayerController;
 
 	int32 armorVal = 0;
+
+	UPROPERTY(EditAnywhere)
 	bool armorBarrier = false;
 
 	bool bItemIsWithinRange = false;
@@ -39,6 +45,7 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		UStaticMeshComponent* SM_TBox;
+
 	UFUNCTION()
 		void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 

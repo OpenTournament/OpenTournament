@@ -23,13 +23,17 @@ class OPENTOURNAMENT_API AUR_Ammo : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AUR_Ammo(const FObjectInitializer& ObjectInitializer);
-
+	
+	UPROPERTY(EditAnywhere)
 	UShapeComponent* Tbox;
+
+	UPROPERTY(EditAnywhere)
 	UAudioComponent* Sound;
 
 	UPROPERTY(EditAnywhere)
 	FString AmmoName = FString(TEXT(""));
 
+	UPROPERTY(EditAnywhere)
 	AUR_Character* PlayerController;
 
 	bool bItemIsWithinRange = false;
@@ -38,7 +42,8 @@ public:
 
 	void GetPlayer(AActor* Player);
 
-	int amount;
+	UPROPERTY(EditAnywhere)
+	int32 amount;
 
 
 	UPROPERTY(EditAnywhere)

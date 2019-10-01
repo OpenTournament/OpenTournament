@@ -28,33 +28,33 @@ public:
 	//virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	/**
-	* Health value.
+	* Armor value.
 	*/
 	UPROPERTY(Replicated, BlueprintReadOnly, EditDefaultsOnly, Category = "ArmorComponent")
-		int32 Armor;
+	int32 Armor;
 	UPROPERTY(Replicated, BlueprintReadOnly, EditDefaultsOnly, Category = "ArmorComponent")
-		bool hasBarrier;
+	bool hasBarrier;
 
 	/**
-	* ArmorMaximum value.
+	* Armor Maximum value.
 	*/
 	UPROPERTY(Replicated, BlueprintReadOnly, EditDefaultsOnly, Category = "ArmorComponent")
-		int32 ArmorMax;
+	int32 ArmorMax;
 
 	/**
-	* Set health to a numerical value
+	* Set armor to a numerical value
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ArmorComponent")
-		void SetArmor(const int32 InValue);
+	void SetArmor(const int32 InValue);
 
 	/**
-	* Change health by a value
+	* Change armor by a value
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ArmorComponent")
-		void ChangeArmor(const int32 InChangeValue);
+	void ChangeArmor(const int32 InChangeValue);
 
 	/**
-	* Change health by a value
+	* Change armor by a value
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ArmorComponent")
 		void SetBarrier(bool barrier);
