@@ -155,22 +155,6 @@ APlayerState* UUR_ChatComponent::GetPlayerState_Implementation()
 
 void UUR_ChatComponent::ClientReceive_Implementation(const FString& SenderName, const FString& Message, int32 TeamIndex, APlayerState* SenderPS)
 {
-	if (true)	// do we want to print to log ?
-	{
-		FString Prefix(TEXT(""));
-		if (TeamIndex >= 0)
-			Prefix = TEXT("[TEAM] ");
-		else if (TeamIndex == CHAT_INDEX_GLOBAL)
-			Prefix = TEXT("[CHAT] ");
-		else if (TeamIndex == CHAT_INDEX_SPEC)
-			Prefix = TEXT("[SPEC] ");
-
-		if (!SenderName.IsEmpty())
-			Prefix.Append(SenderName).Append(": ");
-
-		UE_LOG(LogTemp, Log, TEXT("%s%s"), *Prefix, *Message);
-	}
-
 	OnReceiveChatMessage.Broadcast(SenderName, Message, TeamIndex, SenderPS);
 }
 
@@ -198,4 +182,21 @@ FString UUR_ChatComponent::ProcessChatParameters_Implementation(const FString& O
 	}
 
 	return Result;
+}
+
+FColor UUR_ChatComponent::GetChatMessageColor(UObject* WorldContextObject, int32 TeamIndex)
+{
+	if (TeamIndex >= 0)
+	{
+		// TODO: team color
+		// possibly something like GameState->Teams[TeamIndex]->GetDisplayTextColor()
+
+		//AUR_GameState* GS = WorldContextObject->GetWorld()->GetGameState<AUR_GameState>();
+
+		return FColorList::Red;
+	}
+	else if (TeamIndex == CHAT_INDEX_SPEC)
+		return UUR_FunctionLibrary::GetSpectatorDisplayTextColor();
+	else
+		return FColor::White;
 }

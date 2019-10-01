@@ -12,6 +12,9 @@
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 
+#include "TextRange.h"
+#include "Regex.h"
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameModeBase* UUR_FunctionLibrary::GetGameModeDefaultObject(const UObject* WorldContextObject)
@@ -71,4 +74,39 @@ FColor UUR_FunctionLibrary::GetPlayerDisplayTextColor(APlayerState* PS)
 			return FColorList::Green;	//???
 		}
 	}
+}
+
+FString UUR_FunctionLibrary::StripRichTextDecorators(const FString& InText)
+{
+	FString Result(TEXT(""), InText.Len());
+
+	int32 CurrentPosition = 0;
+
+	// see RichTextMarkupProcessing.cpp
+
+	TArray<FTextRange> LineRanges;
+	FTextRange::CalculateLineRangesFromString(InText, LineRanges);
+
+	FRegexPattern ElementRegexPattern(TEXT("<([\\w\\d\\.-]+)((?: (?:[\\w\\d\\.-]+=(?>\".*?\")))+)?(?:(?:/>)|(?:>(.*?)</>))"));
+	FRegexMatcher ElementRegexMatcher(ElementRegexPattern, InText);
+
+	for (int32 i = 0; i < LineRanges.Num(); i++)
+	{
+		// Limit the element regex matcher to the current line
+		ElementRegexMatcher.SetLimits(LineRanges[i].BeginIndex, LineRanges[i].EndIndex);
+
+		while (ElementRegexMatcher.FindNext())
+		{
+			// append all from current position up to opening marker
+			Result.Append(InText.Mid(CurrentPosition, ElementRegexMatcher.GetMatchBeginning() - CurrentPosition));
+			// append inner content
+			Result.Append(ElementRegexMatcher.GetCaptureGroup(3));
+			// set current position to after closing marker
+			CurrentPosition = ElementRegexMatcher.GetMatchEnding();
+		}
+	}
+
+	Result.Append(InText.Mid(CurrentPosition));
+
+	return Result;
 }
