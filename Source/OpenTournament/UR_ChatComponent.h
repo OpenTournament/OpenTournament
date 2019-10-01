@@ -200,4 +200,11 @@ public:
 	*/
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category = "Chat")
 	FString ProcessChatParameters(const FString& Original);
+
+	/**
+	* Micro helper to translate TeamIndex to message display color.
+	* This is to avoid code duplication between c++ history and blueprint chatbox.
+	*/
+	UFUNCTION(BlueprintPure, Category = "Chat", Meta = (WorldContext = "WorldContextObject"))
+	static FColor GetChatMessageColor(UObject* WorldContextObject, int32 TeamIndex);
 };
