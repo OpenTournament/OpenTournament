@@ -28,17 +28,6 @@ void UUR_MessageHistory::Append(const FMessageHistoryEntry& Entry)
 
 	History.Emplace(Entry);
 
-	// Log a plain text version
-	FString PlainText = UUR_FunctionLibrary::UnescapeRichText(UUR_FunctionLibrary::StripRichTextDecorators(Entry.FormattedText));
-	if (Entry.Type.ToString().EndsWith(TEXT("Chat")) || Entry.Type == MessageType::BotTaunt)
-	{
-		UE_LOG(LogChat, Log, TEXT("%s"), *PlainText);
-	}
-	else
-	{
-		UE_LOG(LogMessages, Log, TEXT("%s"), *PlainText);
-	}
-
 	OnNewMessageHistoryEntry.Broadcast(Entry);
 }
 
@@ -55,20 +44,16 @@ void UUR_MessageHistory::OnReceiveChatMessage(const FString& SenderName, const F
 	else
 		Entry.Type = MessageType::GlobalChat;
 
-	FString FormattedAuthor(TEXT(""));
-	FString FormattedMessage(Message);
-
-	if (SenderName.Len() > 0)
-	{
-		FormattedAuthor = UUR_RichTextDecorator_CustomStyle::DecorateRichText(SenderName, true, UUR_FunctionLibrary::GetPlayerDisplayTextColor(SenderPS));
-		FormattedMessage.InsertAt(0, TEXT(" : "));
-	}
-
-	FormattedMessage = UUR_RichTextDecorator_CustomStyle::DecorateRichText(FormattedMessage, true, UUR_ChatComponent::GetChatMessageColor(this, TeamIndex));
-
-	Entry.FormattedText = FString::Printf(TEXT("%s%s"), *FormattedAuthor, *FormattedMessage);
+	Entry.Parts = { SenderName, Message };
+	Entry.Colors = {
+		UUR_FunctionLibrary::GetPlayerDisplayTextColor(SenderPS),
+		UUR_ChatComponent::GetChatMessageColor(this, TeamIndex),
+	};
 
 	Append(Entry);
+
+	// log something for good measure
+	UE_LOG(LogChat, Log, TEXT("%s%s : %s"), (TeamIndex >= 0) ? TEXT("[Team] ") : ((TeamIndex == CHAT_INDEX_SPEC) ? TEXT("[Spec] ") : TEXT("")), *SenderName, *Message);
 }
 
 
@@ -77,8 +62,11 @@ void UUR_MessageHistory::OnReceiveSystemMessage(const FString& Message)
 	FMessageHistoryEntry Entry;
 	Entry.Time = FDateTime::Now();
 	Entry.Type = MessageType::System;
-	Entry.FormattedText = Message;
+	Entry.Parts = { Message };
+	Entry.Colors = {};
 	Append(Entry);
+
+	UE_LOG(LogMessages, Log, TEXT("[Sys] %s"), *Message);
 }
 
 
@@ -91,33 +79,36 @@ void UUR_MessageHistory::OnReceiveDeathMessage(APlayerState* Killer, APlayerStat
 	Entry.Time = FDateTime::Now();
 	Entry.Type = MessageType::Death;
 
-	// will probably need something along the lines of,
-	// DmgType->GetKillString().Replace(TEXT("%1"), Killer).Replace(TEXT("%2"), Victim)
+	Entry.Parts = { TEXT("%1 killed %2"), TEXT("Somebody"), TEXT("Somebody") };
+	Entry.Colors = { FColor::White, FColor::White };
 
 	if (!Killer || Killer == Victim)
 	{
-		Entry.FormattedText = FString::Printf(TEXT("%s suicided with %s"),
-			*FormattedPlayerName(Killer),
-			DmgType ? *DmgType->GetName() : TEXT("???")
-		);
+		// Suicide
+		// DmgType->GetSuicideString()
+		Entry.Parts[0] = FString::Printf(TEXT("%2 suicided with %s"), DmgType ? *DmgType->GetName() : TEXT("???"));
 	}
 	else
 	{
-		Entry.FormattedText = FString::Printf(TEXT("%s killed %s with %s"),
-			*FormattedPlayerName(Killer),
-			*FormattedPlayerName(Victim),
-			DmgType ? *DmgType->GetName() : TEXT("???")
-		);
+		// Kill
+		// DmgType->GetKillString()
+		Entry.Parts[0] = FString::Printf(TEXT("%1 killed %2 with %s"), DmgType ? *DmgType->GetName() : TEXT("???"));
+	}
+
+	if (Killer)
+	{
+		Entry.Parts[1] = Killer->GetPlayerName();
+		Entry.Colors[0] = UUR_FunctionLibrary::GetPlayerDisplayTextColor(Killer);
+	}
+
+	if (Victim)
+	{
+		Entry.Parts[2] = Victim->GetPlayerName();
+		Entry.Colors[1] = UUR_FunctionLibrary::GetPlayerDisplayTextColor(Victim);
 	}
 
 	Append(Entry);
-}
 
-
-FString UUR_MessageHistory::FormattedPlayerName(APlayerState* PS)
-{
-	if (PS)
-		return UUR_RichTextDecorator_CustomStyle::DecorateRichText(PS->GetPlayerName(), true, UUR_FunctionLibrary::GetPlayerDisplayTextColor(PS));
-
-	return TEXT("Somebody");
+	// LogDeath?
+	UE_LOG(LogMessages, Log, TEXT("%s"), *Entry.Parts[0].Replace(TEXT("%1"), *Entry.Parts[1]).Replace(TEXT("%2"), *Entry.Parts[2]));
 }

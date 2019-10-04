@@ -15,6 +15,10 @@
 #include "TextRange.h"
 #include "Regex.h"
 
+#include "GameFramework/InputSettings.h"
+
+#include "Engine.h"
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameModeBase* UUR_FunctionLibrary::GetGameModeDefaultObject(const UObject* WorldContextObject)
@@ -109,4 +113,39 @@ FString UUR_FunctionLibrary::StripRichTextDecorators(const FString& InText)
 	Result.Append(InText.Mid(CurrentPosition));
 
 	return Result;
+}
+
+
+bool UUR_FunctionLibrary::IsKeyMappedToAction(const FKey& Key, FName ActionName)
+{
+	UInputSettings* Settings = UInputSettings::GetInputSettings();
+	TArray<FInputActionKeyMapping> Mappings;
+	Settings->GetActionMappingByName(ActionName, Mappings);
+	for (const auto& Mapping : Mappings)
+	{
+		if (Mapping.Key == Key)
+			return true;
+	}
+	return false;
+}
+
+bool UUR_FunctionLibrary::IsKeyMappedToAxis(const FKey& Key, FName AxisName, float Direction)
+{
+	UInputSettings* Settings = UInputSettings::GetInputSettings();
+	TArray<FInputAxisKeyMapping> Mappings;
+	Settings->GetAxisMappingByName(AxisName, Mappings);
+	for (const auto& Mapping : Mappings)
+	{
+		if (Mapping.Key == Key && (FMath::IsNearlyZero(Direction) || (Direction*Mapping.Scale > 0)))
+			return true;
+	}
+	return false;
+}
+
+AUR_PlayerController* UUR_FunctionLibrary::GetLocalPlayerController(const UObject* WorldContextObject)
+{
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
+		return World->GetFirstPlayerController<AUR_PlayerController>();
+
+	return nullptr;
 }

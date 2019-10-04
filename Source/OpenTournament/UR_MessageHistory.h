@@ -10,20 +10,35 @@
 namespace MessageType
 {
 	// Chat
-	const FName GlobalChat = FName(TEXT("MSG_GlobalChat"));
-	const FName TeamChat = FName(TEXT("MSG_TeamChat"));
-	const FName SpecChat = FName(TEXT("MSG_SpecChat"));
+	static const FName GlobalChat = FName(TEXT("MSG_GlobalChat"));
+	static const FName TeamChat = FName(TEXT("MSG_TeamChat"));
+	static const FName SpecChat = FName(TEXT("MSG_SpecChat"));
 
 	// System messages
-	const FName System = FName(TEXT("MSG_System"));
+	static const FName System = FName(TEXT("MSG_System"));
 
 	// Some other examples - not implemented yet
-	const FName Death = FName(TEXT("MSG_Death"));
-	const FName Pickup = FName(TEXT("MSG_Pickup"));
-	const FName Objectives = FName(TEXT("MSG_Objective"));
-	const FName BotChat = FName(TEXT("MSG_BotChat"));
-	const FName BotTaunt = FName(TEXT("MSG_BotTaunt"));
+	static const FName Death = FName(TEXT("MSG_Death"));
+	static const FName Pickup = FName(TEXT("MSG_Pickup"));
+	static const FName Objectives = FName(TEXT("MSG_Objective"));
+	static const FName BotChat = FName(TEXT("MSG_BotChat"));
+	static const FName BotTaunt = FName(TEXT("MSG_BotTaunt"));
 };
+
+USTRUCT(BlueprintType)
+struct FMessageHistoryFilters
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bGlobal;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bTeam;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bSpec;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bSystem;
+};
+
 
 DECLARE_LOG_CATEGORY_EXTERN(LogChat, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogMessages, Log, All);
@@ -81,12 +96,24 @@ struct FMessageHistoryEntry
 	FName Type;
 
 	/**
-	* Formatted line of text with rich-text markers, ready to be displayed in RichTextBlock.
-	* - RichTextBlock requires the RichTextDecorator_CustomStyle decorator class.
-	* - You can use the StripDecorators utility to use as plain text.
+	* Instead of one fully formatted rich string done in c++,
+	* we simply prepare string parts and let BP/UMG reconstruct the final line.
+	*
+	* This gives the designer (UMG) more liberty to format/design the line,
+	* in whatever way he sees fit.
+	*
+	* And it does so without holding object references or being restricted
+	* to a fixed set of variables, like we had in first iteration.
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FString FormattedText;
+	TArray<FString> Parts;
+
+	/**
+	* Similarly we put colors of interest (eg: players colors...) here in an array,
+	* so they can be used for formatting (or not, designer decision).
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FColor> Colors;
 };
 
 
@@ -99,7 +126,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNewMessageHistoryEntrySignature, co
 /**
  * 
  */
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, Config = UI)
 class OPENTOURNAMENT_API UUR_MessageHistory : public UObject
 {
 	GENERATED_BODY()
@@ -119,6 +146,12 @@ public:
 	*/
 	UPROPERTY(BlueprintAssignable)
 	FNewMessageHistoryEntrySignature OnNewMessageHistoryEntry;
+
+	/**
+	* Saved filters.
+	*/
+	UPROPERTY(Config, BlueprintReadWrite)
+	FMessageHistoryFilters SavedFilters;
 
 	/**
 	* Add an entry to the history, and trigger dispatcher.
@@ -146,7 +179,8 @@ public:
 	virtual void OnReceiveDeathMessage(APlayerState* Killer, APlayerState* Victim, TSubclassOf<UDamageType> DmgType);
 
 	/**
-	* Utility.
+	* Expose SaveConfig to blueprints so widget can manipulate filters.
 	*/
-	virtual FString FormattedPlayerName(APlayerState* PS);
+	UFUNCTION(BlueprintCallable, Meta = (DisplayName = "Save Config"))
+	virtual void K2_SaveConfig() { SaveConfig(); }
 };

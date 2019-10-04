@@ -187,7 +187,7 @@ public:
 	* SenderName is the server-resolved name of message author.
 	* SenderPS is the player state of author if there is one. Might be null for non-player senders.
 	*/
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(Client, Reliable, BlueprintCallable, Category = "Chat")
 	virtual void ClientReceive(const FString& SenderName, const FString& Message, int32 TeamIndex, APlayerState* SenderPS);
 
 	/**
