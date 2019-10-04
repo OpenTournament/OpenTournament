@@ -67,7 +67,7 @@ public:
 	* Use to keep consistency around interfaces.
 	*/
 	UFUNCTION(BlueprintPure)
-	static FColor GetSpectatorDisplayTextColor() { return FColorList::Gold; }
+	static FColor GetSpectatorDisplayTextColor() { return FColor(255, 200, 0, 255); }
 
 
 	/**
@@ -112,4 +112,34 @@ public:
 	*/
 	UFUNCTION(BlueprintPure)
 	static FString StripRichTextDecorators(const FString& InText);
+
+
+	/**
+	* Returns true if given key is mapped to given action.
+	* Does not consider modifiers.
+	*
+	* This is a helper for doing special UMG navigation via OnKeyDown,
+	* using realtime binds and not hardcoded.
+	*/
+	UFUNCTION(BlueprintPure)
+	static bool IsKeyMappedToAction(const FKey& Key, FName ActionName);
+
+	/**
+	* Returns true if given key is mapped to given axis.
+	* Use direction 0 for any.
+	*
+	* This is a helper for doing special UMG navigation via OnKeyDown,
+	* using realtime binds and not hardcoded.
+	*/
+	UFUNCTION(BlueprintPure)
+	static bool IsKeyMappedToAxis(const FKey& Key, FName AxisName, float Direction=1.f);
+
+	/**
+	* Get local player controller as UR_PlayerController.
+	*
+	* Flagged as cosmetic-only to put emphasis on client-side usage.
+	* Should be avoided on dedicated server code as the result would be random.
+	*/
+	UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game", Meta = (WorldContext = "WorldContextObject", UnsafeDuringActorConstruction = "true"))
+	static class AUR_PlayerController* GetLocalPlayerController(const UObject* WorldContextObject);
 };

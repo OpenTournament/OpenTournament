@@ -275,8 +275,6 @@ void AUR_PlayerController::TeamSay(const FString& Message)
 
 void AUR_PlayerController::ClientMessage_Implementation(const FString& S, FName Type, float MsgLifeTime)
 {
-	UE_LOG(LogTemp, Log, TEXT("[SYS] %s"), *S);
-
 	if (OnReceiveSystemMessage.IsBound())
 		OnReceiveSystemMessage.Broadcast(S);
 	else

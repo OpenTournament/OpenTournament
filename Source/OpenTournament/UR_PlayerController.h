@@ -189,10 +189,10 @@ public:
 	FReceiveSystemMessageSignature OnReceiveSystemMessage;
 
 	/**
-	* Test method.
+	* Blueprint hook for ClientMessage.
 	*/
-	UFUNCTION(Exec)
-	virtual void TestMsg(const FString& Text) { ClientMessage(Text); }
+	UFUNCTION(BlueprintCallable, Exec, Meta = (DisplayName = "Client Message"))
+	void K2_ClientMessage(const FString& Message) { ClientMessage(Message); }
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 };
