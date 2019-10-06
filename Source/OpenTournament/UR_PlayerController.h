@@ -14,8 +14,10 @@
 // Forward Declarations
 
 class UAudioComponent;
+
 class AUR_Character;
 class UUR_PCInputDodgeComponent;
+class UUR_Widget_BaseMenu;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -60,8 +62,8 @@ public:
     UFUNCTION(BlueprintCallable, Category = "UnrealRemake|PlayerController|Music")
     void SetMusicVolume(float MusicVolume);
 
-	UFUNCTION(BlueprintCallable, Category = "UnrealRemake|PlayerController|Input")
-	UUR_PlayerInput* GetPlayerInput();
+    UFUNCTION(BlueprintCallable, Category = "UnrealRemake|PlayerController|Input")
+    UUR_PlayerInput* GetPlayerInput();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -153,4 +155,18 @@ public:
     virtual void UnCrouch();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * Function to Open the Control Keybinding Menu
+    */
+    UFUNCTION(Exec)
+    virtual void OpenControlBindingMenu();
+
+    /**
+    * Temp:
+    */
+    UPROPERTY(EditDefaultsOnly)
+    TSubclassOf<UUR_Widget_BaseMenu> KeyBindingMenu;
+
+    UUR_Widget_BaseMenu* ControlsMenu;
 };

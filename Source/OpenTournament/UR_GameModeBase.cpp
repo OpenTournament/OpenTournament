@@ -7,12 +7,3 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameModeBase::AUR_GameModeBase(){}
-
-void AUR_GameModeBase::OpenControlsMenu()
-{
-	if (ControlsMenu == nullptr)
-	{
-		ControlsMenu = CreateWidget<UUR_Widget_BaseMenu>(GetWorld(), KeyBindingMenu);
-	}
-	ControlsMenu->OpenMenu();
-}
