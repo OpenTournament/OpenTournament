@@ -23,10 +23,10 @@ public:
 
 	void SetupActionMappings();
 
-	UFUNCTION(BlueprintCallable, Category="UnrealRemake|UR_PlayerInput")
+	UFUNCTION(BlueprintCallable, Category="UR_PlayerInput")
 	void SetActionKeyMappingKey(const FInputActionKeyMapping ActionKeyMapping, FKey Key);
 
-	UFUNCTION(BlueprintCallable, Category = "UnrealRemake|UR_PlayerInput")
+	UFUNCTION(BlueprintCallable, Category = "UR_PlayerInput")
 		void ModifyActionKeyMapping(FName ActionName, const FInputActionKeyMapping ModActionKeyMapping);
 
    /*Modify a key mapping for an action or axis
@@ -36,7 +36,7 @@ public:
 
 	void PostInitProperties();
 
-	UFUNCTION(BlueprintCallable, Category = "UnrealRemake|UR_PlayerInput")
+	UFUNCTION(BlueprintCallable, Category = "UR_PlayerInput")
 	void SaveMappings();
 
 private:

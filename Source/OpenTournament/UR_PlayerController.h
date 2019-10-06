@@ -53,16 +53,16 @@ public:
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Audio")
     UAudioComponent* MusicComponent;
 
-    UFUNCTION(BlueprintCallable, Category = "UnrealRemake|PlayerController|Music")
+    UFUNCTION(BlueprintCallable, Category = "PlayerController|Music")
     void PlayMusic(USoundBase* Music, float FadeInDuration);
 
-    UFUNCTION(BlueprintCallable, Category = "UnrealRemake|PlayerController|Music")
+    UFUNCTION(BlueprintCallable, Category = "PlayerController|Music")
     void StopMusic(float FadeOutDuration);
 
-    UFUNCTION(BlueprintCallable, Category = "UnrealRemake|PlayerController|Music")
+    UFUNCTION(BlueprintCallable, Category = "PlayerController|Music")
     void SetMusicVolume(float MusicVolume);
 
-    UFUNCTION(BlueprintCallable, Category = "UnrealRemake|PlayerController|Input")
+    UFUNCTION(BlueprintCallable, Category = "PlayerController|Input")
     UUR_PlayerInput* GetPlayerInput();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
