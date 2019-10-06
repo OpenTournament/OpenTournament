@@ -17,6 +17,7 @@
 #include "Components/AudioComponent.h"
 #include "UR_Character.h"
 #include "UR_PCInputDodgeComponent.h"
+#include "Widgets/UR_Widget_BaseMenu.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -68,7 +69,7 @@ void AUR_PlayerController::SetMusicVolume(float MusicVolume)
 
 UUR_PlayerInput* AUR_PlayerController::GetPlayerInput()
 {
-	return Cast<UUR_PlayerInput>(PlayerInput);
+    return Cast<UUR_PlayerInput>(PlayerInput);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -231,5 +232,21 @@ void AUR_PlayerController::UnCrouch()
     if (URCharacter)
     {
         URCharacter->UnCrouch(false);
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_PlayerController::OpenControlBindingMenu()
+{
+    if (KeyBindingMenu == nullptr)
+    {
+        return;
+    }
+
+    ControlsMenu = CreateWidget<UUR_Widget_BaseMenu>(GetWorld(), KeyBindingMenu);
+    if (ControlsMenu)
+    {
+        ControlsMenu->OpenMenu();
     }
 }

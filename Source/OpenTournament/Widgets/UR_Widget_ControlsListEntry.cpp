@@ -1,12 +1,16 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Open Tournament Project, All Rights Reserved.
 
 #include "UR_Widget_ControlsListEntry.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_Widget_ControlsListEntry::UUR_Widget_ControlsListEntry(const FObjectInitializer& ObjectInitializer) :
 	Super(ObjectInitializer)
 {
 	IsSelectingKey = false;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_Widget_ControlsListEntry::NativeConstruct()
 {

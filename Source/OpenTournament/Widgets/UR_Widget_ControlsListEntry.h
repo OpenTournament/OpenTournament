@@ -1,7 +1,6 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Open Tournament Project, All Rights Reserved.
 
 #pragma once
-
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
@@ -20,31 +19,31 @@
 UCLASS()
 class OPENTOURNAMENT_API UUR_Widget_ControlsListEntry : public UUserWidget, public IUserObjectListEntry
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+    
 public:
-	UUR_Widget_ControlsListEntry(const FObjectInitializer& ObjectInitializer);
+    UUR_Widget_ControlsListEntry(const FObjectInitializer& ObjectInitializer);
 
-	UPROPERTY(meta = (BindWidget))
-		UTextBlock * EntryName;
+    UPROPERTY(meta = (BindWidget))
+    UTextBlock* EntryName;
 
-	UPROPERTY(meta = (BindWidget))
-		UInputKeySelector * EntryKeySelector;
+    UPROPERTY(meta = (BindWidget))
+    UInputKeySelector* EntryKeySelector;
 
-	UObject * Item;
+    UObject* Item;
 
-	UFUNCTION()
-		void OnEntryKeySelectorKeyChanged(FInputChord SelectedKey);
+    UFUNCTION()
+    void OnEntryKeySelectorKeyChanged(FInputChord SelectedKey);
 
-	UFUNCTION()
-		void OnEntryKeySelectorIsSelectingKeyChanged();
+    UFUNCTION()
+    void OnEntryKeySelectorIsSelectingKeyChanged();
 
-	void NativeConstruct();
-	void SetListItemObjectInternal(UObject* InObject);
+    void NativeConstruct();
+    void SetListItemObjectInternal(UObject* InObject);
 
 private:
 
-	bool IsSelectingKey;
+    bool IsSelectingKey;
 
-	void UpdateEntry();
+    void UpdateEntry();
 };
