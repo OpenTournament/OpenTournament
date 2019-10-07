@@ -38,7 +38,7 @@ protected:
 		ModelRange.BeginIndex = InOutModelText->Len();
 
 		// copy default text style
-		FTextBlockStyle TextStyle(Owner->GetDefaultTextStyle());
+		FTextBlockStyle TextStyle(Owner->GetCurrentDefaultTextStyle());
 
 		FRunInfo RunInfo(RunParseResult.Name);
 		for (const TPair<FString, FTextRange>& Pair : RunParseResult.MetaData)
