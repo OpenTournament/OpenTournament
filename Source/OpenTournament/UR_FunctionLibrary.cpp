@@ -12,7 +12,7 @@
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 
-#include "TextRange.h"
+#include "UnrealString.h"
 #include "Regex.h"
 
 #include "GameFramework/InputSettings.h"
