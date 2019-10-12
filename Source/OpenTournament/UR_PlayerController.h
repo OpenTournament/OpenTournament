@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UR_PlayerInput.h"
 #include "GameFramework/PlayerController.h"
 
 #include "UR_PlayerController.generated.h"
@@ -13,8 +14,10 @@
 // Forward Declarations
 
 class UAudioComponent;
+
 class AUR_Character;
 class UUR_PCInputDodgeComponent;
+class UUR_Widget_BaseMenu;
 
 class UUR_ChatComponent;
 enum class EChatChannel : uint8;
@@ -53,14 +56,17 @@ public:
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Audio")
     UAudioComponent* MusicComponent;
 
-    UFUNCTION(BlueprintCallable, Category = "UnrealRemake|PlayerController|Music")
+    UFUNCTION(BlueprintCallable, Category = "PlayerController|Music")
     void PlayMusic(USoundBase* Music, float FadeInDuration);
 
-    UFUNCTION(BlueprintCallable, Category = "UnrealRemake|PlayerController|Music")
+    UFUNCTION(BlueprintCallable, Category = "PlayerController|Music")
     void StopMusic(float FadeOutDuration);
 
-    UFUNCTION(BlueprintCallable, Category = "UnrealRemake|PlayerController|Music")
+    UFUNCTION(BlueprintCallable, Category = "PlayerController|Music")
     void SetMusicVolume(float MusicVolume);
+
+    UFUNCTION(BlueprintCallable, Category = "PlayerController|Input")
+    UUR_PlayerInput* GetPlayerInput();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -177,4 +183,18 @@ public:
 	virtual void OnReceiveChatMessage(const FString& SenderName, const FString& Message, EChatChannel Channel, APlayerState* SenderPS);
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * Function to Open the Control Keybinding Menu
+    */
+    UFUNCTION(Exec)
+    virtual void OpenControlBindingMenu();
+
+    /**
+    * Temp:
+    */
+    UPROPERTY(EditDefaultsOnly)
+    TSubclassOf<UUR_Widget_BaseMenu> KeyBindingMenu;
+
+    UUR_Widget_BaseMenu* ControlsMenu;
 };

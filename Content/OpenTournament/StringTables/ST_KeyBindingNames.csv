@@ -1,0 +1,12 @@
+Key,SourceString
+"MoveForward","Move Forward"
+"MoveBackward","Move Backward"
+"MoveLeft","Move Left"
+"MoveRight","Move Right"
+"MoveUp","Move Up"
+"MoveDown","Move Down"
+"KeyDodge","Dodge"
+"ToggleCrouch","Crouch Toggle"
+"Jump","Jump"
+"Crouch","Crouch"
+"Fire","Fire"

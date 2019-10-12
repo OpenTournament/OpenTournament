@@ -19,6 +19,7 @@
 #include "UR_PCInputDodgeComponent.h"
 #include "UR_ChatComponent.h"
 #include "UR_LocalPlayer.h"
+#include "Widgets/UR_Widget_BaseMenu.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -73,13 +74,18 @@ void AUR_PlayerController::SetMusicVolume(float MusicVolume)
     }
 }
 
+UUR_PlayerInput* AUR_PlayerController::GetPlayerInput()
+{
+    return Cast<UUR_PlayerInput>(PlayerInput);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_PlayerController::InitInputSystem()
 {
     if (PlayerInput == nullptr)
     {
-        // PlayerInput = NewObject<UUTPlayerInput>(this, UUTPlayerInput::StaticClass());
+        PlayerInput = NewObject<UUR_PlayerInput>(this);
     }
 
     Super::InitInputSystem();
@@ -271,4 +277,21 @@ void AUR_PlayerController::OnReceiveChatMessage(const FString& SenderName, const
 
 		LP->ChatHistory.Add({ FDateTime::Now(), SenderName, Message, Channel, AuthorTeamIdx, MessageTeamIdx });
 	}
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_PlayerController::OpenControlBindingMenu()
+{
+    if (KeyBindingMenu == nullptr)
+    {
+        return;
+    }
+
+    ControlsMenu = CreateWidget<UUR_Widget_BaseMenu>(GetWorld(), KeyBindingMenu);
+    if (ControlsMenu)
+    {
+        ControlsMenu->OpenMenu();
+    }
 }
