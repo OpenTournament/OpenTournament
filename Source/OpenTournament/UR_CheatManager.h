@@ -20,6 +20,6 @@ class OPENTOURNAMENT_API UUR_CheatManager : public UCheatManager
 {
 	GENERATED_BODY()
 
-	UFUNCTION(exec, Category = "UnrealRemake|Cheat")
+	UFUNCTION(exec, Category = "Cheat")
 	void Cheat_AddValue();
 };

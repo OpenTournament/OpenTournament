@@ -6,6 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "Widgets/UR_Widget_BaseMenu.h"
 
 #include "UR_GameModeBase.generated.h"
 

@@ -42,7 +42,7 @@ void UUR_PCInputDodgeComponent::BeginPlay()
             InputComponent->BindAction("TapLeft", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapLeft);
             InputComponent->BindAction("TapRight", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapRight);
             InputComponent->BindAction("TapForward", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapForward);
-            InputComponent->BindAction("TapBack", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapBack);
+            InputComponent->BindAction("TapBackward", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapBack);
             InputComponent->BindAction("TapUp", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapUpward);
             InputComponent->BindAction("TapDown", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapDownward);
         }

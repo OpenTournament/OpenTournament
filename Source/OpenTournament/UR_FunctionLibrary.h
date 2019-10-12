@@ -32,10 +32,10 @@ class OPENTOURNAMENT_API UUR_FunctionLibrary : public UBlueprintFunctionLibrary
 public:
 
     // Utility for retrieving GameMode CDO
-    UFUNCTION(BlueprintPure, Category = "UnrealRemake|Character|State")
+    UFUNCTION(BlueprintPure, Category = "Character|State")
     static AUR_GameModeBase* GetGameModeDefaultObject(const UObject* WorldContextObject);
 
-    UFUNCTION(BlueprintPure, Category = "UnrealRemake|Character|State") 
+    UFUNCTION(BlueprintPure, Category = "Character|State") 
     static int32 GetPlayerStateValue(APlayerController* PlayerController);
 
     template<typename TEnum>
