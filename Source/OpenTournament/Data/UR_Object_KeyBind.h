@@ -18,7 +18,7 @@ class OPENTOURNAMENT_API UUR_Object_KeyBind : public UObject
 public:
 	UUR_Object_KeyBind();
 
-	FName ActionName;
+	FName Name;
 
 	FKey Key;
 };

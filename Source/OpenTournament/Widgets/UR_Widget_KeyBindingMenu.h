@@ -43,5 +43,6 @@ private:
 
 	APlayerController * OwningPlayer;
 
+	void CreateKeyBindObject(FName Name, FKey Key);
 	void PopulateKeyBindingList();
 };
