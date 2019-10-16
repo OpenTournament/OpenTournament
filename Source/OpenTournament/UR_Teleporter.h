@@ -6,6 +6,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "UR_Type_ExitRotation.h"
+
 #include "UR_Teleporter.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -16,15 +18,6 @@ class UCapsuleComponent;
 class USoundBase;
 class UStaticMeshComponent;
 class UParticleSystemComponent;
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-UENUM()
-enum class EExitRotation : uint8
-{
-    Relative,
-    Fixed
-};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -78,7 +71,7 @@ public:
     * Does our teleport force us into a new rotation, or is it relative to our DestinationActor's rotation?
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Teleporter")
-    EExitRotation ExitRotationType = EExitRotation::Relative;
+    EExitRotation ExitRotationType;
 
     /*
     * Do Actors teleported retain their velocity?
@@ -109,7 +102,7 @@ public:
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Teleporter")
     void PlayTeleportEffects();
 
-    void GetDesiredRotation(FRotator& DesiredRotation, const FRotator& TargetActorRotation, const FRotator& RelativeDestinationRotation);
+    void GetDesiredRotation(FRotator& DesiredRotation, const FRotator& TargetActorRotation, const FRotator& DestinationRotation);
 
     UFUNCTION()
     void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

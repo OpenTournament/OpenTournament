@@ -23,7 +23,7 @@
 AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer),
     DestinationActor(nullptr),
-    ExitRotationType(EExitRotation::Relative),
+    ExitRotationType(EExitRotation::ER_Relative),
     bKeepMomentum(true)
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -78,7 +78,6 @@ void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other,
 
     if (isTeleporting)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Teleported to %s."), *GetName()));
         return;
     }
 
@@ -86,7 +85,7 @@ void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other,
 
     if (PerformTeleport(Character))
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Teleported to %s."), *GetName()));
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Teleported to %s."), *DestinationActor->GetName()));
     }
     else
     {
@@ -101,68 +100,91 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
         return false;
     }
 
-    AController* CharacterController{ nullptr };
+	AController* CharacterController{ nullptr };
+	UPawnMovementComponent* CharacterMovement{ nullptr };
+	const auto TargetCharacter{ Cast<ACharacter>(TargetActor) };
+
     FRotator TargetActorRotation{ FRotator::ZeroRotator };
     FRotator DestinationRotation{ DestinationActor->GetActorRotation() };
-    FRotator RelativeDestinationRotation{ GetActorRotation() - DestinationRotation };
     FRotator DesiredRotation{ DestinationRotation };
 
-    if (const auto TargetCharacter{ Cast<ACharacter>(TargetActor) })
+    if (TargetCharacter)
     {
         CharacterController = TargetCharacter->GetController();
-
-        if (CharacterController)
-        {
-            TargetActorRotation = CharacterController->GetControlRotation();
-        }
+		CharacterMovement = TargetCharacter->GetMovementComponent();
+        TargetActorRotation = CharacterController->GetControlRotation();
     }
+	else
+	{
+		TargetActorRotation = TargetActor->GetActorRotation();
+	}
 
     // Play effects associated with teleportation
     PlayTeleportEffects();
 
-    // Move Actor to destination teleporter
+    // Move Actor to Destination actor
     TargetActor->SetActorLocation(DestinationActor->GetActorLocation());
 
     // Find out Desired Rotation
-    GetDesiredRotation(DesiredRotation, TargetActorRotation, RelativeDestinationRotation);
+    GetDesiredRotation(DesiredRotation, TargetActorRotation, DestinationRotation);
 
-    // Rotate the TargetActor to face the ExitDirection vector
-    if (CharacterController)
+    // Rotate the TargetActor to face the Exit Direction vector
+    if (TargetCharacter)
     {
         CharacterController->SetControlRotation(DesiredRotation);
     }
-    else
-    {
-        TargetActor->SetActorRotation(DesiredRotation);
-    }
-
+	else
+	{
+		TargetActor->SetActorRotation(DesiredRotation);
+	}
+    
     // Rotate velocity vector relative to the destination teleporter exit heading
     if (!bKeepMomentum)
     {
-        TargetActor->GetRootComponent()->ComponentVelocity = FVector::ZeroVector;
-
-        if (AUR_Character* TargetCharacter = Cast<AUR_Character>(TargetActor))
+        if (TargetCharacter)
         {
-            TargetCharacter->GetMovementComponent()->Velocity = FVector::ZeroVector;
+			CharacterMovement->Velocity = FVector::ZeroVector;
         }
+		else
+		{
+			TargetActor->GetRootComponent()->ComponentVelocity = FVector::ZeroVector;
+		}
     }
-    else
-    {
-        FVector ForwardVector{ TargetActor->GetActorForwardVector() };
+    else 
+	{
+		if (ExitRotationType == EExitRotation::ER_Relative)
+		{			
+			// Rotate velocity vector relatively to the Exit Direction of the Destination actor
+			FRotator MomentumRotator = DestinationActor->GetRootComponent()->GetComponentRotation() - GetRootComponent()->GetComponentRotation();
+			MomentumRotator.Yaw = FMath::UnwindDegrees(MomentumRotator.Yaw + 180);
 
-        if (AUR_Character* TargetCharacter = Cast<AUR_Character>(TargetActor))
-        {
-            if (UCharacterMovementComponent* CharacterMovement = TargetCharacter->GetCharacterMovement())
-            {
-                FVector MovementAngleVector{ ForwardVector - CharacterMovement->Velocity.Normalize() };
-                CharacterMovement->Velocity = CharacterMovement->Velocity.RotateAngleAxis( MovementAngleVector.Rotation().Yaw, DesiredRotation.Vector());
-            }
-        }
-        else
-        {
-            FVector MovementAngleVector{ ForwardVector - TargetActor->GetVelocity().Normalize() };
-            TargetActor->GetRootComponent()->ComponentVelocity = TargetActor->GetVelocity().RotateAngleAxis( MovementAngleVector.Rotation().Yaw, DesiredRotation.Vector());
-        }
+			if (TargetCharacter)
+			{
+				FVector NewTargetVelocity = MomentumRotator.RotateVector(CharacterMovement->Velocity);
+				CharacterMovement->Velocity = NewTargetVelocity;
+			}
+			else
+			{
+				FVector NewTargetVelocity = MomentumRotator.RotateVector(TargetActor->GetRootComponent()->ComponentVelocity);
+				TargetActor->GetRootComponent()->ComponentVelocity = NewTargetVelocity;
+			}
+		}
+		else
+		{
+			// Rotate velocity vector to face the Exit Direction of the Destination actor
+			if (TargetCharacter)
+			{
+				auto NewTargetVelocity = DestinationRotation.RotateVector(FVector::ForwardVector * CharacterMovement->Velocity.Size2D());
+				NewTargetVelocity.Z = CharacterMovement->Velocity.Z;
+				CharacterMovement->Velocity = NewTargetVelocity;
+			}
+			else
+			{
+				auto NewTargetVelocity = DestinationRotation.RotateVector(FVector::ForwardVector * TargetActor->GetRootComponent()->ComponentVelocity.Size2D());
+				NewTargetVelocity.Z = TargetActor->GetRootComponent()->ComponentVelocity.Z;
+				TargetActor->GetRootComponent()->ComponentVelocity = NewTargetVelocity;
+			}
+		}
     }
 
     return true;
@@ -181,16 +203,21 @@ void AUR_Teleporter::PlayTeleportEffects_Implementation()
     }
 }
 
-void AUR_Teleporter::GetDesiredRotation(FRotator& DesiredRotation, const FRotator& TargetActorRotation, const FRotator& RelativeDestinationRotation)
+void AUR_Teleporter::GetDesiredRotation(FRotator& DesiredRotation, const FRotator& TargetActorRotation, const FRotator& DestinationRotation)
 {
-    if (ExitRotationType == EExitRotation::Relative)
+    if (ExitRotationType == EExitRotation::ER_Relative)
     {
-        DesiredRotation = TargetActorRotation + RelativeDestinationRotation;
+		DesiredRotation = DestinationRotation + TargetActorRotation - this->GetActorRotation();
+		DesiredRotation.Yaw += 180;
     }
     else
     {
-        DesiredRotation = TargetActorRotation;
+        DesiredRotation = DestinationRotation;
     }
+
+	DesiredRotation.Yaw = FMath::UnwindDegrees(DesiredRotation.Yaw);
+	DesiredRotation.Pitch = 0.0f;
+	DesiredRotation.Roll = 0.0f;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
