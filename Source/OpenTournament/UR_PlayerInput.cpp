@@ -63,12 +63,12 @@ bool UUR_PlayerInput::ModifyKeyMapping(FName MappingName, const FInputChord Inpu
 		return false;
 	}
 	//If ActionMappings has at least 1 element, change the key mapping for an action
-	if (ActionMappings.IsValidIndex(0))
+	if (ActionMappings.Num() > 0)
 	{
 		RemapAction(ActionMappings[0], InputChord.Key);
 	}
 	//Do the same, but for axis mappings
-	if (AxisMappings.IsValidIndex(0))
+	if (AxisMappings.Num() > 0)
 	{
 		RemapAxis(AxisMappings[0], InputChord.Key);
 	}
@@ -116,6 +116,7 @@ void UUR_PlayerInput::RemapAxis(FInputAxisKeyMapping AxisKeyMapping, const FKey 
 	InputSettings->RemoveActionMapping(TapActionMapping, false);
 	AxisKeyMapping.Key = Key;
 	TapActionMapping.Key = Key;
-	InputSettings->AddAxisMapping(AxisKeyMapping, false);
-	InputSettings->AddActionMapping(TapActionMapping, true);
+	InputSettings->AddActionMapping(TapActionMapping, false);
+	InputSettings->AddAxisMapping(AxisKeyMapping, true);
+	
 }
