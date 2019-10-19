@@ -10,8 +10,6 @@
 // Sets default values
 AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	
-
 	Tbox = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
 	Tbox->SetGenerateOverlapEvents(true);
 	Tbox->OnComponentBeginOverlap.AddDynamic(this, &AUR_Weapon::OnTriggerEnter);
@@ -61,30 +59,11 @@ void AUR_Weapon::PostInitializeComponents()
 	Super::PostInitializeComponents();
 }
 
-void AUR_Weapon::Destroyed()
-{
-}
-
-void AUR_Weapon::StartFire()
-{
-}
-
-void AUR_Weapon::StopFire()
-{
-}
-
 bool AUR_Weapon::CanFire() const
 {
 	return false;
 }
 
-void AUR_Weapon::GiveAmmo(int AddAmount)
-{
-}
-
-void AUR_Weapon::UseAmmo()
-{
-}
 
 
 void AUR_Weapon::Pickup()
@@ -94,7 +73,6 @@ void AUR_Weapon::Pickup()
 	PlayerController->InventoryComponent->Add(this);
 	AttachWeaponToPawn();
 }
-
 
 
 void AUR_Weapon::GetPlayer(AActor* Player)
@@ -137,10 +115,6 @@ USkeletalMeshComponent * AUR_Weapon::GetWeaponMesh() const
 AUR_Character * AUR_Weapon::GetPawnOwner() const
 {
 	return nullptr;
-}
-
-void AUR_Weapon::SetOwningPawn(AUR_Character * AURCharacter)
-{
 }
 
 void AUR_Weapon::AttachMeshToPawn()

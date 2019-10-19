@@ -20,5 +20,4 @@ class OPENTOURNAMENT_API AUR_Ammo_Assault : public AUR_Ammo
 
 	// Sets default values for this actor's properties
 	AUR_Ammo_Assault(const FObjectInitializer& ObjectInitializer);
-	
 };

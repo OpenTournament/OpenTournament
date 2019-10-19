@@ -15,4 +15,7 @@ AUR_Ammo_Sniper::AUR_Ammo_Sniper(const FObjectInitializer& ObjectInitializer) : 
 	USoundCue* helperSound;
 	helperSound = newAssetSound.Object;
 	Sound->SetSound(helperSound);
+
+	amount = 10;
+
 }

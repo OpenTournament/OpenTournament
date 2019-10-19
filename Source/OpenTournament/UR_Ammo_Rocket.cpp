@@ -2,6 +2,7 @@
 
 
 #include "UR_Ammo_Rocket.h"
+#include "Engine.h"
 
 // Sets default values
 AUR_Ammo_Rocket::AUR_Ammo_Rocket(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -15,4 +16,6 @@ AUR_Ammo_Rocket::AUR_Ammo_Rocket(const FObjectInitializer& ObjectInitializer) : 
 	USoundCue* helperSound;
 	helperSound = newAssetSound.Object;
 	Sound->SetSound(helperSound);
+
+	amount = 10;
 }
