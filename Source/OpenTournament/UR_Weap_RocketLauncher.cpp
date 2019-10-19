@@ -2,6 +2,7 @@
 
 
 #include "UR_Weap_RocketLauncher.h"
+#include "Engine.h"
 
 // Sets default values
 AUR_Weap_RocketLauncher::AUR_Weap_RocketLauncher(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -17,18 +18,23 @@ AUR_Weap_RocketLauncher::AUR_Weap_RocketLauncher(const FObjectInitializer& Objec
 	helperSound = newAssetSound.Object;
 	Sound->SetSound(helperSound);
 
-
+	AmmoName = "Rocket";
 }
 
 void AUR_Weap_RocketLauncher::Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams)
 {
-	AUR_Projectile_Rocket* Projectile = World->SpawnActor<AUR_Projectile_Rocket>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
-	if (Projectile)
-	{
-		FVector Direction = MuzzleRotation.Vector();
-		Projectile->FireAt(Direction);
-
+	if (ammoCount > 0) {
+		AUR_Projectile_Rocket* Projectile = World->SpawnActor<AUR_Projectile_Rocket>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
+		if (Projectile)
+		{
+			FVector Direction = MuzzleRotation.Vector();
+			Projectile->FireAt(Direction);
+			ammoCount--;
+		}
 	}
+	else
+		GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Red, FString::Printf(TEXT("NO AMMO LEFT FOR %s!"), *WeaponName));
+
 }
 
 void AUR_Weap_RocketLauncher::BeginPlay()

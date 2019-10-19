@@ -64,15 +64,14 @@ public:
 
 
 	//Weapon select
+	UFUNCTION()
 	void WeaponSelect(int32 number);
-
-	template<int32 number>
-	void WeaponSelect() {WeaponSelect(number);}
 
 	UFUNCTION()
 	void Fire();
 
 	/** get weapon attach point */
+	UFUNCTION()
 	FName GetWeaponAttachPoint() const;
 
 	USkeletalMeshComponent* GetPawnMesh() const;
@@ -292,25 +291,16 @@ protected:
 	void EndPickup();
 
 	//these are to be improved later on
-	void SelectWeapon0();
-	void SelectWeapon1();
-	void SelectWeapon2();
-	void SelectWeapon3();
-	void SelectWeapon4();
-	void SelectWeapon5();
+	void SelectWeapon0(); //pistol
+	void SelectWeapon1(); //assault rifle
+	void SelectWeapon2(); //shotgun
+	void SelectWeapon3(); //rocket launcher
+	void SelectWeapon4(); //grenade launcher
+	void SelectWeapon5(); //sniper rifle
 
 	void ShowInventory();
 
-	//TO BE CLEANED ___________________________________________________________________________
-	//_________________________________________________________________________________________
-	//_________________________________________________________________________________________
-	//_________________________________________________________________________________________
-	//_________________________________________________________________________________________
-	//_________________________________________________________________________________________
-	//_________________________________________________________________________________________
-
-	//Weapon related:
-	private:
+private:
 
 	/** pawn mesh: 1st person view */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
