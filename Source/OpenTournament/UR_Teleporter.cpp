@@ -1,47 +1,53 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Teleporter.h"
 
-#include "Runtime/Engine/Classes/GameFramework/Controller.h"
-#include "Runtime/Engine/Classes/Components/ArrowComponent.h"
-#include "Runtime/Engine/Classes/Components/AudioComponent.h"
-#include "Runtime/Engine/Classes/Components/CapsuleComponent.h"
-#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
-#include "Runtime/Engine/Classes/Components/StaticMeshComponent.h"
+#include "Engine/Engine.h"
+#include "Components/ArrowComponent.h"
+#include "Components/AudioComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "GameFramework/Actor.h"
+#include "GameFramework/Controller.h"
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
 
 #include "UR_Character.h"
+#include "UR_CharacterMovementComponent.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Sets default values
 AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer),
     DestinationActor(nullptr),
-    ExitRotationType(EExitRotation::Relative),
+    ExitRotationType(EExitRotation::ER_Relative),
     bKeepMomentum(true)
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-    PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bCanEverTick = false;
 
-    BaseMeshComponent = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("BaseMeshComponent"));
-    SetRootComponent(BaseCapsule);
+    CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
+    CapsuleComponent->SetCapsuleSize(45.f, 90.f, false);
+    SetRootComponent(CapsuleComponent);
+    CapsuleComponent->SetGenerateOverlapEvents(true);
+    CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Teleporter::OnTriggerEnter);
 
-    // @! TODO : Attachment positioning is messed up, offset by some values. Resolve this
-    ArrowComponent = ObjectInitializer.CreateDefaultSubobject<UArrowComponent>(this, TEXT("ArrowComponent"));
-    ArrowComponent->SetupAttachment(RootComponent);
-    ArrowComponent->SetRelativeLocation(FVector{ 0.f, 0.f, 45.f });
+    MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMeshComponent"));
+    MeshComponent->SetupAttachment(RootComponent);
 
-    AudioComponent = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("AudioComponent"));
-    AudioComponent->SetupAttachment(RootComponent);
-    ArrowComponent->SetRelativeLocation(FVector{ 0.f, 0.f, 45.f });
+#if WITH_EDITORONLY_DATA
+    ArrowComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowComponent"));
+    ArrowComponent->SetupAttachment(CapsuleComponent);
+#endif
 
-    ParticleSystemComponent = ObjectInitializer.CreateDefaultSubobject<UParticleSystemComponent>(this, TEXT("ParticleSystemComponent"));
-    ParticleSystemComponent->SetRelativeLocation(FVector{ 0.f, 0.f, 45.f });
+    AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+    AudioComponent->SetupAttachment(CapsuleComponent);
 
-    BaseCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("BaseCapsule"));
-    BaseCapsule->SetCapsuleSize(45.f, 90.f, false);
+    ParticleSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleSystemComponent"));
     ParticleSystemComponent->SetupAttachment(RootComponent);
-    BaseCapsule->SetRelativeLocation(FVector{ 0.f, 0.f, 90.f });
-    BaseCapsule->SetGenerateOverlapEvents(true);
-    BaseCapsule->OnComponentBeginOverlap.AddDynamic(this, &AUR_Teleporter::OnTriggerEnter);
 }
 
 // Called when the game starts or when spawned
@@ -72,7 +78,6 @@ void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other,
 
     if (isTeleporting)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Teleported to %s."), *GetName()));
         return;
     }
 
@@ -80,7 +85,7 @@ void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other,
 
     if (PerformTeleport(Character))
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Teleported to %s."), *GetName()));
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("[TELEPORTER] Teleported to %s."), *DestinationActor->GetName()));
     }
     else
     {
@@ -95,55 +100,137 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
         return false;
     }
 
-    AController* CharacterController{ nullptr };
+	AController* CharacterController{ nullptr };
+	UPawnMovementComponent* CharacterMovement{ nullptr };
+	const auto TargetCharacter{ Cast<ACharacter>(TargetActor) };
+
     FRotator TargetActorRotation{ FRotator::ZeroRotator };
     FRotator DestinationRotation{ DestinationActor->GetActorRotation() };
     FRotator DesiredRotation{ DestinationRotation };
 
-    if (const auto TargetCharacter{ Cast<ACharacter>(TargetActor) })
+    if (TargetCharacter)
     {
         CharacterController = TargetCharacter->GetController();
-
-        if (CharacterController)
-        {
-            TargetActorRotation = CharacterController->GetControlRotation();
-        }
+		CharacterMovement = TargetCharacter->GetMovementComponent();
+        TargetActorRotation = CharacterController->GetControlRotation();
     }
+	else
+	{
+		TargetActorRotation = TargetActor->GetActorRotation();
+	}
 
-    // Move Actor to destination teleporter
+    // Play effects associated with teleportation
+    PlayTeleportEffects();
+
+    // Move Actor to Destination actor
     TargetActor->SetActorLocation(DestinationActor->GetActorLocation());
 
-    // @! TODO Break out into GetDesiredRotation() function
     // Find out Desired Rotation
-    if (ExitRotationType == EExitRotation::Relative)
-    {
-        DesiredRotation = TargetActorRotation + DestinationRotation;
-    }
-    else
-    {
-        DestinationRotation = TargetActorRotation;
-    }
+    GetDesiredRotation(DesiredRotation, TargetActorRotation, DestinationRotation);
 
-    // Rotate the TargetActor to face the ExitDirection vector
-    if (CharacterController)
+    // Rotate the TargetActor to face the Exit Direction vector
+    if (TargetCharacter)
     {
         CharacterController->SetControlRotation(DesiredRotation);
     }
-    else
-    {
-        TargetActor->SetActorRotation(DesiredRotation);
-    }
-
+	else
+	{
+		TargetActor->SetActorRotation(DesiredRotation);
+	}
+    
     // Rotate velocity vector relative to the destination teleporter exit heading
     if (!bKeepMomentum)
     {
-        TargetActor->GetRootComponent()->ComponentVelocity = FVector::ZeroVector;
+        if (TargetCharacter)
+        {
+			CharacterMovement->Velocity = FVector::ZeroVector;
+        }
+		else
+		{
+			TargetActor->GetRootComponent()->ComponentVelocity = FVector::ZeroVector;
+		}
     }
-    else
-    {
-        // @! TODO Rotate existing TargetActor velocity around our new Rotation 
-        // TargetActor->GetRootComponent()->ComponentVelocity = ...
+    else 
+	{
+		if (ExitRotationType == EExitRotation::ER_Relative)
+		{			
+			// Rotate velocity vector relatively to the Exit Direction of the Destination actor
+			FRotator MomentumRotator = DestinationActor->GetRootComponent()->GetComponentRotation() - GetRootComponent()->GetComponentRotation();
+			MomentumRotator.Yaw = FMath::UnwindDegrees(MomentumRotator.Yaw + 180);
+
+			if (TargetCharacter)
+			{
+				FVector NewTargetVelocity = MomentumRotator.RotateVector(CharacterMovement->Velocity);
+				CharacterMovement->Velocity = NewTargetVelocity;
+			}
+			else
+			{
+				FVector NewTargetVelocity = MomentumRotator.RotateVector(TargetActor->GetRootComponent()->ComponentVelocity);
+				TargetActor->GetRootComponent()->ComponentVelocity = NewTargetVelocity;
+			}
+		}
+		else
+		{
+			// Rotate velocity vector to face the Exit Direction of the Destination actor
+			if (TargetCharacter)
+			{
+				auto NewTargetVelocity = DestinationRotation.RotateVector(FVector::ForwardVector * CharacterMovement->Velocity.Size2D());
+				NewTargetVelocity.Z = CharacterMovement->Velocity.Z;
+				CharacterMovement->Velocity = NewTargetVelocity;
+			}
+			else
+			{
+				auto NewTargetVelocity = DestinationRotation.RotateVector(FVector::ForwardVector * TargetActor->GetRootComponent()->ComponentVelocity.Size2D());
+				NewTargetVelocity.Z = TargetActor->GetRootComponent()->ComponentVelocity.Z;
+				TargetActor->GetRootComponent()->ComponentVelocity = NewTargetVelocity;
+			}
+		}
     }
 
     return true;
 }
+
+void AUR_Teleporter::PlayTeleportEffects_Implementation()
+{
+    if (TeleportOutSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportOutSound, GetActorLocation());
+    }
+
+    if (TeleportInSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportInSound, DestinationActor->GetActorLocation());
+    }
+}
+
+void AUR_Teleporter::GetDesiredRotation(FRotator& DesiredRotation, const FRotator& TargetActorRotation, const FRotator& DestinationRotation)
+{
+    if (ExitRotationType == EExitRotation::ER_Relative)
+    {
+		DesiredRotation = DestinationRotation + TargetActorRotation - this->GetActorRotation();
+		DesiredRotation.Yaw += 180;
+    }
+    else
+    {
+        DesiredRotation = DestinationRotation;
+    }
+
+	DesiredRotation.Yaw = FMath::UnwindDegrees(DesiredRotation.Yaw);
+	DesiredRotation.Pitch = 0.0f;
+	DesiredRotation.Roll = 0.0f;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if WITH_DEV_AUTOMATION_TESTS
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOpenTournamentTeleporterTest, "OpenTournament.Feature.Levels.LevelFeatures.Actor", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+
+bool FOpenTournamentTeleporterTest::RunTest(const FString& Parameters)
+{
+    // TODO : Automated Tests
+
+    return true;
+}
+
+#endif WITH_DEV_AUTOMATION_TESTS

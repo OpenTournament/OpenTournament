@@ -33,16 +33,16 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 		UStaticMeshComponent* ProjMesh;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Projectile")
 		UStaticMeshComponent* SM_TBox;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Projectile")
 		class UParticleSystemComponent* Particles;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Projectile")
 		UAudioComponent* SoundFire;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Projectile")
 		UAudioComponent* SoundHit;
 
 
@@ -50,7 +50,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	// Sphere collision component.
-	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
+	UPROPERTY(VisibleDefaultsOnly, Category = "Projectile")
 		USphereComponent* CollisionComponent;
 
 	// Projectile movement component.

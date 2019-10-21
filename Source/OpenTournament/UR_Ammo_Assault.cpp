@@ -15,4 +15,9 @@ AUR_Ammo_Assault::AUR_Ammo_Assault(const FObjectInitializer& ObjectInitializer) 
 	USoundCue* helperSound;
 	helperSound = newAssetSound.Object;
 	Sound->SetSound(helperSound);
+
+	amount = 40;
+
 }
+
+
