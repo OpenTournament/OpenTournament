@@ -11,11 +11,15 @@ UUR_Widget_KeyBindingMenu::UUR_Widget_KeyBindingMenu(const FObjectInitializer& O
 void UUR_Widget_KeyBindingMenu::OnCloseButtonClicked()
 {
 	UE_LOG(LogTemp, Warning, TEXT("CloseButton Clicked"));
+	/*
 	OwningPlayer->SetInputMode(FInputModeGameOnly());
 	OwningPlayer->bShowMouseCursor = false;
 	RemoveFromViewport();
+	*/
+	Close();
 }
 
+//TODO: remove
 void UUR_Widget_KeyBindingMenu::OpenMenu()
 {
 	OwningPlayer = GetOwningPlayer();

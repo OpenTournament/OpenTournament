@@ -48,4 +48,25 @@ public:
         }
         return enumPtr->GetNameByValue(static_cast<int64>(Value)).ToString();
     }
+
+	/**
+	* Returns true if given key is mapped to given action.
+	* Does not consider modifiers.
+	*
+	* This is a helper for doing special UMG navigation via OnKeyDown,
+	* using realtime binds and not hardcoded.
+	*/
+	UFUNCTION(BlueprintPure)
+	static bool IsKeyMappedToAction(const FKey& Key, FName ActionName);
+
+	/**
+	* Returns true if given key is mapped to given axis.
+	* Use direction 0 for any.
+	*
+	* This is a helper for doing special UMG navigation via OnKeyDown,
+	* using realtime binds and not hardcoded.
+	*/
+	UFUNCTION(BlueprintPure)
+	static bool IsKeyMappedToAxis(const FKey& Key, FName AxisName, float Direction = 1.f);
+
 };

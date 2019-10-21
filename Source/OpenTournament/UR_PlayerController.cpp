@@ -282,6 +282,8 @@ void AUR_PlayerController::OnReceiveChatMessage(const FString& SenderName, const
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+//TODO: delete this now that it is accessible from other menus.
+
 void AUR_PlayerController::OpenControlBindingMenu()
 {
     if (KeyBindingMenu == nullptr)
@@ -292,6 +294,6 @@ void AUR_PlayerController::OpenControlBindingMenu()
     ControlsMenu = CreateWidget<UUR_Widget_BaseMenu>(GetWorld(), KeyBindingMenu);
     if (ControlsMenu)
     {
-        ControlsMenu->OpenMenu();
+        ControlsMenu->Show(nullptr);
     }
 }
