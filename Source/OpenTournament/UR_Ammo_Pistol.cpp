@@ -2,6 +2,7 @@
 
 
 #include "UR_Ammo_Pistol.h"
+#include "Engine.h"
 
 // Sets default values
 AUR_Ammo_Pistol::AUR_Ammo_Pistol(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -15,4 +16,7 @@ AUR_Ammo_Pistol::AUR_Ammo_Pistol(const FObjectInitializer& ObjectInitializer) : 
 	USoundCue* helperSound;
 	helperSound = newAssetSound.Object;
 	Sound->SetSound(helperSound);
+
+	amount = 20;
+
 }

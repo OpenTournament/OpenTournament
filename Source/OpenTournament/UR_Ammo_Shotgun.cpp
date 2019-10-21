@@ -15,4 +15,7 @@ AUR_Ammo_Shotgun::AUR_Ammo_Shotgun(const FObjectInitializer& ObjectInitializer) 
 	USoundCue* helperSound;
 	helperSound = newAssetSound.Object;
 	Sound->SetSound(helperSound);
+
+	amount = 15;
+
 }

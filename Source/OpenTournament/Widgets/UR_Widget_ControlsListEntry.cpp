@@ -35,7 +35,7 @@ void UUR_Widget_ControlsListEntry::OnEntryKeySelectorKeyChanged(FInputChord Sele
 
 		PlayerInput->ModifyActionKeyMapping(KeyBind->ActionName, KeyMapping);
 		KeyBind->Key = SelectedKey.Key;*/
-		if (PlayerInput->ModifyKeyMapping(KeyBind->ActionName, SelectedKey))
+		if (PlayerInput->ModifyKeyMapping(KeyBind->Name, SelectedKey))
 		{
 			KeyBind->Key = SelectedKey.Key;
 			UpdateEntry();
@@ -61,6 +61,6 @@ void UUR_Widget_ControlsListEntry::UpdateEntry()
 {
 	UUR_Object_KeyBind* KeyBind = Cast<UUR_Object_KeyBind>(Item);
 	//EntryName->SetText(FText::FromName((KeyBind->ActionName)));
-	EntryName->SetText(FText::FromStringTable("/Game/OpenTournament/StringTables/ST_KeyBindingNames.ST_KeyBindingNames", KeyBind->ActionName.ToString()));
+	EntryName->SetText(FText::FromStringTable("/Game/OpenTournament/StringTables/ST_KeyBindingNames.ST_KeyBindingNames", KeyBind->Name.ToString()));
 	EntryKeySelector->SetSelectedKey(FInputChord(KeyBind->Key));
 }

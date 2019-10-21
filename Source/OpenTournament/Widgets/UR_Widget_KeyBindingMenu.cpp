@@ -41,6 +41,15 @@ void UUR_Widget_KeyBindingMenu::NativeOnInitialized()
 	PopulateKeyBindingList();
 }
 
+void UUR_Widget_KeyBindingMenu::CreateKeyBindObject(FName Name, FKey Key)
+{
+	UUR_Object_KeyBind * NewKeyBind = NewObject<UUR_Object_KeyBind>(this);
+	NewKeyBind->Name = Name;
+	NewKeyBind->Key = Key;
+
+	ControlsList->AddItem(NewKeyBind);
+}
+
 void UUR_Widget_KeyBindingMenu::PopulateKeyBindingList()
 {
 	AUR_PlayerController * Player = Cast<AUR_PlayerController>(GetOwningPlayer());
@@ -50,26 +59,34 @@ void UUR_Widget_KeyBindingMenu::PopulateKeyBindingList()
 	for (TIndexedContainerIterator<TArray<FName>, FName, int32> it = AxisNames.CreateIterator(); it; it++)
 	{
 		TArray<FInputAxisKeyMapping> AxisMappingsForName;
-		Settings->GetAxisMappingByName(AxisNames[it.GetIndex()], AxisMappingsForName);
+		FName AxisName = AxisNames[it.GetIndex()];
+		Settings->GetAxisMappingByName(AxisName, AxisMappingsForName);
 
-		FInputAxisKeyMapping AxisMapping = AxisMappingsForName[0];
-		UUR_Object_KeyBind * NewKeyBind = NewObject<UUR_Object_KeyBind>(this);
-		NewKeyBind->ActionName = AxisMapping.AxisName;
-		NewKeyBind->Key = AxisMapping.Key;
-
-		ControlsList->AddItem(NewKeyBind);
+		if (AxisMappingsForName.Num() > 0)
+		{
+			FInputAxisKeyMapping AxisMapping = AxisMappingsForName[0];
+			CreateKeyBindObject(AxisMapping.AxisName, AxisMapping.Key);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("No axis with that name found. Name was: %s"), *AxisName.ToString());
+		}
 	}
 
 	for (TIndexedContainerIterator<TArray<FName>, FName, int32> it = ActionNames.CreateIterator(); it; it++)
 	{
 		TArray<FInputActionKeyMapping> ActionMappingsForName;
-		Settings->GetActionMappingByName(ActionNames[it.GetIndex()], ActionMappingsForName);
+		FName ActionName = ActionNames[it.GetIndex()];
+		Settings->GetActionMappingByName(ActionName, ActionMappingsForName);
 
-		FInputActionKeyMapping ActionMapping = ActionMappingsForName[0];
-		UUR_Object_KeyBind * NewKeyBind = NewObject<UUR_Object_KeyBind>(this);
-		NewKeyBind->ActionName = ActionMapping.ActionName;
-		NewKeyBind->Key = ActionMapping.Key;
-
-		ControlsList->AddItem(NewKeyBind);
+		if (ActionMappingsForName.Num() > 0)
+		{
+			FInputActionKeyMapping ActionMapping = ActionMappingsForName[0];
+			CreateKeyBindObject(ActionMapping.ActionName, ActionMapping.Key);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("No action with that name found. Name was: %s"), *ActionName.ToString());
+		}
 	}
 }

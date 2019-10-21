@@ -3,27 +3,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/ShapeComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/AudioComponent.h"
-#include "GameFramework/Actor.h"
 #include "UR_Character.h"
 #include "Engine.h"
 #include "Engine/Canvas.h" // for FCanvasIcon
-
-#include "UR_Ammo.generated.h"
+#include "UR_Armor.generated.h"
 
 UCLASS()
-class OPENTOURNAMENT_API AUR_Ammo : public AActor
+class OPENTOURNAMENT_API AUR_Armor : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AUR_Ammo(const FObjectInitializer& ObjectInitializer);
-	
+	AUR_Armor(const FObjectInitializer& ObjectInitializer);
+
 	UPROPERTY(EditAnywhere)
 	UShapeComponent* Tbox;
 
@@ -31,10 +30,12 @@ public:
 	UAudioComponent* Sound;
 
 	UPROPERTY(EditAnywhere)
-	FString AmmoName = FString(TEXT(""));
+	AUR_Character* PlayerController;
+
+	int32 armorVal = 0;
 
 	UPROPERTY(EditAnywhere)
-	AUR_Character* PlayerController;
+	bool armorBarrier = false;
 
 	bool bItemIsWithinRange = false;
 
@@ -43,16 +44,14 @@ public:
 	void GetPlayer(AActor* Player);
 
 	UPROPERTY(EditAnywhere)
-	int32 amount;
-
-
-	UPROPERTY(EditAnywhere)
 		UStaticMeshComponent* SM_TBox;
+
 	UFUNCTION()
 		void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION()
 		void OnTriggerExit(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -60,10 +59,10 @@ protected:
 
 	/** weapon mesh: 3rd person view */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-		UStaticMeshComponent* AmmoMesh;
+		UStaticMeshComponent* ArmorMesh;
 
 	/** Returns Mesh3P subobject **/
-	FORCEINLINE UStaticMeshComponent* GetMesh() const { return AmmoMesh; }
+	FORCEINLINE UStaticMeshComponent* GetMesh() const { return ArmorMesh; }
 
 public:	
 	// Called every frame
