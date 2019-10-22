@@ -24,6 +24,7 @@
 
 AUR_GameModeMenu::AUR_GameModeMenu()
 {
+	//NOTE: we set these to the BP subclasses in the BP subclass so it seems useless here
     GameStateClass = AUR_GameState::StaticClass();
     PlayerStateClass = AUR_PlayerState::StaticClass();
     PlayerControllerClass = AUR_PlayerController::StaticClass();

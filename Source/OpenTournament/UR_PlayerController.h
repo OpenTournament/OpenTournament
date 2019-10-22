@@ -5,8 +5,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UR_PlayerInput.h"
-#include "GameFramework/PlayerController.h"
+#include "UR_BasePlayerController.h"
 
 #include "UR_PlayerController.generated.h"
 
@@ -29,11 +28,11 @@ enum class EChatChannel : uint8;
  * 
  */
 UCLASS(Config = Game)
-class OPENTOURNAMENT_API AUR_PlayerController : public APlayerController
+class OPENTOURNAMENT_API AUR_PlayerController : public AUR_BasePlayerController
 {
     GENERATED_BODY()
 
-    AUR_PlayerController();
+    AUR_PlayerController(const FObjectInitializer& ObjectInitializer);
 
     UPROPERTY()
     AUR_Character* URCharacter;
@@ -43,7 +42,6 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     virtual void BeginPlay() override;
-    virtual void InitInputSystem() override;
     virtual void SetupInputComponent() override;
     virtual void ProcessPlayerInput(const float DeltaTime, const bool bGamePaused) override;
     virtual void SetPawn(APawn* InPawn) override;
@@ -64,9 +62,6 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "PlayerController|Music")
     void SetMusicVolume(float MusicVolume);
-
-    UFUNCTION(BlueprintCallable, Category = "PlayerController|Input")
-    UUR_PlayerInput* GetPlayerInput();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
