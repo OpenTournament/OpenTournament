@@ -23,7 +23,8 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_PlayerController::AUR_PlayerController()
+AUR_PlayerController::AUR_PlayerController(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
     MusicVolumeScalar = 1.0;
     MusicComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("MusicComponent"));
@@ -74,22 +75,7 @@ void AUR_PlayerController::SetMusicVolume(float MusicVolume)
     }
 }
 
-UUR_PlayerInput* AUR_PlayerController::GetPlayerInput()
-{
-    return Cast<UUR_PlayerInput>(PlayerInput);
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
-void AUR_PlayerController::InitInputSystem()
-{
-    if (PlayerInput == nullptr)
-    {
-        PlayerInput = NewObject<UUR_PlayerInput>(this);
-    }
-
-    Super::InitInputSystem();
-}
 
 void AUR_PlayerController::SetupInputComponent()
 {

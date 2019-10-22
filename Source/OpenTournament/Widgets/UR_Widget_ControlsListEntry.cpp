@@ -27,7 +27,7 @@ void UUR_Widget_ControlsListEntry::OnEntryKeySelectorKeyChanged(FInputChord Sele
 	if (IsSelectingKey)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("EntryKeySelector Key Changed (keybind modify"));
-		AUR_PlayerController * PlayerController = Cast<AUR_PlayerController>(GetOwningPlayer());
+		AUR_BasePlayerController * PlayerController = Cast<AUR_BasePlayerController>(GetOwningPlayer());
 		UUR_PlayerInput * PlayerInput = Cast<UUR_PlayerInput>(PlayerController->GetPlayerInput());
 		UUR_Object_KeyBind * KeyBind = Cast<UUR_Object_KeyBind>(Item);
 

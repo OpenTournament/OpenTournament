@@ -10,6 +10,7 @@
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
 				"Engine",
+				"EngineSettings",
 				"UMG",
 				"CoreUObject",
 				"MoviePlayer"
