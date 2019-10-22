@@ -73,7 +73,9 @@ bool UUR_Widget_BaseMenu::PreventClose_Implementation()
 
 FReply UUR_Widget_BaseMenu::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
+#if WITH_EDITOR
 	UE_LOG(LogTemp, Log, TEXT("OnKeyDown %s @ %s"), *InKeyEvent.GetKey().GetDisplayName().ToString(), *GetDisplayNameBase().ToString());
+#endif
 
 	if (bCloseOnEscape && InKeyEvent.GetKey() == EKeys::Escape)
 	{
