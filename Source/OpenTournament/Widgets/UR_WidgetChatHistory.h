@@ -3,15 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UR_Widget_BaseMenu.h"
 #include "UR_WidgetChatHistory.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class OPENTOURNAMENT_API UUR_WidgetChatHistory : public UUserWidget
+class OPENTOURNAMENT_API UUR_WidgetChatHistory : public UUR_Widget_BaseMenu
 {
 	GENERATED_BODY()
-	
+
+	UUR_WidgetChatHistory(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+	{
+		CloseOnAction = TEXT("ShowChatHistory");
+	}
 };

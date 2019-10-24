@@ -2,6 +2,8 @@
 
 #include "UR_Widget_KeyBindingMenu.h"
 
+#include "GameFramework/InputSettings.h"
+
 UUR_Widget_KeyBindingMenu::UUR_Widget_KeyBindingMenu(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	
@@ -11,11 +13,15 @@ UUR_Widget_KeyBindingMenu::UUR_Widget_KeyBindingMenu(const FObjectInitializer& O
 void UUR_Widget_KeyBindingMenu::OnCloseButtonClicked()
 {
 	UE_LOG(LogTemp, Warning, TEXT("CloseButton Clicked"));
+	/*
 	OwningPlayer->SetInputMode(FInputModeGameOnly());
 	OwningPlayer->bShowMouseCursor = false;
 	RemoveFromViewport();
+	*/
+	Close();
 }
 
+//TODO: remove
 void UUR_Widget_KeyBindingMenu::OpenMenu()
 {
 	OwningPlayer = GetOwningPlayer();
@@ -48,7 +54,7 @@ void UUR_Widget_KeyBindingMenu::CreateKeyBindObject(FName Name, FKey Key)
 
 void UUR_Widget_KeyBindingMenu::PopulateKeyBindingList()
 {
-	AUR_PlayerController * Player = Cast<AUR_PlayerController>(GetOwningPlayer());
+	AUR_BasePlayerController * Player = Cast<AUR_BasePlayerController>(GetOwningPlayer());
 	UUR_PlayerInput * PlayerInput = Player->GetPlayerInput();
 	const UInputSettings * Settings = GetDefault<UInputSettings>();
 

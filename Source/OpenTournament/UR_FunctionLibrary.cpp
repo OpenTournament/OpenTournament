@@ -44,3 +44,29 @@ int32 UUR_FunctionLibrary::GetPlayerStateValue(APlayerController* PlayerControll
     }
     return outValue;
 }
+
+bool UUR_FunctionLibrary::IsKeyMappedToAction(const FKey& Key, FName ActionName)
+{
+	UInputSettings* Settings = UInputSettings::GetInputSettings();
+	TArray<FInputActionKeyMapping> Mappings;
+	Settings->GetActionMappingByName(ActionName, Mappings);
+	for (const auto& Mapping : Mappings)
+	{
+		if (Mapping.Key == Key)
+			return true;
+	}
+	return false;
+}
+
+bool UUR_FunctionLibrary::IsKeyMappedToAxis(const FKey& Key, FName AxisName, float Direction)
+{
+	UInputSettings* Settings = UInputSettings::GetInputSettings();
+	TArray<FInputAxisKeyMapping> Mappings;
+	Settings->GetAxisMappingByName(AxisName, Mappings);
+	for (const auto& Mapping : Mappings)
+	{
+		if (Mapping.Key == Key && (FMath::IsNearlyZero(Direction) || (Direction*Mapping.Scale > 0)))
+			return true;
+	}
+	return false;
+}
