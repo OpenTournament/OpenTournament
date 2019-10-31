@@ -34,7 +34,6 @@ void UUR_PlayerInput::SetActionKeyMappingKey(const FInputActionKeyMapping Action
 
 void UUR_PlayerInput::ModifyActionKeyMapping(FName ActionName, const FInputActionKeyMapping ModActionKeyMapping)
 {
-	TArray<FInputActionKeyMapping> ActionMappings;
 	InputSettings->GetActionMappingByName(ActionName, ActionMappings);
 
 	InputSettings->RemoveActionMapping(ActionMappings[0], false);
@@ -46,8 +45,6 @@ void UUR_PlayerInput::ModifyActionKeyMapping(FName ActionName, const FInputActio
 bool UUR_PlayerInput::ModifyKeyMapping(FName MappingName, const FInputChord InputChord)
 {
 	//Get action mappings and axis mappings
-	TArray<FInputActionKeyMapping> ActionMappings;
-	TArray<FInputAxisKeyMapping> AxisMappings;
 	InputSettings->GetActionMappingByName(MappingName, ActionMappings);
 	InputSettings->GetAxisMappingByName(MappingName, AxisMappings);
 	//If an action and axis have the same name, print an error and return early

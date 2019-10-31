@@ -12,6 +12,13 @@
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 
+#include "UnrealString.h"
+#include "Regex.h"
+
+#include "GameFramework/InputSettings.h"
+
+#include "Engine.h"
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameModeBase* UUR_FunctionLibrary::GetGameModeDefaultObject(const UObject* WorldContextObject)
@@ -45,6 +52,70 @@ int32 UUR_FunctionLibrary::GetPlayerStateValue(APlayerController* PlayerControll
     return outValue;
 }
 
+FColor UUR_FunctionLibrary::GetPlayerDisplayTextColor(APlayerState* PS)
+{
+	if (!PS)
+	{
+		return FColorList::Green;
+	}
+	else if (PS->bOnlySpectator)
+	{
+		return GetSpectatorDisplayTextColor();
+	}
+	else
+	{
+		AUR_PlayerState* URPS = Cast<AUR_PlayerState>(PS);
+		if (URPS)
+		{
+			//TODO: if team game, return team color, something like URPS->Team->GetDisplayTextColor();
+
+			//TODO: if non team game, return player's color ? if any ? or white ?
+
+			return FColorList::Red;
+		}
+		else
+		{
+			return FColorList::Green;	//???
+		}
+	}
+}
+
+FString UUR_FunctionLibrary::StripRichTextDecorators(const FString& InText)
+{
+	FString Result(TEXT(""), InText.Len());
+
+	int32 CurrentPosition = 0;
+
+	// see RichTextMarkupProcessing.cpp
+
+	TArray<FTextRange> LineRanges;
+	FTextRange::CalculateLineRangesFromString(InText, LineRanges);
+
+	FRegexPattern ElementRegexPattern(TEXT("<([\\w\\d\\.-]+)((?: (?:[\\w\\d\\.-]+=(?>\".*?\")))+)?(?:(?:/>)|(?:>(.*?)</>))"));
+	FRegexMatcher ElementRegexMatcher(ElementRegexPattern, InText);
+
+	for (int32 i = 0; i < LineRanges.Num(); i++)
+	{
+		// Limit the element regex matcher to the current line
+		ElementRegexMatcher.SetLimits(LineRanges[i].BeginIndex, LineRanges[i].EndIndex);
+
+		while (ElementRegexMatcher.FindNext())
+		{
+			// append all from current position up to opening marker
+			Result.Append(InText.Mid(CurrentPosition, ElementRegexMatcher.GetMatchBeginning() - CurrentPosition));
+			// append inner content
+			Result.Append(ElementRegexMatcher.GetCaptureGroup(3));
+			// set current position to after closing marker
+			CurrentPosition = ElementRegexMatcher.GetMatchEnding();
+		}
+	}
+
+	Result.Append(InText.Mid(CurrentPosition));
+
+	return Result;
+}
+
+
 bool UUR_FunctionLibrary::IsKeyMappedToAction(const FKey& Key, FName ActionName)
 {
 	UInputSettings* Settings = UInputSettings::GetInputSettings();
@@ -69,4 +140,12 @@ bool UUR_FunctionLibrary::IsKeyMappedToAxis(const FKey& Key, FName AxisName, flo
 			return true;
 	}
 	return false;
+}
+
+AUR_PlayerController* UUR_FunctionLibrary::GetLocalPlayerController(const UObject* WorldContextObject)
+{
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
+		return World->GetFirstPlayerController<AUR_PlayerController>();
+
+	return nullptr;
 }
