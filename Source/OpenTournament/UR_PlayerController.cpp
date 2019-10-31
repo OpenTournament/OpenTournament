@@ -20,6 +20,7 @@
 #include "UR_ChatComponent.h"
 #include "UR_LocalPlayer.h"
 #include "Widgets/UR_Widget_BaseMenu.h"
+#include "UR_MessageHistory.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -39,7 +40,6 @@ AUR_PlayerController::AUR_PlayerController(const FObjectInitializer& ObjectIniti
 	ChatComponent = CreateDefaultSubobject<UUR_ChatComponent>(TEXT("ChatComponent"));
 	ChatComponent->FallbackOwnerName = TEXT("SOMEBODY");
 	ChatComponent->AntiSpamDelay = 1.f;
-	ChatComponent->OnReceiveChatMessage.AddUniqueDynamic(this, &AUR_PlayerController::OnReceiveChatMessage);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,6 +48,8 @@ void AUR_PlayerController::BeginPlay()
 {
     Super::BeginPlay();
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_PlayerController::PlayMusic(USoundBase * Music, float FadeInDuration)
 {
@@ -76,6 +78,37 @@ void AUR_PlayerController::SetMusicVolume(float MusicVolume)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
+{
+	Super::SetPlayer(InPlayer);
+
+	UUR_LocalPlayer* LP = Cast<UUR_LocalPlayer>(GetLocalPlayer());
+	if (LP && LP->MessageHistory)
+	{
+		// bind chat dispatcher to MessageHistory handler
+		ChatComponent->OnReceiveChatMessage.AddUniqueDynamic(LP->MessageHistory, &UUR_MessageHistory::OnReceiveChatMessage);
+
+		// bind system message dispatcher to MessageHistory handler
+		OnReceiveSystemMessage.AddUniqueDynamic(LP->MessageHistory, &UUR_MessageHistory::OnReceiveSystemMessage);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("URPlayerController created but no URLocalPlayer available ?! %s"), *GetDebugName(this));
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_PlayerController::InitInputSystem()
+{
+    if (PlayerInput == nullptr)
+    {
+        // PlayerInput = NewObject<UUTPlayerInput>(this, UUTPlayerInput::StaticClass());
+    }
+
+    Super::InitInputSystem();
+}
 
 void AUR_PlayerController::SetupInputComponent()
 {
@@ -233,36 +266,21 @@ void AUR_PlayerController::UnCrouch()
 void AUR_PlayerController::Say(const FString& Message)
 {
 	if (ChatComponent)
-		ChatComponent->Send(Message, EChatChannel::Say);
+		ChatComponent->Send(Message, false);
 }
 
 void AUR_PlayerController::TeamSay(const FString& Message)
 {
 	if (ChatComponent)
-		ChatComponent->Send(Message, EChatChannel::Team);
+		ChatComponent->Send(Message, true);
 }
 
-void AUR_PlayerController::OnReceiveChatMessage(const FString& SenderName, const FString& Message, EChatChannel Channel, APlayerState* SenderPS)
+void AUR_PlayerController::ClientMessage_Implementation(const FString& S, FName Type, float MsgLifeTime)
 {
-	UUR_LocalPlayer* LP = Cast<UUR_LocalPlayer>(GetLocalPlayer());
-	if (LP)
-	{
-		if (LP->ChatHistory.Num() >= CHAT_HISTORY_MAX)
-			LP->ChatHistory.RemoveAt(0, 1, false);
-
-		int32 AuthorTeamIdx = -2;
-		if (SenderPS)
-		{
-			if (SenderPS->bOnlySpectator)
-				AuthorTeamIdx = -1;
-			else
-				AuthorTeamIdx = 0;	//TODO: real author team index
-		}
-
-		int32 MessageTeamIdx = 0;	//TODO: real self team index
-
-		LP->ChatHistory.Add({ FDateTime::Now(), SenderName, Message, Channel, AuthorTeamIdx, MessageTeamIdx });
-	}
+	if (OnReceiveSystemMessage.IsBound())
+		OnReceiveSystemMessage.Broadcast(S);
+	else
+		Super::ClientMessage_Implementation(S, Type, MsgLifeTime);
 }
 
 

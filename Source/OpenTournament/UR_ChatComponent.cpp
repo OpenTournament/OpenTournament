@@ -10,6 +10,16 @@
 #include "UR_GameState.h"
 #include "UR_Character.h"
 #include "UR_HealthComponent.h"
+#include "UR_FunctionLibrary.h"
+
+/**
+* NOTE: It would kind of make sense to have a BaseChatComponent base class,
+* and a PlayerChatComponent subclass that implements the Controller/PlayerState related parts and replicates.
+*
+* But it is kind of superfluous right now, and maybe ever.
+* It's not like the player part is adding a tremendous amount of code.
+* Nor that this thing will be widely used for non players entities.
+*/
 
 UUR_ChatComponent::UUR_ChatComponent()
 	: OwnerController(nullptr)
@@ -17,7 +27,6 @@ UUR_ChatComponent::UUR_ChatComponent()
 	, AntiSpamDelay(1.f)
 	, LastSendTime(0)
 	, MaxMessageLength(150)
-	
 {
 	bReplicates = true;
 }
@@ -42,30 +51,30 @@ void UUR_ChatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		GM->UnregisterChatComponent(this);
 }
 
-void UUR_ChatComponent::Send(const FString& Message, EChatChannel Channel)
+void UUR_ChatComponent::Send(const FString& Message, bool bTeamMessage)
 {
-	FString ValidatedMessage = Validate(ProcessChatParameters(Message), Channel);
+	FString ValidatedMessage = Validate(ProcessChatParameters(Message), bTeamMessage);
 	if (!ValidatedMessage.IsEmpty())
 	{
 		LastSendTime = GetWorld()->RealTimeSeconds;
 
 		if (GetOwnerRole() == ROLE_Authority)
-			Broadcast(ValidatedMessage, Channel);
+			Broadcast(ValidatedMessage, bTeamMessage ? GetTeamIndex() : CHAT_INDEX_GLOBAL);
 		else
-			ServerSend(ValidatedMessage, Channel);
+			ServerSend(ValidatedMessage, bTeamMessage);
 	}
 }
 
-bool UUR_ChatComponent::ServerSend_Validate(const FString& Message, EChatChannel Channel)
+bool UUR_ChatComponent::ServerSend_Validate(const FString& Message, bool bTeamMessage)
 {
 	return true;
 }
-void UUR_ChatComponent::ServerSend_Implementation(const FString& Message, EChatChannel Channel)
+void UUR_ChatComponent::ServerSend_Implementation(const FString& Message, bool bTeamMessage)
 {
-	Send(Message, Channel);
+	Send(Message, bTeamMessage);
 }
 
-FString UUR_ChatComponent::Validate_Implementation(const FString& Message, EChatChannel Channel)
+FString UUR_ChatComponent::Validate_Implementation(const FString& Message, bool bTeamMessage)
 {
 	// anti spam
 	if (GetWorld()->RealTimeSeconds - LastSendTime < AntiSpamDelay)
@@ -81,29 +90,16 @@ FString UUR_ChatComponent::Validate_Implementation(const FString& Message, EChat
 	return ValidatedMessage;
 }
 
-void UUR_ChatComponent::Broadcast(const FString& Message, EChatChannel Channel)
+void UUR_ChatComponent::Broadcast(const FString& Message, int32 TeamIndex)
 {
-	// Fixup the channel in some cases
-	if (Channel == EChatChannel::Team)
-	{
-		if (OwnerController && OwnerController->PlayerState && OwnerController->PlayerState->bOnlySpectator)
-		{
-			Channel = EChatChannel::Spec;
-		}
-		else
-		{
-			//TODO: if not a team game mode, set Channel = Say
-		}
-	}
-
 	AUR_GameModeBase* GM = GetWorld()->GetAuthGameMode<AUR_GameModeBase>();
 	if (GM)
 	{
 		for (auto Recipient : GM->ChatComponents)
 		{
-			if (Recipient->ShouldReceive(Channel, this))
+			if (Recipient->ShouldReceive(this, TeamIndex))
 			{
-				Recipient->Receive(this, Message, Channel);
+				Recipient->Receive(this, Message, TeamIndex);
 			}
 		}
 	}
@@ -113,42 +109,37 @@ void UUR_ChatComponent::Broadcast(const FString& Message, EChatChannel Channel)
 	}
 }
 
-bool UUR_ChatComponent::ShouldReceive_Implementation(EChatChannel Channel, UUR_ChatComponent* Sender)
+bool UUR_ChatComponent::ShouldReceive_Implementation(UUR_ChatComponent* Sender, int32 TeamIndex)
 {
-	switch (Channel)
-	{
-		case EChatChannel::System:
-		case EChatChannel::Say:
-			return true;
+	if (TeamIndex >= 0)
+		return GetTeamIndex() == TeamIndex;
 
-		case EChatChannel::Team:
-		{
-			if (!Sender)
-				return false;
+	if (TeamIndex == CHAT_INDEX_GLOBAL)
+		return true;
 
-			//TODO: team implementation
-			// if ( IsTeamGameMode() )
-			//   return Sender.GetTeamIndex() == GetTeamIndex()
-			// else
-			return true;
-		}
+	if (TeamIndex == CHAT_INDEX_SPEC)
+		return OwnerController && OwnerController->PlayerState && OwnerController->PlayerState->bOnlySpectator;
 
-		case EChatChannel::Spec:
-			return OwnerController && OwnerController->PlayerState && OwnerController->PlayerState->bOnlySpectator;
-
-		default:
-			return false;
-	}
+	return false;
 }
 
-void UUR_ChatComponent::Receive_Implementation(UUR_ChatComponent* Sender, const FString& Message, EChatChannel Channel)
+void UUR_ChatComponent::Receive_Implementation(UUR_ChatComponent* Sender, const FString& Message, int32 TeamIndex)
 {
 	FString SenderName = Sender ? Sender->GetOwnerName() : TEXT("");
 	APlayerState* SenderPS = Sender ? Sender->GetPlayerState() : nullptr;
 
-	ClientReceive(SenderName, Message, Channel, SenderPS);
+	ClientReceive(SenderName, Message, TeamIndex, SenderPS);
 
-	OnReceiveChatMessage.Broadcast(SenderName, Message, Channel, SenderPS);
+	// ClientReceive triggers dispatcher on client side. Avoid triggering twice in standalone.
+	if ( GetNetMode() != NM_Standalone )
+		OnReceiveChatMessage.Broadcast(SenderName, Message, TeamIndex, SenderPS);
+}
+
+int32 UUR_ChatComponent::GetTeamIndex_Implementation()
+{
+	APlayerState* PS = GetPlayerState();
+	//TODO: return actual team index
+	return PS ? (PS->bOnlySpectator ? CHAT_INDEX_SPEC : 0) : CHAT_INDEX_GLOBAL;
 }
 
 FString UUR_ChatComponent::GetOwnerName_Implementation()
@@ -162,23 +153,9 @@ APlayerState* UUR_ChatComponent::GetPlayerState_Implementation()
 	return OwnerController ? OwnerController->PlayerState : nullptr;
 }
 
-void UUR_ChatComponent::ClientReceive_Implementation(const FString& SenderName, const FString& Message, EChatChannel Channel, APlayerState* SenderPS)
+void UUR_ChatComponent::ClientReceive_Implementation(const FString& SenderName, const FString& Message, int32 TeamIndex, APlayerState* SenderPS)
 {
-	FString Prefix(TEXT(""));
-	switch (Channel)
-	{
-		case EChatChannel::System: Prefix = TEXT("[SYS] ");  break;
-		case EChatChannel::Team:   Prefix = TEXT("[TEAM] "); break;
-		case EChatChannel::Spec:   Prefix = TEXT("[SPEC] "); break;
-	}
-
-	if (!SenderName.IsEmpty())
-		Prefix.Append(SenderName).Append(": ");
-
-	UE_LOG(LogTemp, Log, TEXT("%s%s"), *Prefix, *Message);
-
-	if ( GetOwnerRole() != ROLE_Authority )
-		OnReceiveChatMessage.Broadcast(SenderName, Message, Channel, SenderPS);
+	OnReceiveChatMessage.Broadcast(SenderName, Message, TeamIndex, SenderPS);
 }
 
 FString UUR_ChatComponent::ProcessChatParameters_Implementation(const FString& Original)
@@ -205,4 +182,21 @@ FString UUR_ChatComponent::ProcessChatParameters_Implementation(const FString& O
 	}
 
 	return Result;
+}
+
+FColor UUR_ChatComponent::GetChatMessageColor(UObject* WorldContextObject, int32 TeamIndex)
+{
+	if (TeamIndex >= 0)
+	{
+		// TODO: team color
+		// possibly something like GameState->Teams[TeamIndex]->GetDisplayTextColor()
+
+		//AUR_GameState* GS = WorldContextObject->GetWorld()->GetGameState<AUR_GameState>();
+
+		return FColorList::Red;
+	}
+	else if (TeamIndex == CHAT_INDEX_SPEC)
+		return UUR_FunctionLibrary::GetSpectatorDisplayTextColor();
+	else
+		return FColor::White;
 }

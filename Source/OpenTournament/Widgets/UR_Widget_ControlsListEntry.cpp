@@ -51,7 +51,7 @@ void UUR_Widget_ControlsListEntry::OnEntryKeySelectorIsSelectingKeyChanged()
 	IsSelectingKey = true;
 }
 
-void UUR_Widget_ControlsListEntry::SetListItemObjectInternal(UObject * InObject)
+void UUR_Widget_ControlsListEntry::NativeOnListItemObjectSet(UObject * InObject)
 {
 	Item = InObject;
 	UpdateEntry();

@@ -39,7 +39,7 @@ public:
     void OnEntryKeySelectorIsSelectingKeyChanged();
 
     void NativeConstruct();
-    void SetListItemObjectInternal(UObject* InObject);
+    void NativeOnListItemObjectSet(UObject* InObject);
 
 private:
 
