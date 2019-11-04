@@ -12,9 +12,6 @@ AUR_Lift::AUR_Lift(const FObjectInitializer& ObjectInitializer) : Super(ObjectIn
 	BaseMeshComponent = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("BaseMeshComponent"));
 	RootComponent = BaseMeshComponent;
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> DefaultMesh(TEXT("StaticMesh'/Game/StarterContent/Shapes/Shape_Plane.Shape_Plane'"));
-	BaseMeshComponent->SetStaticMesh(DefaultMesh.Object);
-
 	BaseTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("Collider"));
 	BaseTrigger->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	BaseTrigger->SetBoxExtent(FVector(50, 50, 30));
