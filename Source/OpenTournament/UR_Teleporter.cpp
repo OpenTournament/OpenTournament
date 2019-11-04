@@ -87,12 +87,11 @@ void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other,
         return;
     }
 
-    GAME_LOG(Game, Log, "Teleporter (%s) Triggered", *GetName());
-    GAME_PRINT(1.f, FColor::Green, "Teleporter (%s) Triggered", *GetName());
+    GAME_LOG(Game, Verbose, "Teleporter (%s) Triggered", *GetName());
 
     if (PerformTeleport(Character))
     {
-        GAME_LOG(Game, Verbose, "Teleported Character (%s) to DestinationActor (%s)", *Character->GetName(), *DestinationActor->GetName());
+        GAME_LOG(Game, Log, "Teleported Character (%s) to DestinationActor (%s)", *Character->GetName(), *DestinationActor->GetName());
     }
     else
     {
