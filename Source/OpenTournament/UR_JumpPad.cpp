@@ -53,9 +53,7 @@ void AUR_JumpPad::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UP
 	if (TargetCharacter)
 	{
 		TargetCharacter->LaunchCharacter(CalculateJumpVelocity(TargetCharacter), true, true);
-	}
-	else
-	{
+		PlayJumpPadEffects();
 	}
 }
 
@@ -70,7 +68,7 @@ void AUR_JumpPad::PlayJumpPadEffects_Implementation()
 FVector AUR_JumpPad::CalculateJumpVelocity(AActor* Other)
 {
 	float gravity = GetWorld()->GetGravityZ();
-	FVector targetVector = Destination - this->GetActorLocation();
+	FVector targetVector = Destination - Other->GetActorLocation();
 
 	float sizeXY = targetVector.Size2D() / JumpTime;
 	float sizeZ = targetVector.Z / JumpTime - gravity * JumpTime / 2.0f;
