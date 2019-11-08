@@ -29,10 +29,13 @@ AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer),
     DestinationActor(nullptr),
     ExitRotationType(EExitRotation::ER_Relative),
-    bKeepMomentum(true)
+    bKeepMomentum(true),
+    TeleportOutSound(nullptr),
+    TeleportInSound(nullptr)
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bStartWithTickEnabled = false;
 
     CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
     CapsuleComponent->SetCapsuleSize(45.f, 90.f, false);
@@ -55,18 +58,18 @@ AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
     ParticleSystemComponent->SetupAttachment(RootComponent);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 // Called when the game starts or when spawned
 void AUR_Teleporter::BeginPlay()
 {
     Super::BeginPlay();
-
 }
 
 // Called every frame
 void AUR_Teleporter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
 }
 
 void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

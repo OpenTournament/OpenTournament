@@ -27,39 +27,38 @@ class OPENTOURNAMENT_API AUR_Teleporter : public AActor
     GENERATED_BODY()
 
 public:
-    // Sets default values for this actor's properties
-    AUR_Teleporter(const FObjectInitializer& ObjectInitializer);
 
     /*
     * Static Mesh Component - Teleporter Base
     */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
     UStaticMeshComponent* MeshComponent;
 
     /*
     * Capsule Component - Active Teleport Region
     */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
     UCapsuleComponent* CapsuleComponent;
 
     /*
     * Audio Component
     */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
     UAudioComponent* AudioComponent;
 
     /*
     * Arrow Component
     */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
     UArrowComponent* ArrowComponent;
 
     /*
     * ParticleSystem Component
     */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
     UParticleSystemComponent* ParticleSystemComponent;
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /*
     * Destination of Teleport - May be another Teleporter, TargetPoint, etc.
@@ -90,6 +89,11 @@ public:
     */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleporter")
     USoundBase* TeleportInSound;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Sets default values for this actor's properties
+    AUR_Teleporter(const FObjectInitializer& ObjectInitializer);
 
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
