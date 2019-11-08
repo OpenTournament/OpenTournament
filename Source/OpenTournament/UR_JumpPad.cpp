@@ -28,12 +28,13 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bStartWithTickEnabled = false;
 
     SceneRoot = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("SceneComponent"));
     RootComponent = SceneRoot;
 
     CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
-    CapsuleComponent->SetCapsuleSize(45.f, 45.f, false);
+    CapsuleComponent->SetCapsuleSize(55.f, 55.f, false);
     CapsuleComponent->SetupAttachment(RootComponent);
     
     //SetRootComponent(CapsuleComponent);
@@ -101,6 +102,8 @@ FVector AUR_JumpPad::CalculateJumpVelocity(const AActor* InCharacter)
 
     return TargetVector.GetSafeNormal2D() * SizeXY + FVector::UpVector * SizeZ;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if WITH_EDITOR
 // Workarounds to the editor FTransform widget not having a setting to work in world space

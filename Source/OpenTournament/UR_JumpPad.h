@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+
 #include "UR_JumpPad.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -21,8 +24,6 @@ class OPENTOURNAMENT_API AUR_JumpPad : public AActor
     GENERATED_BODY()
 
 public:
-    // Sets default values for this actor's properties
-    AUR_JumpPad(const FObjectInitializer& ObjectInitializer);
 
     UPROPERTY(BlueprintReadOnly, Category = JumpPad)
     USceneComponent* SceneRoot;
@@ -30,25 +31,25 @@ public:
     /*
     * Static Mesh Component - JumpPad Base
     */
-    UPROPERTY(BlueprintReadOnly, Category = "JumpPad", meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad", meta = (AllowPrivateAccess = "true"))
     UStaticMeshComponent* MeshComponent;
 
     /*
     * Capsule Component - Active JumpPad Region
     */
-    UPROPERTY(BlueprintReadOnly, Category = "JumpPad", meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad", meta = (AllowPrivateAccess = "true"))
     UCapsuleComponent* CapsuleComponent;
     
     /*
     * Audio Component
     */
-    UPROPERTY(BlueprintReadOnly, Category = "JumpPad", meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad", meta = (AllowPrivateAccess = "true"))
     UAudioComponent* AudioComponent;
 
     /*
     * ParticleSystem Component
     */
-    UPROPERTY(BlueprintReadOnly, Category = "JumpPad", meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad", meta = (AllowPrivateAccess = "true"))
     UParticleSystemComponent* ParticleSystemComponent;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,11 +60,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad", meta = (MakeEditWidget = ""))
     FTransform Destination;
 
-#if WITH_EDITOR
     /** if set then lock the Destination when moving/rotating the JumpPad */
     UPROPERTY(EditAnywhere, Category = "JumpPadEditor")
     bool bLockDestination;
-#endif
 
     /*
     * Duration of the Jump - in seconds
@@ -79,11 +78,14 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-protected:
+public:
+
+    // Sets default values for this actor's properties
+    AUR_JumpPad(const FObjectInitializer& ObjectInitializer);
+
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
-public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
@@ -94,6 +96,8 @@ public:
 
     UFUNCTION()
     void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if WITH_EDITOR
     virtual void EditorApplyTranslation(const FVector& DeltaTranslation, bool bAltDown, bool bShiftDown, bool bCtrlDown) override;
