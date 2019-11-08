@@ -13,3 +13,12 @@ http://creativecommons.org/publicdomain/zero/1.0/
 "alanmcki" - fast_whoosh.wav
 https://freesound.org/people/alanmcki/sounds/461017/
 http://creativecommons.org/licenses/by/3.0/
+
+"menegass" - gui-drum-bd-soft.wav
+https://freesound.org/people/menegass/sounds/100052/
+https://creativecommons.org/publicdomain/zero/1.0/
+
+"n1ghthawk" - alien-ambient-flow.wav
+https://freesound.org/people/n1ghthawk/sounds/172131/
+https://creativecommons.org/publicdomain/zero/1.0/
+
