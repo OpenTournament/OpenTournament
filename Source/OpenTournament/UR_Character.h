@@ -102,6 +102,12 @@ public:
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character")
     FCharacterVoice CharacterVoice;
 
+	/**
+	* Fire animation
+	*/
+	UPROPERTY(VisibleDefaultsOnly, Category = "Animation")
+		class UAnimationAsset* fireAnim;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

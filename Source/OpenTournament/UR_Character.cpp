@@ -60,7 +60,8 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     MeshFirstPerson->RelativeRotation = FRotator(1.9f, -19.19f, 5.2f);
     MeshFirstPerson->RelativeLocation = FVector(-0.5f, -4.4f, -155.7f);
 
-
+	ConstructorHelpers::FObjectFinder<UAnimationAsset> fireAnimAsset(TEXT("AnimSequence'/Game/FirstPerson/Animations/FirstPerson_Fire.FirstPerson_Fire'"));
+	fireAnim = fireAnimAsset.Object;
 	WeaponAttachPoint = "GripPoint";
 	
 }
@@ -487,6 +488,7 @@ void AUR_Character::Fire()
 					SpawnParams.Owner = this;
 					SpawnParams.Instigator = Instigator;
 					InventoryComponent->ActiveWeapon->Fire(World, MuzzleLocation, MuzzleRotation, SpawnParams);
+					MeshFirstPerson->PlayAnimation(fireAnim, false);
 				}
 			}
 		}
