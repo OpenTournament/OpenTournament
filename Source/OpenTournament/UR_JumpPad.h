@@ -98,7 +98,7 @@ public:
     /**
     * Is this actor permitted to jump? 
     */
-    UFUNCTION(BlueprintNativeEvent, BlueprintPure,, BlueprintCallable, Category = "JumpPad")
+    UFUNCTION(BlueprintNativeEvent, BlueprintPure, BlueprintCallable, Category = "JumpPad")
     bool IsPermittedToJump(const AActor* InCharacter) const;
 
     /**
