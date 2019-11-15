@@ -74,12 +74,15 @@ void AUR_JumpPad::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UP
 
     if (Other->GetActorLocation().Z > CapsuleComponent->GetComponentTransform().GetLocation().Z)
     {
-        GAME_LOG(Game, Log, "Entered JumpPad (%s)", *GetName());
-
-        if (TargetCharacter)
+        if (IsPermittedToJump(TargetCharacter))
         {
-            TargetCharacter->LaunchCharacter(CalculateJumpVelocity(TargetCharacter), true, true);
-            PlayJumpPadEffects();
+            GAME_LOG(Game, Log, "Entered JumpPad (%s)", *GetName());
+
+            if (TargetCharacter)
+            {
+                TargetCharacter->LaunchCharacter(CalculateJumpVelocity(TargetCharacter), true, true);
+                PlayJumpPadEffects();
+            }
         }
     }
 }
@@ -90,6 +93,11 @@ void AUR_JumpPad::PlayJumpPadEffects_Implementation()
     {
         UGameplayStatics::PlaySoundAtLocation(GetWorld(), JumpPadLaunchSound, GetActorLocation());
     }
+}
+
+bool AUR_JumpPad::IsPermittedToJump_Implementation(const AActor* InCharacter) const
+{
+    return true;
 }
 
 FVector AUR_JumpPad::CalculateJumpVelocity(const AActor* InCharacter)

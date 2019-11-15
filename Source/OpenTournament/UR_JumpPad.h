@@ -89,9 +89,21 @@ public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
+    /**
+    * Play Effects on Successful Jump
+    */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "JumpPad")
     void PlayJumpPadEffects();
 
+    /**
+    * Is this actor permitted to jump? 
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintPure,, BlueprintCallable, Category = "JumpPad")
+    bool IsPermittedToJump(const AActor* InCharacter) const;
+
+    /**
+    * Calculate our Jump Velocity
+    */
     FVector CalculateJumpVelocity(const AActor* InCharacter);
 
     UFUNCTION()
