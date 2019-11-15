@@ -101,8 +101,20 @@ public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
+    /**
+    * Is this actor permitted to teleport? 
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintPure, BlueprintCallable, Category = "Teleporter")
+    bool IsPermittedToTeleport(const AActor* TargetActor) const;
+
+    /**
+    * Perform the teleport. Return true if successful.
+    */
     bool PerformTeleport(AActor* TargetActor);
 
+    /**
+    * Play Teleport Effects
+    */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Teleporter")
     void PlayTeleportEffects();
 

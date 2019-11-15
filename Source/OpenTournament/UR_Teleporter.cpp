@@ -74,14 +74,6 @@ void AUR_Teleporter::Tick(float DeltaTime)
 
 void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    // @! TODO : Check to see if the component/actor overlapping here matches a LD-specifiable list of classes (e.g. if we want to teleport only characters, or if things such as projectiles, vehicles, etc. may also pass through)
-    AUR_Character* Character = Cast<AUR_Character>(Other);
-    if (Character == nullptr)
-    {
-        GAME_LOG(Game, Log, "Teleporter Error. Character was invalid.");
-        return;
-    }
-
     // TODO(Pedro): we should store the "teleporting" state in the MovementComponent of the actor in order to query it here
     bool isTeleporting = (bFromSweep == false);
 
@@ -90,16 +82,32 @@ void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other,
         return;
     }
 
-    GAME_LOG(Game, Verbose, "Teleporter (%s) Triggered", *GetName());
+    if (IsPermittedToTeleport(Other))
+    {
+        GAME_LOG(Game, Verbose, "Teleporter (%s) Triggered", *GetName());
 
-    if (PerformTeleport(Character))
-    {
-        GAME_LOG(Game, Log, "Teleported Character (%s) to DestinationActor (%s)", *Character->GetName(), *DestinationActor->GetName());
+        if (PerformTeleport(Other))
+        {
+            GAME_LOG(Game, Log, "Teleported Character (%s) to DestinationActor (%s)", *Other->GetName(), *DestinationActor->GetName());
+        }
+        else
+        {
+            GAME_LOG(Game, Warning, "Teleporter Destination not set", *Other->GetName(), *DestinationActor->GetName());
+        }
     }
-    else
+}
+
+bool AUR_Teleporter::IsPermittedToTeleport_Implementation(const AActor* TargetActor) const
+{
+    // @! TODO : Check to see if the component/actor overlapping here matches a LD-specifiable list of classes (e.g. if we want to teleport only characters, or if things such as projectiles, vehicles, etc. may also pass through). This function may also be overridden to determine conditions such as only characters of Red/Blue team may pass through
+    const AUR_Character* Character = Cast<AUR_Character>(TargetActor);
+    if (Character == nullptr)
     {
-        GAME_LOG(Game, Warning, "Teleporter Destination not set", *Character->GetName(), *DestinationActor->GetName());
+        GAME_LOG(Game, Log, "Teleporter Error. Character was invalid.");
+        return false;
     }
+
+    return true;
 }
 
 bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
