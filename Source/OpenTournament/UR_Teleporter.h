@@ -104,7 +104,7 @@ public:
     /**
     * Is this actor permitted to teleport? 
     */
-    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Teleporter")
+    UFUNCTION(BlueprintNativeEvent, BlueprintPure, BlueprintCallable, Category = "Teleporter")
     bool IsPermittedToTeleport(const AActor* TargetActor) const;
 
     /**
