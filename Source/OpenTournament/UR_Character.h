@@ -67,6 +67,12 @@ public:
 	UFUNCTION()
 	void WeaponSelect(int32 number);
 
+	UFUNCTION(Exec, BlueprintCallable)
+	void NextWeapon();
+
+	UFUNCTION(Exec, BlueprintCallable)
+	void PrevWeapon();
+
 	UFUNCTION()
 	void Fire();
 

@@ -110,11 +110,11 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("SRifle", IE_Pressed, this, &AUR_Character::SelectWeapon5);
 	PlayerInputComponent->BindAction("Pistol", IE_Pressed, this, &AUR_Character::SelectWeapon0);
 
+	PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
+	PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AUR_Character::BeginFire);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AUR_Character::EndFire);
-
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -458,6 +458,18 @@ bool AUR_Character::IsFirstPerson() const
 
 void AUR_Character::WeaponSelect(int32 number) {
 	InventoryComponent->SelectWeapon(number);
+}
+
+void AUR_Character::NextWeapon()
+{
+	if (InventoryComponent)
+		InventoryComponent->NextWeapon();
+}
+
+void AUR_Character::PrevWeapon()
+{
+	if (InventoryComponent)
+		InventoryComponent->PrevWeapon();
 }
 
 void AUR_Character::BeginFire()
