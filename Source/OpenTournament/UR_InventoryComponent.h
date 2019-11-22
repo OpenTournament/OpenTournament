@@ -60,5 +60,9 @@ public:
 	UFUNCTION()
 	AUR_Weapon * SelectWeaponG(int number);
 
-    
+	UFUNCTION()
+	bool NextWeapon();
+
+	UFUNCTION()
+	bool PrevWeapon();
 };

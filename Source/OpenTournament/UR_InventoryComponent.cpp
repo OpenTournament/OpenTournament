@@ -210,3 +210,59 @@ AUR_Weapon * UUR_InventoryComponent::SelectWeaponG(int number)
 	GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Yellow, FString::Printf(TEXT("Weapon name -> %s \n"), *name));
 	return ActiveWeapon;
 }
+
+bool UUR_InventoryComponent::NextWeapon()
+{
+	AUR_Weapon* NewWeapon = nullptr;
+
+	for (int32 i = 0; i < InventoryW.Num(); i++)
+	{
+		if (InventoryW[i] == ActiveWeapon)
+			NewWeapon = InventoryW[(i + 1) % InventoryW.Num()];
+	}
+	if (!NewWeapon && InventoryW.Num() > 0)
+		NewWeapon = InventoryW[0];
+
+	if (NewWeapon && NewWeapon != ActiveWeapon)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Yellow, FString::Printf(TEXT("Next weapon -> %s \n"), *NewWeapon->WeaponName));
+		if (ActiveWeapon)
+		{
+			ActiveWeapon->DetachMeshFromPawn();
+			ActiveWeapon->setEquipped(false);
+		}
+		NewWeapon->AttachMeshToPawn();
+		NewWeapon->setEquipped(true);
+		ActiveWeapon = NewWeapon;
+		return true;
+	}
+	return false;
+}
+
+bool UUR_InventoryComponent::PrevWeapon()
+{
+	AUR_Weapon* NewWeapon = nullptr;
+
+	for (int32 i = 0; i < InventoryW.Num(); i++)
+	{
+		if (InventoryW[i] == ActiveWeapon)
+			NewWeapon = InventoryW[(i + InventoryW.Num() - 1) % InventoryW.Num()];
+	}
+	if (!NewWeapon && InventoryW.Num() > 0)
+		NewWeapon = InventoryW.Last();
+
+	if (NewWeapon && NewWeapon != ActiveWeapon)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Yellow, FString::Printf(TEXT("Prev weapon -> %s \n"), *NewWeapon->WeaponName));
+		if (ActiveWeapon)
+		{
+			ActiveWeapon->DetachMeshFromPawn();
+			ActiveWeapon->setEquipped(false);
+		}
+		NewWeapon->AttachMeshToPawn();
+		NewWeapon->setEquipped(true);
+		ActiveWeapon = NewWeapon;
+		return true;
+	}
+	return false;
+}
