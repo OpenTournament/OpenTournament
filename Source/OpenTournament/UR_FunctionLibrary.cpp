@@ -149,3 +149,9 @@ AUR_PlayerController* UUR_FunctionLibrary::GetLocalPlayerController(const UObjec
 
 	return nullptr;
 }
+
+bool UUR_FunctionLibrary::IsLocallyViewed(AActor* Other)
+{
+	AUR_PlayerController* PC = GetLocalPlayerController(Other);
+	return PC && PC->GetViewTarget() == Other;
+}

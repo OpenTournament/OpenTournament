@@ -142,4 +142,10 @@ public:
 	*/
 	UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game", Meta = (WorldContext = "WorldContextObject", UnsafeDuringActorConstruction = "true"))
 	static class AUR_PlayerController* GetLocalPlayerController(const UObject* WorldContextObject);
+
+	/**
+	* Returns true if actor is currently viewed by local player controller.
+	*/
+	UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
+	static bool IsLocallyViewed(AActor* Other);
 };
