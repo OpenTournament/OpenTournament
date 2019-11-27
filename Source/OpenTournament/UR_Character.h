@@ -297,6 +297,9 @@ public:
     */
     virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool IsAlive();
+
 protected:
 	//pickup handlers
 	void BeginPickup();

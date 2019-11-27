@@ -372,6 +372,12 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 }
 
+bool AUR_Character::IsAlive()
+{
+	// not sure if we should return true or false when no HealthComponent
+	return HealthComponent ? (HealthComponent->Health > 0) : false;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
