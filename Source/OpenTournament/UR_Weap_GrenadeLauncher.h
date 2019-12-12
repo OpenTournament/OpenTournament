@@ -22,7 +22,7 @@ class OPENTOURNAMENT_API AUR_Weap_GrenadeLauncher : public AUR_Weapon
 
 	AUR_Weap_GrenadeLauncher(const FObjectInitializer& ObjectInitializer);
 
-	TSubclassOf<class AUR_Projectile_Grenade> ProjectileClass;
+	//TSubclassOf<class AUR_Projectile_Grenade> ProjectileClass;
 
 	virtual void Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams) override;
 

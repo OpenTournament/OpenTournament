@@ -63,7 +63,9 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 	ConstructorHelpers::FObjectFinder<UAnimationAsset> fireAnimAsset(TEXT("AnimSequence'/Game/FirstPerson/Animations/FirstPerson_Fire.FirstPerson_Fire'"));
 	fireAnim = fireAnimAsset.Object;
 	WeaponAttachPoint = "GripPoint";
-	
+
+	// Mesh third person
+	GetMesh()->bOwnerNoSee = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -322,35 +324,55 @@ void AUR_Character::OnWallDodge_Implementation(const FVector& DodgeLocation, con
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator,
-    AActor* DamageCauser)
+float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-    if (!ShouldTakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser))
-    {
-        return 0.f;
-    }
-
-    /*if (HealthComponent)
-    {
-        HealthComponent->ChangeHealth(-1 * Damage); //leaving this here for reference is need be
-    }*/
-
-	if (HealthComponent) 
+	if (!ShouldTakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser))
 	{
-		if (ArmorComponent) 
+		return 0.f;
+	}
+
+	// Super() takes care of calculating proper splash damage values and imparting components physics.
+	// Then it triggers events : OnTakePointDamage, OnTakeRadialDamage, OnTakeAnyDamage.
+	float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+
+	/*if (HealthComponent)
+	{
+		HealthComponent->ChangeHealth(-1 * Damage); //leaving this here for reference is need be
+	}*/
+
+	float ArmorPct = 0.60f;
+
+	if (HealthComponent)
+	{
+		int32 ArmorAbsorb = 0;
+
+		if (ArmorComponent)
 		{
-			if (ArmorComponent->Armor < 0.4*Damage && ArmorComponent->Armor > 0) 
+			if (ArmorComponent->hasBarrier)
+				ArmorAbsorb = FMath::Min((int32)ActualDamage, ArmorComponent->Armor);
+			else
+				ArmorAbsorb = FMath::Min((int32)((float)ActualDamage * ArmorPct), ArmorComponent->Armor);
+
+			ArmorComponent->ChangeArmor(-1 * ArmorAbsorb);
+
+			if (ArmorComponent->Armor == 0)
+				ArmorComponent->SetBarrier(false);
+		}
+
+		HealthComponent->ChangeHealth(-1 * (ActualDamage - ArmorAbsorb));
+
+		/*
+			if (ArmorComponent->Armor < 0.4*Damage && ArmorComponent->Armor > 0)
 			{
 				int32 currentArmor = ArmorComponent->Armor;
 				ArmorComponent->ChangeArmor(-1 * ArmorComponent->Armor);
 				HealthComponent->ChangeHealth(-1 * (Damage - currentArmor));
 			}
-			else if	(ArmorComponent->Armor > Damage && ArmorComponent->hasBarrier)
+			else if (ArmorComponent->Armor > Damage && ArmorComponent->hasBarrier)
 			{
 				ArmorComponent->ChangeArmor(-1 * Damage);
 			}
-
-			else if(ArmorComponent->Armor <= 0)
+			else if (ArmorComponent->Armor <= 0)
 			{
 				HealthComponent->ChangeHealth(-1 * Damage);
 			}
@@ -359,17 +381,59 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
 				ArmorComponent->ChangeArmor(-0.6 * Damage);
 				HealthComponent->ChangeHealth(-0.4 * Damage);
 			}
-
-		}
+		*/
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2")));
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - DAMAGE -: %f"), Damage));
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - Remaining Health -: %d"), HealthComponent->Health));
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - DAMAGE -: %f"), ActualDamage));
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Damage Event 2 - Remaining Health -: %d"), HealthComponent->Health));
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("Damage Event 2 - Remaining Armor -: %d"), ArmorComponent->Armor));
 
 
-    return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+	//NOTE: it seems like we are lacking control of damage momentum (knockback) overall.
+	// DamageType has DamageImpulse but it is part of CDO, which is a bit annoying.
+	// We cannot adjust DamageImpulse on the fly with gamemode/mutators.
+	// Also it only applies to physics-enabled stuff. Characters need custom knockback anyways.
+
+	// We will probably need to find a way back to the projectile/weapon (DamageCauser?),
+	// so we can use custom-defined knockback values there.
+
+	// Then we can apply splash falloff using (ActualDamage/Damage) to the knockback power.
+	// And finally, apply knockback manually with a custom impulse.
+
+	// For now, let's try basic values
+	float KnockbackPower = 1500.f * ActualDamage;
+
+	// Avoid very small knockbacks
+	if (KnockbackPower / GetCharacterMovement()->Mass >= 100.f)
+	{
+		FVector KnockbackDir;
+		if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+		{
+			FPointDamageEvent* PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
+
+			// Always use shot direction for knockback
+			KnockbackDir = PointDamageEvent->ShotDirection;
+			GetCharacterMovement()->AddImpulse(KnockbackPower*KnockbackDir);
+		}
+		else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+		{
+			FRadialDamageEvent* RadialDamageEvent = (FRadialDamageEvent*)&DamageEvent;
+
+			// Use no falloff (constant) because we already scaled KnockbackPower
+			GetCharacterMovement()->AddRadialImpulse(RadialDamageEvent->Origin, RadialDamageEvent->Params.GetMaxRadius(), KnockbackPower, ERadialImpulseFalloff::RIF_Constant, false);
+
+			/*
+			// Experimental: use vector (HitLocation->EyeLocation) as knockback direction to make it feel more natural
+
+			KnockbackDir = (GetPawnViewLocation() - RadialDamageEvent->Origin);
+			KnockbackDir.Normalize();
+			GetCharacterMovement()->AddImpulse(KnockbackPower*KnockbackDir);
+			*/
+		}
+	}
+	
+
+	return ActualDamage;
 }
 
 bool AUR_Character::IsAlive()
@@ -481,14 +545,28 @@ void AUR_Character::PrevWeapon()
 void AUR_Character::BeginFire()
 {
 	isFiring = true;
-	Fire();
+	//Fire();
+
+	if (InventoryComponent && InventoryComponent->ActiveWeapon)
+	{
+		InventoryComponent->ActiveWeapon->LocalStartFire();
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("NO WEAPON SELECTED!")));
+	}
 }
 
 void AUR_Character::EndFire() {
 	isFiring = false;
+
+	if (InventoryComponent && InventoryComponent->ActiveWeapon)
+	{
+		InventoryComponent->ActiveWeapon->LocalStopFire();
+	}
 }
 
-
+//deprecated
 void AUR_Character::Fire()
 {
 	if (isFiring) {

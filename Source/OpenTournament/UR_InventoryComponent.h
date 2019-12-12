@@ -30,17 +30,20 @@ class OPENTOURNAMENT_API UUR_InventoryComponent : public UActorComponent
 {
     GENERATED_BODY()
 
+protected:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 public:
 
     UUR_InventoryComponent();
 
-	UPROPERTY(EditAnywhere, Category = "InventoryComponent")
+	UPROPERTY(ReplicatedUsing = OnRep_InventoryW, BlueprintReadOnly, Category = "InventoryComponent")
 	TArray<AUR_Weapon*> InventoryW;
 
-	UPROPERTY(EditAnywhere, Category = "InventoryComponent")
+	UPROPERTY(BlueprintReadOnly, Category = "InventoryComponent")
 	TArray<AUR_Ammo*> InventoryA;
 
-	UPROPERTY(EditAnywhere, Category = "InventoryComponent")
+	UPROPERTY(ReplicatedUsing = OnRep_ActiveWeapon, BlueprintReadOnly, Category = "InventoryComponent")
 	AUR_Weapon * ActiveWeapon;
 
 	void Add(AUR_Weapon* weapon);
@@ -65,4 +68,16 @@ public:
 
 	UFUNCTION()
 	bool PrevWeapon();
+
+	UFUNCTION()
+	void EquipWeapon(AUR_Weapon* Weap);
+
+	UFUNCTION(Server, Reliable)
+	void ServerEquipWeapon(AUR_Weapon* Weap);
+
+	UFUNCTION()
+	virtual void OnRep_InventoryW();
+
+	UFUNCTION()
+	virtual void OnRep_ActiveWeapon();
 };

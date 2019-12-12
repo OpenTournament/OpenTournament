@@ -38,6 +38,5 @@ class OPENTOURNAMENT_API AUR_Projectile_Rocket : public AUR_Projectile
 
 	void DamageNearActors();
 
-
 	void BeginPlay();
 };

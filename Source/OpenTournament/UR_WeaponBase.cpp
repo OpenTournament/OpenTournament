@@ -51,8 +51,9 @@ void AUR_WeaponBase::GiveTo_Implementation(class AActor* Other)
 		AUR_Weapon* Weap = GetWorld()->SpawnActor<AUR_Weapon>(WeaponClass, CapsuleComponent->GetComponentLocation(), FRotator(), SpawnParams);
 		if (Weap)
 		{
-			Weap->PlayerController = Char;
-			Weap->Pickup();
+			//Weap->PlayerController = Char;
+			//Weap->Pickup();
+			Weap->GiveTo(Char);
 		}
 	}
 	Super::GiveTo_Implementation(Other);

@@ -60,17 +60,21 @@ void AUR_Projectile_Rocket::OnHit(UPrimitiveComponent* HitComponent, AActor* Oth
 	SoundHit->SetActive(true);
 	SoundFire = UGameplayStatics::SpawnSoundAtLocation(this, SoundHit->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
 	Particles->SetTemplate(explosion);
+
+	/*
 	OtherActor->TakeDamage(100, FDamageEvent::FDamageEvent() , NULL, this);
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event ROCKET LAUNCHER")));
 	if (ExplosionComponent->IsOverlappingActor(OtherActor))
 		DamageNearActors();
+	*/
+	DamageNearActors();
+
 	ProjMesh->DestroyComponent();
 	DestroyAfter(3);
-
-
 }
 
 void AUR_Projectile_Rocket::DamageNearActors() {
+	/*
 	TArray<AActor*> actors;
 	float distance_centers;
 	ExplosionComponent->GetOverlappingActors(actors, TSubclassOf<AUR_Character>());
@@ -82,6 +86,22 @@ void AUR_Projectile_Rocket::DamageNearActors() {
 		actor->TakeDamage(aoeDamageValue, FDamageEvent::FDamageEvent(), NULL, this);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Damage Event AOE on Actor - DAMAGE %f with distance %f"), aoeDamageValue, distance_centers));
 	}
+	*/
+
+	//TODO: configurable values
+	float BaseDamage = 100.f;
+	float MinimumDamage = 1.f;
+	const FVector& Origin = GetActorLocation();
+	float DamageInnerRadius = 10.f;
+	float DamageOuterRadius = ExplosionComponent->GetScaledSphereRadius();
+	float DamageFalloff = 1.f;
+	TSubclassOf<UDamageType> DamageTypeClass = UDamageType::StaticClass();
+	TArray<AActor*> IgnoreActors;
+	AActor* DamageCauser = this;
+	AController* InstigatedByController = Instigator ? Instigator->Controller : nullptr;
+	ECollisionChannel DamagePreventionChannel = ECollisionChannel::ECC_Visibility;
+
+	UGameplayStatics::ApplyRadialDamageWithFalloff(this, BaseDamage, MinimumDamage, Origin, DamageInnerRadius, DamageOuterRadius, DamageFalloff, DamageTypeClass, IgnoreActors, DamageCauser, InstigatedByController, DamagePreventionChannel);
 }
 
 

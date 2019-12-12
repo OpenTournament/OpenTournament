@@ -2,6 +2,7 @@
 
 
 #include "UR_Projectile.h"
+#include "Components/AudioComponent.h"
 
 
 // Sets default values
@@ -38,6 +39,8 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 	UStaticMesh* helper = newAsset.Object;
 	ProjMesh->SetStaticMesh(helper);
 
+	bReplicates = true;
+	bNetTemporary = true;
 }
 
 // Called when the game starts or when spawned
