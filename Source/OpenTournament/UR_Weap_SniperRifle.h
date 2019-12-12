@@ -23,7 +23,7 @@ class OPENTOURNAMENT_API AUR_Weap_SniperRifle : public AUR_Weapon
 	// Sets default values for this actor's properties
 	AUR_Weap_SniperRifle(const FObjectInitializer& ObjectInitializer);
 
-	TSubclassOf<class AUR_Projectile_Sniper> ProjectileClass;
+	//TSubclassOf<class AUR_Projectile_Sniper> ProjectileClass;
 
 	virtual void Fire(UWorld* World, FVector MuzzleLocation, FRotator MuzzleRotation, FActorSpawnParameters SpawnParams) override;
 

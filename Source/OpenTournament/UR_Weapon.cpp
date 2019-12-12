@@ -3,6 +3,7 @@
 #include "UR_Weapon.h"
 #include "UR_InventoryComponent.h"
 #include "Engine.h"
+#include "UnrealNetwork.h"
 #include "OpenTournament.h"
 #include "UR_Character.h"
 
@@ -31,6 +32,18 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer) : Super(Obje
 	ProjectileClass = AUR_Projectile::StaticClass();
 
 	PrimaryActorTick.bCanEverTick = true;
+
+	bReplicates = true;
+
+	FireInterval = 1.0f;
+}
+
+void AUR_Weapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(AUR_Weapon, ammoCount, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AUR_Weapon, equipped, COND_SkipOwner);
 }
 
 // Called when the game starts or when spawned
@@ -45,7 +58,7 @@ void AUR_Weapon::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-	if (PlayerController != NULL) 
+	if (HasAuthority() && PlayerController != NULL) 
 	{
 		if (bItemIsWithinRange) 
 		{
@@ -64,16 +77,49 @@ bool AUR_Weapon::CanFire() const
 	return false;
 }
 
-
-
 void AUR_Weapon::Pickup()
 {
+	UKismetSystemLibrary::PrintString(this, TEXT("Pickup()"));
+
 	Sound->SetActive(true);
 	Sound = UGameplayStatics::SpawnSoundAtLocation(this, Sound->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
 	PlayerController->InventoryComponent->Add(this);
 	AttachWeaponToPawn();
 }
 
+void AUR_Weapon::GiveTo(AUR_Character* NewOwner)
+{
+	SetOwner(NewOwner);
+	PlayerController = NewOwner;
+	if (NewOwner && NewOwner->InventoryComponent)
+	{
+		NewOwner->InventoryComponent->Add(this);
+	}
+
+	//tmp - prevent Pickup() call
+	Tbox->SetGenerateOverlapEvents(false);
+	bItemIsWithinRange = false;
+}
+
+void AUR_Weapon::OnRep_Owner()
+{
+	PlayerController = Cast<AUR_Character>(GetOwner());
+	AttachWeaponToPawn();
+
+	// In case Equipped was replicated before Owner
+	OnRep_Equipped();
+}
+
+void AUR_Weapon::OnRep_Equipped()
+{
+	if (!PlayerController)
+		return;	// owner not replicated yet
+
+	if (PlayerController->IsLocallyControlled())
+		return;	// should already be attached locally
+
+	setEquipped(equipped);
+}
 
 void AUR_Weapon::GetPlayer(AActor* Player)
 {
@@ -198,9 +244,215 @@ bool AUR_Weapon::IsEquipped() const
 void AUR_Weapon::setEquipped(bool eq)
 {
 	equipped = eq;
+
+	if (equipped)
+		AttachMeshToPawn();
+	else
+		DetachMeshFromPawn();
 }
 
 bool AUR_Weapon::IsAttachedToPawn() const
 {
 	return false;
+}
+
+
+//============================================================
+// Basic firing loop for basic fire mode.
+//============================================================
+
+void AUR_Weapon::LocalStartFire()
+{
+	bFiring = true;
+
+	// Already firing or in cooldown
+	if (FireLoopTimerHandle.IsValid())
+		return;
+
+	// Start fire loop
+	LocalFireLoop();
+}
+
+void AUR_Weapon::LocalStopFire()
+{
+	//NOTE: Do not clear timer here, or repeated clicks will bypass fire interval.
+	bFiring = false;
+}
+
+void AUR_Weapon::LocalFireLoop()
+{
+	UKismetSystemLibrary::PrintString(this, TEXT("LocalFireLoop()"));
+
+	FireLoopTimerHandle.Invalidate();
+
+	// Here we stop the loop if player isn't firing anymore
+	if (!bFiring)
+		return;
+
+	// Additional checks to stop firing automatically
+	if (!PlayerController || !PlayerController->isFiring || !PlayerController->IsAlive() || !PlayerController->GetController())
+	{
+		bFiring = false;
+		return;
+	}
+
+	// Not sure what this is
+	//if (!CanFire())
+		//return;
+
+	if (ammoCount <= 0)
+	{
+		// Play out-of-ammo sound ?
+		GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Red, FString::Printf(TEXT("%s out of ammo"), *WeaponName));
+		// Auto switch weapon ?
+		return;
+	}
+
+	LocalFire();
+
+	GetWorld()->GetTimerManager().SetTimer(FireLoopTimerHandle, this, &AUR_Weapon::LocalFireLoop, FireInterval, false);
+}
+
+void AUR_Weapon::LocalFire()
+{
+	ServerFire();
+	PlayFireEffects();
+	LocalFireTime = GetWorld()->GetTimeSeconds();
+}
+
+void AUR_Weapon::ServerFire_Implementation()
+{
+	//if (!CanFire())
+		//return;
+
+	if (ammoCount <= 0)
+		return;
+
+	// Check if client is asking us to fire too early
+	float Delay = FireInterval - GetWorld()->TimeSince(LastFireTime);
+	if (Delay > 0.0f)
+	{
+		if (Delay > FMath::Min(0.200f, FireInterval/2.f))
+			return;	// discard this shot
+
+		// Delay a bit and fire
+		GetWorld()->GetTimerManager().SetTimer(DelayedFireTimerHandle, this, &AUR_Weapon::ServerFire_Implementation, Delay, false);
+		return;
+	}
+
+	SpawnShot();
+	LastFireTime = GetWorld()->GetTimeSeconds();
+	ConsumeAmmo();
+	MulticastFired();
+}
+
+void AUR_Weapon::SpawnShot()
+{
+	if (ProjectileClass)
+	{
+		SpawnShot_Projectile();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SpawnShot() not implemented"));
+	}
+}
+
+void AUR_Weapon::ConsumeAmmo()
+{
+	ammoCount -= 1;
+}
+
+void AUR_Weapon::MulticastFired_Implementation()
+{
+	if (!IsNetMode(NM_Client))
+		return;
+
+	if (PlayerController && PlayerController->IsLocallyControlled())
+	{
+		// Server just fired, adjust our fire loop accordingly
+		float FirePing = GetWorld()->TimeSince(LocalFireTime);
+		float Delay = FireInterval - FirePing/2.f;
+		if (Delay > 0.0f)
+			GetWorld()->GetTimerManager().SetTimer(FireLoopTimerHandle, this, &AUR_Weapon::LocalFireLoop, Delay, false);
+		else
+			LocalFireLoop();
+	}
+	else
+	{
+		PlayFireEffects();
+	}
+}
+
+void AUR_Weapon::PlayFireEffects()
+{
+	// Play muzzle flash
+	// Play fire sound
+
+	if (PlayerController && PlayerController->MeshFirstPerson)
+	{
+		PlayerController->MeshFirstPerson->PlayAnimation(PlayerController->fireAnim, false);
+	}
+}
+
+//============================================================
+// Helpers
+//============================================================
+
+void AUR_Weapon::GetFireVector(FVector& FireLoc, FRotator& FireRot)
+{
+	if (PlayerController)
+	{
+		if (ProjectileClass)
+		{
+			// Use centered projectiles as it is a lot simpler with less edge cases.
+			PlayerController->GetActorEyesViewPoint(FireLoc, FireRot);
+			FireLoc += FireRot.Vector() * PlayerController->MuzzleOffset.Size();	//TODO: muzzle offset should be part of weapon, not character
+
+			// Avoid spawning projectile within/behind geometry because of the offset.
+			FVector TraceStart;
+			PlayerController->GetActorEyesViewPoint(TraceStart, FireRot);
+			FCollisionQueryParams TraceParams(FCollisionQueryParams::DefaultQueryParam);
+			TraceParams.AddIgnoredActor(this);
+			TraceParams.AddIgnoredActor(PlayerController);
+			FHitResult Hit;
+			if (GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, FireLoc, ECollisionChannel::ECC_Visibility, TraceParams))
+			{
+				FireLoc = Hit.Location;
+			}
+		}
+		else
+		{
+			// For hitscan, use straight line from camera to crosshair.
+			PlayerController->GetActorEyesViewPoint(FireLoc, FireRot);
+			// Muzzle offset should be used only to adjust the fire effect (beam) start loc.
+		}
+	}
+	else
+	{
+		GetActorEyesViewPoint(FireLoc, FireRot);
+	}
+}
+
+void AUR_Weapon::SpawnShot_Projectile()
+{
+	FVector FireLoc;
+	FRotator FireRot;
+	GetFireVector(FireLoc, FireRot);
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = GetOwner();
+	SpawnParams.Instigator = Instigator ? Instigator : Cast<APawn>(GetOwner());
+	//SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	AUR_Projectile* Projectile = GetWorld()->SpawnActor<AUR_Projectile>(ProjectileClass, FireLoc, FireRot, SpawnParams);
+	if (Projectile)
+	{
+		Projectile->FireAt(FireRot.Vector());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to spawn projectile ??"));
+	}
 }
