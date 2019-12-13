@@ -131,6 +131,11 @@ void AUR_PlayerController::SetupInputComponent()
 
     InputComponent->BindAction("Crouch", IE_Pressed, this, &AUR_PlayerController::Crouch);
     InputComponent->BindAction("Crouch", IE_Released, this, &AUR_PlayerController::UnCrouch);
+
+	// Forward to StartFire() provided by engine, handles things like spectator, request respawn...
+	InputComponent->BindAction("Fire", IE_Pressed, this, &AUR_PlayerController::PressedFire);
+	//NOTE: we cannot bind 'Pressed' in PC and 'Released' in Character that just doesn't work...
+	InputComponent->BindAction("Fire", IE_Released, this, &AUR_PlayerController::ReleasedFire);
 }
 
 void AUR_PlayerController::ProcessPlayerInput(const float DeltaTime, const bool bGamePaused)
@@ -259,6 +264,14 @@ void AUR_PlayerController::UnCrouch()
     {
         URCharacter->UnCrouch(false);
     }
+}
+
+void AUR_PlayerController::ReleasedFire()
+{
+	if (URCharacter)
+	{
+		URCharacter->PawnStopFire(0);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

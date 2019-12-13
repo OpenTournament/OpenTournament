@@ -281,7 +281,7 @@ void AUR_Weapon::LocalStopFire()
 
 void AUR_Weapon::LocalFireLoop()
 {
-	UKismetSystemLibrary::PrintString(this, TEXT("LocalFireLoop()"));
+	//UKismetSystemLibrary::PrintString(this, TEXT("LocalFireLoop()"));
 
 	FireLoopTimerHandle.Invalidate();
 
@@ -403,20 +403,24 @@ void AUR_Weapon::GetFireVector(FVector& FireLoc, FRotator& FireRot)
 {
 	if (PlayerController)
 	{
+		// Careful, in URCharacter we are using a custom 1p camera.
+		// We should use that for start location and NOT GetActorEyesViewPoint !
+		// Or we should fix GetActorEyesViewPoint.
+		FVector CameraLoc = PlayerController->CharacterCameraComponent->GetComponentLocation();
+		FireLoc = CameraLoc;
+		FireRot = PlayerController->GetViewRotation();
+
 		if (ProjectileClass)
 		{
 			// Use centered projectiles as it is a lot simpler with less edge cases.
-			PlayerController->GetActorEyesViewPoint(FireLoc, FireRot);
 			FireLoc += FireRot.Vector() * PlayerController->MuzzleOffset.Size();	//TODO: muzzle offset should be part of weapon, not character
 
 			// Avoid spawning projectile within/behind geometry because of the offset.
-			FVector TraceStart;
-			PlayerController->GetActorEyesViewPoint(TraceStart, FireRot);
 			FCollisionQueryParams TraceParams(FCollisionQueryParams::DefaultQueryParam);
 			TraceParams.AddIgnoredActor(this);
 			TraceParams.AddIgnoredActor(PlayerController);
 			FHitResult Hit;
-			if (GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, FireLoc, ECollisionChannel::ECC_Visibility, TraceParams))
+			if (GetWorld()->LineTraceSingleByChannel(Hit, CameraLoc, FireLoc, ECollisionChannel::ECC_Visibility, TraceParams))
 			{
 				FireLoc = Hit.Location;
 			}
@@ -424,7 +428,7 @@ void AUR_Weapon::GetFireVector(FVector& FireLoc, FRotator& FireRot)
 		else
 		{
 			// For hitscan, use straight line from camera to crosshair.
-			PlayerController->GetActorEyesViewPoint(FireLoc, FireRot);
+
 			// Muzzle offset should be used only to adjust the fire effect (beam) start loc.
 		}
 	}

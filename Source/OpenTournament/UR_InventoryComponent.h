@@ -32,6 +32,7 @@ class OPENTOURNAMENT_API UUR_InventoryComponent : public UActorComponent
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
 public:
 
