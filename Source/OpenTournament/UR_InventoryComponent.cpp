@@ -248,3 +248,27 @@ void UUR_InventoryComponent::OnRep_ActiveWeapon()
 	// Here we can make sure server has the same equipped weapon as us.
 	// If not, we might want to re-equip, or replace local equipped weapon...
 }
+
+void UUR_InventoryComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
+{
+	if (GetOwnerRole() == ROLE_Authority)
+	{
+		//TODO: drop active weapon
+
+		for (AUR_Weapon* Weap : InventoryW)
+		{
+			if (Weap)
+				Weap->Destroy();
+		}
+		InventoryW.Empty();
+
+		for (AUR_Ammo* Ammo : InventoryA)
+		{
+			if (Ammo)
+				Ammo->Destroy();
+		}
+		InventoryA.Empty();
+	}
+
+	Super::OnComponentDestroyed(bDestroyingHierarchy);
+}

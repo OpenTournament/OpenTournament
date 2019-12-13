@@ -59,9 +59,8 @@ public:
 	bool bIsPickingUp = false;
 	bool isFiring = false;
 
-	void BeginFire();
-	void EndFire();
-
+	virtual void PawnStartFire(uint8 FireModeNum = 0) override;
+	virtual void PawnStopFire(uint8 FireModeNum = 0);
 
 	//Weapon select
 	UFUNCTION()
@@ -112,7 +111,19 @@ public:
 	* Fire animation
 	*/
 	UPROPERTY(VisibleDefaultsOnly, Category = "Animation")
-		class UAnimationAsset* fireAnim;
+	class UAnimationAsset* fireAnim;
+
+	/**
+	* Spring arm for third person camera
+	*/
+	UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
+	class USpringArmComponent* ThirdPersonArm;
+
+	/**
+	* Third person camera.
+	*/
+	UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
+	class UCameraComponent* ThirdPersonCamera;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -120,6 +131,7 @@ public:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void CalcCamera(float DeltaTime, struct FMinimalViewInfo& OutResult) override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Input (Keypress to Weapon, Movement/Dodge)
@@ -296,6 +308,28 @@ public:
     * Take Damage override.
     */
     virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	/**
+	* Kill this player.
+	* Authority only.
+	*/
+	UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
+	virtual void Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser);
+
+	/**
+	* Play dying effect (animation, ragdoll, sound, blood, gib).
+	* Client only.
+	*/
+	UFUNCTION(BlueprintCosmetic)
+	virtual void PlayDeath();
+
+	/**
+	* Called on network client when replication channel is cut (ie. death).
+	*/
+	virtual void TornOff() override
+	{
+		PlayDeath();
+	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool IsAlive();

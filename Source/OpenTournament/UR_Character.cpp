@@ -66,6 +66,16 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 
 	// Mesh third person
 	GetMesh()->bOwnerNoSee = true;
+
+	// Third person camera
+	ThirdPersonArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonArm"));
+	ThirdPersonArm->SetupAttachment(GetCapsuleComponent());
+	ThirdPersonArm->TargetArmLength = 400.f;
+	ThirdPersonArm->TargetOffset.Set(0.f, 0.f, 100.f);
+	ThirdPersonArm->bUsePawnControlRotation = true;
+
+	ThirdPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
+	ThirdPersonCamera->SetupAttachment(ThirdPersonArm);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,8 +100,7 @@ void AUR_Character::BeginPlay()
 void AUR_Character::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-	if (HealthComponent->Health <= 0)
-		Destroy(); //to be replaced with Dead state and respawnability
+
     TickFootsteps(DeltaTime);
 }
 
@@ -114,9 +123,22 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
 	PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
+}
 
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AUR_Character::BeginFire);
-	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AUR_Character::EndFire);
+void AUR_Character::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
+{
+	if (IsAlive() && CharacterCameraComponent && CharacterCameraComponent->bIsActive)
+	{
+		CharacterCameraComponent->GetCameraView(DeltaTime, OutResult);
+	}
+	else if ( ThirdPersonCamera && ThirdPersonCamera->bIsActive )
+	{
+		ThirdPersonCamera->GetCameraView(DeltaTime, OutResult);
+	}
+	else
+	{
+		Super::CalcCamera(DeltaTime, OutResult);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -431,15 +453,97 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
 			*/
 		}
 	}
-	
+
+	if (HealthComponent && HealthComponent->Health <= 0)
+	{
+		Die(EventInstigator, DamageEvent, DamageCauser);
+	}
 
 	return ActualDamage;
 }
 
+void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser)
+{
+	// Already killed (might happen when multiple damage sources in 1 frame)
+	if (GetTearOff() || IsPendingKillPending())
+		return;
+
+	// Here we can hook game mode + mutators for things like :
+	// - prevent death
+	// - announce kill (death message, kill message, sprees, etc)
+	// - score kill (add to score / team score)
+
+	if (HealthComponent)
+	{
+		HealthComponent->SetHealth(0);
+	}
+
+	// Cut the replication link
+	TearOff();
+
+	if (GetNetMode() == NM_DedicatedServer)
+	{
+		//Destroy();
+		SetLifeSpan(0.200f);	// give it time to replicate the tear off ?
+		SetActorEnableCollision(false);
+	}
+	else
+	{
+		PlayDeath();
+	}
+}
+
+void AUR_Character::PlayDeath()
+{
+	APlayerController* OldController = nullptr;
+	if (Controller && Controller->GetPawn() == this)
+		OldController = Cast<APlayerController>(Controller);
+
+	// Unpossess
+	DetachFromControllerPendingDestroy();
+
+	// Set view target back, should auto to 3p cam
+	if (OldController)
+		OldController->SetViewTarget(this);
+
+	// Improve camera feel
+	ThirdPersonArm->bInheritPitch = false;
+	ThirdPersonArm->bInheritRoll = false;
+	ThirdPersonArm->bEnableCameraLag = true;
+	ThirdPersonArm->bEnableCameraRotationLag = true;
+
+	// Not sure why these are still rendered as "owned" after unpossessing. Maybe because it is ViewTarget.
+	GetMesh()->SetOwnerNoSee(false);
+	MeshFirstPerson->SetVisibility(false, true);
+
+	GetCharacterMovement()->StopActiveMovement();
+
+	// Disable capsule
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCapsuleComponent()->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+
+	// Set mesh as root with physics (ragdoll)
+	GetMesh()->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	GetMesh()->SetSimulatePhysics(true);
+	SetRootComponent(GetMesh());
+
+	// Attach capsule back to mesh
+	GetCapsuleComponent()->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
+
+	SetLifeSpan(5.0f);
+}
+
 bool AUR_Character::IsAlive()
 {
+	if (GetTearOff() || IsPendingKillPending())
+		return false;	// server link has been cut, health might not replicate anymore
+
+	if (HealthComponent)
+		return HealthComponent->Health > 0;
+
 	// not sure if we should return true or false when no HealthComponent
-	return HealthComponent ? (HealthComponent->Health > 0) : false;
+	return true;
 }
 
 
@@ -542,7 +646,7 @@ void AUR_Character::PrevWeapon()
 		InventoryComponent->PrevWeapon();
 }
 
-void AUR_Character::BeginFire()
+void AUR_Character::PawnStartFire(uint8 FireModeNum)
 {
 	isFiring = true;
 	//Fire();
@@ -557,7 +661,8 @@ void AUR_Character::BeginFire()
 	}
 }
 
-void AUR_Character::EndFire() {
+void AUR_Character::PawnStopFire(uint8 FireModeNum)
+{
 	isFiring = false;
 
 	if (InventoryComponent && InventoryComponent->ActiveWeapon)
