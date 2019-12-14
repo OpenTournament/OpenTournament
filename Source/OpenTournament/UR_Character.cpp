@@ -42,13 +42,13 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     URMovementComponent->bUseFlatBaseForFloorChecks = true;
 
     HealthComponent = Cast<UUR_HealthComponent>(CreateDefaultSubobject<UUR_HealthComponent>(TEXT("HealthComponent")));
-	ArmorComponent = Cast<UUR_ArmorComponent>(CreateDefaultSubobject<UUR_ArmorComponent>(TEXT("ArmorComponent")));
-	InventoryComponent = Cast<UUR_InventoryComponent>(CreateDefaultSubobject<UUR_InventoryComponent>(TEXT("InventoryComponent")));
+    ArmorComponent = Cast<UUR_ArmorComponent>(CreateDefaultSubobject<UUR_ArmorComponent>(TEXT("ArmorComponent")));
+    InventoryComponent = Cast<UUR_InventoryComponent>(CreateDefaultSubobject<UUR_InventoryComponent>(TEXT("InventoryComponent")));
 
     // Create a CameraComponent	
     CharacterCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     CharacterCameraComponent->SetupAttachment(GetCapsuleComponent());
-    CharacterCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
+    CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, 64.f)); // Position the camera
     CharacterCameraComponent->bUsePawnControlRotation = true;
 
     // Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
@@ -57,13 +57,13 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     MeshFirstPerson->SetupAttachment(CharacterCameraComponent);
     MeshFirstPerson->bCastDynamicShadow = false;
     MeshFirstPerson->CastShadow = false;
-    MeshFirstPerson->RelativeRotation = FRotator(1.9f, -19.19f, 5.2f);
-    MeshFirstPerson->RelativeLocation = FVector(-0.5f, -4.4f, -155.7f);
+    MeshFirstPerson->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
+    MeshFirstPerson->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
-	ConstructorHelpers::FObjectFinder<UAnimationAsset> fireAnimAsset(TEXT("AnimSequence'/Game/FirstPerson/Animations/FirstPerson_Fire.FirstPerson_Fire'"));
-	fireAnim = fireAnimAsset.Object;
-	WeaponAttachPoint = "GripPoint";
-	
+    ConstructorHelpers::FObjectFinder<UAnimationAsset> fireAnimAsset(TEXT("AnimSequence'/Game/FirstPerson/Animations/FirstPerson_Fire.FirstPerson_Fire'"));
+    fireAnim = fireAnimAsset.Object;
+    WeaponAttachPoint = "GripPoint";
+    
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +73,7 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(AUR_Character, HealthComponent);
-	DOREPLIFETIME(AUR_Character, InventoryComponent);
+    DOREPLIFETIME(AUR_Character, InventoryComponent);
     DOREPLIFETIME(AUR_Character, DodgeDirection);
 }
 
@@ -82,14 +82,14 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 void AUR_Character::BeginPlay()
 {
     Super::BeginPlay();
-	HealthComponent->SetHealth(100);
+    HealthComponent->SetHealth(100);
 }
 
 void AUR_Character::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-	if (HealthComponent->Health <= 0)
-		Destroy(); //to be replaced with Dead state and respawnability
+    if (HealthComponent->Health <= 0)
+        Destroy(); //to be replaced with Dead state and respawnability
     TickFootsteps(DeltaTime);
 }
 
@@ -98,21 +98,21 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 
-	PlayerInputComponent->BindAction("Pickup", IE_Pressed, this, &AUR_Character::BeginPickup);
-	PlayerInputComponent->BindAction("Pickup", IE_Released, this, &AUR_Character::EndPickup);
+    PlayerInputComponent->BindAction("Pickup", IE_Pressed, this, &AUR_Character::BeginPickup);
+    PlayerInputComponent->BindAction("Pickup", IE_Released, this, &AUR_Character::EndPickup);
 
-	PlayerInputComponent->BindAction("ShowInventory", IE_Pressed, this, &AUR_Character::ShowInventory);
+    PlayerInputComponent->BindAction("ShowInventory", IE_Pressed, this, &AUR_Character::ShowInventory);
 
-	PlayerInputComponent->BindAction("ARifle", IE_Pressed, this, &AUR_Character::SelectWeapon1);
-	PlayerInputComponent->BindAction("Shotgun", IE_Pressed, this, &AUR_Character::SelectWeapon2);
-	PlayerInputComponent->BindAction("RLauncher", IE_Pressed, this, &AUR_Character::SelectWeapon3);
-	PlayerInputComponent->BindAction("GLauncher", IE_Pressed, this, &AUR_Character::SelectWeapon4);
-	PlayerInputComponent->BindAction("SRifle", IE_Pressed, this, &AUR_Character::SelectWeapon5);
-	PlayerInputComponent->BindAction("Pistol", IE_Pressed, this, &AUR_Character::SelectWeapon0);
+    PlayerInputComponent->BindAction("ARifle", IE_Pressed, this, &AUR_Character::SelectWeapon1);
+    PlayerInputComponent->BindAction("Shotgun", IE_Pressed, this, &AUR_Character::SelectWeapon2);
+    PlayerInputComponent->BindAction("RLauncher", IE_Pressed, this, &AUR_Character::SelectWeapon3);
+    PlayerInputComponent->BindAction("GLauncher", IE_Pressed, this, &AUR_Character::SelectWeapon4);
+    PlayerInputComponent->BindAction("SRifle", IE_Pressed, this, &AUR_Character::SelectWeapon5);
+    PlayerInputComponent->BindAction("Pistol", IE_Pressed, this, &AUR_Character::SelectWeapon0);
 
 
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AUR_Character::BeginFire);
-	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AUR_Character::EndFire);
+    PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AUR_Character::BeginFire);
+    PlayerInputComponent->BindAction("Fire", IE_Released, this, &AUR_Character::EndFire);
 
 
 }
@@ -225,7 +225,7 @@ void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
     // Do nothing yet
     // Get our health component & apply damage
     
-    if (Role == ROLE_Authority && URMovementComponent != nullptr)
+    if (GetLocalRole() && URMovementComponent != nullptr)
     {
         // @! TODO Proper Damage Handling
         if (HealthComponent)
@@ -301,7 +301,7 @@ void AUR_Character::OnDodge_Implementation(const FVector& DodgeLocation, const F
     // @! TODO Effects
     if (CharacterVoice.DodgeSound != nullptr)
     {
-        if (Role == ROLE_Authority)
+        if (GetLocalRole() == ROLE_Authority)
         {
             UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.DodgeSound, GetActorLocation(), GetActorRotation());
         }
@@ -313,7 +313,7 @@ void AUR_Character::OnWallDodge_Implementation(const FVector& DodgeLocation, con
     // @! TODO Effects
     if (CharacterVoice.DodgeSound != nullptr)
     {
-        if (Role == ROLE_Authority)
+        if (GetLocalRole() == ROLE_Authority)
         {
             UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.DodgeSound, GetActorLocation(), GetActorRotation());
         }
@@ -335,38 +335,38 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
         HealthComponent->ChangeHealth(-1 * Damage); //leaving this here for reference is need be
     }*/
 
-	if (HealthComponent) 
-	{
-		if (ArmorComponent) 
-		{
-			if (ArmorComponent->Armor < 0.4*Damage && ArmorComponent->Armor > 0) 
-			{
-				int32 currentArmor = ArmorComponent->Armor;
-				ArmorComponent->ChangeArmor(-1 * ArmorComponent->Armor);
-				HealthComponent->ChangeHealth(-1 * (Damage - currentArmor));
-			}
-			else if	(ArmorComponent->Armor > Damage && ArmorComponent->hasBarrier)
-			{
-				ArmorComponent->ChangeArmor(-1 * Damage);
-			}
+    if (HealthComponent) 
+    {
+        if (ArmorComponent) 
+        {
+            if (ArmorComponent->Armor < 0.4*Damage && ArmorComponent->Armor > 0) 
+            {
+                int32 currentArmor = ArmorComponent->Armor;
+                ArmorComponent->ChangeArmor(-1 * ArmorComponent->Armor);
+                HealthComponent->ChangeHealth(-1 * (Damage - currentArmor));
+            }
+            else if	(ArmorComponent->Armor > Damage && ArmorComponent->hasBarrier)
+            {
+                ArmorComponent->ChangeArmor(-1 * Damage);
+            }
 
-			else if(ArmorComponent->Armor <= 0)
-			{
-				HealthComponent->ChangeHealth(-1 * Damage);
-			}
-			else if (ArmorComponent->Armor > 0.4*Damage && !ArmorComponent->hasBarrier)
-			{
-				ArmorComponent->ChangeArmor(-0.6 * Damage);
-				HealthComponent->ChangeHealth(-0.4 * Damage);
-			}
+            else if(ArmorComponent->Armor <= 0)
+            {
+                HealthComponent->ChangeHealth(-1 * Damage);
+            }
+            else if (ArmorComponent->Armor > 0.4*Damage && !ArmorComponent->hasBarrier)
+            {
+                ArmorComponent->ChangeArmor(-0.6 * Damage);
+                HealthComponent->ChangeHealth(-0.4 * Damage);
+            }
 
-		}
-	}
+        }
+    }
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2")));
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - DAMAGE -: %f"), Damage));
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - Remaining Health -: %d"), HealthComponent->Health));
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("Damage Event 2 - Remaining Armor -: %d"), ArmorComponent->Armor));
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2")));
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - DAMAGE -: %f"), Damage));
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - Remaining Health -: %d"), HealthComponent->Health));
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("Damage Event 2 - Remaining Armor -: %d"), ArmorComponent->Armor));
 
 
     return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
@@ -378,121 +378,121 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
 
 void AUR_Character::BeginPickup()
 {
-	bIsPickingUp = true;
+    bIsPickingUp = true;
 }
 
 void AUR_Character::EndPickup() 
 {
-	bIsPickingUp = false;
+    bIsPickingUp = false;
 }
 
 void AUR_Character::SelectWeapon1()
 {
-	FString name;
-	name = "Assault Rifle";
-	InventoryComponent->SelectWeapon(1);
+    FString name;
+    name = "Assault Rifle";
+    InventoryComponent->SelectWeapon(1);
 }
 
 void AUR_Character::SelectWeapon2()
 {
-	FString name;
-	name = "Shotgun";
-	InventoryComponent->SelectWeapon(2);
+    FString name;
+    name = "Shotgun";
+    InventoryComponent->SelectWeapon(2);
 }
 
 void AUR_Character::SelectWeapon3()
 {
-	FString name;
-	name = "Rocket Launcher";
-	InventoryComponent->SelectWeapon(3);
+    FString name;
+    name = "Rocket Launcher";
+    InventoryComponent->SelectWeapon(3);
 }
 
 void AUR_Character::SelectWeapon4()
 {
-	FString name;
-	name = "Grenade Launcher";
-	InventoryComponent->SelectWeapon(4);
+    FString name;
+    name = "Grenade Launcher";
+    InventoryComponent->SelectWeapon(4);
 }
 
 void AUR_Character::SelectWeapon5()
 {
-	FString name;
-	name = "Sniper Rifle";
-	InventoryComponent->SelectWeapon(5);
+    FString name;
+    name = "Sniper Rifle";
+    InventoryComponent->SelectWeapon(5);
 }
 
 void AUR_Character::SelectWeapon0()
 {
-	FString name;
-	name = "Pistol";
-	InventoryComponent->SelectWeapon(0);
+    FString name;
+    name = "Pistol";
+    InventoryComponent->SelectWeapon(0);
 }
 
 void AUR_Character::ShowInventory() 
 {
-	InventoryComponent->ShowInventory();
+    InventoryComponent->ShowInventory();
 }
 
 FName AUR_Character::GetWeaponAttachPoint() const
 {
-	return WeaponAttachPoint;
+    return WeaponAttachPoint;
 }
 
 USkeletalMeshComponent* AUR_Character::GetPawnMesh() const
 {
-	return MeshFirstPerson;
+    return MeshFirstPerson;
 }
 
 USkeletalMeshComponent* AUR_Character::GetSpecifcPawnMesh(bool WantFirstPerson) const
 {
-	return MeshFirstPerson;
+    return MeshFirstPerson;
 
 }
 
 
 bool AUR_Character::IsFirstPerson() const
 {
-	return Controller && Controller->IsLocalPlayerController();
+    return Controller && Controller->IsLocalPlayerController();
 }
 
 
 void AUR_Character::WeaponSelect(int32 number) {
-	InventoryComponent->SelectWeapon(number);
+    InventoryComponent->SelectWeapon(number);
 }
 
 void AUR_Character::BeginFire()
 {
-	isFiring = true;
-	Fire();
+    isFiring = true;
+    Fire();
 }
 
 void AUR_Character::EndFire() {
-	isFiring = false;
+    isFiring = false;
 }
 
 
 void AUR_Character::Fire()
 {
-	if (isFiring) {
-		if (InventoryComponent->ActiveWeapon != NULL) {
-			if (InventoryComponent->ActiveWeapon->ProjectileClass)
-			{
-				GetActorEyesViewPoint(InventoryComponent->ActiveWeapon->Location, InventoryComponent->ActiveWeapon->Rotation);
-				FVector MuzzleLocation = InventoryComponent->ActiveWeapon->Location + FTransform(InventoryComponent->ActiveWeapon->Rotation).TransformVector(MuzzleOffset);
-				FRotator MuzzleRotation = InventoryComponent->ActiveWeapon->Rotation;
+    if (isFiring) {
+        if (InventoryComponent->ActiveWeapon != NULL) {
+            if (InventoryComponent->ActiveWeapon->ProjectileClass)
+            {
+                GetActorEyesViewPoint(InventoryComponent->ActiveWeapon->Location, InventoryComponent->ActiveWeapon->Rotation);
+                FVector MuzzleLocation = InventoryComponent->ActiveWeapon->Location + FTransform(InventoryComponent->ActiveWeapon->Rotation).TransformVector(MuzzleOffset);
+                FRotator MuzzleRotation = InventoryComponent->ActiveWeapon->Rotation;
 
-				UWorld* World = GetWorld();
-				if (World)
-				{
-					FActorSpawnParameters SpawnParams;
-					SpawnParams.Owner = this;
-					SpawnParams.Instigator = Instigator;
-					InventoryComponent->ActiveWeapon->Fire(World, MuzzleLocation, MuzzleRotation, SpawnParams);
-					MeshFirstPerson->PlayAnimation(fireAnim, false);
-				}
-			}
-		}
-		else
-			GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Yellow, FString::Printf(TEXT("NO WEAPON SELECTED!")));
-	}
+                UWorld* World = GetWorld();
+                if (World)
+                {
+                    FActorSpawnParameters SpawnParams;
+                    SpawnParams.Owner = this;
+                    SpawnParams.Instigator = GetInstigator();
+                    InventoryComponent->ActiveWeapon->Fire(World, MuzzleLocation, MuzzleRotation, SpawnParams);
+                    MeshFirstPerson->PlayAnimation(fireAnim, false);
+                }
+            }
+        }
+        else
+            GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Yellow, FString::Printf(TEXT("NO WEAPON SELECTED!")));
+    }
 }

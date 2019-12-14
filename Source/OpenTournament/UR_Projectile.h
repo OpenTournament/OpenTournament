@@ -1,20 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/PrimitiveComponent.h"
-#include "Components/SphereComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "Components/ShapeComponent.h"
-#include "Components/BoxComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
-#include "ConstructorHelpers.h"
-#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "GameFramework/Actor.h"
-#include "ConstructorHelpers.h"
 
 #include "UR_Projectile.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// Forward Declarations
+
+class UAudioComponent;
+class USphereComponent;
+class UStaticMeshComponent;
+class UParticleSystemComponent;
+class UProjectileMovementComponent;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 UCLASS()
 class OPENTOURNAMENT_API AUR_Projectile : public AActor
@@ -31,31 +35,32 @@ protected:
 
 	/** weapon mesh: 3rd person view */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-		UStaticMeshComponent* ProjMesh;
+	UStaticMeshComponent* ProjMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Projectile")
-		UStaticMeshComponent* SM_TBox;
+	UStaticMeshComponent* SM_TBox;
 
 	UPROPERTY(EditAnywhere, Category = "Projectile")
-		class UParticleSystemComponent* Particles;
+	class UParticleSystemComponent* Particles;
 
 	UPROPERTY(EditAnywhere, Category = "Projectile")
-		UAudioComponent* SoundFire;
+	UAudioComponent* SoundFire;
 
 	UPROPERTY(EditAnywhere, Category = "Projectile")
-		UAudioComponent* SoundHit;
+	UAudioComponent* SoundHit;
 
 
 public:	
-	// Called every frame
+
 	virtual void Tick(float DeltaTime) override;
+
 	// Sphere collision component.
 	UPROPERTY(VisibleDefaultsOnly, Category = "Projectile")
-		USphereComponent* CollisionComponent;
+	USphereComponent* CollisionComponent;
 
 	// Projectile movement component.
 	UPROPERTY(VisibleAnywhere, Category = Movement)
-		UProjectileMovementComponent* ProjectileMovementComponent;
+	UProjectileMovementComponent* ProjectileMovementComponent;
 
 	void FireAt(const FVector& ShootDirection);
 
