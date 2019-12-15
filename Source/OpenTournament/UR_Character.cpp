@@ -42,7 +42,7 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     URMovementComponent->bUseFlatBaseForFloorChecks = true;
 
     HealthComponent = Cast<UUR_HealthComponent>(CreateDefaultSubobject<UUR_HealthComponent>(TEXT("HealthComponent")));
-    ArmorComponent = Cast<UUR_ArmorComponent>(CreateDefaultSubobject<UUR_ArmorComponent>(TEXT("ArmorComponent")));
+    //ArmorComponent = Cast<UUR_ArmorComponent>(CreateDefaultSubobject<UUR_ArmorComponent>(TEXT("ArmorComponent")));
     InventoryComponent = Cast<UUR_InventoryComponent>(CreateDefaultSubobject<UUR_InventoryComponent>(TEXT("InventoryComponent")));
 
     // Create a CameraComponent	
@@ -337,7 +337,7 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
 
     if (HealthComponent) 
     {
-        if (ArmorComponent) 
+        /*if (ArmorComponent) 
         {
             if (ArmorComponent->Armor < 0.4*Damage && ArmorComponent->Armor > 0) 
             {
@@ -359,15 +359,13 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
                 ArmorComponent->ChangeArmor(-0.6 * Damage);
                 HealthComponent->ChangeHealth(-0.4 * Damage);
             }
-
-        }
+        }*/
     }
 
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2")));
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - DAMAGE -: %f"), Damage));
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - Remaining Health -: %d"), HealthComponent->Health));
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("Damage Event 2 - Remaining Armor -: %d"), ArmorComponent->Armor));
-
+    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("Damage Event 2 - Remaining Armor -: %d"), ArmorComponent->Armor));
 
     return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 }
