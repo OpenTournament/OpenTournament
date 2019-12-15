@@ -11,7 +11,7 @@ UUR_ArmorComponent::UUR_ArmorComponent()
     , ArmorMax(200.f)
     //, hasBarrier(false)
 {
-    SetIsReplicated(true);
+    SetIsReplicatedByDefault(true);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
