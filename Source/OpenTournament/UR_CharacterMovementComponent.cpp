@@ -212,7 +212,7 @@ void UUR_CharacterMovementComponent::SetupMovementPropertiesGeneration4_Scaled()
 void UUR_CharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
 {
     const auto URCharacterOwner = Cast<AUR_Character>(CharacterOwner);
-    const bool bIsClient = (GetNetMode() == NM_Client && CharacterOwner->Role == ROLE_AutonomousProxy);
+    const bool bIsClient = (GetNetMode() == NM_Client && CharacterOwner->GetLocalRole() == ROLE_AutonomousProxy);
 
     UMovementComponent::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
@@ -222,9 +222,9 @@ void UUR_CharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelT
         return;
     }
 
-    if (URCharacterOwner->Role > ROLE_SimulatedProxy)
+    if (URCharacterOwner->GetLocalRole() > ROLE_SimulatedProxy)
     {
-        if (URCharacterOwner->Role == ROLE_Authority)
+        if (URCharacterOwner->HasAuthority())
         {
             // Check we are still in the world, and stop simulating if not.
             const bool bStillInWorld = (bCheatFlying || CharacterOwner->CheckStillInWorld());
@@ -243,7 +243,7 @@ void UUR_CharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelT
         // Allow root motion to move characters that have no controller.
         if (CharacterOwner->IsLocallyControlled() || bRunPhysicsWithNoController || (!CharacterOwner->Controller && CharacterOwner->IsPlayingRootMotion()))
         {
-            FNetworkPredictionData_Client_Character* ClientData = ((CharacterOwner->Role < ROLE_Authority) && (GetNetMode() == NM_Client)) ? GetPredictionData_Client_Character() : nullptr;
+            FNetworkPredictionData_Client_Character* ClientData = ((CharacterOwner->GetLocalRole() < ROLE_Authority) && (GetNetMode() == NM_Client)) ? GetPredictionData_Client_Character() : nullptr;
             if (ClientData)
             {
                 CurrentServerMoveTime = ClientData->CurrentTimeStamp;
@@ -262,7 +262,7 @@ void UUR_CharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelT
             Acceleration = ScaleInputAcceleration(ConstrainInputAcceleration(InputVector));
             AnalogInputModifier = ComputeAnalogInputModifier();
 
-            if ((CharacterOwner->Role == ROLE_Authority))
+            if ((CharacterOwner->HasAuthority()))
             {
                 PerformMovement(DeltaTime);
             }
@@ -286,7 +286,7 @@ void UUR_CharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelT
             }
         }
     }
-    else if (CharacterOwner->Role == ROLE_SimulatedProxy)
+    else if (CharacterOwner->GetLocalRole() == ROLE_SimulatedProxy)
     {
         AdjustProxyCapsuleSize();
         SimulatedTick(DeltaTime);

@@ -28,7 +28,7 @@ UUR_ChatComponent::UUR_ChatComponent()
 	, LastSendTime(0)
 	, MaxMessageLength(150)
 {
-	bReplicates = true;
+	SetIsReplicatedByDefault(true);
 }
 
 void UUR_ChatComponent::BeginPlay()

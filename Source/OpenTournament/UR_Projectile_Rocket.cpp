@@ -98,7 +98,7 @@ void AUR_Projectile_Rocket::DamageNearActors() {
 	TSubclassOf<UDamageType> DamageTypeClass = UDamageType::StaticClass();
 	TArray<AActor*> IgnoreActors;
 	AActor* DamageCauser = this;
-	AController* InstigatedByController = Instigator ? Instigator->Controller : nullptr;
+	AController* InstigatedByController = GetInstigatorController();
 	ECollisionChannel DamagePreventionChannel = ECollisionChannel::ECC_Visibility;
 
 	UGameplayStatics::ApplyRadialDamageWithFalloff(this, BaseDamage, MinimumDamage, Origin, DamageInnerRadius, DamageOuterRadius, DamageFalloff, DamageTypeClass, IgnoreActors, DamageCauser, InstigatedByController, DamagePreventionChannel);
