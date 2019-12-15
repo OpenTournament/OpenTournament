@@ -57,6 +57,4 @@ public:
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Armor")
     bool IsBarrier;
-
-
 };
