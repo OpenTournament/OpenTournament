@@ -13,7 +13,7 @@ UUR_HealthComponent::UUR_HealthComponent()
     , HealthMax(100)
     , SuperHealthMax(200)
 {
-    bReplicates = true;
+	SetIsReplicatedByDefault(true);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

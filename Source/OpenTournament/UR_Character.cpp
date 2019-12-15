@@ -48,7 +48,7 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     // Create a CameraComponent	
     CharacterCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     CharacterCameraComponent->SetupAttachment(GetCapsuleComponent());
-    CharacterCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
+    CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, 64.f)); // Position the camera
     CharacterCameraComponent->bUsePawnControlRotation = true;
 
     // Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
@@ -57,8 +57,8 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     MeshFirstPerson->SetupAttachment(CharacterCameraComponent);
     MeshFirstPerson->bCastDynamicShadow = false;
     MeshFirstPerson->CastShadow = false;
-    MeshFirstPerson->RelativeRotation = FRotator(1.9f, -19.19f, 5.2f);
-    MeshFirstPerson->RelativeLocation = FVector(-0.5f, -4.4f, -155.7f);
+    MeshFirstPerson->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
+    MeshFirstPerson->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
 	ConstructorHelpers::FObjectFinder<UAnimationAsset> fireAnimAsset(TEXT("AnimSequence'/Game/FirstPerson/Animations/FirstPerson_Fire.FirstPerson_Fire'"));
 	fireAnim = fireAnimAsset.Object;
@@ -127,11 +127,11 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 void AUR_Character::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
 {
-	if (IsAlive() && CharacterCameraComponent && CharacterCameraComponent->bIsActive)
+	if (IsAlive() && CharacterCameraComponent && CharacterCameraComponent->IsActive())
 	{
 		CharacterCameraComponent->GetCameraView(DeltaTime, OutResult);
 	}
-	else if ( ThirdPersonCamera && ThirdPersonCamera->bIsActive )
+	else if (ThirdPersonCamera && ThirdPersonCamera->IsActive())
 	{
 		ThirdPersonCamera->GetCameraView(DeltaTime, OutResult);
 	}
@@ -249,7 +249,7 @@ void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
     // Do nothing yet
     // Get our health component & apply damage
     
-    if (Role == ROLE_Authority && URMovementComponent != nullptr)
+    if (HasAuthority() && URMovementComponent != nullptr)
     {
         // @! TODO Proper Damage Handling
         if (HealthComponent)
@@ -325,7 +325,7 @@ void AUR_Character::OnDodge_Implementation(const FVector& DodgeLocation, const F
     // @! TODO Effects
     if (CharacterVoice.DodgeSound != nullptr)
     {
-        if (Role == ROLE_Authority)
+        if (HasAuthority())
         {
             UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.DodgeSound, GetActorLocation(), GetActorRotation());
         }
@@ -337,7 +337,7 @@ void AUR_Character::OnWallDodge_Implementation(const FVector& DodgeLocation, con
     // @! TODO Effects
     if (CharacterVoice.DodgeSound != nullptr)
     {
-        if (Role == ROLE_Authority)
+        if (HasAuthority())
         {
             UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.DodgeSound, GetActorLocation(), GetActorRotation());
         }
@@ -687,7 +687,7 @@ void AUR_Character::Fire()
 				{
 					FActorSpawnParameters SpawnParams;
 					SpawnParams.Owner = this;
-					SpawnParams.Instigator = Instigator;
+					SpawnParams.Instigator = this;
 					InventoryComponent->ActiveWeapon->Fire(World, MuzzleLocation, MuzzleRotation, SpawnParams);
 					MeshFirstPerson->PlayAnimation(fireAnim, false);
 				}

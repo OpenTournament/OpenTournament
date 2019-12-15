@@ -446,7 +446,7 @@ void AUR_Weapon::SpawnShot_Projectile()
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = GetOwner();
-	SpawnParams.Instigator = Instigator ? Instigator : Cast<APawn>(GetOwner());
+	SpawnParams.Instigator = GetInstigator() ? GetInstigator() : Cast<APawn>(GetOwner());
 	//SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
