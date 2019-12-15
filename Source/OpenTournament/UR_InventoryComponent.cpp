@@ -11,7 +11,7 @@
 
 UUR_InventoryComponent::UUR_InventoryComponent()
 {
-    SetIsReplicated(true);
+    SetIsReplicatedByDefault(true);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
