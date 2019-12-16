@@ -1,64 +1,77 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/PrimitiveComponent.h"
-#include "Components/SphereComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "Components/ShapeComponent.h"
-#include "Components/BoxComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
-#include "ConstructorHelpers.h"
-#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "GameFramework/Actor.h"
-#include "ConstructorHelpers.h"
 
 #include "UR_Projectile.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// Forward Declarations
+
+class UAudioComponent;
+class USphereComponent;
+class UStaticMeshComponent;
+class UParticleSystemComponent;
+class UProjectileMovementComponent;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 UCLASS()
 class OPENTOURNAMENT_API AUR_Projectile : public AActor
 {
-	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
-	AUR_Projectile(const FObjectInitializer& ObjectInitializer);
+    GENERATED_BODY()
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+public:
 
-	/** weapon mesh: 3rd person view */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-		UStaticMeshComponent* ProjMesh;
+    AUR_Projectile(const FObjectInitializer& ObjectInitializer);
 
-	UPROPERTY(EditAnywhere, Category = "Projectile")
-		UStaticMeshComponent* SM_TBox;
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	UPROPERTY(EditAnywhere, Category = "Projectile")
-		class UParticleSystemComponent* Particles;
+    // Sphere collision component.
+    UPROPERTY(VisibleDefaultsOnly, Category = "Projectile|Collision")
+    USphereComponent* CollisionComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Projectile")
-		UAudioComponent* SoundFire;
+    // Projectile movement component.
+    UPROPERTY(VisibleAnywhere, Category = "Projectile|Movement")
+    UProjectileMovementComponent* ProjectileMovementComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Projectile")
-		UAudioComponent* SoundHit;
+    // Projectile Mesh
+    UPROPERTY(VisibleDefaultsOnly, Category = "Projectile|Mesh")
+    UStaticMeshComponent* StaticMeshComponent;
 
+    // Audio Component
+    UPROPERTY(VisibleDefaultsOnly, Category = "Projectile|Audio")
+    UAudioComponent* AudioComponent;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-	// Sphere collision component.
-	UPROPERTY(VisibleDefaultsOnly, Category = "Projectile")
-		USphereComponent* CollisionComponent;
+    // Projectile Particles
+    UPROPERTY(EditAnywhere, Category = "Projectile|Particles")
+    UParticleSystemComponent* Particles;
 
-	// Projectile movement component.
-	UPROPERTY(VisibleAnywhere, Category = Movement)
-		UProjectileMovementComponent* ProjectileMovementComponent;
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	void FireAt(const FVector& ShootDirection);
+    UFUNCTION()
+    void Overlap(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	void DestroyAfter(int delay);
+    // Hook for Blueprint. This will need to be elaborated further
+    UFUNCTION(BlueprintImplementableEvent, Category = "Projectile")
+    void OnOverlap(AActor* HitActor);
 
+    void FireAt(const FVector& ShootDirection);
+
+    void DestroyAfter(const int32 delay);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    UPROPERTY(EditAnywhere, Category = "Projectile|Audio")
+    USoundBase* SoundHit;
+
+    UPROPERTY()
+    float Damage;
+
+    UPROPERTY()
+    float DamageRadius;
 };
