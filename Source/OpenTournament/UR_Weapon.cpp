@@ -10,34 +10,34 @@
 // Sets default values
 AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	Tbox = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
-	Tbox->SetGenerateOverlapEvents(true);
-	Tbox->OnComponentBeginOverlap.AddDynamic(this, &AUR_Weapon::OnTriggerEnter);
-	Tbox->OnComponentEndOverlap.AddDynamic(this, &AUR_Weapon::OnTriggerExit);
+    Tbox = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
+    Tbox->SetGenerateOverlapEvents(true);
+    Tbox->OnComponentBeginOverlap.AddDynamic(this, &AUR_Weapon::OnTriggerEnter);
+    Tbox->OnComponentEndOverlap.AddDynamic(this, &AUR_Weapon::OnTriggerExit);
 
-	RootComponent = Tbox;
+    RootComponent = Tbox;
 
-	SM_TBox = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Box Mesh"));
-	SM_TBox->SetupAttachment(RootComponent);
-	
-	Mesh1P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh1P"));
-	Mesh1P->SetupAttachment(RootComponent);
-	Mesh3P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh3P"));
-	Mesh3P->SetupAttachment(Mesh1P);
+    SM_TBox = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Box Mesh"));
+    SM_TBox->SetupAttachment(RootComponent);
+    
+    Mesh1P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh1P"));
+    Mesh1P->SetupAttachment(RootComponent);
+    Mesh3P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh3P"));
+    Mesh3P->SetupAttachment(Mesh1P);
 
-	Sound = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("Sound"));
-	Sound->SetupAttachment(RootComponent);
+    Sound = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("Sound"));
+    Sound->SetupAttachment(RootComponent);
 
-	ProjectileClass = AUR_Projectile::StaticClass();
+    ProjectileClass = AUR_Projectile::StaticClass();
 
-	PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bCanEverTick = true;
 }
 
 // Called when the game starts or when spawned
 void AUR_Weapon::BeginPlay()
 {
     Super::BeginPlay();
-	Sound->SetActive(false);
+    Sound->SetActive(false);
 }
 
 // Called every frame
@@ -45,162 +45,162 @@ void AUR_Weapon::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-	if (PlayerController != NULL) 
-	{
-		if (bItemIsWithinRange) 
-		{
-			Pickup();
-		}
-	}
+    if (PlayerController != NULL) 
+    {
+        if (bItemIsWithinRange) 
+        {
+            Pickup();
+        }
+    }
 }
 
 void AUR_Weapon::PostInitializeComponents()
 {
-	Super::PostInitializeComponents();
+    Super::PostInitializeComponents();
 }
 
 bool AUR_Weapon::CanFire() const
 {
-	return false;
+    return false;
 }
 
 
 
 void AUR_Weapon::Pickup()
 {
-	Sound->SetActive(true);
-	Sound = UGameplayStatics::SpawnSoundAtLocation(this, Sound->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
-	PlayerController->InventoryComponent->Add(this);
-	AttachWeaponToPawn();
+    Sound->SetActive(true);
+    Sound = UGameplayStatics::SpawnSoundAtLocation(this, Sound->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
+    PlayerController->InventoryComponent->Add(this);
+    AttachWeaponToPawn();
 }
 
 
 void AUR_Weapon::GetPlayer(AActor* Player)
 {
-	PlayerController = Cast<AUR_Character>(Player);
+    PlayerController = Cast<AUR_Character>(Player);
 }
 
 void AUR_Weapon::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor * Other, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	bItemIsWithinRange = true;
-	GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Red, FString::Printf(TEXT("Press E to Pickup %s"), *WeaponName));
-	GetPlayer(Other);
+    bItemIsWithinRange = true;
+    GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Red, FString::Printf(TEXT("Press E to Pickup %s"), *WeaponName));
+    GetPlayer(Other);
 }
 
 void AUR_Weapon::OnTriggerExit(UPrimitiveComponent* HitComp, AActor * Other, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
 {
-	bItemIsWithinRange = false;
+    bItemIsWithinRange = false;
 }
 
 EWeaponState::Type AUR_Weapon::GetCurrentState() const
 {
-	return EWeaponState::Type();
+    return EWeaponState::Type();
 }
 
 int32 AUR_Weapon::GetCurrentAmmo() const
 {
-	return int32();
+    return int32();
 }
 
 int32 AUR_Weapon::GetMaxAmmo() const
 {
-	return int32();
+    return int32();
 }
 
 USkeletalMeshComponent * AUR_Weapon::GetWeaponMesh() const
 {
-	return Mesh1P;
+    return Mesh1P;
 }
 
 AUR_Character * AUR_Weapon::GetPawnOwner() const
 {
-	return nullptr;
+    return nullptr;
 }
 
 void AUR_Weapon::AttachMeshToPawn()
 {
-	this->SetActorHiddenInGame(false);
+    this->SetActorHiddenInGame(false);
 
-	if (PlayerController)
-	{
-		// Remove and hide both first and third person meshes
-		DetachMeshFromPawn();
+    if (PlayerController)
+    {
+        // Remove and hide both first and third person meshes
+        DetachMeshFromPawn();
 
-		// For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
-		FName AttachPoint = PlayerController->GetWeaponAttachPoint();
-		if (PlayerController->IsLocallyControlled() == true)
-		{
-			USkeletalMeshComponent* PawnMesh1p = PlayerController->GetSpecifcPawnMesh(true);
-			USkeletalMeshComponent* PawnMesh3p = PlayerController->GetSpecifcPawnMesh(false);
-			Mesh1P->SetHiddenInGame(false);
-			Mesh3P->SetHiddenInGame(false);
-			Mesh1P->AttachToComponent(PawnMesh1p, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
-			Mesh3P->AttachToComponent(PawnMesh3p, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
-		}
-		else
-		{
-			USkeletalMeshComponent* UseWeaponMesh = GetWeaponMesh();
-			USkeletalMeshComponent* UsePawnMesh = PlayerController->GetPawnMesh();
-			UseWeaponMesh->AttachToComponent(UsePawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
-			UseWeaponMesh->SetHiddenInGame(false);
-		}
-	}
+        // For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
+        FName AttachPoint = PlayerController->GetWeaponAttachPoint();
+        if (PlayerController->IsLocallyControlled())
+        {
+            //USkeletalMeshComponent* PawnMesh1p = PlayerController->GetSpecifcPawnMesh(true);
+            //USkeletalMeshComponent* PawnMesh3p = PlayerController->GetSpecifcPawnMesh(false);
+            //Mesh1P->SetHiddenInGame(false);
+            //Mesh3P->SetHiddenInGame(false);
+            //Mesh1P->AttachToComponent(PawnMesh1p, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+            //Mesh3P->AttachToComponent(PawnMesh3p, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+        }
+        else
+        {
+            //USkeletalMeshComponent* UseWeaponMesh = GetWeaponMesh();
+            //USkeletalMeshComponent* UsePawnMesh = PlayerController->GetPawnMesh();
+            //UseWeaponMesh->AttachToComponent(UsePawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+            //UseWeaponMesh->SetHiddenInGame(false);
+        }
+    }
 }
 
 void AUR_Weapon::AttachWeaponToPawn()
 {
-	this->SetActorHiddenInGame(true);
-	Tbox->SetGenerateOverlapEvents(false);
+    this->SetActorHiddenInGame(true);
+    Tbox->SetGenerateOverlapEvents(false);
 
-	if (PlayerController)
-	{
-		// For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
-		FName AttachPoint = PlayerController->GetWeaponAttachPoint();
-		if (PlayerController->IsLocallyControlled() == true)
-		{
-			USkeletalMeshComponent* PawnMesh = PlayerController->GetSpecifcPawnMesh(true);
-			this->AttachToComponent(PawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
-		}
-		else
-		{
-			USkeletalMeshComponent* UsePawnMesh = PlayerController->GetPawnMesh();
-			this->AttachToComponent(UsePawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
-		}
-	}
-	this->SetActorHiddenInGame(true);
+    if (PlayerController)
+    {
+        // For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
+        FName AttachPoint = PlayerController->GetWeaponAttachPoint();
+        if (PlayerController->IsLocallyControlled() == true)
+        {
+            //USkeletalMeshComponent* PawnMesh = PlayerController->GetSpecifcPawnMesh(true);
+            //this->AttachToComponent(PawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+        }
+        else
+        {
+            //USkeletalMeshComponent* UsePawnMesh = PlayerController->GetPawnMesh();
+            //this->AttachToComponent(UsePawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+        }
+    }
+    this->SetActorHiddenInGame(true);
 }
 
 void AUR_Weapon::DetachMeshFromPawn()
 {
-	Mesh1P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
-	Mesh1P->SetHiddenInGame(true);
+    Mesh1P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+    Mesh1P->SetHiddenInGame(true);
 
-	Mesh3P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
-	Mesh3P->SetHiddenInGame(true);
+    Mesh3P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+    Mesh3P->SetHiddenInGame(true);
 }
 
 void AUR_Weapon::OnEquip(AUR_Weapon * LastWeapon)
 {
-	LastWeapon->DetachMeshFromPawn();
-	this->AttachMeshToPawn();
+    LastWeapon->DetachMeshFromPawn();
+    this->AttachMeshToPawn();
 }
 
 void AUR_Weapon::OnUnEquip()
 {
-	DetachMeshFromPawn();
+    DetachMeshFromPawn();
 }
 
 bool AUR_Weapon::IsEquipped() const
 {
-	return equipped;
+    return equipped;
 }
 
 void AUR_Weapon::setEquipped(bool eq)
 {
-	equipped = eq;
+    equipped = eq;
 }
 
 bool AUR_Weapon::IsAttachedToPawn() const
 {
-	return false;
+    return false;
 }
