@@ -1,7 +1,7 @@
 // Copyright 2019 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
 
 #pragma once
 
