@@ -224,7 +224,7 @@ void UUR_CharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelT
 
     if (URCharacterOwner->GetLocalRole() > ROLE_SimulatedProxy)
     {
-        if (URCharacterOwner->HasAuthority())
+        if (URCharacterOwner->GetLocalRole() == ROLE_Authority)
         {
             // Check we are still in the world, and stop simulating if not.
             const bool bStillInWorld = (bCheatFlying || CharacterOwner->CheckStillInWorld());
@@ -262,7 +262,7 @@ void UUR_CharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelT
             Acceleration = ScaleInputAcceleration(ConstrainInputAcceleration(InputVector));
             AnalogInputModifier = ComputeAnalogInputModifier();
 
-            if ((CharacterOwner->HasAuthority()))
+            if ((CharacterOwner->GetLocalRole() == ROLE_Authority))
             {
                 PerformMovement(DeltaTime);
             }

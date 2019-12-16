@@ -1,85 +1,61 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Armor.h"
-#include "UR_Weapon.h"
-#include "UR_ArmorComponent.h"
-#include "Engine.h"
 #include "OpenTournament.h"
-#include "UR_Character.h"
+
+#include "Components/AudioComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
+
+#include "UR_ArmorComponent.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Sets default values
-AUR_Armor::AUR_Armor(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+AUR_Armor::AUR_Armor(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer),
+    ArmorValue(0.f),
+    IsBarrier(false)
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	Tbox = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
-	Tbox->SetGenerateOverlapEvents(true);
-	Tbox->OnComponentBeginOverlap.AddDynamic(this, &AUR_Armor::OnTriggerEnter);
-	Tbox->OnComponentEndOverlap.AddDynamic(this, &AUR_Armor::OnTriggerExit);
+    CollisionComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionComponent"));
+    CollisionComponent->SetGenerateOverlapEvents(true);
+    CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Armor::OnOverlap);
 
-	RootComponent = Tbox;
+    RootComponent = CollisionComponent;
 
-	SM_TBox = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Box Mesh"));
-	SM_TBox->SetupAttachment(RootComponent);
+    AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+    AudioComponent->SetupAttachment(RootComponent);
 
-	ArmorMesh = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("ArmorMesh"));
-	ArmorMesh->SetupAttachment(RootComponent);
-
-	Sound = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("Sound"));
-	Sound->SetupAttachment(RootComponent);
-
-	PrimaryActorTick.bCanEverTick = true;
+    StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+    StaticMeshComponent->SetupAttachment(RootComponent);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Called when the game starts or when spawned
-void AUR_Armor::BeginPlay()
+void AUR_Armor::OnOverlap(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	Super::BeginPlay();
-	Sound->SetActive(false);
+    GAME_PRINT(2.f, FColor::Red, "Overlapped Armor Pickup (%s)", *this->GetName());
+
+    // @! TODO
+    // if (IsPickupAllowed())
+    //{
+    //    Pickup();
+    //}
 }
 
-// Called every frame
-void AUR_Armor::Tick(float DeltaTime)
+void AUR_Armor::Pickup(UUR_ArmorComponent* ArmorComponent)
 {
-	Super::Tick(DeltaTime);
+    UGameplayStatics::PlaySoundAtLocation(this, PickupSound, GetActorLocation());
 
-	if (PlayerController != NULL)
-	{
-		if (bItemIsWithinRange)
-		{
-			Pickup();
-		}
-	}
+    int32 PriorValue = ArmorComponent->Armor;
+    ArmorComponent->SetArmor(PriorValue + ArmorValue);
+    ArmorComponent->SetBarrier(IsBarrier);
 
+    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("ARMOR VALUE ON INVENTORY: %d"), PlayerController->ArmorComponent->Armor));
+
+    // Need to Handle pickup removal behavior better here
+    Destroy();
 }
-
-void AUR_Armor::Pickup()
-{
-	Sound->SetActive(true);
-	Sound = UGameplayStatics::SpawnSoundAtLocation(this, Sound->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
-	int32 value = PlayerController->ArmorComponent->Armor;
-	PlayerController->ArmorComponent->SetArmor(value + armorVal);
-	PlayerController->ArmorComponent->SetBarrier(armorBarrier);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("ARMOR VALUE ON INVENTORY: %d"), PlayerController->ArmorComponent->Armor));
-	Destroy();
-}
-
-void AUR_Armor::GetPlayer(AActor * Player)
-{
-	PlayerController = Cast<AUR_Character>(Player);
-}
-
-void AUR_Armor::OnTriggerEnter(UPrimitiveComponent * HitComp, AActor * Other, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
-{
-	bItemIsWithinRange = true;
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("HI this is ARMOR")));
-	GetPlayer(Other);
-}
-
-void AUR_Armor::OnTriggerExit(UPrimitiveComponent * HitComp, AActor * Other, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("BYE this is ARMOR")));
-}
-
-

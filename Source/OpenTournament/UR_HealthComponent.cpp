@@ -13,7 +13,7 @@ UUR_HealthComponent::UUR_HealthComponent()
     , HealthMax(100)
     , SuperHealthMax(200)
 {
-	SetIsReplicatedByDefault(true);
+    SetIsReplicatedByDefault(true);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,6 +49,6 @@ void UUR_HealthComponent::ChangeHealthPercentage(const int32 InChangePercentage)
 
 void UUR_HealthComponent::HealBy(const int32 HealAmount, bool bSuperHeal)
 {
-	int32 NewHealth = FMath::Min(Health + HealAmount, bSuperHeal ? SuperHealthMax : HealthMax);
-	Health = FMath::Max(Health, NewHealth);
+    int32 NewHealth = FMath::Min(Health + HealAmount, bSuperHeal ? SuperHealthMax : HealthMax);
+    Health = FMath::Max(Health, NewHealth);
 }

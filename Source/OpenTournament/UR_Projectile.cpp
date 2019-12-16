@@ -1,70 +1,159 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Projectile.h"
-#include "Components/AudioComponent.h"
 
+#include "ConstructorHelpers.h"
+#include "Components/AudioComponent.h"
+#include "Components/SphereComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
+#include "GameFramework/DamageType.h"
+#include "Kismet/GameplayStatics.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Sets default values
 AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
+    CollisionComponent->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
+    CollisionComponent->SetGenerateOverlapEvents(true);
+    CollisionComponent->InitSphereRadius(15.0f);
+    CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Projectile::Overlap);
+    CollisionComponent->OnComponentHit.AddDynamic(this, &AUR_Projectile::OnHit);
 
-	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
-	CollisionComponent->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
-	CollisionComponent->InitSphereRadius(15.0f);
-	RootComponent = CollisionComponent;
+    RootComponent = CollisionComponent;
 
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
-	ProjectileMovementComponent->SetUpdatedComponent(CollisionComponent);
-	ProjectileMovementComponent->InitialSpeed = 5000.0f;
-	ProjectileMovementComponent->MaxSpeed = 5000.0f;
-	ProjectileMovementComponent->bRotationFollowsVelocity = true;
-	ProjectileMovementComponent->bShouldBounce = true;
+    ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
+    ProjectileMovementComponent->SetUpdatedComponent(CollisionComponent);
+    ProjectileMovementComponent->InitialSpeed = 5000.0f;
+    ProjectileMovementComponent->MaxSpeed = 5000.0f;
+    ProjectileMovementComponent->bRotationFollowsVelocity = true;
+    ProjectileMovementComponent->ProjectileGravityScale = 0.f;
+    ProjectileMovementComponent->bShouldBounce = false;
 
-	SM_TBox = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Box Mesh"));
-	SM_TBox->SetupAttachment(RootComponent);
+    StaticMeshComponent = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("StaticMeshComponent"));
+    StaticMeshComponent->SetupAttachment(RootComponent);
 
-	ProjMesh = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("ProjMesh1"));
-	ProjMesh->SetupAttachment(RootComponent);
+    AudioComponent = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("AudioComponent"));
+    AudioComponent->SetupAttachment(RootComponent);
 
-	SoundFire = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("SoundFire"));
-	SoundFire->SetupAttachment(RootComponent);
+    Particles = ObjectInitializer.CreateDefaultSubobject<UParticleSystemComponent>(this, TEXT("Particles"));
+    Particles->SetupAttachment(RootComponent);
 
-	SoundHit = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("SoundHit"));
-	SoundHit->SetupAttachment(RootComponent);
+    bReplicates = true;
+    bNetTemporary = true;
 
-	ConstructorHelpers::FObjectFinder<UStaticMesh> newAsset(TEXT("StaticMesh'/Game/FirstPerson/Meshes/FirstPersonProjectileMesh.FirstPersonProjectileMesh'"));
-	UStaticMesh* helper = newAsset.Object;
-	ProjMesh->SetStaticMesh(helper);
-
-	bReplicates = true;
-	bNetTemporary = true;
+    BaseDamage = 100.f;
+    SplashRadius = 0.0f;
+    InnerSplashRadius = 10.f;
+    SplashMinimumDamage = 1.0f;
+    SplashFalloff = 1.0f;
+    DamageTypeClass = UDamageType::StaticClass();
 }
 
-// Called when the game starts or when spawned
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 void AUR_Projectile::BeginPlay()
 {
-	Super::BeginPlay();
-	ProjectileMovementComponent->ProjectileGravityScale = 0;
-	CollisionComponent->SetGenerateOverlapEvents(true);
-}
+    Super::BeginPlay();
 
-// Called every frame
-void AUR_Projectile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+    // Avoid colliding with shooter
+    if (GetInstigator())
+    {
+        CollisionComponent->IgnoreActorWhenMoving(GetInstigator(), true);
+        GetInstigator()->MoveIgnoreActorAdd(this);
+    }
 }
 
 void AUR_Projectile::FireAt(const FVector& ShootDirection)
 {
-	ProjectileMovementComponent->Velocity = ShootDirection * ProjectileMovementComponent->InitialSpeed;
+    ProjectileMovementComponent->Velocity = ShootDirection * ProjectileMovementComponent->InitialSpeed;
 }
 
-void AUR_Projectile::DestroyAfter(int delay)
+void AUR_Projectile::Overlap(UPrimitiveComponent * HitComp, AActor * Other, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	SetActorEnableCollision(false);
-	SetLifeSpan(2);
+    // TODO
 }
 
+void AUR_Projectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
+{
+    // Old RocketProjectile code
+    /*
+    SoundHit->SetActive(true);
+    SoundFire = UGameplayStatics::SpawnSoundAtLocation(this, SoundHit->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
+    Particles->SetTemplate(explosion);
+
+    OtherActor->TakeDamage(100, FDamageEvent::FDamageEvent() , NULL, this);
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event ROCKET LAUNCHER")));
+    if (ExplosionComponent->IsOverlappingActor(OtherActor))
+        DamageNearActors();
+
+    ProjMesh->DestroyComponent();
+    DestroyAfter(3);
+    */
+
+    // Some notes :
+    // - SoundFire => ImpactSound
+    // - ProjMesh => StaticMeshComponent
+    // - Particles => now spawning independent emitter with ImpactTemplate.
+
+    if (GetNetMode() != NM_DedicatedServer)
+    {
+        //TODO: attenuation & concurrency settings
+        UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+
+        UGameplayStatics::SpawnEmitterAtLocation(
+            GetWorld(),
+            ImpactTemplate,
+            FTransform(Hit.ImpactNormal.Rotation(), Hit.Location, GetActorScale3D())
+        );
+    }
+
+    if (SplashRadius > 0.0f)
+    {
+        TArray<AActor*> IgnoreActors;
+        IgnoreActors.Add(this);
+
+        UGameplayStatics::ApplyRadialDamageWithFalloff(
+            this,
+            BaseDamage,
+            SplashMinimumDamage,
+            GetActorLocation(),
+            InnerSplashRadius,
+            SplashRadius,
+            SplashFalloff,
+            DamageTypeClass,
+            IgnoreActors,
+            this,
+            GetInstigatorController(),
+            ECollisionChannel::ECC_Visibility
+        );
+    }
+    else
+    {
+        //TODO: not sure what to put in HitFromDirection.
+        FVector HitFromDirection = (GetActorLocation() - Hit.Location);
+        if (!HitFromDirection.IsNearlyZero())
+        {
+            HitFromDirection.Normalize();
+        }
+        else
+        {
+            HitFromDirection = -1 * GetActorRotation().Vector();
+        }
+        UGameplayStatics::ApplyPointDamage(OtherActor, BaseDamage, HitFromDirection, Hit, GetInstigatorController(), this, DamageTypeClass);
+    }
+
+    Destroy();
+}
+
+// might be deprecated
+void AUR_Projectile::DestroyAfter(const int32 Delay)
+{
+    SetActorEnableCollision(false);
+    SetLifeSpan(Delay);
+}

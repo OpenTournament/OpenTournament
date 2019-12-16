@@ -13,6 +13,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UAnimationMontage;
 class UUR_HealthComponent;
 class UUR_ArmorComponent;
 class UUR_InventoryComponent;
@@ -56,38 +57,9 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	bool bIsPickingUp = false;
-	bool isFiring = false;
+    bool bIsPickingUp = false;
 
-	virtual void PawnStartFire(uint8 FireModeNum = 0) override;
-	virtual void PawnStopFire(uint8 FireModeNum = 0);
-
-	//Weapon select
-	UFUNCTION()
-	void WeaponSelect(int32 number);
-
-	UFUNCTION(Exec, BlueprintCallable)
-	void NextWeapon();
-
-	UFUNCTION(Exec, BlueprintCallable)
-	void PrevWeapon();
-
-	UFUNCTION()
-	void Fire();
-
-	/** get weapon attach point */
-	UFUNCTION()
-	FName GetWeaponAttachPoint() const;
-
-	USkeletalMeshComponent* GetPawnMesh() const;
-
-	USkeletalMeshComponent* GetSpecifcPawnMesh(bool WantFirstPerson) const;
-
-	bool IsFirstPerson() const;
-
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Assets")
-	USkeletalMesh* AlternateMeshAsset;
+    USkeletalMeshComponent* GetPawnMesh() const;
 
     /**
     * First person Camera
@@ -107,23 +79,23 @@ public:
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character")
     FCharacterVoice CharacterVoice;
 
-	/**
-	* Fire animation
-	*/
-	UPROPERTY(VisibleDefaultsOnly, Category = "Animation")
-	class UAnimationAsset* fireAnim;
+    /**
+    * Fire animation
+    */
+    UPROPERTY(EditDefaultsOnly, Category = "Character")
+    UAnimMontage* FireAnimation;
 
-	/**
-	* Spring arm for third person camera
-	*/
-	UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
-	class USpringArmComponent* ThirdPersonArm;
+    /**
+    * Spring arm for third person camera
+    */
+    UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
+    class USpringArmComponent* ThirdPersonArm;
 
-	/**
-	* Third person camera.
-	*/
-	UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
-	class UCameraComponent* ThirdPersonCamera;
+    /**
+    * Third person camera.
+    */
+    UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
+    class UCameraComponent* ThirdPersonCamera;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -131,7 +103,7 @@ public:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	virtual void CalcCamera(float DeltaTime, struct FMinimalViewInfo& OutResult) override;
+    virtual void CalcCamera(float DeltaTime, struct FMinimalViewInfo& OutResult) override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Input (Keypress to Weapon, Movement/Dodge)
@@ -143,12 +115,7 @@ public:
     UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Character")
     TSubclassOf<UUR_CharacterMovementComponent> MovementComponentClass;
 
-	//////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game")
-	FVector MuzzleOffset;
-
-
+    //////////////////////////////////////////////////////////////////////////////////////////////////
     // Axis movement
 
     /**
@@ -192,8 +159,6 @@ public:
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Walk")
     float FootstepTimeIntervalBase;
-
-
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Jump & Crouch
@@ -292,71 +257,95 @@ public:
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Health")
     UUR_HealthComponent* HealthComponent;
 
-	/**
-	* Armor Component
-	*/
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Armor")
-		UUR_ArmorComponent* ArmorComponent;
-
-	/**
-	* Inventory Component
-	*/
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
-	UUR_InventoryComponent* InventoryComponent;
+    /**
+    * Armor Component
+    */
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Armor")
+    UUR_ArmorComponent* ArmorComponent;
 
     /**
     * Take Damage override.
     */
     virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
-	/**
-	* Kill this player.
-	* Authority only.
-	*/
-	UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
-	virtual void Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser);
+    /**
+    * Kill this player.
+    * Authority only.
+    */
+    UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
+    virtual void Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser);
 
-	/**
-	* Play dying effect (animation, ragdoll, sound, blood, gib).
-	* Client only.
-	*/
-	UFUNCTION(BlueprintCosmetic)
-	virtual void PlayDeath();
+    /**
+    * Play dying effect (animation, ragdoll, sound, blood, gib).
+    * Client only.
+    */
+    UFUNCTION(BlueprintCosmetic)
+    virtual void PlayDeath();
 
-	/**
-	* Called on network client when replication channel is cut (ie. death).
-	*/
-	virtual void TornOff() override
-	{
-		PlayDeath();
-	}
+    /**
+    * Called on network client when replication channel is cut (ie. death).
+    */
+    virtual void TornOff() override
+    {
+        PlayDeath();
+    }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	bool IsAlive();
+    UFUNCTION(BlueprintCallable, BlueprintPure)
+    bool IsAlive();
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // @section Inventory
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * Inventory Component
+    */
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
+    UUR_InventoryComponent* InventoryComponent;
+
+    bool isFiring = false;
+
+    virtual void PawnStartFire(uint8 FireModeNum = 0) override;
+    virtual void PawnStopFire(uint8 FireModeNum = 0);
+
+    //Weapon select
+    UFUNCTION()
+    void WeaponSelect(int32 number);
+
+    UFUNCTION(Exec, BlueprintCallable)
+    void NextWeapon();
+
+    UFUNCTION(Exec, BlueprintCallable)
+    void PrevWeapon();
+
+    UFUNCTION()
+    void Fire();
+
+    /** get weapon attach point */
+    UFUNCTION()
+    FName GetWeaponAttachPoint() const;
+
+    //TODO: This should be part of weapon, not character.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game")
+    FVector MuzzleOffset;
 
 protected:
-	//pickup handlers
-	void BeginPickup();
-	void EndPickup();
+    //pickup handlers
+    void BeginPickup();
+    void EndPickup();
 
-	//these are to be improved later on
-	void SelectWeapon0(); //pistol
-	void SelectWeapon1(); //assault rifle
-	void SelectWeapon2(); //shotgun
-	void SelectWeapon3(); //rocket launcher
-	void SelectWeapon4(); //grenade launcher
-	void SelectWeapon5(); //sniper rifle
+    //these are to be improved later on
+    void SelectWeapon0(); //pistol
+    void SelectWeapon1(); //assault rifle
+    void SelectWeapon2(); //shotgun
+    void SelectWeapon3(); //rocket launcher
+    void SelectWeapon4(); //grenade launcher
+    void SelectWeapon5(); //sniper rifle
 
-	void ShowInventory();
+    void ShowInventory();
 
-private:
-
-	/** pawn mesh: 1st person view */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-	USkeletalMeshComponent* Mesh1P;
-	protected:
-
-	/** socket or bone name for attaching weapon mesh */
-	UPROPERTY(EditDefaultsOnly, Category = Inventory)
-	FName WeaponAttachPoint;
+    /** socket or bone name for attaching weapon mesh */
+    UPROPERTY(EditDefaultsOnly, Category = "Character|Inventory")
+    FName WeaponAttachPoint;
 };
