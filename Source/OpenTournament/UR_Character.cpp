@@ -9,7 +9,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Engine.h"
+//#include "Engine.h"
 
 #include "OpenTournament.h"
 #include "UR_HealthComponent.h"
@@ -17,13 +17,10 @@
 #include "UR_InventoryComponent.h"
 #include "UR_CharacterMovementComponent.h"
 #include "UR_PlayerController.h"
-#include "UR_Projectile.h"
-#include "UR_Projectile_Assault.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Sets default values
 AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer.SetDefaultSubobjectClass<UUR_CharacterMovementComponent>(ACharacter::CharacterMovementComponentName)),
     FootstepTimestamp(0.f),
@@ -60,10 +57,7 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     MeshFirstPerson->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
     MeshFirstPerson->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
-    ConstructorHelpers::FObjectFinder<UAnimationAsset> fireAnimAsset(TEXT("AnimSequence'/Game/FirstPerson/Animations/FirstPerson_Fire.FirstPerson_Fire'"));
-    fireAnim = fireAnimAsset.Object;
     WeaponAttachPoint = "GripPoint";
-    
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +149,7 @@ void AUR_Character::MoveUp(const float InValue)
     if (InValue != 0.0f)
     {
         // add movement in up direction
-        AddMovementInput(FVector(0.f,0.f,1.f), InValue);
+        AddMovementInput(FVector(0.f, 0.f, 1.f), InValue);
     }
 }
 
@@ -224,7 +218,7 @@ void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
 {
     // Do nothing yet
     // Get our health component & apply damage
-    
+
     if (GetLocalRole() && URMovementComponent != nullptr)
     {
         // @! TODO Proper Damage Handling
@@ -275,7 +269,7 @@ void AUR_Character::Dodge(FVector DodgeDir, FVector DodgeCross)
 {
     if (CanDodge())
     {
-        if ( DodgeOverride(DodgeDir, DodgeCross) )
+        if (DodgeOverride(DodgeDir, DodgeCross))
         {
             return;
         }
@@ -290,7 +284,10 @@ void AUR_Character::Dodge(FVector DodgeDir, FVector DodgeCross)
     }
 }
 
-bool AUR_Character::ServerSetDodgeDirection_Validate(const EDodgeDirection InDodgeDirection) { return true; }
+bool AUR_Character::ServerSetDodgeDirection_Validate(const EDodgeDirection InDodgeDirection)
+{
+    return true;
+}
 void AUR_Character::ServerSetDodgeDirection_Implementation(const EDodgeDirection InDodgeDirection)
 {
     DodgeDirection = InDodgeDirection;
@@ -335,11 +332,11 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
         HealthComponent->ChangeHealth(-1 * Damage); //leaving this here for reference is need be
     }*/
 
-    if (HealthComponent) 
+    if (HealthComponent)
     {
-        /*if (ArmorComponent) 
+        /*if (ArmorComponent)
         {
-            if (ArmorComponent->Armor < 0.4*Damage && ArmorComponent->Armor > 0) 
+            if (ArmorComponent->Armor < 0.4*Damage && ArmorComponent->Armor > 0)
             {
                 int32 currentArmor = ArmorComponent->Armor;
                 ArmorComponent->ChangeArmor(-1 * ArmorComponent->Armor);
@@ -379,7 +376,7 @@ void AUR_Character::BeginPickup()
     bIsPickingUp = true;
 }
 
-void AUR_Character::EndPickup() 
+void AUR_Character::EndPickup()
 {
     bIsPickingUp = false;
 }
@@ -426,7 +423,7 @@ void AUR_Character::SelectWeapon0()
     InventoryComponent->SelectWeapon(0);
 }
 
-void AUR_Character::ShowInventory() 
+void AUR_Character::ShowInventory()
 {
     InventoryComponent->ShowInventory();
 }
@@ -441,20 +438,8 @@ USkeletalMeshComponent* AUR_Character::GetPawnMesh() const
     return MeshFirstPerson;
 }
 
-USkeletalMeshComponent* AUR_Character::GetSpecifcPawnMesh(bool WantFirstPerson) const
+void AUR_Character::WeaponSelect(int32 number)
 {
-    return MeshFirstPerson;
-
-}
-
-
-bool AUR_Character::IsFirstPerson() const
-{
-    return Controller && Controller->IsLocalPlayerController();
-}
-
-
-void AUR_Character::WeaponSelect(int32 number) {
     InventoryComponent->SelectWeapon(number);
 }
 
@@ -464,30 +449,25 @@ void AUR_Character::BeginFire()
     Fire();
 }
 
-void AUR_Character::EndFire() {
+void AUR_Character::EndFire()
+{
     isFiring = false;
 }
 
-
 void AUR_Character::Fire()
 {
-    if (isFiring) {
-        if (InventoryComponent->ActiveWeapon != NULL) {
+    if (isFiring)
+    {
+        if (InventoryComponent->ActiveWeapon != NULL)
+        {
             if (InventoryComponent->ActiveWeapon->ProjectileClass)
             {
                 GetActorEyesViewPoint(InventoryComponent->ActiveWeapon->Location, InventoryComponent->ActiveWeapon->Rotation);
                 FVector MuzzleLocation = InventoryComponent->ActiveWeapon->Location + FTransform(InventoryComponent->ActiveWeapon->Rotation).TransformVector(MuzzleOffset);
                 FRotator MuzzleRotation = InventoryComponent->ActiveWeapon->Rotation;
 
-                UWorld* World = GetWorld();
-                if (World)
-                {
-                    FActorSpawnParameters SpawnParams;
-                    SpawnParams.Owner = this;
-                    SpawnParams.Instigator = GetInstigator();
-                    InventoryComponent->ActiveWeapon->Fire(World, MuzzleLocation, MuzzleRotation, SpawnParams);
-                    MeshFirstPerson->PlayAnimation(fireAnim, false);
-                }
+                InventoryComponent->ActiveWeapon->Fire();
+                MeshFirstPerson->PlayAnimation(FireAnimation, false);
             }
         }
         else

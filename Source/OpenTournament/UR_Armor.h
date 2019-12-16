@@ -1,71 +1,60 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/PrimitiveComponent.h"
-#include "Components/ShapeComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "Components/BoxComponent.h"
-#include "Components/AudioComponent.h"
-#include "UR_Character.h"
-#include "Engine.h"
-#include "Engine/Canvas.h" // for FCanvasIcon
+
 #include "UR_Armor.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// Forward Declarations
+
+class UAudioComponent;
+class UCapsuleComponent;
+class USoundBase;
+class UUR_ArmorComponent;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 UCLASS()
 class OPENTOURNAMENT_API AUR_Armor : public AActor
 {
-	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
-	AUR_Armor(const FObjectInitializer& ObjectInitializer);
+    GENERATED_BODY()
+    
+public:
 
-	UPROPERTY(EditAnywhere)
-	UShapeComponent* Tbox;
+    AUR_Armor(const FObjectInitializer& ObjectInitializer);
 
-	UPROPERTY(EditAnywhere)
-	UAudioComponent* Sound;
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	UPROPERTY(EditAnywhere)
-	AUR_Character* PlayerController;
+    UPROPERTY(EditDefaultsOnly)
+    UCapsuleComponent* CollisionComponent;
 
-	int32 armorVal = 0;
+    UPROPERTY(EditDefaultsOnly)
+    UAudioComponent* AudioComponent;
 
-	UPROPERTY(EditAnywhere)
-	bool armorBarrier = false;
+    /** Pickup mesh: 3rd person view */
+    UPROPERTY(VisibleDefaultsOnly, Category = "Pickup")
+    UStaticMeshComponent* StaticMeshComponent;
 
-	bool bItemIsWithinRange = false;
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	void Pickup();
+    UFUNCTION()
+    void OnOverlap(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	void GetPlayer(AActor* Player);
+    UFUNCTION()
+    void Pickup(UUR_ArmorComponent* ArmorComponent);
 
-	UPROPERTY(EditAnywhere)
-		UStaticMeshComponent* SM_TBox;
+    UFUNCTION(BlueprintImplementableEvent, Category = "Armor")
+    void OnPickup();
 
-	UFUNCTION()
-		void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Armor")
+    USoundBase* PickupSound;
 
-	UFUNCTION()
-		void OnTriggerExit(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Armor")
+    int32 ArmorValue;
 
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-	/** weapon mesh: 3rd person view */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-		UStaticMeshComponent* ArmorMesh;
-
-	/** Returns Mesh3P subobject **/
-	FORCEINLINE UStaticMeshComponent* GetMesh() const { return ArmorMesh; }
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Armor")
+    bool IsBarrier;
 };
