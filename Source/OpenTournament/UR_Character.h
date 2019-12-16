@@ -13,8 +13,9 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UAnimationMontage;
 class UUR_HealthComponent;
-//class UUR_ArmorComponent;
+class UUR_ArmorComponent;
 class UUR_InventoryComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,14 +77,6 @@ public:
 
     USkeletalMeshComponent* GetPawnMesh() const;
 
-    USkeletalMeshComponent* GetSpecifcPawnMesh(bool WantFirstPerson) const;
-
-    bool IsFirstPerson() const;
-
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Assets")
-    USkeletalMesh* AlternateMeshAsset;
-
     /**
     * First person Camera
     */
@@ -105,8 +98,8 @@ public:
     /**
     * Fire animation
     */
-    UPROPERTY(VisibleDefaultsOnly, Category = "Animation")
-        class UAnimationAsset* fireAnim;
+    UPROPERTY(EditDefaultsOnly, Category = "Character")
+    UAnimMontage* FireAnimation;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -126,11 +119,6 @@ public:
     TSubclassOf<UUR_CharacterMovementComponent> MovementComponentClass;
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game")
-    FVector MuzzleOffset;
-
-
     // Axis movement
 
     /**
@@ -174,8 +162,6 @@ public:
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Walk")
     float FootstepTimeIntervalBase;
-
-
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Jump & Crouch
@@ -281,15 +267,20 @@ public:
     //UUR_ArmorComponent* ArmorComponent;
 
     /**
-    * Inventory Component
-    */
-    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
-    UUR_InventoryComponent* InventoryComponent;
-
-    /**
     * Take Damage override.
     */
     virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // @section Inventory
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * Inventory Component
+    */
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
+        UUR_InventoryComponent* InventoryComponent;
 
 protected:
     //pickup handlers
@@ -306,12 +297,10 @@ protected:
 
     void ShowInventory();
 
-private:
-
-    /** pawn mesh: 1st person view */
-    UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-    USkeletalMeshComponent* Mesh1P;
-    protected:
+protected:
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game")
+    FVector MuzzleOffset;
 
     /** socket or bone name for attaching weapon mesh */
     UPROPERTY(EditDefaultsOnly, Category = Inventory)

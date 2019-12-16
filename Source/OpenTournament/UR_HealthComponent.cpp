@@ -12,7 +12,7 @@ UUR_HealthComponent::UUR_HealthComponent()
     : Health(100.f)
     , HealthMax(200.f)
 {
-    SetIsReplicated(true);
+    SetIsReplicatedByDefault(true);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

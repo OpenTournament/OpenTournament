@@ -16,12 +16,12 @@
 // Sets default values
 AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 {
-    // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-    PrimaryActorTick.bCanEverTick = true;
-
     CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
     CollisionComponent->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
+    CollisionComponent->SetGenerateOverlapEvents(true);
     CollisionComponent->InitSphereRadius(15.0f);
+    CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Projectile::Overlap);
+
     RootComponent = CollisionComponent;
 
     ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
@@ -29,39 +29,21 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
     ProjectileMovementComponent->InitialSpeed = 5000.0f;
     ProjectileMovementComponent->MaxSpeed = 5000.0f;
     ProjectileMovementComponent->bRotationFollowsVelocity = true;
-    ProjectileMovementComponent->bShouldBounce = true;
+    ProjectileMovementComponent->ProjectileGravityScale = 0.f;
+    ProjectileMovementComponent->bShouldBounce = false;
 
-    SM_TBox = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Box Mesh"));
-    SM_TBox->SetupAttachment(RootComponent);
+    StaticMeshComponent = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("StaticMeshComponent"));
+    StaticMeshComponent->SetupAttachment(RootComponent);
 
-    ProjMesh = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("ProjMesh1"));
-    ProjMesh->SetupAttachment(RootComponent);
-
-    SoundFire = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("SoundFire"));
-    SoundFire->SetupAttachment(RootComponent);
-
-    SoundHit = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("SoundHit"));
-    SoundHit->SetupAttachment(RootComponent);
-
-    ConstructorHelpers::FObjectFinder<UStaticMesh> newAsset(TEXT("StaticMesh'/Game/FirstPerson/Meshes/FirstPersonProjectileMesh.FirstPersonProjectileMesh'"));
-    UStaticMesh* helper = newAsset.Object;
-    ProjMesh->SetStaticMesh(helper);
+    AudioComponent = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("AudioComponent"));
+    AudioComponent->SetupAttachment(RootComponent);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Called when the game starts or when spawned
-void AUR_Projectile::BeginPlay()
+void AUR_Projectile::Overlap(UPrimitiveComponent * HitComp, AActor * Other, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-    Super::BeginPlay();
-    ProjectileMovementComponent->ProjectileGravityScale = 0;
-    CollisionComponent->SetGenerateOverlapEvents(true);
-}
-
-// Called every frame
-void AUR_Projectile::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
+    // TODO
 }
 
 void AUR_Projectile::FireAt(const FVector& ShootDirection)
@@ -69,9 +51,8 @@ void AUR_Projectile::FireAt(const FVector& ShootDirection)
     ProjectileMovementComponent->Velocity = ShootDirection * ProjectileMovementComponent->InitialSpeed;
 }
 
-void AUR_Projectile::DestroyAfter(int delay)
+void AUR_Projectile::DestroyAfter(const int32 delay)
 {
     SetActorEnableCollision(false);
     SetLifeSpan(2);
 }
-

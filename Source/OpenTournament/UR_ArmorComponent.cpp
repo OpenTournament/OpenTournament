@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
 
 
 #include "UR_ArmorComponent.h"
@@ -11,7 +11,7 @@ UUR_ArmorComponent::UUR_ArmorComponent()
     , ArmorMax(200.f)
     //, hasBarrier(false)
 {
-    SetIsReplicated(true);
+    SetIsReplicatedByDefault(true);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
