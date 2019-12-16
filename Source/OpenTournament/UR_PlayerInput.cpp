@@ -21,7 +21,7 @@ void UUR_PlayerInput::SetupActionMappings()
 
 void UUR_PlayerInput::SetActionKeyMappingKey(const FInputActionKeyMapping ActionKeyMapping, FKey Key)
 {
-	int FoundIndex = -1;
+	int32 FoundIndex = -1;
 	if (ActionMappings.Find(ActionKeyMapping, FoundIndex))
 	{
 		FInputActionKeyMapping & KeyMappingToModify = ActionMappings[FoundIndex];

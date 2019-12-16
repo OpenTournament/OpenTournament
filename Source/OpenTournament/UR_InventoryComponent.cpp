@@ -81,7 +81,7 @@ void UUR_InventoryComponent::ShowInventory()
 
 }
 
-int32 UUR_InventoryComponent::SelectWeapon(int number)
+int32 UUR_InventoryComponent::SelectWeapon(int32 number)
 {
     FString name = "null weapon";
     int32 result = 0;
@@ -145,7 +145,7 @@ int32 UUR_InventoryComponent::SelectWeapon(int number)
     return result;
 }
 
-AUR_Weapon * UUR_InventoryComponent::SelectWeaponG(int number)
+AUR_Weapon * UUR_InventoryComponent::SelectWeaponG(int32 number)
 {
 
     FString name = "null weapon";
