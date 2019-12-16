@@ -1,64 +1,130 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/PrimitiveComponent.h"
-#include "Components/SphereComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "Components/ShapeComponent.h"
-#include "Components/BoxComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
-#include "ConstructorHelpers.h"
-#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "GameFramework/Actor.h"
-#include "ConstructorHelpers.h"
 
 #include "UR_Projectile.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// Forward Declarations
+
+class UAudioComponent;
+class USphereComponent;
+class UStaticMeshComponent;
+class UParticleSystemComponent;
+class UProjectileMovementComponent;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 UCLASS()
 class OPENTOURNAMENT_API AUR_Projectile : public AActor
 {
-	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
-	AUR_Projectile(const FObjectInitializer& ObjectInitializer);
+    GENERATED_BODY()
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+    virtual void BeginPlay() override;
 
-	/** weapon mesh: 3rd person view */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-		UStaticMeshComponent* ProjMesh;
+public:
 
-	UPROPERTY(EditAnywhere, Category = "Projectile")
-		UStaticMeshComponent* SM_TBox;
+    AUR_Projectile(const FObjectInitializer& ObjectInitializer);
 
-	UPROPERTY(EditAnywhere, Category = "Projectile")
-		class UParticleSystemComponent* Particles;
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	UPROPERTY(EditAnywhere, Category = "Projectile")
-		UAudioComponent* SoundFire;
+    // Sphere collision component.
+    UPROPERTY(VisibleDefaultsOnly, Category = "Projectile|Collision")
+    USphereComponent* CollisionComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Projectile")
-		UAudioComponent* SoundHit;
+    // Projectile movement component.
+    UPROPERTY(VisibleAnywhere, Category = "Projectile|Movement")
+    UProjectileMovementComponent* ProjectileMovementComponent;
 
+    // Projectile Mesh
+    UPROPERTY(VisibleDefaultsOnly, Category = "Projectile|Mesh")
+    UStaticMeshComponent* StaticMeshComponent;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-	// Sphere collision component.
-	UPROPERTY(VisibleDefaultsOnly, Category = "Projectile")
-		USphereComponent* CollisionComponent;
+    // Audio Component
+    UPROPERTY(VisibleDefaultsOnly, Category = "Projectile|Audio")
+    UAudioComponent* AudioComponent;
 
-	// Projectile movement component.
-	UPROPERTY(VisibleAnywhere, Category = Movement)
-		UProjectileMovementComponent* ProjectileMovementComponent;
+    // Projectile Particles
+    UPROPERTY(VisibleDefaultsOnly, Category = "Projectile|Particles")
+    UParticleSystemComponent* Particles;
 
-	void FireAt(const FVector& ShootDirection);
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	void DestroyAfter(int delay);
+    UFUNCTION()
+    virtual void FireAt(const FVector& ShootDirection);
 
+    UFUNCTION()
+    void Overlap(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+    // Hook for Blueprint. This will need to be elaborated further
+    UFUNCTION(BlueprintImplementableEvent, Category = "Projectile")
+    void OnOverlap(AActor* HitActor);
+
+    //NOTE: Currently we are using this, not the Overlap events.
+    UFUNCTION()
+    void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
+
+    UFUNCTION()
+    virtual void DestroyAfter(const int32 Delay);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * Damage for direct hits and for actors within InnerSplashRadius if applicable.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile|Damage")
+    float BaseDamage;
+
+    /**
+    * 
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile|Damage")
+    float SplashRadius;
+
+    /**
+    * Radius within which no falloff is applied yet (Damage = BaseDamage).
+    * Only if SplashRadius > 0.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile|Damage")
+    float InnerSplashRadius;
+
+    /**
+    * Minimum damage when somebody is hit at the edge of splash radius.
+    * Only if SplashRadius > 0.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile|Damage")
+    float SplashMinimumDamage;
+
+    /**
+    * Splash damage falloff exponent.
+    * Only if SplashRadius > 0.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile|Damage")
+    float SplashFalloff;
+
+    /**
+    *
+    */
+    UPROPERTY(EditAnywhere, Category = "Projectile|Damage")
+    TSubclassOf<UDamageType> DamageTypeClass;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * Impact/explosion sound.
+    */
+    UPROPERTY(EditAnywhere, Category = "Projectile|Audio")
+    USoundBase* ImpactSound;
+
+    /**
+    * Impact/explosion effect template.
+    */
+    UPROPERTY(EditAnywhere, Category = "Projectile|Particles")
+    UParticleSystem* ImpactTemplate;
 };

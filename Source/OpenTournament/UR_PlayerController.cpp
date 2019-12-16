@@ -25,7 +25,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_PlayerController::AUR_PlayerController(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+    : Super(ObjectInitializer)
 {
     MusicVolumeScalar = 1.0;
     MusicComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("MusicComponent"));
@@ -37,9 +37,9 @@ AUR_PlayerController::AUR_PlayerController(const FObjectInitializer& ObjectIniti
     // @! TODO Should we add via BP instead ?
     InputDodgeComponent = CreateDefaultSubobject<UUR_PCInputDodgeComponent>(TEXT("InputDodgeComponent"));
 
-	ChatComponent = CreateDefaultSubobject<UUR_ChatComponent>(TEXT("ChatComponent"));
-	ChatComponent->FallbackOwnerName = TEXT("SOMEBODY");
-	ChatComponent->AntiSpamDelay = 1.f;
+    ChatComponent = CreateDefaultSubobject<UUR_ChatComponent>(TEXT("ChatComponent"));
+    ChatComponent->FallbackOwnerName = TEXT("SOMEBODY");
+    ChatComponent->AntiSpamDelay = 1.f;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -81,21 +81,21 @@ void AUR_PlayerController::SetMusicVolume(float MusicVolume)
 
 void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
 {
-	Super::SetPlayer(InPlayer);
+    Super::SetPlayer(InPlayer);
 
-	UUR_LocalPlayer* LP = Cast<UUR_LocalPlayer>(GetLocalPlayer());
-	if (LP && LP->MessageHistory)
-	{
-		// bind chat dispatcher to MessageHistory handler
-		ChatComponent->OnReceiveChatMessage.AddUniqueDynamic(LP->MessageHistory, &UUR_MessageHistory::OnReceiveChatMessage);
+    UUR_LocalPlayer* LP = Cast<UUR_LocalPlayer>(GetLocalPlayer());
+    if (LP && LP->MessageHistory)
+    {
+        // bind chat dispatcher to MessageHistory handler
+        ChatComponent->OnReceiveChatMessage.AddUniqueDynamic(LP->MessageHistory, &UUR_MessageHistory::OnReceiveChatMessage);
 
-		// bind system message dispatcher to MessageHistory handler
-		OnReceiveSystemMessage.AddUniqueDynamic(LP->MessageHistory, &UUR_MessageHistory::OnReceiveSystemMessage);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("URPlayerController created but no URLocalPlayer available ?! %s"), *GetDebugName(this));
-	}
+        // bind system message dispatcher to MessageHistory handler
+        OnReceiveSystemMessage.AddUniqueDynamic(LP->MessageHistory, &UUR_MessageHistory::OnReceiveSystemMessage);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("URPlayerController created but no URLocalPlayer available ?! %s"), *GetDebugName(this));
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -278,22 +278,22 @@ void AUR_PlayerController::ReleasedFire()
 
 void AUR_PlayerController::Say(const FString& Message)
 {
-	if (ChatComponent)
-		ChatComponent->Send(Message, false);
+    if (ChatComponent)
+        ChatComponent->Send(Message, false);
 }
 
 void AUR_PlayerController::TeamSay(const FString& Message)
 {
-	if (ChatComponent)
-		ChatComponent->Send(Message, true);
+    if (ChatComponent)
+        ChatComponent->Send(Message, true);
 }
 
 void AUR_PlayerController::ClientMessage_Implementation(const FString& S, FName Type, float MsgLifeTime)
 {
-	if (OnReceiveSystemMessage.IsBound())
-		OnReceiveSystemMessage.Broadcast(S);
-	else
-		Super::ClientMessage_Implementation(S, Type, MsgLifeTime);
+    if (OnReceiveSystemMessage.IsBound())
+        OnReceiveSystemMessage.Broadcast(S);
+    else
+        Super::ClientMessage_Implementation(S, Type, MsgLifeTime);
 }
 
 

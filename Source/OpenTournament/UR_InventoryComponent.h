@@ -1,7 +1,7 @@
 // Copyright 2019 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
 
 #pragma once
 
@@ -31,54 +31,54 @@ class OPENTOURNAMENT_API UUR_InventoryComponent : public UActorComponent
     GENERATED_BODY()
 
 protected:
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
 public:
 
     UUR_InventoryComponent();
 
-	UPROPERTY(ReplicatedUsing = OnRep_InventoryW, BlueprintReadOnly, Category = "InventoryComponent")
-	TArray<AUR_Weapon*> InventoryW;
+    UPROPERTY(ReplicatedUsing = OnRep_InventoryW, BlueprintReadOnly, Category = "InventoryComponent")
+    TArray<AUR_Weapon*> InventoryW;
 
-	UPROPERTY(BlueprintReadOnly, Category = "InventoryComponent")
-	TArray<AUR_Ammo*> InventoryA;
+    UPROPERTY(BlueprintReadOnly, Category = "InventoryComponent")
+    TArray<AUR_Ammo*> InventoryA;
 
-	UPROPERTY(ReplicatedUsing = OnRep_ActiveWeapon, BlueprintReadOnly, Category = "InventoryComponent")
-	AUR_Weapon * ActiveWeapon;
+    UPROPERTY(ReplicatedUsing = OnRep_ActiveWeapon, BlueprintReadOnly, Category = "InventoryComponent")
+    AUR_Weapon * ActiveWeapon;
 
-	void Add(AUR_Weapon* weapon);
+    void Add(AUR_Weapon* weapon);
 
-	void Add(AUR_Ammo* ammo);
+    void Add(AUR_Ammo* ammo);
 
-	void AmmoCountInInventory(AUR_Weapon* weapon);
+    void AmmoCountInInventory(AUR_Weapon* weapon);
 
-	void UpdateWeaponAmmo(AUR_Ammo* ammo);
+    void UpdateWeaponAmmo(AUR_Ammo* ammo);
 
-	UFUNCTION()
-	void ShowInventory();
+    UFUNCTION()
+    void ShowInventory();
 
-	UFUNCTION()
-	int32 SelectWeapon(int number);
+    UFUNCTION()
+    int32 SelectWeapon(int32 number);
 
-	UFUNCTION()
-	AUR_Weapon * SelectWeaponG(int number);
+    UFUNCTION()
+    AUR_Weapon * SelectWeaponG(int32 number);
 
-	UFUNCTION()
-	bool NextWeapon();
+    UFUNCTION()
+    bool NextWeapon();
 
-	UFUNCTION()
-	bool PrevWeapon();
+    UFUNCTION()
+    bool PrevWeapon();
 
-	UFUNCTION()
-	void EquipWeapon(AUR_Weapon* Weap);
+    UFUNCTION()
+    void EquipWeapon(AUR_Weapon* Weap);
 
-	UFUNCTION(Server, Reliable)
-	void ServerEquipWeapon(AUR_Weapon* Weap);
+    UFUNCTION(Server, Reliable)
+    void ServerEquipWeapon(AUR_Weapon* Weap);
 
-	UFUNCTION()
-	virtual void OnRep_InventoryW();
+    UFUNCTION()
+    virtual void OnRep_InventoryW();
 
-	UFUNCTION()
-	virtual void OnRep_ActiveWeapon();
+    UFUNCTION()
+    virtual void OnRep_ActiveWeapon();
 };

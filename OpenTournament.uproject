@@ -13,7 +13,8 @@
 				"EngineSettings",
 				"UMG",
 				"CoreUObject",
-				"MoviePlayer"
+				"MoviePlayer",
+				"GameplayAbilities"
 			]
 		}
 	],

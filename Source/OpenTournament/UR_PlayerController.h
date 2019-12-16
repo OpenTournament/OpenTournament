@@ -48,7 +48,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     virtual void BeginPlay() override;
-	virtual void SetPlayer(UPlayer* InPlayer) override;
+    virtual void SetPlayer(UPlayer* InPlayer) override;
     virtual void InitInputSystem() override;
     virtual void SetupInputComponent() override;
     virtual void ProcessPlayerInput(const float DeltaTime, const bool bGamePaused) override;
@@ -172,41 +172,41 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	UPROPERTY(BlueprintReadOnly)
-	UUR_ChatComponent* ChatComponent;
+    UPROPERTY(BlueprintReadOnly)
+    UUR_ChatComponent* ChatComponent;
 
-	/**
-	* Command to send chat message to match channel.
-	*/
-	UFUNCTION(Exec)
-	virtual void Say(const FString& Message);
+    /**
+    * Command to send chat message to match channel.
+    */
+    UFUNCTION(Exec)
+    virtual void Say(const FString& Message);
 
-	/**
-	* Command to send chat message to team channel.
-	* In non-team gamemodes, should fallback to match channel.
-	* In spectator, should use spectator channel.
-	*/
-	UFUNCTION(Exec)
-	virtual void TeamSay(const FString& Message);
+    /**
+    * Command to send chat message to team channel.
+    * In non-team gamemodes, should fallback to match channel.
+    * In spectator, should use spectator channel.
+    */
+    UFUNCTION(Exec)
+    virtual void TeamSay(const FString& Message);
 
-	/**
-	* Override ClientMessage to use our systems.
-	*/
-	virtual void ClientMessage_Implementation(const FString& S, FName Type = NAME_None, float MsgLifeTime = 0.f) override;
+    /**
+    * Override ClientMessage to use our systems.
+    */
+    virtual void ClientMessage_Implementation(const FString& S, FName Type = NAME_None, float MsgLifeTime = 0.f) override;
 
-	/**
-	* Event dispatcher for receiving a system message.
-	*/
-	UPROPERTY(BlueprintAssignable)
-	FReceiveSystemMessageSignature OnReceiveSystemMessage;
+    /**
+    * Event dispatcher for receiving a system message.
+    */
+    UPROPERTY(BlueprintAssignable)
+    FReceiveSystemMessageSignature OnReceiveSystemMessage;
 
-	/**
-	* Blueprint hook for ClientMessage.
-	*/
-	UFUNCTION(BlueprintCallable, Exec, Meta = (DisplayName = "Client Message"))
-	void K2_ClientMessage(const FString& Message) { ClientMessage(Message); }
+    /**
+    * Blueprint hook for ClientMessage.
+    */
+    UFUNCTION(BlueprintCallable, Exec, Meta = (DisplayName = "Client Message"))
+    void K2_ClientMessage(const FString& Message) { ClientMessage(Message); }
 
-	/////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
     * Function to Open the Control Keybinding Menu
