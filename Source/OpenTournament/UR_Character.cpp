@@ -9,7 +9,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Engine.h"
+//#include "Engine.h"
 
 #include "OpenTournament.h"
 #include "UR_HealthComponent.h"
@@ -17,13 +17,10 @@
 #include "UR_InventoryComponent.h"
 #include "UR_CharacterMovementComponent.h"
 #include "UR_PlayerController.h"
-#include "UR_Projectile.h"
-#include "UR_Projectile_Assault.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Sets default values
 AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer.SetDefaultSubobjectClass<UUR_CharacterMovementComponent>(ACharacter::CharacterMovementComponentName)),
     FootstepTimestamp(0.f),
@@ -457,7 +454,6 @@ void AUR_Character::EndFire()
     isFiring = false;
 }
 
-
 void AUR_Character::Fire()
 {
     if (isFiring)
@@ -470,15 +466,8 @@ void AUR_Character::Fire()
                 FVector MuzzleLocation = InventoryComponent->ActiveWeapon->Location + FTransform(InventoryComponent->ActiveWeapon->Rotation).TransformVector(MuzzleOffset);
                 FRotator MuzzleRotation = InventoryComponent->ActiveWeapon->Rotation;
 
-                UWorld* World = GetWorld();
-                if (World)
-                {
-                    FActorSpawnParameters SpawnParams;
-                    SpawnParams.Owner = this;
-                    SpawnParams.Instigator = GetInstigator();
-                    InventoryComponent->ActiveWeapon->Fire(World, MuzzleLocation, MuzzleRotation, SpawnParams);
-                    MeshFirstPerson->PlayAnimation(FireAnimation, false);
-                }
+                InventoryComponent->ActiveWeapon->Fire();
+                MeshFirstPerson->PlayAnimation(FireAnimation, false);
             }
         }
         else

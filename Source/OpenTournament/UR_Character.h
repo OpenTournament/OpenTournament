@@ -267,15 +267,20 @@ public:
     //UUR_ArmorComponent* ArmorComponent;
 
     /**
-    * Inventory Component
-    */
-    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
-    UUR_InventoryComponent* InventoryComponent;
-
-    /**
     * Take Damage override.
     */
     virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // @section Inventory
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * Inventory Component
+    */
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
+        UUR_InventoryComponent* InventoryComponent;
 
 protected:
     //pickup handlers
@@ -293,10 +298,6 @@ protected:
     void ShowInventory();
 
 protected:
-
-    /** pawn mesh: 1st person view */
-    UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-    USkeletalMeshComponent* Mesh1P;
     
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game")
     FVector MuzzleOffset;

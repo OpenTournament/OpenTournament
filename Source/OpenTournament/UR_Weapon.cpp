@@ -1,14 +1,17 @@
 // Copyright 2019 Open Tournament Project, All Rights Reserved.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 #include "UR_Weapon.h"
-#include "UR_InventoryComponent.h"
-#include "Engine.h"
+
 #include "OpenTournament.h"
+#include "UR_InventoryComponent.h"
 #include "UR_Character.h"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Sets default values
-AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
 {
     Tbox = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
     Tbox->SetGenerateOverlapEvents(true);
@@ -17,9 +20,6 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer) : Super(Obje
 
     RootComponent = Tbox;
 
-    SM_TBox = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Box Mesh"));
-    SM_TBox->SetupAttachment(RootComponent);
-    
     Mesh1P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh1P"));
     Mesh1P->SetupAttachment(RootComponent);
     Mesh3P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh3P"));
@@ -45,9 +45,9 @@ void AUR_Weapon::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (PlayerController != NULL) 
+    if (PlayerController != NULL)
     {
-        if (bItemIsWithinRange) 
+        if (bItemIsWithinRange)
         {
             Pickup();
         }
@@ -64,14 +64,39 @@ bool AUR_Weapon::CanFire() const
     return false;
 }
 
-
-
 void AUR_Weapon::Pickup()
 {
     Sound->SetActive(true);
     Sound = UGameplayStatics::SpawnSoundAtLocation(this, Sound->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
     PlayerController->InventoryComponent->Add(this);
     AttachWeaponToPawn();
+}
+
+void AUR_Weapon::Fire()
+{
+    if (auto World = GetWorld())
+    {
+        FVector MuzzleLocation{};
+        FRotator MuzzleRotation{};
+
+        if (ammoCount > 0)
+        {
+            FActorSpawnParameters ProjectileSpawnParameters;
+
+            AUR_Projectile* Projectile = World->SpawnActor<AUR_Projectile>(ProjectileClass, MuzzleLocation, MuzzleRotation, ProjectileSpawnParameters);
+
+            if (Projectile)
+            {
+                FVector Direction = MuzzleRotation.Vector();
+                Projectile->FireAt(Direction);
+                ammoCount--;
+            }
+        }
+        else
+        {
+            GAME_PRINT(1.f, FColor::Red, "Ammo Expended for %s", *WeaponName);
+        }
+    }
 }
 
 
