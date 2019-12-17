@@ -94,6 +94,7 @@ void AUR_Weapon::GiveTo(AUR_Character* NewOwner)
 {
     SetOwner(NewOwner);
     PlayerController = NewOwner;
+    AttachWeaponToPawn();
     if (NewOwner && NewOwner->InventoryComponent)
     {
         NewOwner->InventoryComponent->Add(this);

@@ -38,8 +38,22 @@ public:
     UPROPERTY(VisibleDefaultsOnly, Category = "Projectile|Collision")
     USphereComponent* CollisionComponent;
 
+    /**
+    * Set projectile to not collide with shooter.
+    * This should always be true by default, otherwise projectile can collide shooter on spawn.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile|Collision")
+    bool bIgnoreInstigator;
+
+    /**
+    * Only for bouncing projectiles.
+    * Use this to let projectile collide with shooter after first bounce.
+    */
+    UPROPERTY(EditAnywhere, Category = "Projectile|Collision")
+    bool bCollideInstigatorAfterBounce;
+
     // Projectile movement component.
-    UPROPERTY(VisibleAnywhere, Category = "Projectile|Movement")
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Projectile|Movement")
     UProjectileMovementComponent* ProjectileMovementComponent;
 
     // Projectile Mesh
@@ -56,6 +70,9 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
+    UFUNCTION(BlueprintCallable)
+    virtual void SetIgnoreInstigator(bool bIgnore);
+
     UFUNCTION()
     virtual void FireAt(const FVector& ShootDirection);
 
@@ -68,12 +85,31 @@ public:
 
     //NOTE: Currently we are using this, not the Overlap events.
     UFUNCTION()
-    void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
+    virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
+
+    UFUNCTION()
+    virtual void OnBounceInternal(const FHitResult& ImpactResult, const FVector& ImpactVelocity);
+
+    /**
+    * Only for bouncing projectiles.
+    * Return whether we should explode on the hit actor, or bounce off it.
+    */
+    UFUNCTION(BlueprintNativeEvent)
+    bool ShouldExplodeOn(AActor* Other);
+
+    /**
+    * Call this to trigger explosion/impact effects and splash damage.
+    * If there is no splash radius, no damage is applied. Point damage should be applied on hit.
+    */
+    UFUNCTION(BlueprintCallable, Category = "Projectile")
+    virtual void Explode(const FVector& HitLocation, const FVector& HitNormal);
 
     UFUNCTION()
     virtual void DestroyAfter(const int32 Delay);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    
 
     /**
     * Damage for direct hits and for actors within InnerSplashRadius if applicable.

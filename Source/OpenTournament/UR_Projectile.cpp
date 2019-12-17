@@ -15,6 +15,8 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+//NOTE: Maybe a BouncingProjectile subclass would be appropriate.
+
 // Sets default values
 AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 {
@@ -24,6 +26,8 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
     CollisionComponent->InitSphereRadius(15.0f);
     CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Projectile::Overlap);
     CollisionComponent->OnComponentHit.AddDynamic(this, &AUR_Projectile::OnHit);
+    bIgnoreInstigator = true;
+    bCollideInstigatorAfterBounce = true;
 
     RootComponent = CollisionComponent;
 
@@ -37,12 +41,15 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 
     StaticMeshComponent = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("StaticMeshComponent"));
     StaticMeshComponent->SetupAttachment(RootComponent);
+    StaticMeshComponent->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
 
     AudioComponent = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("AudioComponent"));
     AudioComponent->SetupAttachment(RootComponent);
 
     Particles = ObjectInitializer.CreateDefaultSubobject<UParticleSystemComponent>(this, TEXT("Particles"));
     Particles->SetupAttachment(RootComponent);
+
+    SetCanBeDamaged(false);
 
     bReplicates = true;
     bNetTemporary = true;
@@ -61,11 +68,31 @@ void AUR_Projectile::BeginPlay()
 {
     Super::BeginPlay();
 
-    // Avoid colliding with shooter
+    if (bIgnoreInstigator)
+    {
+        SetIgnoreInstigator(true);
+    }
+
+    if (ProjectileMovementComponent->bShouldBounce)
+    {
+        ProjectileMovementComponent->OnProjectileBounce.AddDynamic(this, &AUR_Projectile::OnBounceInternal);
+    }
+}
+
+void AUR_Projectile::SetIgnoreInstigator(bool bIgnore)
+{
+    bIgnoreInstigator = bIgnore;
     if (GetInstigator())
     {
-        CollisionComponent->IgnoreActorWhenMoving(GetInstigator(), true);
-        GetInstigator()->MoveIgnoreActorAdd(this);
+        CollisionComponent->IgnoreActorWhenMoving(GetInstigator(), bIgnoreInstigator);
+        if (bIgnoreInstigator)
+        {
+            GetInstigator()->MoveIgnoreActorAdd(this);
+        }
+        else
+        {
+            GetInstigator()->MoveIgnoreActorRemove(this);
+        }
     }
 }
 
@@ -80,6 +107,45 @@ void AUR_Projectile::Overlap(UPrimitiveComponent * HitComp, AActor * Other, UPri
 }
 
 void AUR_Projectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
+{
+    if (ProjectileMovementComponent->bShouldBounce && !ShouldExplodeOn(OtherActor))
+    {
+        return;
+    }
+
+    if (SplashRadius <= 0.0f)
+    {
+        //TODO: not sure what to put in HitFromDirection.
+        FVector HitFromDirection = (Hit.Location - GetActorLocation());
+        if (!HitFromDirection.IsNearlyZero())
+        {
+            HitFromDirection.Normalize();
+        }
+        else
+        {
+            HitFromDirection = GetActorRotation().Vector();
+        }
+        UGameplayStatics::ApplyPointDamage(OtherActor, BaseDamage, HitFromDirection, Hit, GetInstigatorController(), this, DamageTypeClass);
+    }
+
+    Explode(Hit.Location, Hit.ImpactNormal);
+}
+
+void AUR_Projectile::OnBounceInternal(const FHitResult& ImpactResult, const FVector& ImpactVelocity)
+{
+    if (bCollideInstigatorAfterBounce && bIgnoreInstigator)
+    {
+        SetIgnoreInstigator(false);
+    }
+    //TODO: bounce sound
+}
+
+bool AUR_Projectile::ShouldExplodeOn_Implementation(AActor* Other)
+{
+    return Other && (Cast<APawn>(Other) || Other->CanBeDamaged());
+}
+
+void AUR_Projectile::Explode(const FVector& HitLocation, const FVector& HitNormal)
 {
     // Old RocketProjectile code
     /*
@@ -97,7 +163,7 @@ void AUR_Projectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
     */
 
     // Some notes :
-    // - SoundFire => ImpactSound
+    // - SoundHit => ImpactSound
     // - ProjMesh => StaticMeshComponent
     // - Particles => now spawning independent emitter with ImpactTemplate.
 
@@ -109,7 +175,7 @@ void AUR_Projectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
         UGameplayStatics::SpawnEmitterAtLocation(
             GetWorld(),
             ImpactTemplate,
-            FTransform(Hit.ImpactNormal.Rotation(), Hit.Location, GetActorScale3D())
+            FTransform(HitNormal.Rotation(), HitLocation, GetActorScale3D())
         );
     }
 
@@ -132,20 +198,6 @@ void AUR_Projectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
             GetInstigatorController(),
             ECollisionChannel::ECC_Visibility
         );
-    }
-    else
-    {
-        //TODO: not sure what to put in HitFromDirection.
-        FVector HitFromDirection = (GetActorLocation() - Hit.Location);
-        if (!HitFromDirection.IsNearlyZero())
-        {
-            HitFromDirection.Normalize();
-        }
-        else
-        {
-            HitFromDirection = -1 * GetActorRotation().Vector();
-        }
-        UGameplayStatics::ApplyPointDamage(OtherActor, BaseDamage, HitFromDirection, Hit, GetInstigatorController(), this, DamageTypeClass);
     }
 
     Destroy();
