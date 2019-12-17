@@ -154,4 +154,13 @@ public:
     */
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "FunctionLibrary")
     static FString GetTimeString(const float TimeSeconds);
+
+    /**
+    * Random vector between 2 vectors.
+    */
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Math")
+    static FVector RandomVectorInRange(const FVector& Vector1, const FVector& Vector2)
+    {
+        return FVector(FMath::RandRange(Vector1.X, Vector2.X), FMath::RandRange(Vector1.Y, Vector2.Y), FMath::RandRange(Vector1.Z, Vector2.Z));
+    }
 };
