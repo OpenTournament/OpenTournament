@@ -6,6 +6,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "AbilitySystemInterface.h"
+#include "Net/UnrealNetwork.h"
+#include "GameplayAbilitySpec.h"
+#include "GameplayEffect.h"
 
 #include <UR_Type_DodgeDirection.h>
 
@@ -15,7 +19,10 @@
 
 class UAnimationMontage;
 class UUR_HealthComponent;
+class UUR_AbilitySystemComponent;
 class UUR_ArmorComponent;
+class UUR_AttributeSet;
+class UUR_GameplayAbility;
 class UUR_InventoryComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +52,8 @@ struct FCharacterVoice
  *
  */
 UCLASS()
-class OPENTOURNAMENT_API AUR_Character : public ACharacter
+class OPENTOURNAMENT_API AUR_Character : public ACharacter,
+    public IAbilitySystemInterface
 {
     GENERATED_BODY()
 
@@ -249,6 +257,51 @@ public:
     UFUNCTION(Server, Reliable, WithValidation)
     void ServerSetDodgeDirection(const EDodgeDirection InDodgeDirection);
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // @section Gameplay Ability System
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Implement IAbilitySystemInterface
+    UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+    /** Grant a GameplayAbility */
+    UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Character")
+    void Server_GiveAbility(TSubclassOf<UUR_GameplayAbility> InAbility, const int32 InAbilityLevel = 1);
+
+    /** Remove a GameplayAbility */
+    UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Character")
+    void Server_RemoveAbility(TSubclassOf<UUR_GameplayAbility> InAbilityClass) const;
+
+    /** Get the Level of a GameplayAbility */
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Character")
+    int32 GetAbilityLevel(TSubclassOf<UUR_GameplayAbility> InAbilityClass) const;
+
+    /** Get the Level of a GameplayAbility */
+    UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Character")
+    void Server_SetAbilityLevel(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel = 1);
+
+    /*
+    * Ability System Component
+    */
+    UPROPERTY()
+    UUR_AbilitySystemComponent* AbilitySystemComponent;
+
+    /**
+    * Attribute Set
+    */
+    UPROPERTY()
+    UUR_AttributeSet* AttributeSet;
+
+    UPROPERTY()
+    int32 bAbilitiesInitialized;
+
+    /** Abilities to grant to this character on creation. These will be activated by tag or event and are not bound to specific inputs */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Abilities")
+    TArray<TSubclassOf<UUR_GameplayAbility>> GameplayAbilities;
+
+    /** Passive gameplay effects applied on creation */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
+    TArray<TSubclassOf<UGameplayEffect>> PassiveGameplayEffects;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Health & Damage
