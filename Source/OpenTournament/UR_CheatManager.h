@@ -18,8 +18,8 @@
 UCLASS()
 class OPENTOURNAMENT_API UUR_CheatManager : public UCheatManager
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	UFUNCTION(exec, Category = "Cheat")
-	void Cheat_AddValue();
+    UFUNCTION(exec, Category = "Cheat")
+    void Cheat_AddScore(int32 n = 1);
 };

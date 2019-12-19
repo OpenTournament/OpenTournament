@@ -106,6 +106,40 @@ public:
     virtual void CalcCamera(float DeltaTime, struct FMinimalViewInfo& OutResult) override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Camera Management
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * Updated by CalcCamera. Controlled by PickCamera/IsThirdPersonCamera.
+    * Client only.
+    */
+    UPROPERTY(BlueprintReadOnly)
+    bool bViewingThirdPerson;
+
+    /**
+    * Return the camera component to use when viewing this pawn.
+    * Called by CalcCamera which is tick-based.
+    * Override this to implement new cameras.
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintCosmetic, BlueprintPure)
+    UCameraComponent* PickCamera();
+
+    /**
+    * Return true if this camera component is a third-person view.
+    * Called by CalcCamera which is tick-based.
+    * This controls triggering of CameraViewChanged event.
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure)
+    bool IsThirdPersonCamera(UCameraComponent* Camera);
+
+    /**
+    * Update 1p/3p meshes visibility according to bViewingThirdPerson.
+    * Client only.
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic)
+    void CameraViewChanged();
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Input (Keypress to Weapon, Movement/Dodge)
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -293,6 +327,14 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure)
     bool IsAlive();
 
+    UFUNCTION(Exec)
+    virtual void Suicide()
+    {
+        ServerSuicide();
+    }
+
+    UFUNCTION(Server, Reliable)
+    void ServerSuicide();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Inventory

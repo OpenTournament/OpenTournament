@@ -11,6 +11,7 @@
 #include "Engine.h"
 #include "UR_FunctionLibrary.h"
 #include "UR_PlayerController.h"
+#include "UR_LocalMessage.h"
 
 /**
 * NOTES about rotating movement :
@@ -59,6 +60,8 @@ AUR_PickupBase::AUR_PickupBase()
 
 	InitialSpawnDelay = 0;
 	RespawnTime = 5;
+
+    PickupMessage = UUR_LocalMessage::StaticClass();
 }
 
 void AUR_PickupBase::OnConstruction(const FTransform& Transform)
@@ -268,13 +271,6 @@ void AUR_PickupBase::MulticastPickedUp_Implementation(AActor* Picker)
 		if (PickupMessage && Picker && UUR_FunctionLibrary::IsLocallyViewed(Picker))
 		{
 			UUR_FunctionLibrary::GetLocalPlayerController(this)->ClientReceiveLocalizedMessage_Implementation(PickupMessage, 0, nullptr, nullptr, this);
-			//NOTE: seems like UE4 LocalMessage framework is *really* barebones.
-			// I'm not sure if it's actually relied on, if we're supposed to heavily extend it like UT, or use an alternative.
-			// Going to use a print string for now.
-		}
-		if (Picker && UUR_FunctionLibrary::IsLocallyViewed(Picker))
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, GetPickupText(Picker).ToString());
 		}
 	}
 

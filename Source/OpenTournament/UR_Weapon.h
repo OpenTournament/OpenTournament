@@ -87,7 +87,7 @@ public:
 
 
 
-    UPROPERTY(EditAnywhere, Replicated, Category = "Weapon")
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Weapon")
     int32 ammoCount;
 
     UPROPERTY(EditAnywhere, Category = "Weapon")
