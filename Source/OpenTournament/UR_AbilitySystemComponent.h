@@ -1,13 +1,16 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
-
 
 #include "AbilitySystemComponent.h"
 
 #include "OpenTournament.h"
 #include "UR_AbilityTypes.h"
 #include "UR_AbilitySystemComponent.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Subclass of ability system component with game-specific data

@@ -1,10 +1,13 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "OpenTournament.h"
 
 #include "Abilities/GameplayAbilityTypes.h"
+
+#include "OpenTournament.h"
 #include "UR_AbilityTypes.h"
 
 #include "UR_TargetType.generated.h"
@@ -38,7 +41,11 @@ public:
     void GetTargets(AUR_Character* TargetingCharacter, AActor* TargetingActor, FGameplayEventData EventData, TArray<FHitResult>& OutHitResults, TArray<AActor*>& OutActors) const;
 };
 
-/** Trivial target type that uses the owner */
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+* Trivial target type that uses the owner
+*/
 UCLASS(NotBlueprintable)
 class OPENTOURNAMENT_API UUR_TargetType_UseOwner : public UUR_TargetType
 {
@@ -52,7 +59,11 @@ public:
     virtual void GetTargets_Implementation(AUR_Character* TargetingCharacter, AActor* TargetingActor, FGameplayEventData EventData, TArray<FHitResult>& OutHitResults, TArray<AActor*>& OutActors) const override;
 };
 
-/** Trivial target type that pulls the target out of the event data */
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+* Trivial target type that pulls the target out of the event data
+*/
 UCLASS(NotBlueprintable)
 class OPENTOURNAMENT_API UUR_TargetType_UseEventData : public UUR_TargetType
 {
