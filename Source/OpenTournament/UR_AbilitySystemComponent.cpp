@@ -1,13 +1,13 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_AbilitySystemComponent.h"
 
-//#include "Abilities/RPGGameplayAbility.h"
 #include "AbilitySystemGlobals.h"
 
 #include "UR_Character.h"
+#include "UR_GameplayAbility.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

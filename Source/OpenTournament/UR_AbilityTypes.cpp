@@ -1,12 +1,13 @@
-// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_AbilityTypes.h"
 
+#include "AbilitySystemGlobals.h"
+
 #include "OpenTournament.h"
 #include "UR_AbilitySystemComponent.h"
-#include "AbilitySystemGlobals.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
