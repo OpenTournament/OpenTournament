@@ -16,6 +16,10 @@
 #include "UR_ArmorComponent.h"
 #include "UR_InventoryComponent.h"
 #include "UR_CharacterMovementComponent.h"
+#include "UR_AbilitySystemComponent.h"
+#include "UR_ArmorComponent.h"
+#include "UR_AttributeSet.h"
+#include "UR_GameplayAbility.h"
 #include "UR_PlayerController.h"
 
 
@@ -58,6 +62,11 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     MeshFirstPerson->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
     WeaponAttachPoint = "GripPoint";
+
+    AbilitySystemComponent = CreateDefaultSubobject<UUR_AbilitySystemComponent>("AbilitySystemComponent");
+
+    // Create the attribute set, this replicates by default
+    AttributeSet = CreateDefaultSubobject<UUR_AttributeSet>(TEXT("AttributeSet"));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,6 +94,11 @@ void AUR_Character::Tick(float DeltaTime)
     if (HealthComponent->Health <= 0)
         Destroy(); //to be replaced with Dead state and respawnability
     TickFootsteps(DeltaTime);
+}
+
+UAbilitySystemComponent* AUR_Character::GetAbilitySystemComponent() const
+{
+    return AbilitySystemComponent;
 }
 
 void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -367,9 +381,7 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 }
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 void AUR_Character::BeginPickup()
 {
@@ -472,5 +484,95 @@ void AUR_Character::Fire()
         }
         else
             GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Yellow, FString::Printf(TEXT("NO WEAPON SELECTED!")));
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool AUR_Character::Server_GiveAbility_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel) { return true; }
+void AUR_Character::Server_GiveAbility_Implementation(TSubclassOf<UUR_GameplayAbility> InAbility, const int32 InAbilityLevel)
+{
+    if (InAbility == nullptr)
+    {
+        GAME_LOG(Game, Error, "InAbilityClass was Null!");
+        return;
+    }
+
+    check(AbilitySystemComponent);
+
+    if (AbilitySystemComponent)
+    {
+        // @! TODO : Unsure of the purpose of InputID, seems to be related to input/keybinding
+        const int32 InputID{ 0 }; //static_cast<int32>(Cast<UUR_GameplayAbility>(InAbilityClass.GetDefaultObject())->Input);
+
+        AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(InAbility, InAbilityLevel, InputID, this));
+        GameplayAbilities.AddUnique(InAbility);
+    }
+}
+
+bool AUR_Character::Server_RemoveAbility_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass) { return true; }
+void AUR_Character::Server_RemoveAbility_Implementation(TSubclassOf<UUR_GameplayAbility> InAbilityClass) const
+{
+    if (InAbilityClass == nullptr)
+    {
+        GAME_LOG(Game, Error, "InAbilityClass was Null!");
+        return;
+    }
+
+    check(AbilitySystemComponent);
+
+    if (AbilitySystemComponent)
+    {
+        const auto& Abilities = AbilitySystemComponent->GetActivatableAbilities();
+
+        for (const auto& Ability : Abilities)
+        {
+            if (Ability.Ability->GetClass() == InAbilityClass)
+            {
+                AbilitySystemComponent->ClearAbility(Ability.Handle);
+                break;
+            }
+        }
+    }
+}
+
+int32 AUR_Character::GetAbilityLevel(TSubclassOf<UUR_GameplayAbility> InAbilityClass) const
+{
+    int32 OutLevel{ -1 };
+
+    if (AbilitySystemComponent)
+    {
+        const auto& Abilities = AbilitySystemComponent->GetActivatableAbilities();
+
+        for (const auto& Ability : Abilities)
+        {
+            if (Ability.Ability->GetClass() == InAbilityClass)
+            {
+                OutLevel = Ability.Level;
+                break;
+            }
+        }
+    }
+
+    return OutLevel;
+}
+
+bool AUR_Character::Server_SetAbilityLevel_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel) { return true; }
+void AUR_Character::Server_SetAbilityLevel_Implementation(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel)
+{
+    if (AbilitySystemComponent)
+    {
+        // Get a reference to our ASC ActiveatableAbilities. Reference so our modifications stick.
+        auto& Abilities = AbilitySystemComponent->GetActivatableAbilities();
+
+        for (auto& Ability : Abilities)
+        {
+            if (Ability.Ability->GetClass() == InAbilityClass)
+            {
+                Ability.Level = InAbilityLevel;
+                AbilitySystemComponent->MarkAbilitySpecDirty(Ability);
+                break;
+            }
+        }
     }
 }
