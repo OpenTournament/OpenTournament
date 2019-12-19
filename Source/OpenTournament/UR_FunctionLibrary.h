@@ -35,9 +35,6 @@ public:
     UFUNCTION(BlueprintPure, Category = "Character|State")
     static AUR_GameModeBase* GetGameModeDefaultObject(const UObject* WorldContextObject);
 
-    UFUNCTION(BlueprintPure, Category = "Character|State") 
-    static int32 GetPlayerStateValue(APlayerController* PlayerController);
-
     template<typename TEnum>
     static FORCEINLINE FString GetEnumValueAsString(const FString& Name, TEnum Value)
     {

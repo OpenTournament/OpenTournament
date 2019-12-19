@@ -17,6 +17,7 @@
 #include "UR_InventoryComponent.h"
 #include "UR_CharacterMovementComponent.h"
 #include "UR_PlayerController.h"
+#include "UR_GameMode.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -119,18 +120,61 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 void AUR_Character::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
 {
-    if (IsAlive() && CharacterCameraComponent && CharacterCameraComponent->IsActive())
+    UCameraComponent* Camera = PickCamera();
+    if (Camera)
     {
-        CharacterCameraComponent->GetCameraView(DeltaTime, OutResult);
-    }
-    else if (ThirdPersonCamera && ThirdPersonCamera->IsActive())
-    {
-        ThirdPersonCamera->GetCameraView(DeltaTime, OutResult);
+        bool bThirdPerson = IsThirdPersonCamera(Camera);
+        if (bThirdPerson != bViewingThirdPerson)
+        {
+            bViewingThirdPerson = bThirdPerson;
+            CameraViewChanged();
+        }
+        Camera->GetCameraView(DeltaTime, OutResult);
     }
     else
     {
+        // Fallback to Super
         Super::CalcCamera(DeltaTime, OutResult);
     }
+}
+
+UCameraComponent* AUR_Character::PickCamera_Implementation()
+{
+    // End game = always 3p
+    AGameState* GS = GetWorld()->GetGameState<AGameState>();
+    if (GS && GS->HasMatchEnded() && ThirdPersonCamera)
+    {
+        return ThirdPersonCamera;
+    }
+
+    // Alive = 1p
+    //TODO: specs should be able to switch at will.
+    // That would be a variable in PlayerController.
+    // Hopefully this is client-only, so we can get local PC to check this.
+    if (IsAlive() && CharacterCameraComponent && CharacterCameraComponent->IsActive())
+    {
+        return CharacterCameraComponent;
+    }
+
+    // Fallback to 3p
+    if (ThirdPersonCamera && ThirdPersonCamera->IsActive())
+    {
+        return ThirdPersonCamera;
+    }
+
+    return nullptr;
+}
+
+bool AUR_Character::IsThirdPersonCamera_Implementation(UCameraComponent* Camera)
+{
+    return Camera && Camera == ThirdPersonCamera;
+}
+
+void AUR_Character::CameraViewChanged_Implementation()
+{
+    GetMesh()->SetOwnerNoSee(!bViewingThirdPerson);
+    MeshFirstPerson->SetVisibility(!bViewingThirdPerson, true);
+    //TODO: weapon
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -402,8 +446,8 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     }
 
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - DAMAGE -: %f"), ActualDamage));
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Damage Event 2 - Remaining Health -: %d"), HealthComponent->Health));
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("Damage Event 2 - Remaining Armor -: %d"), ArmorComponent->Armor));
+    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Damage Event 2 - Remaining Health -: %d"), HealthComponent->Health));
+    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("Damage Event 2 - Remaining Armor -: %d"), ArmorComponent->Armor));
 
 
     //NOTE: it seems like we are lacking control of damage momentum (knockback) overall.
@@ -461,12 +505,27 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
 {
     // Already killed (might happen when multiple damage sources in 1 frame)
     if (GetTearOff() || IsPendingKillPending())
+    {
         return;
+    }
 
-    // Here we can hook game mode + mutators for things like :
-    // - prevent death
-    // - announce kill (death message, kill message, sprees, etc)
-    // - score kill (add to score / team score)
+    AUR_GameMode* GM = GetWorld()->GetAuthGameMode<AUR_GameMode>();
+    if (GM)
+    {
+        AController* Killed = GetController();
+
+        if (GM->PreventDeath(Killed, Killer, DamageEvent, DamageCauser))
+        {
+            // Make sure we don't stay with <=0 health or IsAlive() would return false.
+            if (HealthComponent && HealthComponent->Health <= 0)
+            {
+                HealthComponent->SetHealth(1);
+            }
+            return;
+        }
+
+        GM->PlayerKilled(Killed, Killer, DamageEvent, DamageCauser);
+    }
 
     if (HealthComponent)
     {
@@ -507,10 +566,6 @@ void AUR_Character::PlayDeath()
     ThirdPersonArm->bEnableCameraLag = true;
     ThirdPersonArm->bEnableCameraRotationLag = true;
 
-    // Not sure why these are still rendered as "owned" after unpossessing. Maybe because it is ViewTarget.
-    GetMesh()->SetOwnerNoSee(false);
-    MeshFirstPerson->SetVisibility(false, true);
-
     GetCharacterMovement()->StopActiveMovement();
 
     // Disable capsule
@@ -539,6 +594,11 @@ bool AUR_Character::IsAlive()
 
     // not sure if we should return true or false when no HealthComponent
     return true;
+}
+
+void AUR_Character::ServerSuicide_Implementation()
+{
+    Die(nullptr, FDamageEvent(), nullptr);
 }
 
 
