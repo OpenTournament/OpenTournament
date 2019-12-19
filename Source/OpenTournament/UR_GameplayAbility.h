@@ -1,4 +1,6 @@
-// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -46,25 +48,23 @@ public:
     TMap<FGameplayTag, FUR_GameplayEffectContainer> EffectContainerMap;
 
     /** Make gameplay effect container spec to be applied later, using the passed in container */
-    UFUNCTION(BlueprintCallable, Category = Ability, meta=(AutoCreateRefTerm = "EventData"))
+    UFUNCTION(BlueprintCallable, Category = "Ability", meta=(AutoCreateRefTerm = "EventData"))
     virtual FUR_GameplayEffectContainerSpec MakeEffectContainerSpecFromContainer(const FUR_GameplayEffectContainer& Container, const FGameplayEventData& EventData, int32 OverrideGameplayLevel = -1);
 
     /** Search for and make a gameplay effect container spec to be applied later, from the EffectContainerMap */
-    UFUNCTION(BlueprintCallable, Category = Ability, meta = (AutoCreateRefTerm = "EventData"))
+    UFUNCTION(BlueprintCallable, Category = "Ability", meta = (AutoCreateRefTerm = "EventData"))
     virtual FUR_GameplayEffectContainerSpec MakeEffectContainerSpec(FGameplayTag ContainerTag, const FGameplayEventData& EventData, int32 OverrideGameplayLevel = -1);
 
     /** Applies a gameplay effect container spec that was previously created */
-    UFUNCTION(BlueprintCallable, Category = Ability)
+    UFUNCTION(BlueprintCallable, Category = "Ability")
     virtual TArray<FActiveGameplayEffectHandle> ApplyEffectContainerSpec(const FUR_GameplayEffectContainerSpec& ContainerSpec);
 
     /** Applies a gameplay effect container, by creating and then applying the spec */
-    UFUNCTION(BlueprintCallable, Category = Ability, meta = (AutoCreateRefTerm = "EventData"))
+    UFUNCTION(BlueprintCallable, Category = "Ability", meta = (AutoCreateRefTerm = "EventData"))
     virtual TArray<FActiveGameplayEffectHandle> ApplyEffectContainer(FGameplayTag ContainerTag, const FGameplayEventData& EventData, int32 OverrideGameplayLevel = -1);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Healers")
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Ability")
     FUR_GameplayAbilityData Data;
-
-
 };

@@ -1,18 +1,26 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_TargetType.h"
 #include "UR_GameplayAbility.h"
 #include "UR_Character.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_TargetType::GetTargets_Implementation(AUR_Character* TargetingCharacter, AActor* TargetingActor, FGameplayEventData EventData, TArray<FHitResult>& OutHitResults, TArray<AActor*>& OutActors) const
 {
 	return;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 void UUR_TargetType_UseOwner::GetTargets_Implementation(AUR_Character* TargetingCharacter, AActor* TargetingActor, FGameplayEventData EventData, TArray<FHitResult>& OutHitResults, TArray<AActor*>& OutActors) const
 {
 	OutActors.Add(TargetingCharacter);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_TargetType_UseEventData::GetTargets_Implementation(AUR_Character* TargetingCharacter, AActor* TargetingActor, FGameplayEventData EventData, TArray<FHitResult>& OutHitResults, TArray<AActor*>& OutActors) const
 {
