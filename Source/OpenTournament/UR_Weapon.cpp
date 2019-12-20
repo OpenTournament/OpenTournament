@@ -192,7 +192,13 @@ USkeletalMeshComponent * AUR_Weapon::GetWeaponMesh() const
 
 AUR_Character * AUR_Weapon::GetPawnOwner() const
 {
-    return nullptr;
+    return Cast<AUR_Character>(GetOwner());
+}
+
+bool AUR_Weapon::IsLocallyControlled() const
+{
+    APawn* P = Cast<APawn>(GetOwner());
+    return P && P->IsLocallyControlled();
 }
 
 void AUR_Weapon::AttachMeshToPawn()
@@ -231,6 +237,9 @@ void AUR_Weapon::AttachMeshToPawn()
         // This will have to be reworked later.
         // Be aware that "owner" means not only the local player, but also anybody looking through character via ViewTarget.
         // And both spectators/localplayer might be in either 1P or 3P, so I believe we cannot rely on bOwnerSee/bOwnerNoSee for this.
+
+        //TODO: See camera management in UR_Character.
+        // Here we can use UR_Character::bViewingThirdPerson.
 
         Mesh1P->AttachToComponent(PlayerController->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, PlayerController->GetWeaponAttachPoint());
         Mesh1P->SetHiddenInGame(false);
@@ -298,9 +307,22 @@ void AUR_Weapon::setEquipped(bool eq)
     equipped = eq;
 
     if (equipped)
+    {
         AttachMeshToPawn();
+
+        if (AUR_Character* Char = Cast<AUR_Character>(GetOwner()))
+        {
+            if (Char->IsLocallyControlled() && Char->isFiring)
+            {
+                LocalStartFire();
+            }
+        }
+    }
     else
+    {
         DetachMeshFromPawn();
+        LocalStopFire();
+    }
 }
 
 bool AUR_Weapon::IsAttachedToPawn() const
@@ -342,7 +364,7 @@ void AUR_Weapon::LocalFireLoop()
         return;
 
     // Additional checks to stop firing automatically
-    if (!PlayerController || !PlayerController->isFiring || !PlayerController->IsAlive() || !PlayerController->GetController())
+    if (!PlayerController || !PlayerController->isFiring || !PlayerController->IsAlive() || !PlayerController->GetController() || !equipped)
     {
         bFiring = false;
         return;
@@ -377,8 +399,25 @@ void AUR_Weapon::ServerFire_Implementation()
     //if (!CanFire())
         //return;
 
+    // No ammo, discard this shot
     if (ammoCount <= 0)
+    {
         return;
+    }
+
+    // Client asking to fire while not equipped
+    // Could be a slightly desynced swap, try to delay a bit
+    if (!equipped)
+    {
+        FTimerDelegate TimerCallback;
+        TimerCallback.BindLambda([this]
+        {
+            if (equipped)
+                ServerFire_Implementation();
+        });
+        GetWorld()->GetTimerManager().SetTimer(DelayedFireTimerHandle, TimerCallback, 0.1f, false);
+        return;
+    }
 
     // Check if client is asking us to fire too early
     float Delay = FireInterval - GetWorld()->TimeSince(LastFireTime);
