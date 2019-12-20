@@ -81,4 +81,7 @@ public:
 
     UFUNCTION()
     virtual void OnRep_ActiveWeapon();
+
+    UFUNCTION(BlueprintAuthorityOnly, BlueprintNativeEvent, BlueprintCallable)
+    void Clear();
 };

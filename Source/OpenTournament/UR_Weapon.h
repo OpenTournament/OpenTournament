@@ -172,11 +172,11 @@ public:
     USkeletalMeshComponent* GetWeaponMesh() const;
 
     /** get pawn owner */
-    UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
-    class AUR_Character* GetPawnOwner() const; //TODO: Check this
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Game|Weapon")
+    class AUR_Character* GetPawnOwner() const;
 
-    /** set the weapon's owning pawn */
-    void SetOwningPawn(AUR_Character* AURCharacter);
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Game|Weapon")
+    bool IsLocallyControlled() const;
 
 protected:
     /** weapon mesh: 1st person view */

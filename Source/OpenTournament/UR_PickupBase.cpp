@@ -46,11 +46,11 @@ AUR_PickupBase::AUR_PickupBase()
 	CapsuleComponent->SetupAttachment(RootComponent);
 	CapsuleComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 55.f));
 	CapsuleComponent->SetGenerateOverlapEvents(true);
-	/* not sure how to use these in c++
+    //TODO: Should probably define a collision profile for pickups
+    CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	CapsuleComponent->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 	CapsuleComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	CapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-	*/
 	CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_PickupBase::OnBeginOverlap);
 
 	RotatingComponent = nullptr;

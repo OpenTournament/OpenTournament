@@ -251,24 +251,30 @@ void UUR_InventoryComponent::OnRep_ActiveWeapon()
 
 void UUR_InventoryComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
 {
-    if (GetOwnerRole() == ROLE_Authority)
+    // !IsUnreachable() avoids crash during endgame world cleanup, trying to resolve bp-enabled events
+    if (GetOwnerRole() == ROLE_Authority && !IsUnreachable())
     {
         //TODO: drop active weapon
 
-        for (AUR_Weapon* Weap : InventoryW)
-        {
-            if (Weap)
-                Weap->Destroy();
-        }
-        InventoryW.Empty();
-
-        for (AUR_Ammo* Ammo : InventoryA)
-        {
-            if (Ammo)
-                Ammo->Destroy();
-        }
-        InventoryA.Empty();
+        Clear();
     }
 
     Super::OnComponentDestroyed(bDestroyingHierarchy);
+}
+
+void UUR_InventoryComponent::Clear_Implementation()
+{
+    for (AUR_Weapon* Weap : InventoryW)
+    {
+        if (Weap)
+            Weap->Destroy();
+    }
+    InventoryW.Empty();
+
+    for (AUR_Ammo* Ammo : InventoryA)
+    {
+        if (Ammo)
+            Ammo->Destroy();
+    }
+    InventoryA.Empty();
 }
