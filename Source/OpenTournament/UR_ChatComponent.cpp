@@ -193,7 +193,6 @@ FString UUR_ChatComponent::ProcessChatParameters_Implementation(const FString& O
         AUR_Character* Char = Cast<AUR_Character>(OwnerController->GetCharacter());
         if (Char)
         {
-            Result.ReplaceInline(TEXT("%h"), *FString::Printf(TEXT("%i"), Char->HealthComponent->Health));
             Result.ReplaceInline(TEXT("%a"), *FString::Printf(TEXT("%i"), 0));	//TODO: armor
             Result.ReplaceInline(TEXT("%w"), TEXT("None"));	//TODO: weapon
             Result.ReplaceInline(TEXT("%l"), TEXT("Somewhere"));	//TODO: location
