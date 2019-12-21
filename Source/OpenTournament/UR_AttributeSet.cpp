@@ -13,6 +13,7 @@ UUR_AttributeSet::UUR_AttributeSet()
   , HealthMax(1.f)
   , Armor(0.0f)
   , ArmorMax(1.0f)
+  , ArmorAbsorptionPercent(0.5f)
   , Shield(0.0f)
   , ShieldMax(1.0f)
   , Energy(0.f)
@@ -100,6 +101,11 @@ void UUR_AttributeSet::OnRep_Armor()
 void UUR_AttributeSet::OnRep_ArmorMax()
 {
     GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, ArmorMax);
+}
+
+void UUR_AttributeSet::OnRep_ArmorAbsorptionPercent()
+{
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, ArmorAbsorptionPercent);
 }
 
 void UUR_AttributeSet::OnRep_Shield()
