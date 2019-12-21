@@ -56,6 +56,10 @@ public:
     FGameplayAttributeData ArmorMax;
     ATTRIBUTE_ACCESSORS(UUR_AttributeSet, ArmorMax)
 
+    UPROPERTY(ReplicatedUsing=OnRep_ArmorAbsorptionPercent, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
+        FGameplayAttributeData ArmorAbsorptionPercent;
+    ATTRIBUTE_ACCESSORS(UUR_AttributeSet, ArmorAbsorptionPercent)
+
     ////////========////////
 
     UPROPERTY(ReplicatedUsing=OnRep_Shield, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
@@ -139,6 +143,9 @@ protected:
 
     UFUNCTION()
     virtual void OnRep_ArmorMax();
+
+    UFUNCTION()
+    virtual void OnRep_ArmorAbsorptionPercent();
 
     UFUNCTION()
     virtual void OnRep_Shield();
