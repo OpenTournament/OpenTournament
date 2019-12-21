@@ -18,9 +18,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 class UAnimationMontage;
-class UUR_HealthComponent;
 class UUR_AbilitySystemComponent;
-class UUR_ArmorComponent;
 class UUR_AttributeSet;
 class UUR_GameplayAbility;
 class UUR_InventoryComponent;
@@ -306,18 +304,6 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Health & Damage
     /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-    * Health Component
-    */
-    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Health")
-    UUR_HealthComponent* HealthComponent;
-
-    /**
-    * Armor Component
-    */
-    //UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Armor")
-    //UUR_ArmorComponent* ArmorComponent;
 
     /**
     * Take Damage override.

@@ -12,13 +12,10 @@
 //#include "Engine.h"
 
 #include "OpenTournament.h"
-#include "UR_HealthComponent.h"
-#include "UR_ArmorComponent.h"
 #include "UR_InventoryComponent.h"
 #include "UR_CharacterMovementComponent.h"
-#include "UR_AbilitySystemComponent.h"
-#include "UR_ArmorComponent.h"
 #include "UR_AttributeSet.h"
+#include "UR_AbilitySystemComponent.h"
 #include "UR_GameplayAbility.h"
 #include "UR_PlayerController.h"
 
@@ -42,8 +39,6 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     URMovementComponent = Cast<UUR_CharacterMovementComponent>(GetCharacterMovement());
     URMovementComponent->bUseFlatBaseForFloorChecks = true;
 
-    HealthComponent = Cast<UUR_HealthComponent>(CreateDefaultSubobject<UUR_HealthComponent>(TEXT("HealthComponent")));
-    //ArmorComponent = Cast<UUR_ArmorComponent>(CreateDefaultSubobject<UUR_ArmorComponent>(TEXT("ArmorComponent")));
     InventoryComponent = Cast<UUR_InventoryComponent>(CreateDefaultSubobject<UUR_InventoryComponent>(TEXT("InventoryComponent")));
 
     // Create a CameraComponent	
@@ -62,11 +57,13 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     MeshFirstPerson->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
     WeaponAttachPoint = "GripPoint";
-
-    AbilitySystemComponent = CreateDefaultSubobject<UUR_AbilitySystemComponent>("AbilitySystemComponent");
-
+    
     // Create the attribute set, this replicates by default
     AttributeSet = CreateDefaultSubobject<UUR_AttributeSet>(TEXT("AttributeSet"));
+
+    // Create the ASC
+    AbilitySystemComponent = CreateDefaultSubobject<UUR_AbilitySystemComponent>("AbilitySystemComponent");
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +72,6 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(AUR_Character, HealthComponent);
     DOREPLIFETIME(AUR_Character, InventoryComponent);
     DOREPLIFETIME(AUR_Character, DodgeDirection);
 }
@@ -85,14 +81,21 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 void AUR_Character::BeginPlay()
 {
     Super::BeginPlay();
-    HealthComponent->SetHealth(100);
+
+    AttributeSet->SetHealth(100.f);
+    AttributeSet->SetArmor(100.f);
+    //AttributeSet->SetShield(100.f);
 }
 
 void AUR_Character::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    if (HealthComponent->Health <= 0)
-        Destroy(); //to be replaced with Dead state and respawnability
+
+    if (AttributeSet && AttributeSet->GetHealth() <= 0.f)
+    {
+        Destroy(); // to be replaced with Dead state and respawnability
+    }
+
     TickFootsteps(DeltaTime);
 }
 
@@ -221,7 +224,7 @@ void AUR_Character::ClearJumpInput(float DeltaTime)
     }
 }
 
-void AUR_Character::Landed(const FHitResult & Hit)
+void AUR_Character::Landed(const FHitResult& Hit)
 {
     TakeFallingDamage(Hit, GetCharacterMovement()->Velocity.Z);
 
@@ -230,24 +233,20 @@ void AUR_Character::Landed(const FHitResult & Hit)
 
 void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
 {
-    // Do nothing yet
-    // Get our health component & apply damage
-
-    if (GetLocalRole() && URMovementComponent != nullptr)
+    if (AbilitySystemComponent == nullptr || URMovementComponent == nullptr)
     {
-        // @! TODO Proper Damage Handling
-        if (HealthComponent)
-        {
-            if (FallingSpeed * -1.f > FallDamageSpeedThreshold)
-            {
-                const float FallingDamage = 0.15f * (FallDamageSpeedThreshold - FallingSpeed);
+        return;
+    }
 
-                if (FallingDamage >= 1.0f)
-                {
-                    FDamageEvent DamageEvent; // @! TODO Real DamageTypes
-                    TakeDamage(FallingDamage, DamageEvent, Controller, this);
-                }
-            }
+    if (FallingSpeed * -1.f > FallDamageSpeedThreshold)
+    {
+        const float FallingDamage = -0.15f * (FallDamageSpeedThreshold + FallingSpeed);
+        //GAME_PRINT(10.f, FColor::Red, "Fall Damage (%f)", FallingDamage);
+
+        if (FallingDamage >= 1.0f)
+        {
+            FDamageEvent DamageEvent; // @! TODO Real DamageTypes
+            TakeDamage(FallingDamage, DamageEvent, Controller, this);
         }
     }
 }
@@ -336,47 +335,54 @@ void AUR_Character::OnWallDodge_Implementation(const FVector& DodgeLocation, con
 float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator,
     AActor* DamageCauser)
 {
+    GAME_LOG(Game, Log, "Damage Incoming (%f)", Damage);
+
     if (!ShouldTakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser))
     {
         return 0.f;
     }
 
-    /*if (HealthComponent)
-    {
-        HealthComponent->ChangeHealth(-1 * Damage); //leaving this here for reference is need be
-    }*/
+    Damage = FMath::FloorToFloat(Damage);
+    //GAME_PRINT(10.f, FColor::Purple, "Damage Floor (%f)", DamageToArmor);
+    GAME_LOG(Game, Log, "Damage Incoming Floor (%f)", Damage);
 
-    if (HealthComponent)
+    if (AttributeSet)
     {
-        /*if (ArmorComponent)
+        if (AttributeSet->Health.GetCurrentValue() > 0.f)
         {
-            if (ArmorComponent->Armor < 0.4*Damage && ArmorComponent->Armor > 0)
+            const float CurrentShield = FMath::FloorToFloat(AttributeSet->Shield.GetCurrentValue());
+            if (CurrentShield > 0.f)
             {
-                int32 currentArmor = ArmorComponent->Armor;
-                ArmorComponent->ChangeArmor(-1 * ArmorComponent->Armor);
-                HealthComponent->ChangeHealth(-1 * (Damage - currentArmor));
-            }
-            else if	(ArmorComponent->Armor > Damage && ArmorComponent->hasBarrier)
-            {
-                ArmorComponent->ChangeArmor(-1 * Damage);
+                //GAME_PRINT(10.f, FColor::Yellow, "Damage to Shield (%f)", FMath::Min(Damage, CurrentShield));
+                GAME_LOG(Game, Log, "Damage to Shield (%f)", FMath::Min(Damage, CurrentShield));
+
+                AttributeSet->SetShield(FMath::FloorToFloat(FMath::Max(CurrentShield - Damage, 0.f)));
+                Damage = CurrentShield - Damage > 0.f ? 0.f : Damage - CurrentShield;
             }
 
-            else if(ArmorComponent->Armor <= 0)
+            const float CurrentArmor = FMath::FloorToFloat(AttributeSet->Armor.GetCurrentValue());
+            const float ArmorAbsorption = AttributeSet->ArmorAbsorptionPercent.GetCurrentValue();
+            if (CurrentArmor > 0.f && Damage > 0.f)
             {
-                HealthComponent->ChangeHealth(-1 * Damage);
+                const float DamageToArmor = FMath::FloorToFloat(FMath::Min(Damage * ArmorAbsorption, CurrentArmor));
+
+                //GAME_PRINT(10.f, FColor::Emerald, "Damage to Armor (%f)", DamageToArmor);
+                GAME_LOG(Game, Log, "Damage to Armor (%f)", DamageToArmor);
+
+                AttributeSet->SetArmor(FMath::Max(CurrentArmor - DamageToArmor, 0.f));
+                Damage = FMath::Max(Damage - DamageToArmor, 0.f);
             }
-            else if (ArmorComponent->Armor > 0.4*Damage && !ArmorComponent->hasBarrier)
+
+            const float CurrentHealth = AttributeSet->Health.GetCurrentValue();
+            if (CurrentHealth > 0.f && Damage > 0.f)
             {
-                ArmorComponent->ChangeArmor(-0.6 * Damage);
-                HealthComponent->ChangeHealth(-0.4 * Damage);
+                //GAME_PRINT(10.f, FColor::Red, "Damage to Health (%f)", Damage);
+                GAME_LOG(Game, Log, "Damage to Health (%f)", Damage);
+
+                AttributeSet->SetHealth(FMath::FloorToFloat(FMath::Max(CurrentHealth - Damage, 0.f)));
             }
-        }*/
+        }
     }
-
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2")));
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - DAMAGE -: %f"), Damage));
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - Remaining Health -: %d"), HealthComponent->Health));
-    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("Damage Event 2 - Remaining Armor -: %d"), ArmorComponent->Armor));
 
     return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 }
