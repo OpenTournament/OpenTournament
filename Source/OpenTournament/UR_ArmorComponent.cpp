@@ -7,8 +7,8 @@
 
 // Sets default values for this component's properties
 UUR_ArmorComponent::UUR_ArmorComponent()
-    : Armor(100.f)
-    , ArmorMax(200.f)
+    : Armor(100)
+    , ArmorMax(200)
     //, hasBarrier(false)
 {
     SetIsReplicatedByDefault(true);
@@ -56,4 +56,3 @@ void UUR_ArmorComponent::SetBarrier(bool barrier)
 {
     hasBarrier = barrier;
 }
-

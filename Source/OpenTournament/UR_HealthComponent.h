@@ -38,9 +38,16 @@ public:
 
     /**
     * HealthMaximum value.
+    * Maximum health with normal healing items (health packs).
     */
     UPROPERTY(Replicated, BlueprintReadOnly, EditDefaultsOnly, Category = "HealthComponent")
     int32 HealthMax;
+
+	/**
+	* Maximum health with items that can super-heal (keg, vials).
+	*/
+	UPROPERTY(Replicated, BlueprintReadOnly, EditDefaultsOnly, Category = "HealthComponent")
+	int32 SuperHealthMax;
 
     /**
     * Set health to a numerical value
@@ -65,4 +72,10 @@ public:
     */
     UFUNCTION(BlueprintCallable, Category = "HealthComponent")
     void ChangeHealthPercentage(const int32 InChangePercentage);
+
+	/**
+	* Heal by a specified amount.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "HealthComponent")
+	void HealBy(const int32 HealAmount, bool bSuperHeal);
 };

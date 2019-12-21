@@ -35,9 +35,6 @@ public:
     UFUNCTION(BlueprintPure, Category = "Character|State")
     static AUR_GameModeBase* GetGameModeDefaultObject(const UObject* WorldContextObject);
 
-    UFUNCTION(BlueprintPure, Category = "Character|State") 
-    static int32 GetPlayerStateValue(APlayerController* PlayerController);
-
     template<typename TEnum>
     static FORCEINLINE FString GetEnumValueAsString(const FString& Name, TEnum Value)
     {
@@ -144,8 +141,23 @@ public:
     static class AUR_PlayerController* GetLocalPlayerController(const UObject* WorldContextObject);
 
     /**
+    * Returns true if actor is currently viewed by local player controller.
+    */
+    UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
+    static bool IsLocallyViewed(AActor* Other);
+
+    /**
     * Get the Time as a String
     */
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "FunctionLibrary")
     static FString GetTimeString(const float TimeSeconds);
+
+    /**
+    * Random vector between 2 vectors.
+    */
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Math")
+    static FVector RandomVectorInRange(const FVector& Vector1, const FVector& Vector2)
+    {
+        return FVector(FMath::RandRange(Vector1.X, Vector2.X), FMath::RandRange(Vector1.Y, Vector2.Y), FMath::RandRange(Vector1.Z, Vector2.Z));
+    }
 };

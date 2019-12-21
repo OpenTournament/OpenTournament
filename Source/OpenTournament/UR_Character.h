@@ -64,22 +64,6 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     bool bIsPickingUp = false;
-    bool isFiring = false;
-
-    void BeginFire();
-    void EndFire();
-
-
-    //Weapon select
-    UFUNCTION()
-    void WeaponSelect(int32 number);
-
-    UFUNCTION()
-    void Fire();
-
-    /** get weapon attach point */
-    UFUNCTION()
-    FName GetWeaponAttachPoint() const;
 
     USkeletalMeshComponent* GetPawnMesh() const;
 
@@ -107,12 +91,59 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Character")
     UAnimMontage* FireAnimation;
 
+    /**
+    * Spring arm for third person camera
+    */
+    UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
+    class USpringArmComponent* ThirdPersonArm;
+
+    /**
+    * Third person camera.
+    */
+    UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
+    class UCameraComponent* ThirdPersonCamera;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    virtual void CalcCamera(float DeltaTime, struct FMinimalViewInfo& OutResult) override;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Camera Management
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * Updated by CalcCamera. Controlled by PickCamera/IsThirdPersonCamera.
+    * Client only.
+    */
+    UPROPERTY(BlueprintReadOnly)
+    bool bViewingThirdPerson;
+
+    /**
+    * Return the camera component to use when viewing this pawn.
+    * Called by CalcCamera which is tick-based.
+    * Override this to implement new cameras.
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintCosmetic, BlueprintPure)
+    UCameraComponent* PickCamera();
+
+    /**
+    * Return true if this camera component is a third-person view.
+    * Called by CalcCamera which is tick-based.
+    * This controls triggering of CameraViewChanged event.
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure)
+    bool IsThirdPersonCamera(UCameraComponent* Camera);
+
+    /**
+    * Update 1p/3p meshes visibility according to bViewingThirdPerson.
+    * Client only.
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic)
+    void CameraViewChanged();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Input (Keypress to Weapon, Movement/Dodge)
@@ -310,6 +341,39 @@ public:
     */
     virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+    /**
+    * Kill this player.
+    * Authority only.
+    */
+    UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
+    virtual void Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser);
+
+    /**
+    * Play dying effect (animation, ragdoll, sound, blood, gib).
+    * Client only.
+    */
+    UFUNCTION(BlueprintCosmetic)
+    virtual void PlayDeath();
+
+    /**
+    * Called on network client when replication channel is cut (ie. death).
+    */
+    virtual void TornOff() override
+    {
+        PlayDeath();
+    }
+
+    UFUNCTION(BlueprintCallable, BlueprintPure)
+    bool IsAlive();
+
+    UFUNCTION(Exec)
+    virtual void Suicide()
+    {
+        ServerSuicide();
+    }
+
+    UFUNCTION(Server, Reliable)
+    void ServerSuicide();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Inventory
@@ -319,7 +383,33 @@ public:
     * Inventory Component
     */
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
-        UUR_InventoryComponent* InventoryComponent;
+    UUR_InventoryComponent* InventoryComponent;
+
+    bool isFiring = false;
+
+    virtual void PawnStartFire(uint8 FireModeNum = 0) override;
+    virtual void PawnStopFire(uint8 FireModeNum = 0);
+
+    //Weapon select
+    UFUNCTION()
+    void WeaponSelect(int32 number);
+
+    UFUNCTION(Exec, BlueprintCallable)
+    void NextWeapon();
+
+    UFUNCTION(Exec, BlueprintCallable)
+    void PrevWeapon();
+
+    UFUNCTION()
+    void Fire();
+
+    /** get weapon attach point */
+    UFUNCTION()
+    FName GetWeaponAttachPoint() const;
+
+    //TODO: This should be part of weapon, not character.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game")
+    FVector MuzzleOffset;
 
 protected:
     //pickup handlers
@@ -336,12 +426,7 @@ protected:
 
     void ShowInventory();
 
-protected:
-    
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game")
-    FVector MuzzleOffset;
-
     /** socket or bone name for attaching weapon mesh */
-    UPROPERTY(EditDefaultsOnly, Category = Inventory)
+    UPROPERTY(EditDefaultsOnly, Category = "Character|Inventory")
     FName WeaponAttachPoint;
 };

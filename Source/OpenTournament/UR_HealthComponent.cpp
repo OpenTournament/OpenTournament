@@ -9,8 +9,9 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_HealthComponent::UUR_HealthComponent()
-    : Health(100.f)
-    , HealthMax(200.f)
+    : Health(100)
+    , HealthMax(100)
+    , SuperHealthMax(200)
 {
     SetIsReplicatedByDefault(true);
 }
@@ -21,6 +22,7 @@ void UUR_HealthComponent::GetLifetimeReplicatedProps( TArray<FLifetimeProperty>&
 {
     DOREPLIFETIME(UUR_HealthComponent, Health);
     DOREPLIFETIME(UUR_HealthComponent, HealthMax);
+    DOREPLIFETIME(UUR_HealthComponent, SuperHealthMax);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,4 +45,10 @@ void UUR_HealthComponent::ChangeHealth(const int32 InChangeValue)
 void UUR_HealthComponent::ChangeHealthPercentage(const int32 InChangePercentage)
 {
     Health += (HealthMax / 100) * InChangePercentage;
+}
+
+void UUR_HealthComponent::HealBy(const int32 HealAmount, bool bSuperHeal)
+{
+    int32 NewHealth = FMath::Min(Health + HealAmount, bSuperHeal ? SuperHealthMax : HealthMax);
+    Health = FMath::Max(Health, NewHealth);
 }
