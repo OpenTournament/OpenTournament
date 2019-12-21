@@ -21,5 +21,3 @@ class OPENTOURNAMENT_API AUR_Weap_RocketLauncher : public AUR_Weapon
 
     AUR_Weap_RocketLauncher(const FObjectInitializer& ObjectInitializer);
 };
-
-

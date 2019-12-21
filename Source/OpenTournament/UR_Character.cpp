@@ -18,6 +18,7 @@
 #include "UR_AbilitySystemComponent.h"
 #include "UR_GameplayAbility.h"
 #include "UR_PlayerController.h"
+#include "UR_GameMode.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,14 +57,26 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     MeshFirstPerson->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
     MeshFirstPerson->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
-    WeaponAttachPoint = "GripPoint";
+    WeaponAttachPoint = FName(TEXT("GripPoint"));
+
+    // Mesh third person
+    GetMesh()->bOwnerNoSee = true;
+
+    // Third person camera
+    ThirdPersonArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonArm"));
+    ThirdPersonArm->SetupAttachment(GetCapsuleComponent());
+    ThirdPersonArm->TargetArmLength = 400.f;
+    ThirdPersonArm->TargetOffset.Set(0.f, 0.f, 100.f);
+    ThirdPersonArm->bUsePawnControlRotation = true;
+
+    ThirdPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
+    ThirdPersonCamera->SetupAttachment(ThirdPersonArm);
     
     // Create the attribute set, this replicates by default
     AttributeSet = CreateDefaultSubobject<UUR_AttributeSet>(TEXT("AttributeSet"));
 
     // Create the ASC
     AbilitySystemComponent = CreateDefaultSubobject<UUR_AbilitySystemComponent>("AbilitySystemComponent");
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +85,6 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(AUR_Character, InventoryComponent);
     DOREPLIFETIME(AUR_Character, DodgeDirection);
 }
 
@@ -91,11 +103,6 @@ void AUR_Character::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (AttributeSet && AttributeSet->GetHealth() <= 0.f)
-    {
-        Destroy(); // to be replaced with Dead state and respawnability
-    }
-
     TickFootsteps(DeltaTime);
 }
 
@@ -107,7 +114,6 @@ UAbilitySystemComponent* AUR_Character::GetAbilitySystemComponent() const
 void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 
     PlayerInputComponent->BindAction("Pickup", IE_Pressed, this, &AUR_Character::BeginPickup);
     PlayerInputComponent->BindAction("Pickup", IE_Released, this, &AUR_Character::EndPickup);
@@ -121,11 +127,67 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
     PlayerInputComponent->BindAction("SRifle", IE_Pressed, this, &AUR_Character::SelectWeapon5);
     PlayerInputComponent->BindAction("Pistol", IE_Pressed, this, &AUR_Character::SelectWeapon0);
 
+    PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
+    PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
+}
 
-    PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AUR_Character::BeginFire);
-    PlayerInputComponent->BindAction("Fire", IE_Released, this, &AUR_Character::EndFire);
+void AUR_Character::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
+{
+    UCameraComponent* Camera = PickCamera();
+    if (Camera)
+    {
+        bool bThirdPerson = IsThirdPersonCamera(Camera);
+        if (bThirdPerson != bViewingThirdPerson)
+        {
+            bViewingThirdPerson = bThirdPerson;
+            CameraViewChanged();
+        }
+        Camera->GetCameraView(DeltaTime, OutResult);
+    }
+    else
+    {
+        // Fallback to Super
+        Super::CalcCamera(DeltaTime, OutResult);
+    }
+}
 
+UCameraComponent* AUR_Character::PickCamera_Implementation()
+{
+    // End game = always 3p
+    AGameState* GS = GetWorld()->GetGameState<AGameState>();
+    if (GS && GS->HasMatchEnded() && ThirdPersonCamera)
+    {
+        return ThirdPersonCamera;
+    }
 
+    // Alive = 1p
+    //TODO: specs should be able to switch at will.
+    // That would be a variable in PlayerController.
+    // Hopefully this is client-only, so we can get local PC to check this.
+    if (IsAlive() && CharacterCameraComponent && CharacterCameraComponent->IsActive())
+    {
+        return CharacterCameraComponent;
+    }
+
+    // Fallback to 3p
+    if (ThirdPersonCamera && ThirdPersonCamera->IsActive())
+    {
+        return ThirdPersonCamera;
+    }
+
+    return nullptr;
+}
+
+bool AUR_Character::IsThirdPersonCamera_Implementation(UCameraComponent* Camera)
+{
+    return Camera && Camera == ThirdPersonCamera;
+}
+
+void AUR_Character::CameraViewChanged_Implementation()
+{
+    GetMesh()->SetOwnerNoSee(!bViewingThirdPerson);
+    MeshFirstPerson->SetVisibility(!bViewingThirdPerson, true);
+    //TODO: weapon
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -332,8 +394,7 @@ void AUR_Character::OnWallDodge_Implementation(const FVector& DodgeLocation, con
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator,
-    AActor* DamageCauser)
+float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
     GAME_LOG(Game, Log, "Damage Incoming (%f)", Damage);
 
@@ -341,6 +402,10 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     {
         return 0.f;
     }
+
+    // Super() takes care of calculating proper splash damage values and imparting components physics.
+    // Then it triggers events : OnTakePointDamage, OnTakeRadialDamage, OnTakeAnyDamage.
+    float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 
     Damage = FMath::FloorToFloat(Damage);
     //GAME_PRINT(10.f, FColor::Purple, "Damage Floor (%f)", DamageToArmor);
@@ -382,10 +447,170 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
                 AttributeSet->SetHealth(FMath::FloorToFloat(FMath::Max(CurrentHealth - Damage, 0.f)));
             }
         }
+            else if (ArmorComponent->Armor > 0.4*Damage && !ArmorComponent->hasBarrier)
+            {
+                ArmorComponent->ChangeArmor(-0.6 * Damage);
+                HealthComponent->ChangeHealth(-0.4 * Damage);
+            }
+        */
     }
 
-    return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - DAMAGE -: %f"), ActualDamage));
+    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Damage Event 2 - Remaining Health -: %d"), HealthComponent->Health));
+    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("Damage Event 2 - Remaining Armor -: %d"), ArmorComponent->Armor));
+
+
+    //NOTE: it seems like we are lacking control of damage momentum (knockback) overall.
+    // DamageType has DamageImpulse but it is part of CDO, which is a bit annoying.
+    // We cannot adjust DamageImpulse on the fly with gamemode/mutators.
+    // Also it only applies to physics-enabled stuff. Characters need custom knockback anyways.
+
+    // We will probably need to find a way back to the projectile/weapon (DamageCauser?),
+    // so we can use custom-defined knockback values there.
+
+    // Then we can apply splash falloff using (ActualDamage/Damage) to the knockback power.
+    // And finally, apply knockback manually with a custom impulse.
+
+    // For now, let's try basic values
+    float KnockbackPower = 1500.f * ActualDamage;
+
+    // Avoid very small knockbacks
+    if (KnockbackPower / GetCharacterMovement()->Mass >= 100.f)
+    {
+        FVector KnockbackDir;
+        if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+        {
+            FPointDamageEvent* PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
+
+            // Always use shot direction for knockback
+            KnockbackDir = PointDamageEvent->ShotDirection;
+            GetCharacterMovement()->AddImpulse(KnockbackPower*KnockbackDir);
+        }
+        else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+        {
+            FRadialDamageEvent* RadialDamageEvent = (FRadialDamageEvent*)&DamageEvent;
+
+            // Use no falloff (constant) because we already scaled KnockbackPower
+            GetCharacterMovement()->AddRadialImpulse(RadialDamageEvent->Origin, RadialDamageEvent->Params.GetMaxRadius(), KnockbackPower, ERadialImpulseFalloff::RIF_Constant, false);
+
+            /*
+            // Experimental: use vector (HitLocation->EyeLocation) as knockback direction to make it feel more natural
+
+            KnockbackDir = (GetPawnViewLocation() - RadialDamageEvent->Origin);
+            KnockbackDir.Normalize();
+            GetCharacterMovement()->AddImpulse(KnockbackPower*KnockbackDir);
+            */
+        }
+    }
+
+    if (HealthComponent && HealthComponent->Health <= 0)
+    {
+        Die(EventInstigator, DamageEvent, DamageCauser);
+    }
+
+    return ActualDamage;
 }
+
+void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser)
+{
+    // Already killed (might happen when multiple damage sources in 1 frame)
+    if (GetTearOff() || IsPendingKillPending())
+    {
+        return;
+    }
+
+    AUR_GameMode* GM = GetWorld()->GetAuthGameMode<AUR_GameMode>();
+    if (GM)
+    {
+        AController* Killed = GetController();
+
+        if (GM->PreventDeath(Killed, Killer, DamageEvent, DamageCauser))
+        {
+            // Make sure we don't stay with <=0 health or IsAlive() would return false.
+            if (HealthComponent && HealthComponent->Health <= 0)
+            {
+                HealthComponent->SetHealth(1);
+            }
+            return;
+        }
+
+        GM->PlayerKilled(Killed, Killer, DamageEvent, DamageCauser);
+    }
+
+    if (HealthComponent)
+    {
+        HealthComponent->SetHealth(0);
+    }
+
+    // Cut the replication link
+    TearOff();
+
+    if (GetNetMode() == NM_DedicatedServer)
+    {
+        //Destroy();
+        SetLifeSpan(0.200f);	// give it time to replicate the tear off ?
+        SetActorEnableCollision(false);
+    }
+    else
+    {
+        PlayDeath();
+    }
+}
+
+void AUR_Character::PlayDeath()
+{
+    APlayerController* OldController = nullptr;
+    if (Controller && Controller->GetPawn() == this)
+        OldController = Cast<APlayerController>(Controller);
+
+    // Unpossess
+    DetachFromControllerPendingDestroy();
+
+    // Set view target back, should auto to 3p cam
+    if (OldController)
+        OldController->SetViewTarget(this);
+
+    // Improve camera feel
+    ThirdPersonArm->bInheritPitch = false;
+    ThirdPersonArm->bInheritRoll = false;
+    ThirdPersonArm->bEnableCameraLag = true;
+    ThirdPersonArm->bEnableCameraRotationLag = true;
+
+    GetCharacterMovement()->StopActiveMovement();
+
+    // Disable capsule
+    GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    GetCapsuleComponent()->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+
+    // Set mesh as root with physics (ragdoll)
+    GetMesh()->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+    GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+    GetMesh()->SetSimulatePhysics(true);
+    SetRootComponent(GetMesh());
+
+    // Attach capsule back to mesh
+    GetCapsuleComponent()->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
+
+    SetLifeSpan(5.0f);
+}
+
+bool AUR_Character::IsAlive()
+{
+    if (GetTearOff() || IsPendingKillPending())
+        return false;	// server link has been cut, health might not replicate anymore
+
+    if (HealthComponent)
+        return HealthComponent->Health > 0;
+
+    // not sure if we should return true or false when no HealthComponent
+    return true;
+}
+
+void AUR_Character::ServerSuicide_Implementation()
+{
+    Die(nullptr, FDamageEvent(), nullptr);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -461,17 +686,43 @@ void AUR_Character::WeaponSelect(int32 number)
     InventoryComponent->SelectWeapon(number);
 }
 
-void AUR_Character::BeginFire()
+void AUR_Character::NextWeapon()
+{
+    if (InventoryComponent)
+        InventoryComponent->NextWeapon();
+}
+
+void AUR_Character::PrevWeapon()
+{
+    if (InventoryComponent)
+        InventoryComponent->PrevWeapon();
+}
+
+void AUR_Character::PawnStartFire(uint8 FireModeNum)
 {
     isFiring = true;
-    Fire();
+
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
+    {
+        InventoryComponent->ActiveWeapon->LocalStartFire();
+    }
+    else
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("NO WEAPON SELECTED!")));
+    }
 }
 
-void AUR_Character::EndFire()
+void AUR_Character::PawnStopFire(uint8 FireModeNum)
 {
     isFiring = false;
+
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
+    {
+        InventoryComponent->ActiveWeapon->LocalStopFire();
+    }
 }
 
+//deprecated
 void AUR_Character::Fire()
 {
     if (isFiring)
