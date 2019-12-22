@@ -95,8 +95,10 @@ void AUR_Character::BeginPlay()
     Super::BeginPlay();
 
     AttributeSet->SetHealth(100.f);
+    AttributeSet->SetHealthMax(100.f);
     AttributeSet->SetArmor(100.f);
-    //AttributeSet->SetShield(100.f);
+    AttributeSet->SetArmorMax(100.f);
+    AttributeSet->SetShieldMax(100.f);
 }
 
 void AUR_Character::Tick(float DeltaTime)
@@ -405,9 +407,7 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
 
     // Super() takes care of calculating proper splash damage values and imparting components physics.
     // Then it triggers events : OnTakePointDamage, OnTakeRadialDamage, OnTakeAnyDamage.
-    float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
-
-    Damage = FMath::FloorToFloat(Damage);
+    Damage = FMath::FloorToFloat(Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser));
     //GAME_PRINT(10.f, FColor::Purple, "Damage Floor (%f)", DamageToArmor);
     GAME_LOG(Game, Log, "Damage Incoming Floor (%f)", Damage);
 
@@ -447,18 +447,7 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
                 AttributeSet->SetHealth(FMath::FloorToFloat(FMath::Max(CurrentHealth - Damage, 0.f)));
             }
         }
-            else if (ArmorComponent->Armor > 0.4*Damage && !ArmorComponent->hasBarrier)
-            {
-                ArmorComponent->ChangeArmor(-0.6 * Damage);
-                HealthComponent->ChangeHealth(-0.4 * Damage);
-            }
-        */
     }
-
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - DAMAGE -: %f"), ActualDamage));
-    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Damage Event 2 - Remaining Health -: %d"), HealthComponent->Health));
-    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("Damage Event 2 - Remaining Armor -: %d"), ArmorComponent->Armor));
-
 
     //NOTE: it seems like we are lacking control of damage momentum (knockback) overall.
     // DamageType has DamageImpulse but it is part of CDO, which is a bit annoying.
@@ -472,7 +461,7 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     // And finally, apply knockback manually with a custom impulse.
 
     // For now, let's try basic values
-    float KnockbackPower = 1500.f * ActualDamage;
+    float KnockbackPower = 1500.f * Damage;
 
     // Avoid very small knockbacks
     if (KnockbackPower / GetCharacterMovement()->Mass >= 100.f)
@@ -503,12 +492,12 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
         }
     }
 
-    if (HealthComponent && HealthComponent->Health <= 0)
+    if (AttributeSet->Health.GetCurrentValue() <= 0)
     {
         Die(EventInstigator, DamageEvent, DamageCauser);
     }
 
-    return ActualDamage;
+    return Damage;
 }
 
 void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser)
@@ -527,9 +516,9 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
         if (GM->PreventDeath(Killed, Killer, DamageEvent, DamageCauser))
         {
             // Make sure we don't stay with <=0 health or IsAlive() would return false.
-            if (HealthComponent && HealthComponent->Health <= 0)
+            if (AttributeSet->Health.GetCurrentValue() <= 0)
             {
-                HealthComponent->SetHealth(1);
+                AttributeSet->SetHealth(1);
             }
             return;
         }
@@ -537,9 +526,9 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
         GM->PlayerKilled(Killed, Killer, DamageEvent, DamageCauser);
     }
 
-    if (HealthComponent)
+    if (AttributeSet)
     {
-        HealthComponent->SetHealth(0);
+        AttributeSet->SetHealth(0);
     }
 
     // Cut the replication link
@@ -596,14 +585,12 @@ void AUR_Character::PlayDeath()
 
 bool AUR_Character::IsAlive()
 {
-    if (GetTearOff() || IsPendingKillPending())
+    if (GetTearOff() || IsPendingKillPending() || AttributeSet == nullptr)
+    {
         return false;	// server link has been cut, health might not replicate anymore
+    }
 
-    if (HealthComponent)
-        return HealthComponent->Health > 0;
-
-    // not sure if we should return true or false when no HealthComponent
-    return true;
+    return AttributeSet->GetHealth() > 0;
 }
 
 void AUR_Character::ServerSuicide_Implementation()
