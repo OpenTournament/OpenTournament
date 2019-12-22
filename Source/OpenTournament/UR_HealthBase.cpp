@@ -2,39 +2,52 @@
 
 #include "UR_HealthBase.h"
 #include "UR_Character.h"
-#include "UR_HealthComponent.h"
+#include "UR_AttributeSet.h"
 
 AUR_HealthBase::AUR_HealthBase()
 {
-	HealAmount = 25;
-	bSuperHeal = false;
+    HealAmount = 25;
+    bSuperHeal = false;
 }
 
 bool AUR_HealthBase::AllowPickupBy_Implementation(class AActor* Other)
 {
-	if (Super::AllowPickupBy_Implementation(Other))
-	{
-		// Can always pick up super-heal items
-		if (bSuperHeal)
-			return true;
+    if (Super::AllowPickupBy_Implementation(Other))
+    {
+        // Can always pick up super-heal items
+        if (bSuperHeal)
+        {
+            return true;
+        }
 
-		// Can only pick ups health packs if we are below 100
-		AUR_Character* Char = Cast<AUR_Character>(Other);
-		return (Char && Char->HealthComponent && Char->HealthComponent->Health < Char->HealthComponent->HealthMax);
-	}
-	return false;
+        // Can only pick ups health packs if we are below 100
+        AUR_Character* Char = Cast<AUR_Character>(Other);
+        return (Char && Char->AttributeSet && Char->AttributeSet->GetHealth() < Char->AttributeSet->GetHealthMax());
+    }
+    return false;
 }
 
 void AUR_HealthBase::GiveTo_Implementation(class AActor* Other)
 {
-	AUR_Character* Char = Cast<AUR_Character>(Other);
-	if (Char && Char->HealthComponent)
-		Char->HealthComponent->HealBy(HealAmount, bSuperHeal);
+    AUR_Character* Char = Cast<AUR_Character>(Other);
+    if (Char && Char->AttributeSet)
+    {
+        const float CurrentHealth = Char->AttributeSet->GetHealth();
+        GAME_LOG(Game, Log, "Health Pickup: Current Health (%f)", CurrentHealth);
 
-	Super::GiveTo_Implementation(Other);
+        if (!bSuperHeal)
+        {
+            HealAmount = FMath::Clamp<int32>(static_cast<int32>(CurrentHealth) + HealAmount, 0.f, static_cast<int32>(Char->AttributeSet->GetHealthMax()));
+            GAME_LOG(Game, Log, "Health Pickup: Restoring Health (%d)", HealAmount);
+        }
+
+        Char->AttributeSet->SetHealth(CurrentHealth + HealAmount);
+    }
+
+    Super::GiveTo_Implementation(Other);
 }
 
 FText AUR_HealthBase::GetItemName_Implementation()
 {
-	return FText::FromString(FString::Printf(TEXT("%i Health"), HealAmount));
+    return FText::FromString(FString::Printf(TEXT("%i Health"), HealAmount));
 }
