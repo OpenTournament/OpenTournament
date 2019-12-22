@@ -9,7 +9,6 @@
 
 #include "UR_GameState.h"
 #include "UR_Character.h"
-#include "UR_HealthComponent.h"
 #include "UR_FunctionLibrary.h"
 
 /**
