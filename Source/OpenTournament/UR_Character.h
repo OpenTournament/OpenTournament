@@ -312,7 +312,7 @@ public:
     /*
     * Ability System Component
     */
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Abilities")
     UUR_AbilitySystemComponent* AbilitySystemComponent;
 
     /**
@@ -325,11 +325,11 @@ public:
     int32 bAbilitiesInitialized;
 
     /** Abilities to grant to this character on creation. These will be activated by tag or event and are not bound to specific inputs */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Abilities")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Abilities")
     TArray<TSubclassOf<UUR_GameplayAbility>> GameplayAbilities;
 
     /** Passive gameplay effects applied on creation */
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character|Abilities")
     TArray<TSubclassOf<UGameplayEffect>> PassiveGameplayEffects;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
