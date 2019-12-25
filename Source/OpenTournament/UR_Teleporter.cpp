@@ -107,7 +107,22 @@ bool AUR_Teleporter::IsPermittedToTeleport_Implementation(const AActor* TargetAc
         return false;
     }
 
-    return true;
+	// Check if the actor being teleported has any Required or Excluded GameplayTags
+	FGameplayTagContainer TargetTags;
+	Character->GetOwnedGameplayTags(TargetTags);
+	return IsPermittedByGameplayTags(TargetTags);
+}
+
+bool AUR_Teleporter::IsPermittedByGameplayTags(const FGameplayTagContainer& TargetTags) const
+{
+	if (RequiredTags.Num() == 0 || TargetTags.HasAnyExact(RequiredTags))
+	{
+		return (ExcludedTags.Num() == 0 || !TargetTags.HasAnyExact(ExcludedTags));
+	}
+	else
+	{
+		return false;
+	}
 }
 
 bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
