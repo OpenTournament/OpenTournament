@@ -10,6 +10,7 @@
 #include "Net/UnrealNetwork.h"
 #include "GameplayAbilitySpec.h"
 #include "GameplayEffect.h"
+#include "GameplayTagAssetInterface.h"
 
 #include <UR_Type_DodgeDirection.h>
 
@@ -51,7 +52,8 @@ struct FCharacterVoice
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_Character : public ACharacter,
-    public IAbilitySystemInterface
+    public IAbilitySystemInterface,
+	public IGameplayTagAssetInterface
 {
     GENERATED_BODY()
 
@@ -289,6 +291,17 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Gameplay Ability System
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	// Gameplay Tags
+
+	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	FGameplayTagContainer GameplayTags;
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	// GAS
 
     // Implement IAbilitySystemInterface
     UAbilitySystemComponent* GetAbilitySystemComponent() const override;
