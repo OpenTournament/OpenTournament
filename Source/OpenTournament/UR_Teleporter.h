@@ -1,4 +1,4 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -6,6 +6,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "GameplayTagAssetInterface.h"
+
 #include "UR_Type_ExitRotation.h"
 
 #include "UR_Teleporter.generated.h"
@@ -22,7 +24,8 @@ class UParticleSystemComponent;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UCLASS()
-class OPENTOURNAMENT_API AUR_Teleporter : public AActor
+class OPENTOURNAMENT_API AUR_Teleporter : public AActor,
+	public IGameplayTagAssetInterface
 {
     GENERATED_BODY()
 
@@ -107,6 +110,12 @@ public:
     UFUNCTION(BlueprintNativeEvent, BlueprintPure, BlueprintCallable, Category = "Teleporter")
     bool IsPermittedToTeleport(const AActor* TargetActor) const;
 
+	/**
+	* Is this actor permitted to teleport given its associated GameplayTags?
+	*/
+	UFUNCTION()
+	bool IsPermittedByGameplayTags(const FGameplayTagContainer& TargetTags) const;
+
     /**
     * Perform the teleport. Return true if successful.
     */
@@ -122,4 +131,27 @@ public:
 
     UFUNCTION()
     void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	// Gameplay Tags
+
+	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
+
+	/**
+	* Gameplay Tags for this Actor
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	FGameplayTagContainer GameplayTags;
+
+	/**
+	* Actors attempting to Teleport must have at least one exact Tag match
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	FGameplayTagContainer RequiredTags;
+
+	/**
+	* Gameplay Tags for this Actor
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	FGameplayTagContainer ExcludedTags;
 };

@@ -9,13 +9,13 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void UUR_CheatManager::Cheat_AddValue()
+void UUR_CheatManager::Cheat_AddScore(int32 n)
 {
     if (auto PC = Cast<AUR_PlayerController>(GetOuter()))
     {
         if (auto PS = Cast<AUR_PlayerState>(PC->PlayerState))
         {
-            PS->ArbitraryValue += 1;
+            PS->Score += n;
         }
     }
 }

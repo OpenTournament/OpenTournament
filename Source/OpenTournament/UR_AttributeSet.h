@@ -46,6 +46,14 @@ public:
     FGameplayAttributeData HealthMax;
     ATTRIBUTE_ACCESSORS(UUR_AttributeSet, HealthMax)
 
+    UPROPERTY(ReplicatedUsing=OnRep_OverHealth, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
+        FGameplayAttributeData OverHealth;
+    ATTRIBUTE_ACCESSORS(UUR_AttributeSet, OverHealth)
+
+    UPROPERTY(ReplicatedUsing=OnRep_OverHealthMax, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
+        FGameplayAttributeData OverHealthMax;
+    ATTRIBUTE_ACCESSORS(UUR_AttributeSet, OverHealthMax)
+
     ////////========////////
 
     UPROPERTY(ReplicatedUsing=OnRep_Armor, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
@@ -131,6 +139,12 @@ protected:
 
     UFUNCTION()
     virtual void OnRep_HealthMax();
+
+    UFUNCTION()
+    virtual void OnRep_OverHealth();
+
+    UFUNCTION()
+    virtual void OnRep_OverHealthMax();
 
     UFUNCTION()
     virtual void OnRep_Energy();
