@@ -65,6 +65,12 @@ class OPENTOURNAMENT_API AUR_Weapon : public AActor
     bool CanFire() const;
 
 
+protected:
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    virtual void OnRep_Owner() override;
+
+    UFUNCTION()
+    virtual void OnRep_Equipped();
 
 
 public:	
@@ -81,7 +87,7 @@ public:
 
 
 
-    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Weapon")
     int32 ammoCount;
 
     UPROPERTY(EditAnywhere, Category = "Weapon")
@@ -107,10 +113,14 @@ public:
 
     bool bItemIsWithinRange = false;
 
+    UPROPERTY(ReplicatedUsing = OnRep_Equipped)
     bool equipped = false;
 
     UFUNCTION()
     void Pickup();
+
+    UFUNCTION(BlueprintAuthorityOnly)
+    void GiveTo(class AUR_Character* NewOwner);
 
     UFUNCTION()
     virtual void Fire();
@@ -162,11 +172,11 @@ public:
     USkeletalMeshComponent* GetWeaponMesh() const;
 
     /** get pawn owner */
-    UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
-    class AUR_Character* GetPawnOwner() const; //TODO: Check this
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Game|Weapon")
+    class AUR_Character* GetPawnOwner() const;
 
-    /** set the weapon's owning pawn */
-    void SetOwningPawn(AUR_Character* AURCharacter);
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Game|Weapon")
+    bool IsLocallyControlled() const;
 
 protected:
     /** weapon mesh: 1st person view */
@@ -184,4 +194,108 @@ protected:
     
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
+
+
+    //============================================================
+    // Basic firing loop with network support.
+    // - Not fit for fast fire-rate like mini/beams.
+    // - No support for custom systems like charging.
+    // - No blueprint support yet.
+    //============================================================
+public:
+
+    UPROPERTY()
+    bool bFiring;
+
+    UPROPERTY(EditAnywhere)
+    float FireInterval;
+
+    /**
+    * Used to calculate server response time to our ServerFire() call, and adjust fire loop.
+    * Owner client only.
+    */
+    UPROPERTY()
+    float LocalFireTime;
+
+    /**
+    * Used to make sure server/authority never fires faster than FireInterval.
+    * Authority only.
+    */
+    UPROPERTY()
+    float LastFireTime;
+
+    FTimerHandle FireLoopTimerHandle;
+    FTimerHandle DelayedFireTimerHandle;
+
+    /**
+    * Start the fire loop on owning client.
+    */
+    UFUNCTION()
+    virtual void LocalStartFire();
+
+    /**
+    * Stop the fire loop on owning client.
+    */
+    UFUNCTION()
+    virtual void LocalStopFire();
+
+    /**
+    * Fire loop.
+    * Fully simulated on owning client.
+    */
+    UFUNCTION()
+    virtual void LocalFireLoop();
+
+    /**
+    * Simulate fire on owning client.
+    */
+    UFUNCTION()
+    virtual void LocalFire();
+
+    /**
+    * Fire on server.
+    */
+    UFUNCTION(Server, Reliable)
+    void ServerFire();
+
+    /**
+    * Spawn projectile or perform hitscan trace and apply damage.
+    * Authority only.
+    */
+    UFUNCTION(BlueprintAuthorityOnly)
+    virtual void SpawnShot();
+
+    /**
+    * Consume ammo for shot.
+    */
+    UFUNCTION(BlueprintAuthorityOnly)
+    virtual void ConsumeAmmo();
+
+    /**
+    * Server just fired.
+    * Remote clients should spawn muzzle flash effect.
+    * Owner client should update his fire loop timer to avoid lingering desync.
+    */
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastFired();
+
+    /**
+    * Play fire sound, muzzle flash, possibly beam/trace if hitscan.
+    * Client only.
+    */
+    UFUNCTION(BlueprintCosmetic)
+    virtual void PlayFireEffects();
+
+    //============================================================
+    // Helper methods
+    //============================================================
+
+    UFUNCTION()
+    virtual void GetFireVector(FVector& FireLoc, FRotator& FireRot);
+
+    /**
+    * Factor code for all basic projectile-based weapons.
+    */
+    UFUNCTION()
+    virtual void SpawnShot_Projectile();
 };

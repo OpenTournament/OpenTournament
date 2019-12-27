@@ -9,7 +9,6 @@
 
 #include "UR_GameState.h"
 #include "UR_Character.h"
-#include "UR_HealthComponent.h"
 #include "UR_FunctionLibrary.h"
 
 /**
@@ -95,7 +94,7 @@ FString UUR_ChatComponent::Validate_Implementation(const FString& Message, bool 
     // crop message length
     if (ValidatedMessage.Len() > MaxMessageLength)
     {
-        ValidatedMessage = ValidatedMessage.Left(MaxMessageLength-3).Append(TEXT("..."));	// TEXT('…') not supported by font atm
+        ValidatedMessage = ValidatedMessage.Left(MaxMessageLength-3).Append(TEXT("..."));	// TEXT('ï¿½') not supported by font atm
     }
 
     return ValidatedMessage;
