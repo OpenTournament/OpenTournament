@@ -1,9 +1,10 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "GameplayTagAssetInterface.h"
 
 #include "UR_JumpPad.generated.h"
 
@@ -19,7 +20,8 @@ class UParticleSystemComponent;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UCLASS()
-class OPENTOURNAMENT_API AUR_JumpPad : public AActor
+class OPENTOURNAMENT_API AUR_JumpPad : public AActor,
+	public IGameplayTagAssetInterface
 {
     GENERATED_BODY()
 
@@ -31,25 +33,25 @@ public:
     /*
     * Static Mesh Component - JumpPad Base
     */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad", meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
     UStaticMeshComponent* MeshComponent;
 
     /*
     * Capsule Component - Active JumpPad Region
     */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad", meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
     UCapsuleComponent* CapsuleComponent;
     
     /*
     * Audio Component
     */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad", meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
     UAudioComponent* AudioComponent;
 
     /*
     * ParticleSystem Component
     */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad", meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
     UParticleSystemComponent* ParticleSystemComponent;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +62,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad", meta = (MakeEditWidget = ""))
     FTransform Destination;
 
-    /** if set then lock the Destination when moving/rotating the JumpPad */
+    /**
+	* If set then lock the Destination when moving/rotating the JumpPad
+	*/
     UPROPERTY(EditAnywhere, Category = "JumpPadEditor")
     bool bLockDestination;
 
@@ -71,7 +75,7 @@ public:
     float JumpTime;
 
     /**
-    * Actor is launched by JumpPad
+    * Sound played on Launch
     */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad")
     USoundBase* JumpPadLaunchSound;
@@ -80,14 +84,7 @@ public:
 
 public:
 
-    // Sets default values for this actor's properties
     AUR_JumpPad(const FObjectInitializer& ObjectInitializer);
-
-    // Called when the game starts or when spawned
-    virtual void BeginPlay() override;
-
-    // Called every frame
-    virtual void Tick(float DeltaTime) override;
 
     /**
     * Play Effects on Successful Jump
@@ -99,7 +96,13 @@ public:
     * Is this actor permitted to jump? 
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintPure, BlueprintCallable, Category = "JumpPad")
-    bool IsPermittedToJump(const AActor* InCharacter) const;
+    bool IsPermittedToJump(const AActor* TargetActor) const;
+
+	/**
+	* Is this actor permitted to teleport given its associated GameplayTags?
+	*/
+	UFUNCTION()
+	bool IsPermittedByGameplayTags(const FGameplayTagContainer& TargetTags) const;
 
     /**
     * Calculate our Jump Velocity
@@ -108,6 +111,48 @@ public:
 
     UFUNCTION()
     void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	// Gameplay Tags
+
+	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
+
+	/**
+	* Gameplay Tags for this Actor
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	FGameplayTagContainer GameplayTags;
+
+	/**
+	* Are RequiredTags Exact?
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	bool bRequiredTagsExact;
+
+	/**
+	* Actors attempting to Teleport must have at least one exact Tag match
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	FGameplayTagContainer RequiredTags;
+
+	/**
+	* Are ExcludedTags Exact?
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	bool bExcludedTagsExact;
+
+	/**
+	* Gameplay Tags for this Actor
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	FGameplayTagContainer ExcludedTags;
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+// Conditional Edit Properties
+
+#if WITH_EDITOR
+	virtual bool CanEditChange(const UProperty* InProperty) const override;
+#endif
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 

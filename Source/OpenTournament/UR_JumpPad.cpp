@@ -12,6 +12,7 @@
 #include "Particles/ParticleSystemComponent.h"
 
 #include "OpenTournament.h"
+#include "UR_Character.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 #include "AutomationTest.h"
@@ -19,25 +20,24 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Sets default values
 AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer),
     Destination(FTransform()),
     JumpTime(2.f),
-    JumpPadLaunchSound(nullptr)
+    JumpPadLaunchSound(nullptr),
+	bRequiredTagsExact(false),
+	bExcludedTagsExact(true)
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = false;
     PrimaryActorTick.bStartWithTickEnabled = false;
 
-    SceneRoot = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("SceneComponent"));
+    SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
     RootComponent = SceneRoot;
 
     CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
     CapsuleComponent->SetCapsuleSize(55.f, 55.f, false);
     CapsuleComponent->SetupAttachment(RootComponent);
-    
-    //SetRootComponent(CapsuleComponent);
     CapsuleComponent->SetGenerateOverlapEvents(true);
     CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_JumpPad::OnTriggerEnter);
 
@@ -56,33 +56,18 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Called when the game starts or when spawned
-void AUR_JumpPad::BeginPlay()
-{
-    Super::BeginPlay();
-}
-
-// Called every frame
-void AUR_JumpPad::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
-}
-
 void AUR_JumpPad::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    const auto TargetCharacter{ Cast<ACharacter>(Other) };
+    ACharacter* TargetCharacter{ Cast<ACharacter>(Other) };
 
-    if (Other->GetActorLocation().Z > CapsuleComponent->GetComponentTransform().GetLocation().Z)
+    if (TargetCharacter && TargetCharacter->GetActorLocation().Z > CapsuleComponent->GetComponentTransform().GetLocation().Z)
     {
         if (IsPermittedToJump(TargetCharacter))
         {
             GAME_LOG(Game, Log, "Entered JumpPad (%s)", *GetName());
 
-            if (TargetCharacter)
-            {
-                TargetCharacter->LaunchCharacter(CalculateJumpVelocity(TargetCharacter), true, true);
-                PlayJumpPadEffects();
-            }
+            TargetCharacter->LaunchCharacter(CalculateJumpVelocity(TargetCharacter), true, true);
+            PlayJumpPadEffects();
         }
     }
 }
@@ -95,9 +80,34 @@ void AUR_JumpPad::PlayJumpPadEffects_Implementation()
     }
 }
 
-bool AUR_JumpPad::IsPermittedToJump_Implementation(const AActor* InCharacter) const
+bool AUR_JumpPad::IsPermittedToJump_Implementation(const AActor* TargetActor) const
 {
-    return true;
+	// @! TODO : Check to see if the component/actor overlapping here matches a LD-specifiable list of classes
+	// (e.g. if we want to jump only characters, or if things such as projectiles, vehicles, etc. may also interact).
+	const AUR_Character* Character = Cast<AUR_Character>(TargetActor);
+	if (Character == nullptr)
+	{
+		GAME_LOG(Game, Log, "Teleporter Error. Character was invalid.");
+		return false;
+	}
+
+	// Check if the actor being teleported has any Required or Excluded GameplayTags
+	// e.g. Check for Red/Blue team tag, or exclude Flag-carrier tag, etc.
+	FGameplayTagContainer TargetTags;
+	Character->GetOwnedGameplayTags(TargetTags);
+	return IsPermittedByGameplayTags(TargetTags);
+}
+
+bool AUR_JumpPad::IsPermittedByGameplayTags(const FGameplayTagContainer& TargetTags) const
+{
+	if (RequiredTags.Num() == 0 || (bRequiredTagsExact && TargetTags.HasAnyExact(RequiredTags)) || (!bRequiredTagsExact && TargetTags.HasAny(RequiredTags)))
+	{
+		return (ExcludedTags.Num() == 0 || (bExcludedTagsExact && !TargetTags.HasAnyExact(ExcludedTags)) || (!bExcludedTagsExact && TargetTags.HasAny(RequiredTags)));
+	}
+	else
+	{
+		return false;
+	}
 }
 
 FVector AUR_JumpPad::CalculateJumpVelocity(const AActor* InCharacter)
@@ -110,6 +120,29 @@ FVector AUR_JumpPad::CalculateJumpVelocity(const AActor* InCharacter)
 
     return TargetVector.GetSafeNormal2D() * SizeXY + FVector::UpVector * SizeZ;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if WITH_EDITOR
+bool AUR_JumpPad::CanEditChange(const UProperty* InProperty) const
+{
+	const bool ParentVal = Super::CanEditChange(InProperty);
+
+	// Can we edit bRequiredTagsExact?
+	if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_JumpPad, bRequiredTagsExact))
+	{
+		return RequiredTags.Num() > 0;
+	}
+
+	// Can we edit bExcludedTagsExact?
+	if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_JumpPad, bExcludedTagsExact))
+	{
+		return ExcludedTags.Num() > 0;
+	}
+
+	return ParentVal;
+}
+#endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

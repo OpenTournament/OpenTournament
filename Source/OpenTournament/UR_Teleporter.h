@@ -34,39 +34,45 @@ public:
     /*
     * Static Mesh Component - Teleporter Base
     */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter")
     UStaticMeshComponent* MeshComponent;
 
     /*
     * Capsule Component - Active Teleport Region
     */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter")
     UCapsuleComponent* CapsuleComponent;
 
     /*
     * Audio Component
     */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter")
     UAudioComponent* AudioComponent;
 
     /*
     * Arrow Component
     */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter")
     UArrowComponent* ArrowComponent;
 
     /*
     * ParticleSystem Component
     */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter")
     UParticleSystemComponent* ParticleSystemComponent;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
+	/*
+	* Destination of Teleport - By Transform. Only editable when DestinationTeleporter is none.
+	*/
+	UPROPERTY(BlueprintReadWrite, EditInstanceOnly, Category = "Teleporter", meta = (MakeEditWidget = ""))
+	FTransform DestinationTransform;
+
     /*
     * Destination of Teleport - May be another Teleporter, TargetPoint, etc.
     */
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Teleporter")
+    UPROPERTY(BlueprintReadWrite, EditInstanceOnly, Category = "Teleporter")
     AActor* DestinationActor;
 
     /*
@@ -79,7 +85,7 @@ public:
     * Do Actors teleported retain their velocity?
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Teleporter")
-    bool bKeepMomentum = true;
+    bool bKeepMomentum;
 
     /**
     * Actor teleports out
@@ -95,14 +101,13 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Sets default values for this actor's properties
     AUR_Teleporter(const FObjectInitializer& ObjectInitializer);
 
-    // Called when the game starts or when spawned
-    virtual void BeginPlay() override;
-
-    // Called every frame
-    virtual void Tick(float DeltaTime) override;
+	/**
+	* On Overlap with CollisionCapsule
+	*/
+	UFUNCTION()
+	void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
     /**
     * Is this actor permitted to teleport? 
@@ -119,7 +124,14 @@ public:
     /**
     * Perform the teleport. Return true if successful.
     */
+	UFUNCTION(BlueprintCallable)
     bool PerformTeleport(AActor* TargetActor);
+
+	/**
+	* Apply a GameplayTag to a Teleporting Actor
+	*/
+	UFUNCTION()
+	void ApplyGameplayTag(AActor * TargetActor);
 
     /**
     * Play Teleport Effects
@@ -129,8 +141,8 @@ public:
 
     void GetDesiredRotation(FRotator& DesiredRotation, const FRotator& TargetActorRotation, const FRotator& DestinationRotation);
 
-    UFUNCTION()
-    void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Teleporter")
+	FGameplayTag TeleportTag;
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	// Gameplay Tags
@@ -144,14 +156,33 @@ public:
 	FGameplayTagContainer GameplayTags;
 
 	/**
+	* Are RequiredTags Exact?
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	bool bRequiredTagsExact;
+
+	/**
 	* Actors attempting to Teleport must have at least one exact Tag match
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
 	FGameplayTagContainer RequiredTags;
 
 	/**
+	* Are ExcludedTags Exact?
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	bool bExcludedTagsExact;
+
+	/**
 	* Gameplay Tags for this Actor
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
 	FGameplayTagContainer ExcludedTags;
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	// Conditional Edit Properties
+
+#if WITH_EDITOR
+	virtual bool CanEditChange(const UProperty* InProperty) const override;
+#endif
 };
