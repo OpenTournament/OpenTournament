@@ -1,17 +1,16 @@
 // Copyright 2019 Open Tournament Project, All Rights Reserved.
 
 #include "UR_JumpPad.h"
+#include "OpenTournament.h"
 
-#include "Engine/Engine.h"
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Particles/ParticleSystemComponent.h"
-
-#include "OpenTournament.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 #include "AutomationTest.h"
@@ -23,8 +22,13 @@
 AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer),
     Destination(FTransform()),
+    bLockDestination(true),
     JumpTime(2.f),
-    JumpPadLaunchSound(nullptr)
+    JumpPadLaunchSound(nullptr),
+    bUseJumpPadMaterialInstance(true),
+    JumpPadMaterialInstance(nullptr),
+    JumpPadMaterialIndex(0),
+    JumpPadMaterialParameterName("Color")
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = false;
@@ -60,6 +64,8 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
 void AUR_JumpPad::BeginPlay()
 {
     Super::BeginPlay();
+
+    InitializeDynamicMaterialInstance();
 }
 
 // Called every frame
@@ -109,6 +115,19 @@ FVector AUR_JumpPad::CalculateJumpVelocity(const AActor* InCharacter)
     float SizeZ = TargetVector.Z / JumpTime - Gravity * JumpTime / 2.0f;
 
     return TargetVector.GetSafeNormal2D() * SizeXY + FVector::UpVector * SizeZ;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_JumpPad::InitializeDynamicMaterialInstance()
+{
+    if (MeshComponent && bUseJumpPadMaterialInstance)
+    {
+        UMaterialInterface* Material = MeshComponent->GetMaterial(JumpPadMaterialIndex);
+        JumpPadMaterialInstance =  UMaterialInstanceDynamic::Create(Material, NULL);
+        JumpPadMaterialInstance->SetVectorParameterValue(JumpPadMaterialParameterName, JumpPadMaterialColorBase);
+        MeshComponent->SetMaterial(JumpPadMaterialIndex, JumpPadMaterialInstance);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
