@@ -12,9 +12,10 @@
 class AActor;
 class UAudioComponent;
 class UCapsuleComponent;
+class UMaterialInstanceDynamic;
+class UParticleSystemComponent;
 class USoundBase;
 class UStaticMeshComponent;
-class UParticleSystemComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -108,6 +109,33 @@ public:
 
     UFUNCTION()
     void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Dynamic MaterialInstance
+
+    UFUNCTION()
+    void InitializeDynamicMaterialInstance();
+
+    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "JumpPad|MaterialInstance")
+    bool bUseJumpPadMaterialInstance;
+
+    UPROPERTY(BlueprintReadWrite, Category = "JumpPad|MaterialInstance")
+    UMaterialInstanceDynamic* JumpPadMaterialInstance;
+
+    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "JumpPad|MaterialInstance")
+    int32 JumpPadMaterialIndex;
+
+    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "JumpPad|MaterialInstance")
+    FName JumpPadMaterialParameterName;
+
+    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "JumpPad|MaterialInstance")
+    FLinearColor JumpPadMaterialColorBase;
+
+    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "JumpPad|MaterialInstance")
+    FLinearColor JumpPadMaterialColorJump;
+
+    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "JumpPad|MaterialInstance")
+    FLinearColor JumpPadMaterialColorInactive;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 

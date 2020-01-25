@@ -39,19 +39,6 @@ AUR_GameModeBase* UUR_FunctionLibrary::GetGameModeDefaultObject(const UObject* W
     return GameModeDefaultObject;
 }
 
-int32 UUR_FunctionLibrary::GetPlayerStateValue(APlayerController* PlayerController)
-{
-    int32 outValue = -1;
-    if (PlayerController)
-    {
-        if (const auto PlayerState = Cast<AUR_PlayerState>(PlayerController->PlayerState))
-        {
-            outValue = PlayerState->ArbitraryValue;
-        }
-    }
-    return outValue;
-}
-
 FColor UUR_FunctionLibrary::GetPlayerDisplayTextColor(APlayerState* PS)
 {
     if (!PS)
@@ -148,6 +135,12 @@ AUR_PlayerController* UUR_FunctionLibrary::GetLocalPlayerController(const UObjec
         return World->GetFirstPlayerController<AUR_PlayerController>();
 
     return nullptr;
+}
+
+bool UUR_FunctionLibrary::IsLocallyViewed(AActor* Other)
+{
+	AUR_PlayerController* PC = GetLocalPlayerController(Other);
+	return PC && PC->GetViewTarget() == Other;
 }
 
 FString UUR_FunctionLibrary::GetTimeString(const float TimeSeconds)

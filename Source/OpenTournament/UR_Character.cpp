@@ -12,15 +12,13 @@
 //#include "Engine.h"
 
 #include "OpenTournament.h"
-#include "UR_HealthComponent.h"
-#include "UR_ArmorComponent.h"
 #include "UR_InventoryComponent.h"
 #include "UR_CharacterMovementComponent.h"
-#include "UR_AbilitySystemComponent.h"
-#include "UR_ArmorComponent.h"
 #include "UR_AttributeSet.h"
+#include "UR_AbilitySystemComponent.h"
 #include "UR_GameplayAbility.h"
 #include "UR_PlayerController.h"
+#include "UR_GameMode.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,8 +40,6 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     URMovementComponent = Cast<UUR_CharacterMovementComponent>(GetCharacterMovement());
     URMovementComponent->bUseFlatBaseForFloorChecks = true;
 
-    HealthComponent = Cast<UUR_HealthComponent>(CreateDefaultSubobject<UUR_HealthComponent>(TEXT("HealthComponent")));
-    //ArmorComponent = Cast<UUR_ArmorComponent>(CreateDefaultSubobject<UUR_ArmorComponent>(TEXT("ArmorComponent")));
     InventoryComponent = Cast<UUR_InventoryComponent>(CreateDefaultSubobject<UUR_InventoryComponent>(TEXT("InventoryComponent")));
 
     // Create a CameraComponent	
@@ -61,12 +57,26 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     MeshFirstPerson->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
     MeshFirstPerson->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
-    WeaponAttachPoint = "GripPoint";
+    WeaponAttachPoint = FName(TEXT("GripPoint"));
 
-    AbilitySystemComponent = CreateDefaultSubobject<UUR_AbilitySystemComponent>("AbilitySystemComponent");
+    // Mesh third person
+    GetMesh()->bOwnerNoSee = true;
 
+    // Third person camera
+    ThirdPersonArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonArm"));
+    ThirdPersonArm->SetupAttachment(GetCapsuleComponent());
+    ThirdPersonArm->TargetArmLength = 400.f;
+    ThirdPersonArm->TargetOffset.Set(0.f, 0.f, 100.f);
+    ThirdPersonArm->bUsePawnControlRotation = true;
+
+    ThirdPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
+    ThirdPersonCamera->SetupAttachment(ThirdPersonArm);
+    
     // Create the attribute set, this replicates by default
     AttributeSet = CreateDefaultSubobject<UUR_AttributeSet>(TEXT("AttributeSet"));
+
+    // Create the ASC
+    AbilitySystemComponent = CreateDefaultSubobject<UUR_AbilitySystemComponent>("AbilitySystemComponent");
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,9 +85,9 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(AUR_Character, HealthComponent);
-    DOREPLIFETIME(AUR_Character, InventoryComponent);
     DOREPLIFETIME(AUR_Character, DodgeDirection);
+    DOREPLIFETIME(AUR_Character, InventoryComponent);
+    DOREPLIFETIME(AUR_Character, AbilitySystemComponent);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,14 +95,18 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 void AUR_Character::BeginPlay()
 {
     Super::BeginPlay();
-    HealthComponent->SetHealth(100);
+
+    AttributeSet->SetHealth(100.f);
+    AttributeSet->SetHealthMax(100.f);
+    AttributeSet->SetArmor(100.f);
+    AttributeSet->SetArmorMax(100.f);
+    AttributeSet->SetShieldMax(100.f);
 }
 
 void AUR_Character::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    if (HealthComponent->Health <= 0)
-        Destroy(); //to be replaced with Dead state and respawnability
+
     TickFootsteps(DeltaTime);
 }
 
@@ -104,7 +118,6 @@ UAbilitySystemComponent* AUR_Character::GetAbilitySystemComponent() const
 void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 
     PlayerInputComponent->BindAction("Pickup", IE_Pressed, this, &AUR_Character::BeginPickup);
     PlayerInputComponent->BindAction("Pickup", IE_Released, this, &AUR_Character::EndPickup);
@@ -118,11 +131,67 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
     PlayerInputComponent->BindAction("SRifle", IE_Pressed, this, &AUR_Character::SelectWeapon5);
     PlayerInputComponent->BindAction("Pistol", IE_Pressed, this, &AUR_Character::SelectWeapon0);
 
+    PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
+    PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
+}
 
-    PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AUR_Character::BeginFire);
-    PlayerInputComponent->BindAction("Fire", IE_Released, this, &AUR_Character::EndFire);
+void AUR_Character::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
+{
+    UCameraComponent* Camera = PickCamera();
+    if (Camera)
+    {
+        bool bThirdPerson = IsThirdPersonCamera(Camera);
+        if (bThirdPerson != bViewingThirdPerson)
+        {
+            bViewingThirdPerson = bThirdPerson;
+            CameraViewChanged();
+        }
+        Camera->GetCameraView(DeltaTime, OutResult);
+    }
+    else
+    {
+        // Fallback to Super
+        Super::CalcCamera(DeltaTime, OutResult);
+    }
+}
 
+UCameraComponent* AUR_Character::PickCamera_Implementation()
+{
+    // End game = always 3p
+    AGameState* GS = GetWorld()->GetGameState<AGameState>();
+    if (GS && GS->HasMatchEnded() && ThirdPersonCamera)
+    {
+        return ThirdPersonCamera;
+    }
 
+    // Alive = 1p
+    //TODO: specs should be able to switch at will.
+    // That would be a variable in PlayerController.
+    // Hopefully this is client-only, so we can get local PC to check this.
+    if (IsAlive() && CharacterCameraComponent && CharacterCameraComponent->IsActive())
+    {
+        return CharacterCameraComponent;
+    }
+
+    // Fallback to 3p
+    if (ThirdPersonCamera && ThirdPersonCamera->IsActive())
+    {
+        return ThirdPersonCamera;
+    }
+
+    return nullptr;
+}
+
+bool AUR_Character::IsThirdPersonCamera_Implementation(UCameraComponent* Camera)
+{
+    return Camera && Camera == ThirdPersonCamera;
+}
+
+void AUR_Character::CameraViewChanged_Implementation()
+{
+    GetMesh()->SetOwnerNoSee(!bViewingThirdPerson);
+    MeshFirstPerson->SetVisibility(!bViewingThirdPerson, true);
+    //TODO: weapon
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -221,7 +290,7 @@ void AUR_Character::ClearJumpInput(float DeltaTime)
     }
 }
 
-void AUR_Character::Landed(const FHitResult & Hit)
+void AUR_Character::Landed(const FHitResult& Hit)
 {
     TakeFallingDamage(Hit, GetCharacterMovement()->Velocity.Z);
 
@@ -230,24 +299,20 @@ void AUR_Character::Landed(const FHitResult & Hit)
 
 void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
 {
-    // Do nothing yet
-    // Get our health component & apply damage
-
-    if (GetLocalRole() && URMovementComponent != nullptr)
+    if (AbilitySystemComponent == nullptr || URMovementComponent == nullptr)
     {
-        // @! TODO Proper Damage Handling
-        if (HealthComponent)
-        {
-            if (FallingSpeed * -1.f > FallDamageSpeedThreshold)
-            {
-                const float FallingDamage = 0.15f * (FallDamageSpeedThreshold - FallingSpeed);
+        return;
+    }
 
-                if (FallingDamage >= 1.0f)
-                {
-                    FDamageEvent DamageEvent; // @! TODO Real DamageTypes
-                    TakeDamage(FallingDamage, DamageEvent, Controller, this);
-                }
-            }
+    if (FallingSpeed * -1.f > FallDamageSpeedThreshold)
+    {
+        const float FallingDamage = -0.15f * (FallDamageSpeedThreshold + FallingSpeed);
+        //GAME_PRINT(10.f, FColor::Red, "Fall Damage (%f)", FallingDamage);
+
+        if (FallingDamage >= 1.0f)
+        {
+            FDamageEvent DamageEvent; // @! TODO Real DamageTypes
+            TakeDamage(FallingDamage, DamageEvent, Controller, this);
         }
     }
 }
@@ -333,53 +398,208 @@ void AUR_Character::OnWallDodge_Implementation(const FVector& DodgeLocation, con
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator,
-    AActor* DamageCauser)
+float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+    GAME_LOG(Game, Log, "Damage Incoming (%f)", Damage);
+
     if (!ShouldTakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser))
     {
         return 0.f;
     }
 
-    /*if (HealthComponent)
-    {
-        HealthComponent->ChangeHealth(-1 * Damage); //leaving this here for reference is need be
-    }*/
+    // Super() takes care of calculating proper splash damage values and imparting components physics.
+    // Then it triggers events : OnTakePointDamage, OnTakeRadialDamage, OnTakeAnyDamage.
+    Damage = FMath::FloorToFloat(Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser));
+    //GAME_PRINT(10.f, FColor::Purple, "Damage Floor (%f)", DamageToArmor);
+    GAME_LOG(Game, Log, "Damage Incoming Floor (%f)", Damage);
 
-    if (HealthComponent)
+    if (AttributeSet)
     {
-        /*if (ArmorComponent)
+        if (AttributeSet->Health.GetCurrentValue() > 0.f)
         {
-            if (ArmorComponent->Armor < 0.4*Damage && ArmorComponent->Armor > 0)
+            const float CurrentShield = FMath::FloorToFloat(AttributeSet->Shield.GetCurrentValue());
+            if (CurrentShield > 0.f)
             {
-                int32 currentArmor = ArmorComponent->Armor;
-                ArmorComponent->ChangeArmor(-1 * ArmorComponent->Armor);
-                HealthComponent->ChangeHealth(-1 * (Damage - currentArmor));
-            }
-            else if	(ArmorComponent->Armor > Damage && ArmorComponent->hasBarrier)
-            {
-                ArmorComponent->ChangeArmor(-1 * Damage);
+                //GAME_PRINT(10.f, FColor::Yellow, "Damage to Shield (%f)", FMath::Min(Damage, CurrentShield));
+                GAME_LOG(Game, Log, "Damage to Shield (%f)", FMath::Min(Damage, CurrentShield));
+
+                AttributeSet->SetShield(FMath::FloorToFloat(FMath::Max(CurrentShield - Damage, 0.f)));
+                Damage = CurrentShield - Damage > 0.f ? 0.f : Damage - CurrentShield;
             }
 
-            else if(ArmorComponent->Armor <= 0)
+            const float CurrentArmor = FMath::FloorToFloat(AttributeSet->Armor.GetCurrentValue());
+            const float ArmorAbsorption = AttributeSet->ArmorAbsorptionPercent.GetCurrentValue();
+            if (CurrentArmor > 0.f && Damage > 0.f)
             {
-                HealthComponent->ChangeHealth(-1 * Damage);
+                const float DamageToArmor = FMath::FloorToFloat(FMath::Min(Damage * ArmorAbsorption, CurrentArmor));
+
+                //GAME_PRINT(10.f, FColor::Emerald, "Damage to Armor (%f)", DamageToArmor);
+                GAME_LOG(Game, Log, "Damage to Armor (%f)", DamageToArmor);
+
+                AttributeSet->SetArmor(FMath::Max(CurrentArmor - DamageToArmor, 0.f));
+                Damage = FMath::Max(Damage - DamageToArmor, 0.f);
             }
-            else if (ArmorComponent->Armor > 0.4*Damage && !ArmorComponent->hasBarrier)
+
+            const float CurrentHealth = AttributeSet->Health.GetCurrentValue();
+            if (CurrentHealth > 0.f && Damage > 0.f)
             {
-                ArmorComponent->ChangeArmor(-0.6 * Damage);
-                HealthComponent->ChangeHealth(-0.4 * Damage);
+                //GAME_PRINT(10.f, FColor::Red, "Damage to Health (%f)", Damage);
+                GAME_LOG(Game, Log, "Damage to Health (%f)", Damage);
+
+                AttributeSet->SetHealth(FMath::FloorToFloat(FMath::Max(CurrentHealth - Damage, 0.f)));
             }
-        }*/
+        }
     }
 
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2")));
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - DAMAGE -: %f"), Damage));
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event 2 - Remaining Health -: %d"), HealthComponent->Health));
-    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("Damage Event 2 - Remaining Armor -: %d"), ArmorComponent->Armor));
+    //NOTE: it seems like we are lacking control of damage momentum (knockback) overall.
+    // DamageType has DamageImpulse but it is part of CDO, which is a bit annoying.
+    // We cannot adjust DamageImpulse on the fly with gamemode/mutators.
+    // Also it only applies to physics-enabled stuff. Characters need custom knockback anyways.
 
-    return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+    // We will probably need to find a way back to the projectile/weapon (DamageCauser?),
+    // so we can use custom-defined knockback values there.
+
+    // Then we can apply splash falloff using (ActualDamage/Damage) to the knockback power.
+    // And finally, apply knockback manually with a custom impulse.
+
+    // For now, let's try basic values
+    float KnockbackPower = 1500.f * Damage;
+
+    // Avoid very small knockbacks
+    if (KnockbackPower / GetCharacterMovement()->Mass >= 100.f)
+    {
+        FVector KnockbackDir;
+        if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+        {
+            FPointDamageEvent* PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
+
+            // Always use shot direction for knockback
+            KnockbackDir = PointDamageEvent->ShotDirection;
+            GetCharacterMovement()->AddImpulse(KnockbackPower*KnockbackDir);
+        }
+        else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+        {
+            FRadialDamageEvent* RadialDamageEvent = (FRadialDamageEvent*)&DamageEvent;
+
+            // Use no falloff (constant) because we already scaled KnockbackPower
+            GetCharacterMovement()->AddRadialImpulse(RadialDamageEvent->Origin, RadialDamageEvent->Params.GetMaxRadius(), KnockbackPower, ERadialImpulseFalloff::RIF_Constant, false);
+
+            /*
+            // Experimental: use vector (HitLocation->EyeLocation) as knockback direction to make it feel more natural
+
+            KnockbackDir = (GetPawnViewLocation() - RadialDamageEvent->Origin);
+            KnockbackDir.Normalize();
+            GetCharacterMovement()->AddImpulse(KnockbackPower*KnockbackDir);
+            */
+        }
+    }
+
+    if (AttributeSet->Health.GetCurrentValue() <= 0)
+    {
+        Die(EventInstigator, DamageEvent, DamageCauser);
+    }
+
+    return Damage;
 }
+
+void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser)
+{
+    // Already killed (might happen when multiple damage sources in 1 frame)
+    if (GetTearOff() || IsPendingKillPending())
+    {
+        return;
+    }
+
+    AUR_GameMode* GM = GetWorld()->GetAuthGameMode<AUR_GameMode>();
+    if (GM)
+    {
+        AController* Killed = GetController();
+
+        if (GM->PreventDeath(Killed, Killer, DamageEvent, DamageCauser))
+        {
+            // Make sure we don't stay with <=0 health or IsAlive() would return false.
+            if (AttributeSet->Health.GetCurrentValue() <= 0)
+            {
+                AttributeSet->SetHealth(1);
+            }
+            return;
+        }
+
+        GM->PlayerKilled(Killed, Killer, DamageEvent, DamageCauser);
+    }
+
+    if (AttributeSet)
+    {
+        AttributeSet->SetHealth(0);
+    }
+
+    // Cut the replication link
+    TearOff();
+
+    if (GetNetMode() == NM_DedicatedServer)
+    {
+        //Destroy();
+        SetLifeSpan(0.200f);	// give it time to replicate the tear off ?
+        SetActorEnableCollision(false);
+    }
+    else
+    {
+        PlayDeath();
+    }
+}
+
+void AUR_Character::PlayDeath()
+{
+    APlayerController* OldController = nullptr;
+    if (Controller && Controller->GetPawn() == this)
+        OldController = Cast<APlayerController>(Controller);
+
+    // Unpossess
+    DetachFromControllerPendingDestroy();
+
+    // Set view target back, should auto to 3p cam
+    if (OldController)
+        OldController->SetViewTarget(this);
+
+    // Improve camera feel
+    ThirdPersonArm->bInheritPitch = false;
+    ThirdPersonArm->bInheritRoll = false;
+    ThirdPersonArm->bEnableCameraLag = true;
+    ThirdPersonArm->bEnableCameraRotationLag = true;
+
+    GetCharacterMovement()->StopActiveMovement();
+
+    // Disable capsule
+    GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    GetCapsuleComponent()->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+
+    // Set mesh as root with physics (ragdoll)
+    GetMesh()->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+    GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+    GetMesh()->SetSimulatePhysics(true);
+    SetRootComponent(GetMesh());
+
+    // Attach capsule back to mesh
+    GetCapsuleComponent()->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
+
+    SetLifeSpan(5.0f);
+}
+
+bool AUR_Character::IsAlive()
+{
+    if (GetTearOff() || IsPendingKillPending() || AttributeSet == nullptr)
+    {
+        return false;	// server link has been cut, health might not replicate anymore
+    }
+
+    return AttributeSet->GetHealth() > 0;
+}
+
+void AUR_Character::ServerSuicide_Implementation()
+{
+    Die(nullptr, FDamageEvent(), nullptr);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -455,17 +675,43 @@ void AUR_Character::WeaponSelect(int32 number)
     InventoryComponent->SelectWeapon(number);
 }
 
-void AUR_Character::BeginFire()
+void AUR_Character::NextWeapon()
+{
+    if (InventoryComponent)
+        InventoryComponent->NextWeapon();
+}
+
+void AUR_Character::PrevWeapon()
+{
+    if (InventoryComponent)
+        InventoryComponent->PrevWeapon();
+}
+
+void AUR_Character::PawnStartFire(uint8 FireModeNum)
 {
     isFiring = true;
-    Fire();
+
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
+    {
+        InventoryComponent->ActiveWeapon->LocalStartFire();
+    }
+    else
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("NO WEAPON SELECTED!")));
+    }
 }
 
-void AUR_Character::EndFire()
+void AUR_Character::PawnStopFire(uint8 FireModeNum)
 {
     isFiring = false;
+
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
+    {
+        InventoryComponent->ActiveWeapon->LocalStopFire();
+    }
 }
 
+//deprecated
 void AUR_Character::Fire()
 {
     if (isFiring)

@@ -9,7 +9,6 @@
 
 #include "UR_GameState.h"
 #include "UR_Character.h"
-#include "UR_HealthComponent.h"
 #include "UR_FunctionLibrary.h"
 
 /**
@@ -95,7 +94,7 @@ FString UUR_ChatComponent::Validate_Implementation(const FString& Message, bool 
     // crop message length
     if (ValidatedMessage.Len() > MaxMessageLength)
     {
-        ValidatedMessage = ValidatedMessage.Left(MaxMessageLength-3).Append(TEXT("..."));	// TEXT('…') not supported by font atm
+        ValidatedMessage = ValidatedMessage.Left(MaxMessageLength-3).Append(TEXT("..."));	// TEXT('ï¿½') not supported by font atm
     }
 
     return ValidatedMessage;
@@ -193,7 +192,6 @@ FString UUR_ChatComponent::ProcessChatParameters_Implementation(const FString& O
         AUR_Character* Char = Cast<AUR_Character>(OwnerController->GetCharacter());
         if (Char)
         {
-            Result.ReplaceInline(TEXT("%h"), *FString::Printf(TEXT("%i"), Char->HealthComponent->Health));
             Result.ReplaceInline(TEXT("%a"), *FString::Printf(TEXT("%i"), 0));	//TODO: armor
             Result.ReplaceInline(TEXT("%w"), TEXT("None"));	//TODO: weapon
             Result.ReplaceInline(TEXT("%l"), TEXT("Somewhere"));	//TODO: location

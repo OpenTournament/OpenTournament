@@ -46,6 +46,14 @@ public:
     FGameplayAttributeData HealthMax;
     ATTRIBUTE_ACCESSORS(UUR_AttributeSet, HealthMax)
 
+    UPROPERTY(ReplicatedUsing=OnRep_OverHealth, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
+        FGameplayAttributeData OverHealth;
+    ATTRIBUTE_ACCESSORS(UUR_AttributeSet, OverHealth)
+
+    UPROPERTY(ReplicatedUsing=OnRep_OverHealthMax, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
+        FGameplayAttributeData OverHealthMax;
+    ATTRIBUTE_ACCESSORS(UUR_AttributeSet, OverHealthMax)
+
     ////////========////////
 
     UPROPERTY(ReplicatedUsing=OnRep_Armor, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
@@ -55,6 +63,10 @@ public:
     UPROPERTY(ReplicatedUsing=OnRep_ArmorMax, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
     FGameplayAttributeData ArmorMax;
     ATTRIBUTE_ACCESSORS(UUR_AttributeSet, ArmorMax)
+
+    UPROPERTY(ReplicatedUsing=OnRep_ArmorAbsorptionPercent, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
+        FGameplayAttributeData ArmorAbsorptionPercent;
+    ATTRIBUTE_ACCESSORS(UUR_AttributeSet, ArmorAbsorptionPercent)
 
     ////////========////////
 
@@ -129,6 +141,12 @@ protected:
     virtual void OnRep_HealthMax();
 
     UFUNCTION()
+    virtual void OnRep_OverHealth();
+
+    UFUNCTION()
+    virtual void OnRep_OverHealthMax();
+
+    UFUNCTION()
     virtual void OnRep_Energy();
 
     UFUNCTION()
@@ -139,6 +157,9 @@ protected:
 
     UFUNCTION()
     virtual void OnRep_ArmorMax();
+
+    UFUNCTION()
+    virtual void OnRep_ArmorAbsorptionPercent();
 
     UFUNCTION()
     virtual void OnRep_Shield();
