@@ -57,16 +57,20 @@ OpenTournament\.sln
 Source/LastSaved
 Config/DefaultEditorPerProjectUserSettings.ini
 
-# Remove Source Files Installed from Asset Packs
+# Ignore Source Files Installed from Asset Packs
 SourceFiles/InPlace
 SourceFiles/RootMotion
 
-# Remove UE4 Asset Packs
+# Ignore UE4 Asset Packs
 AutomotiveMaterials.png
 ParticleToolkitVol1.png
 FootstepsSoundV2.png
 MissionNotificationSys.png
 Content/*
 
-#Exclude All Base Level Content Except OpenTournament Directory
+#Exclude-from-Ignore All Base Level Content Except OpenTournament Directory (and specified others)
+!Content/Splash
 !Content/OpenTournament
+
+#Exclude-from-Ignore Build Stuff
+!Build/Windows
