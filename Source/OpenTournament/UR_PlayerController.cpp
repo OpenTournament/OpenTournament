@@ -13,9 +13,14 @@
 #include "Runtime/UMG/Public/Slate/SObjectWidget.h"
 #include "Runtime/UMG/Public/IUMGModule.h"
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 #include "Components/AudioComponent.h"
+
+#include "OpenTournament.h"
+#include "Interfaces/UR_HUDAttributeInitializedInterface.h"
 #include "UR_Character.h"
+#include "UR_HUD.h"
 #include "UR_PCInputDodgeComponent.h"
 #include "UR_ChatComponent.h"
 #include "UR_LocalPlayer.h"
@@ -132,10 +137,10 @@ void AUR_PlayerController::SetupInputComponent()
     InputComponent->BindAction("Crouch", IE_Pressed, this, &AUR_PlayerController::Crouch);
     InputComponent->BindAction("Crouch", IE_Released, this, &AUR_PlayerController::UnCrouch);
 
-	// Forward to StartFire() provided by engine, handles things like spectator, request respawn...
-	InputComponent->BindAction("Fire", IE_Pressed, this, &AUR_PlayerController::PressedFire);
-	//NOTE: we cannot bind 'Pressed' in PC and 'Released' in Character that just doesn't work...
-	InputComponent->BindAction("Fire", IE_Released, this, &AUR_PlayerController::ReleasedFire);
+    // Forward to StartFire() provided by engine, handles things like spectator, request respawn...
+    InputComponent->BindAction("Fire", IE_Pressed, this, &AUR_PlayerController::PressedFire);
+    //NOTE: we cannot bind 'Pressed' in PC and 'Released' in Character that just doesn't work...
+    InputComponent->BindAction("Fire", IE_Released, this, &AUR_PlayerController::ReleasedFire);
 }
 
 void AUR_PlayerController::ProcessPlayerInput(const float DeltaTime, const bool bGamePaused)
@@ -156,6 +161,11 @@ void AUR_PlayerController::SetPawn(APawn* InPawn)
     AController::SetPawn(InPawn);
 
     URCharacter = Cast<AUR_Character>(InPawn);
+
+    if (auto URHUD = Cast<AUR_HUD>(GetHUD()))
+    {
+        URHUD->OnHUDRestart();
+    }
 
     // Set Spectating Pawn
 }
@@ -268,10 +278,10 @@ void AUR_PlayerController::UnCrouch()
 
 void AUR_PlayerController::ReleasedFire()
 {
-	if (URCharacter)
-	{
-		URCharacter->PawnStopFire(0);
-	}
+    if (URCharacter)
+    {
+        URCharacter->PawnStopFire(0);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
