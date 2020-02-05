@@ -19,7 +19,6 @@ AUR_HUD::AUR_HUD()
 {
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_HUD::DrawHUD()
 {
@@ -46,11 +45,4 @@ void AUR_HUD::DrawCrosshair()
     FCanvasTileItem TileItem(CrosshairDrawPosition, CrosshairTex->Resource, FLinearColor::White);
     TileItem.BlendMode = SE_BLEND_Translucent;
     Canvas->DrawItem(TileItem);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-void AUR_HUD::Client_RestartHUD_Implementation()
-{
-    OnHUDRestart();
 }
