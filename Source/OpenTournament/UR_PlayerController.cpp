@@ -157,6 +157,14 @@ void AUR_PlayerController::SetPawn(APawn* InPawn)
 
     URCharacter = Cast<AUR_Character>(InPawn);
 
+    if (InPawn != nullptr)
+    {
+        if (auto URHUD = Cast<AUR_HUD>(GetHUD()))
+        {
+            URHUD->OnHUDRestart();
+        }
+    }
+
     // Set Spectating Pawn
 }
 
