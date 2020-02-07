@@ -160,6 +160,8 @@ void AUR_PlayerController::SetPawn(APawn* InPawn)
 {
     AController::SetPawn(InPawn);
 
+    URCharacter = Cast<AUR_Character>(InPawn);
+
     if (InPawn != nullptr)
     {
         if (auto URHUD = Cast<AUR_HUD>(GetHUD()))
