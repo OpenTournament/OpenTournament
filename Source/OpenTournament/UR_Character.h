@@ -1,4 +1,4 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -53,7 +53,7 @@ struct FCharacterVoice
 UCLASS()
 class OPENTOURNAMENT_API AUR_Character : public ACharacter,
     public IAbilitySystemInterface,
-	public IGameplayTagAssetInterface
+    public IGameplayTagAssetInterface
 {
     GENERATED_BODY()
 
@@ -292,16 +292,16 @@ public:
     // @section Gameplay Ability System
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	/////////////////////////////////////////////////////////////////////////////////////////////////
-	// Gameplay Tags
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Gameplay Tags
 
-	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
+    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
-	FGameplayTagContainer GameplayTags;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+    FGameplayTagContainer GameplayTags;
 
-	/////////////////////////////////////////////////////////////////////////////////////////////////
-	// GAS
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // GAS
 
     // Implement IAbilitySystemInterface
     UAbilitySystemComponent* GetAbilitySystemComponent() const override;

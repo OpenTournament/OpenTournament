@@ -160,15 +160,15 @@ public:
     */
     virtual void UnCrouch();
 
-	/**
-	* Function bound to "Fire" ActionMapping Input. Forward to builtin StartFire.
-	*/
-	virtual void PressedFire() { StartFire(0); }
+    /**
+    * Function bound to "Fire" ActionMapping Input. Forward to builtin StartFire.
+    */
+    virtual void PressedFire() { StartFire(0); }
 
-	/**
-	* Forward to character like StartFire does.
-	*/
-	virtual void ReleasedFire();
+    /**
+    * Forward to character like StartFire does.
+    */
+    virtual void ReleasedFire();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
