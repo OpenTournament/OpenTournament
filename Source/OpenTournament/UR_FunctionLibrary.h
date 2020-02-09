@@ -1,4 +1,4 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -32,7 +32,7 @@ class OPENTOURNAMENT_API UUR_FunctionLibrary : public UBlueprintFunctionLibrary
 public:
 
     // Utility for retrieving GameMode CDO
-    UFUNCTION(BlueprintPure, Category = "Character|State")
+    UFUNCTION(BlueprintPure, Category = "Utility")
     static AUR_GameModeBase* GetGameModeDefaultObject(const UObject* WorldContextObject);
 
     template<typename TEnum>
