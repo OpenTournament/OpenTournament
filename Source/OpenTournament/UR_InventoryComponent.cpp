@@ -1,11 +1,14 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_InventoryComponent.h"
 
-#include "UnrealNetwork.h"
-#include "Engine.h"
+#include "Net/UnrealNetwork.h"
+
+#include "OpenTournament.h"
+#include "UR_Weapon.h"
+#include "UR_Ammo.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -13,6 +16,8 @@ UUR_InventoryComponent::UUR_InventoryComponent()
 {
     SetIsReplicatedByDefault(true);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_InventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -69,19 +74,20 @@ void UUR_InventoryComponent::Add(AUR_Ammo* ammo)
         }
     }
     else {*/
-        InventoryA.Add(ammo);
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You picked the %s"), *ammo->AmmoName));
+        //InventoryA.Add(ammo);
+        //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You picked the %s"), *ammo->AmmoName));
     //}
-        UpdateWeaponAmmo(ammo);
+        //UpdateWeaponAmmo(ammo);
 }
 
 void UUR_InventoryComponent::AmmoCountInInventory(AUR_Weapon* weapon) 
 {
     for (auto& ammo : InventoryA)
     {
-        if (weapon->AmmoName == *ammo->AmmoName) {
+        /*if (weapon->AmmoName == *ammo->AmmoName)
+        {
             weapon->ammoCount += ammo->amount;
-        }
+        }*/
     }
 }
 
@@ -89,9 +95,10 @@ void UUR_InventoryComponent::UpdateWeaponAmmo(AUR_Ammo* ammo)
 {
     for (auto& weapon : InventoryW)
     {
-        if (weapon->AmmoName == *ammo->AmmoName) {
+        /*if (weapon->AmmoName == *ammo->AmmoName)
+        {
             weapon->ammoCount += ammo->amount;
-        }
+        }*/
     }
 }
 
@@ -105,7 +112,7 @@ void UUR_InventoryComponent::ShowInventory()
 
     for (auto& ammo : InventoryA)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Ammo in inventory: %s"), *ammo->AmmoName));
+        //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Ammo in inventory: %s"), *ammo->AmmoName));
     }
 
 }

@@ -1,4 +1,4 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -7,9 +7,10 @@
 #include "UnrealNetwork.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/GameState.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
-//#include "Engine.h"
 
 #include "OpenTournament.h"
 #include "UR_InventoryComponent.h"
@@ -19,6 +20,7 @@
 #include "UR_GameplayAbility.h"
 #include "UR_PlayerController.h"
 #include "UR_GameMode.h"
+#include "UR_Weapon.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,6 +132,13 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
     PlayerInputComponent->BindAction("GLauncher", IE_Pressed, this, &AUR_Character::SelectWeapon4);
     PlayerInputComponent->BindAction("SRifle", IE_Pressed, this, &AUR_Character::SelectWeapon5);
     PlayerInputComponent->BindAction("Pistol", IE_Pressed, this, &AUR_Character::SelectWeapon0);
+
+    // Select Weapon Bind
+    // Throw Weapon
+
+    // Voice
+    // Ping
+    // Emote
 
     PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
     PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
@@ -259,7 +268,7 @@ void AUR_Character::PlayFootstepEffects(const float WalkingSpeedPercentage) cons
     UGameplayStatics::PlaySound2D(GetWorld(), CharacterVoice.FootstepSound, FootstepVolume, 1.f);
 }
 
-
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_Character::CheckJumpInput(float DeltaTime)
 {
@@ -336,7 +345,6 @@ bool AUR_Character::IsDodgePermitted_Implementation() const
     }
 
     return IsPermitted;
-    return !URMovementComponent->IsFlying();
 }
 
 bool AUR_Character::CanDodge() const
@@ -678,13 +686,17 @@ void AUR_Character::WeaponSelect(int32 number)
 void AUR_Character::NextWeapon()
 {
     if (InventoryComponent)
+    {
         InventoryComponent->NextWeapon();
+    }
 }
 
 void AUR_Character::PrevWeapon()
 {
     if (InventoryComponent)
+    {
         InventoryComponent->PrevWeapon();
+    }
 }
 
 void AUR_Character::PawnStartFire(uint8 FireModeNum)
@@ -697,7 +709,7 @@ void AUR_Character::PawnStartFire(uint8 FireModeNum)
     }
     else
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("NO WEAPON SELECTED!")));
+        GAME_PRINT(1.f, FColor::White, "No Weapon Selected");
     }
 }
 
@@ -716,7 +728,7 @@ void AUR_Character::Fire()
 {
     if (isFiring)
     {
-        if (InventoryComponent->ActiveWeapon != NULL)
+        if (InventoryComponent->ActiveWeapon)
         {
             if (InventoryComponent->ActiveWeapon->ProjectileClass)
             {
@@ -729,7 +741,9 @@ void AUR_Character::Fire()
             }
         }
         else
-            GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Yellow, FString::Printf(TEXT("NO WEAPON SELECTED!")));
+        {
+            GAME_PRINT(1.f, FColor::White, "No Weapon Selected");
+        }
     }
 }
 
