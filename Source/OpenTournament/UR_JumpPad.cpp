@@ -1,4 +1,6 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_JumpPad.h"
 #include "OpenTournament.h"
@@ -10,6 +12,7 @@
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
 
 #include "OpenTournament.h"
@@ -62,18 +65,11 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Called when the game starts or when spawned
 void AUR_JumpPad::BeginPlay()
 {
     Super::BeginPlay();
 
     InitializeDynamicMaterialInstance();
-}
-
-// Called every frame
-void AUR_JumpPad::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
 }
 
 void AUR_JumpPad::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -97,6 +93,11 @@ void AUR_JumpPad::PlayJumpPadEffects_Implementation()
     if (JumpPadLaunchSound)
     {
         UGameplayStatics::PlaySoundAtLocation(GetWorld(), JumpPadLaunchSound, GetActorLocation());
+
+        if (auto PSComponent = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), JumpPadLaunchParticleClass, GetActorTransform()))
+        {
+            // TODO : Modify PSComponent if needed, based on Team, etc.
+        }
     }
 }
 
