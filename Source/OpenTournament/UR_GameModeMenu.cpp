@@ -1,4 +1,4 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -24,7 +24,7 @@
 
 AUR_GameModeMenu::AUR_GameModeMenu()
 {
-	//NOTE: we set these to the BP subclasses in the BP subclass so it seems useless here
+    //NOTE: we set these to the BP subclasses in the BP subclass so it seems useless here
     GameStateClass = AUR_GameState::StaticClass();
     PlayerStateClass = AUR_PlayerState::StaticClass();
     PlayerControllerClass = AUR_PlayerController::StaticClass();
