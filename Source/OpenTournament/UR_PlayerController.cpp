@@ -1,10 +1,10 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_PlayerController.h"
 
-#include "Engine/World.h"
+#include "Components/AudioComponent.h"
 
 //UMG
 #include "SlateBasics.h"
@@ -14,13 +14,12 @@
 #include "Runtime/UMG/Public/IUMGModule.h"
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 
-#include "Components/AudioComponent.h"
 #include "UR_Character.h"
-#include "UR_PCInputDodgeComponent.h"
 #include "UR_ChatComponent.h"
 #include "UR_LocalPlayer.h"
-#include "Widgets/UR_Widget_BaseMenu.h"
 #include "UR_MessageHistory.h"
+#include "UR_PCInputDodgeComponent.h"
+#include "Widgets/UR_Widget_BaseMenu.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -132,10 +131,10 @@ void AUR_PlayerController::SetupInputComponent()
     InputComponent->BindAction("Crouch", IE_Pressed, this, &AUR_PlayerController::Crouch);
     InputComponent->BindAction("Crouch", IE_Released, this, &AUR_PlayerController::UnCrouch);
 
-	// Forward to StartFire() provided by engine, handles things like spectator, request respawn...
-	InputComponent->BindAction("Fire", IE_Pressed, this, &AUR_PlayerController::PressedFire);
-	//NOTE: we cannot bind 'Pressed' in PC and 'Released' in Character that just doesn't work...
-	InputComponent->BindAction("Fire", IE_Released, this, &AUR_PlayerController::ReleasedFire);
+    // Forward to StartFire() provided by engine, handles things like spectator, request respawn...
+    InputComponent->BindAction("Fire", IE_Pressed, this, &AUR_PlayerController::PressedFire);
+    //NOTE: we cannot bind 'Pressed' in PC and 'Released' in Character that just doesn't work...
+    InputComponent->BindAction("Fire", IE_Released, this, &AUR_PlayerController::ReleasedFire);
 }
 
 void AUR_PlayerController::ProcessPlayerInput(const float DeltaTime, const bool bGamePaused)
@@ -266,12 +265,19 @@ void AUR_PlayerController::UnCrouch()
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_PlayerController::PressedFire()
+{
+    StartFire(0);
+}
+
 void AUR_PlayerController::ReleasedFire()
 {
-	if (URCharacter)
-	{
-		URCharacter->PawnStopFire(0);
-	}
+    if (URCharacter)
+    {
+        URCharacter->PawnStopFire(0);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -296,21 +302,4 @@ void AUR_PlayerController::ClientMessage_Implementation(const FString& S, FName 
         Super::ClientMessage_Implementation(S, Type, MsgLifeTime);
 }
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
-//TODO: delete this now that it is accessible from other menus.
-
-void AUR_PlayerController::OpenControlBindingMenu()
-{
-    if (KeyBindingMenu == nullptr)
-    {
-        return;
-    }
-
-    ControlsMenu = CreateWidget<UUR_Widget_BaseMenu>(GetWorld(), KeyBindingMenu);
-    if (ControlsMenu)
-    {
-        ControlsMenu->Show(nullptr);
-    }
-}

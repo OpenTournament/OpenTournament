@@ -1,10 +1,9 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "UR_BasePlayerController.h"
 
 #include "UR_PlayerController.generated.h"
@@ -160,18 +159,23 @@ public:
     */
     virtual void UnCrouch();
 
-	/**
-	* Function bound to "Fire" ActionMapping Input. Forward to builtin StartFire.
-	*/
-	virtual void PressedFire() { StartFire(0); }
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	/**
-	* Forward to character like StartFire does.
-	*/
-	virtual void ReleasedFire();
+    /**
+    * Function bound to "Fire" ActionMapping Input. Forward to builtin StartFire.
+    */
+    virtual void PressedFire();
+
+    /**
+    * Forward to character like StartFire does.
+    */
+    virtual void ReleasedFire();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+    * Component handling Chat Messages
+    */
     UPROPERTY(BlueprintReadOnly)
     UUR_ChatComponent* ChatComponent;
 
@@ -207,12 +211,6 @@ public:
     void K2_ClientMessage(const FString& Message) { ClientMessage(Message); }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-    * Function to Open the Control Keybinding Menu
-    */
-    UFUNCTION(Exec)
-    virtual void OpenControlBindingMenu();
 
     /**
     * Temp:
