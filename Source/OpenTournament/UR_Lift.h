@@ -1,126 +1,149 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
 #include "UR_Type_LiftState.h"
 #include "UR_Lift.generated.h"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+class UAudioComponent;
+class UBoxComponent;
+class UStaticMeshComponent;
+class USoundBase;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+*
+*/
 UCLASS()
 class OPENTOURNAMENT_API AUR_Lift : public AActor
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 public:	
-	// Sets default values for this actor's properties
-	AUR_Lift(const FObjectInitializer& ObjectInitializer);
+    
+    AUR_Lift(const FObjectInitializer& ObjectInitializer);
 
-	/*
-	* Static Mesh Component - Lift Base
-	*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lift", meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent* MeshComponent;
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	/*
-	* Box Component - Active Teleport Region
-	*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lift", meta = (AllowPrivateAccess = "true"))
-	UBoxComponent* BoxComponent;
+    /*
+    * Static Mesh Component - Lift Base
+    */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lift", meta = (AllowPrivateAccess = "true"))
+    UStaticMeshComponent* MeshComponent;
 
-	/*
-	* Audio Component
-	*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lift", meta = (AllowPrivateAccess = "true"))
-	UAudioComponent* AudioComponent;
+    /*
+    * Box Component - Active Trigger Region
+    */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lift", meta = (AllowPrivateAccess = "true"))
+    UBoxComponent* BoxComponent;
 
-	/*
-	* Duration of the Lift travel between Start and End positions
-	*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lift")
-	float TravelDuration = 1;
+    /*
+    * Audio Component
+    */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lift", meta = (AllowPrivateAccess = "true"))
+    UAudioComponent* AudioComponent;
 
-	/*
-	* Duration that Lift will wait at the End position before returning
-	*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lift", meta = (ClampMin = "0.01", UIMin = "0.01"))
-	float StoppedAtEndPosition = 2;
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lift")
-	FVector EndRelativeLocation;
+    virtual void BeginPlay() override;
 
-	/*
-	* Ease the beginning of the movement of the Lift
-	*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lift")
-	bool EaseIn;
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	/*
-	* Ease the end of the movement of the Lift
-	*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lift")
-	bool EaseOut;
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Lift")
+    void PlayLiftEffects();
 
-	/**
-	* Lift starts moving
-	*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lift")
-	USoundBase* LiftStartSound;
-	
-	/**
-	* Lift is moving
-	*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lift")
-	USoundBase* LiftMovingSound;
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Lift")
+    void StopLiftEffects();
 
-	/**
-	* Lift reaches end
-	*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lift")
-	USoundBase* LiftEndSound;
+    UFUNCTION()
+    void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+    UFUNCTION()
+    void OnTriggerExit(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+    UFUNCTION(BlueprintCallable)
+    void OnReachedStart();
+
+    UFUNCTION(BlueprintCallable)
+    void OnReachedEnd();
 
 private:
 
-	FVector startLocation;
+    void MoveToStartPosition();
+    void MoveToEndPosition();
 
-	bool bIsTriggered;
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+public:
 
-	TArray<AActor*> actorsOnTrigger;
+    /*
+    * Duration of the Lift travel between Start and End positions
+    */
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lift")
+    float TravelDuration;
 
-	FTimerHandle returnTimerHandle;
+    /*
+    * Duration that Lift will wait at the End position before returning
+    */
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lift", meta = (ClampMin = "0.01", UIMin = "0.01"))
+    float StoppedAtEndPosition;
 
-	ELiftState liftState;
+    /**
+    * Relative Position at which the Lift stops
+    */
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lift")
+    FVector EndRelativeLocation;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+    /*
+    * Ease the beginning of the movement of the Lift
+    */
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lift")
+    bool EaseIn;
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Lift")
-	void PlayLiftEffects();
+    /*
+    * Ease the end of the movement of the Lift
+    */
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lift")
+    bool EaseOut;
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Lift")
-	void StopLiftEffects();
+    /**
+    * Lift starts moving
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lift")
+    USoundBase* LiftStartSound;
+    
+    /**
+    * Lift is moving
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lift")
+    USoundBase* LiftMovingSound;
 
-	UFUNCTION()
-	void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void OnTriggerExit(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-	UFUNCTION(BlueprintCallable)
-	void OnReachedStart();
-
-	UFUNCTION(BlueprintCallable)
-	void OnReachedEnd();
+    /**
+    * Lift reaches end
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lift")
+    USoundBase* LiftEndSound;
 
 private:
 
-	void MoveToStartPosition();
-	void MoveToEndPosition();
+    UPROPERTY()
+    FVector StartLocation;
 
+    UPROPERTY()
+    bool bIsTriggered;
+
+    UPROPERTY()
+    TArray<AActor*> ActorsOnTrigger;
+
+    UPROPERTY()
+    ELiftState LiftState;
+
+    FTimerHandle ReturnTimerHandle;
 };

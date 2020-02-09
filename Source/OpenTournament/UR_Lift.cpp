@@ -1,131 +1,143 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Lift.h"
-#include "Engine.h"
 
-// Sets default values
+#include "Components/AudioComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
+
+#include "OpenTournament.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 AUR_Lift::AUR_Lift(const FObjectInitializer& ObjectInitializer) :
-	Super(ObjectInitializer)
-
+    Super(ObjectInitializer),
+    TravelDuration(1.f),
+    StoppedAtEndPosition(2.f),
+    EndRelativeLocation(FVector(0.f, 0.f, 100.f)),
+    EaseIn(true),
+    EaseOut(true),
+    LiftStartSound(nullptr),
+    LiftMovingSound(nullptr),
+    LiftEndSound(nullptr)
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+    BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
+    BoxComponent->SetBoxExtent(FVector(50, 50, 30));
+    SetRootComponent(BoxComponent);
+    BoxComponent->SetGenerateOverlapEvents(true);
+    BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Lift::OnTriggerEnter);
+    BoxComponent->OnComponentEndOverlap.AddDynamic(this, &AUR_Lift::OnTriggerExit);
 
-	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
-	BoxComponent->SetBoxExtent(FVector(50, 50, 30));
-	SetRootComponent(BoxComponent);
-	BoxComponent->SetGenerateOverlapEvents(true);
-	BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Lift::OnTriggerEnter);
-	BoxComponent->OnComponentEndOverlap.AddDynamic(this, &AUR_Lift::OnTriggerExit);
+    MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMeshComponent"));
+    MeshComponent->SetupAttachment(RootComponent);
 
-	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMeshComponent"));
-	MeshComponent->SetupAttachment(RootComponent);
+    EndRelativeLocation = RootComponent->GetComponentLocation() + FVector::UpVector * 100;
 
-	EndRelativeLocation = RootComponent->GetComponentLocation() + FVector::UpVector * 100;
-
-	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
-	AudioComponent->SetupAttachment(RootComponent);
+    AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+    AudioComponent->SetupAttachment(RootComponent);
 }
 
-// Called when the game starts or when spawned
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 void AUR_Lift::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-	startLocation = RootComponent->GetComponentLocation();
+    StartLocation = RootComponent->GetComponentLocation();
 }
 
-// Called every frame
-void AUR_Lift::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_Lift::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (bIsTriggered == false && liftState == ELiftState::LS_Start)
-	{
-		MoveToEndPosition();
-	}
+    if (bIsTriggered == false && LiftState == ELiftState::LS_Start)
+    {
+        MoveToEndPosition();
+    }
 
-	bIsTriggered = true;
-	actorsOnTrigger.AddUnique(Other);
+    bIsTriggered = true;
+    ActorsOnTrigger.AddUnique(Other);
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("[LIFT] Entered lift %s"), *GetName()));
+    GAME_PRINT(1.f, FColor::White, "[Lift] Entered Lift %s", *GetName());
 }
 
 void AUR_Lift::OnTriggerExit(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	actorsOnTrigger.Remove(Other);
-	bIsTriggered = actorsOnTrigger.Num() > 0;
+    ActorsOnTrigger.Remove(Other);
+    bIsTriggered = ActorsOnTrigger.Num() > 0;
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("[LIFT] Exited lift %s"), *GetName()));
+    GAME_PRINT(1.f, FColor::White, "[Lift] Exited Lift %s", *GetName());
 
-	if (bIsTriggered)
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("[LIFT] Lift %s is not empty"), *GetName()));
+    if (bIsTriggered)
+    {
+        GAME_PRINT(1.f, FColor::White, "[Lift] Lift %s is not Empty", *GetName());
+    }
 }
 
 void AUR_Lift::MoveToStartPosition()
 {
-	FLatentActionInfo info;
-	info.CallbackTarget = this;
-	info.ExecutionFunction = "OnReachedStart";
-	info.UUID = 1;
-	info.Linkage = 1;
-	UKismetSystemLibrary::MoveComponentTo(RootComponent, startLocation, FRotator::ZeroRotator, EaseOut, EaseIn, TravelDuration, true, EMoveComponentAction::Type::Move, info);
+    FLatentActionInfo info;
+    info.CallbackTarget = this;
+    info.ExecutionFunction = "OnReachedStart";
+    info.UUID = 1;
+    info.Linkage = 1;
+    UKismetSystemLibrary::MoveComponentTo(RootComponent, StartLocation, FRotator::ZeroRotator, EaseOut, EaseIn, TravelDuration, true, EMoveComponentAction::Type::Move, info);
 
-	liftState = ELiftState::LS_Moving;
+    LiftState = ELiftState::LS_Moving;
 
-	PlayLiftEffects();
+    PlayLiftEffects();
 }
 
 void AUR_Lift::MoveToEndPosition()
 {
-	FLatentActionInfo info;
-	info.CallbackTarget = this;
-	info.ExecutionFunction = "OnReachedEnd";
-	info.UUID = 1;
-	info.Linkage = 1;
-	UKismetSystemLibrary::MoveComponentTo(RootComponent, startLocation + EndRelativeLocation, FRotator::ZeroRotator, EaseOut, EaseIn, TravelDuration, true, EMoveComponentAction::Type::Move, info);
+    FLatentActionInfo info;
+    info.CallbackTarget = this;
+    info.ExecutionFunction = "OnReachedEnd";
+    info.UUID = 1;
+    info.Linkage = 1;
+    UKismetSystemLibrary::MoveComponentTo(RootComponent, StartLocation + EndRelativeLocation, FRotator::ZeroRotator, EaseOut, EaseIn, TravelDuration, true, EMoveComponentAction::Type::Move, info);
 
-	liftState = ELiftState::LS_Moving;
-	PlayLiftEffects();
+    LiftState = ELiftState::LS_Moving;
+    PlayLiftEffects();
 }
 
 void AUR_Lift::OnReachedStart()
 {
-	liftState = ELiftState::LS_Start;
-	StopLiftEffects();
+    LiftState = ELiftState::LS_Start;
+    StopLiftEffects();
 }
 
 void AUR_Lift::OnReachedEnd()
 {
-	liftState = ELiftState::LS_End;
-	StopLiftEffects();
-	GetWorldTimerManager().SetTimer(returnTimerHandle, this, &AUR_Lift::MoveToStartPosition, StoppedAtEndPosition);
+    LiftState = ELiftState::LS_End;
+    StopLiftEffects();
+    GetWorldTimerManager().SetTimer(ReturnTimerHandle, this, &AUR_Lift::MoveToStartPosition, StoppedAtEndPosition);
 }
 
 void AUR_Lift::PlayLiftEffects_Implementation()
 {
-	if (LiftStartSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), LiftEndSound, GetActorLocation());
-	}
+    if (LiftStartSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, LiftEndSound, MeshComponent->GetComponentLocation());
+    }
 
-	if (LiftMovingSound)
-	{
-		AudioComponent->SetSound(LiftMovingSound);
-		AudioComponent->Play();
-	}
+    if (LiftMovingSound)
+    {
+        AudioComponent->SetSound(LiftMovingSound);
+        AudioComponent->Play();
+    }
 }
 
 void AUR_Lift::StopLiftEffects_Implementation()
 {
-	AudioComponent->Stop();
+    AudioComponent->Stop();
 
-	if (LiftEndSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), LiftEndSound, GetActorLocation());
-	}
+    if (LiftEndSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(GetWorld(), LiftEndSound, MeshComponent->GetComponentLocation());
+    }
 }
