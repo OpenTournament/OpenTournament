@@ -1,23 +1,18 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "Runtime/Engine/Classes/Components/ActorComponent.h"
-
-#include "OpenTournament.h"
-#include "UR_Weapon.h"
-#include "UR_Ammo.h"
-
 
 #include "UR_InventoryComponent.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Forward declaration
 
+class AUR_Ammo;
+class AUR_Weapon;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -25,7 +20,7 @@
 /**
  * InventoryComponent is the base component for use by actors to have an inventory.
  */
-UCLASS(DefaultToInstanced, BlueprintType, meta = (Tooltip = "A InventoryComponent is a reusable component that can be added to any actor to give it a Inventory value.", ShortTooltip = "A InventoryComponent is a reusable component that can be added to any actor to give it a Inventory value."), hideCategories = (UR, Character, Collision, Cooking))
+UCLASS(DefaultToInstanced, BlueprintType, meta = (Tooltip = "A InventoryComponent is a reusable component that can be added to any actor to give it an Inventory.", ShortTooltip = "A InventoryComponent is a reusable component that can be added to any actor to give it an Inventory."), hideCategories = (UR, Character, Collision, Cooking))
 class OPENTOURNAMENT_API UUR_InventoryComponent : public UActorComponent
 {
     GENERATED_BODY()
@@ -37,6 +32,8 @@ protected:
 public:
 
     UUR_InventoryComponent();
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
     UPROPERTY(ReplicatedUsing = OnRep_InventoryW, BlueprintReadOnly, Category = "InventoryComponent")
     TArray<AUR_Weapon*> InventoryW;
