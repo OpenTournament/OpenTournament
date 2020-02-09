@@ -1,10 +1,9 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "Runtime/Engine/Classes/Components/ActorComponent.h"
 
 #include <UR_Type_DodgeDirection.h>

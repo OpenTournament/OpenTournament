@@ -1,10 +1,8 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_PCInputDodgeComponent.h"
-
-#include "Engine/World.h"
 
 #include "UR_Character.h"
 #include "UR_CharacterMovementComponent.h"
@@ -26,6 +24,8 @@ UUR_PCInputDodgeComponent::UUR_PCInputDodgeComponent() :
     KeyTapTime.LastTapUpTime = -10.f;
     KeyTapTime.LastTapDownTime = -10.f;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_PCInputDodgeComponent::BeginPlay()
 {
