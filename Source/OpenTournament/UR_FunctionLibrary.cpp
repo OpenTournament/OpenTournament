@@ -1,4 +1,4 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -139,8 +139,8 @@ AUR_PlayerController* UUR_FunctionLibrary::GetLocalPlayerController(const UObjec
 
 bool UUR_FunctionLibrary::IsLocallyViewed(AActor* Other)
 {
-	AUR_PlayerController* PC = GetLocalPlayerController(Other);
-	return PC && PC->GetViewTarget() == Other;
+    AUR_PlayerController* PC = GetLocalPlayerController(Other);
+    return PC && PC->GetViewTarget() == Other;
 }
 
 FString UUR_FunctionLibrary::GetTimeString(const float TimeSeconds)
