@@ -1,4 +1,4 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@ class UUserWidget;
 
 
 /**
- * 
+ * Core HUD Class
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_HUD : public AHUD
