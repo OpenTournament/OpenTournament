@@ -1,10 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Projectile.h"
 
-#include "ConstructorHelpers.h"
 #include "Components/AudioComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -17,7 +16,6 @@
 
 //NOTE: Maybe a BouncingProjectile subclass would be appropriate.
 
-// Sets default values
 AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 {
     CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
@@ -39,7 +37,7 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
     ProjectileMovementComponent->ProjectileGravityScale = 0.f;
     ProjectileMovementComponent->bShouldBounce = false;
 
-    StaticMeshComponent = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("StaticMeshComponent"));
+    StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
     StaticMeshComponent->SetupAttachment(RootComponent);
     StaticMeshComponent->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
 

@@ -1,10 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
 #include "UR_Projectile.generated.h"
@@ -38,20 +37,6 @@ public:
     UPROPERTY(VisibleDefaultsOnly, Category = "Projectile|Collision")
     USphereComponent* CollisionComponent;
 
-    /**
-    * Set projectile to not collide with shooter.
-    * This should always be true by default, otherwise projectile can collide shooter on spawn.
-    */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile|Collision")
-    bool bIgnoreInstigator;
-
-    /**
-    * Only for bouncing projectiles.
-    * Use this to let projectile collide with shooter after first bounce.
-    */
-    UPROPERTY(EditAnywhere, Category = "Projectile|Collision")
-    bool bCollideInstigatorAfterBounce;
-
     // Projectile movement component.
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Projectile|Movement")
     UProjectileMovementComponent* ProjectileMovementComponent;
@@ -67,6 +52,22 @@ public:
     // Projectile Particles
     UPROPERTY(VisibleDefaultsOnly, Category = "Projectile|Particles")
     UParticleSystemComponent* Particles;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * Set projectile to not collide with shooter.
+    * This should always be true by default, otherwise projectile can collide shooter on spawn.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile|Collision")
+    bool bIgnoreInstigator;
+
+    /**
+    * Only for bouncing projectiles.
+    * Use this to let projectile collide with shooter after first bounce.
+    */
+    UPROPERTY(EditAnywhere, Category = "Projectile|Collision")
+    bool bCollideInstigatorAfterBounce;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -109,8 +110,6 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    
-
     /**
     * Damage for direct hits and for actors within InnerSplashRadius if applicable.
     */
@@ -118,7 +117,7 @@ public:
     float BaseDamage;
 
     /**
-    * 
+    * Radius for Damage
     */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile|Damage")
     float SplashRadius;
@@ -145,7 +144,7 @@ public:
     float SplashFalloff;
 
     /**
-    *
+    * DamageType
     */
     UPROPERTY(EditAnywhere, Category = "Projectile|Damage")
     TSubclassOf<UDamageType> DamageTypeClass;
