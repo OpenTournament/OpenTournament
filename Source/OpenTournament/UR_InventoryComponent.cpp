@@ -9,6 +9,7 @@
 #include "OpenTournament.h"
 #include "UR_Weapon.h"
 #include "UR_Ammo.h"
+#include "UR_Character.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -43,9 +44,9 @@ void UUR_InventoryComponent::Add(AUR_Weapon* weapon)
     {
         if (Weap->GetClass() == weapon->GetClass())
         {
-            int32 NewAmmoCount = Weap->ammoCount + weapon->ammoCount;
-            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("%s ammo count %i -> %i"), *Weap->WeaponName, Weap->ammoCount, NewAmmoCount));
-            Weap->ammoCount = NewAmmoCount;
+            int32 NewAmmoCount = Weap->AmmoCount + weapon->AmmoCount;
+            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("%s ammo count %i -> %i"), *Weap->WeaponName, Weap->AmmoCount, NewAmmoCount));
+            Weap->AmmoCount = NewAmmoCount;
             weapon->Destroy();
             return;
         }
@@ -53,7 +54,7 @@ void UUR_InventoryComponent::Add(AUR_Weapon* weapon)
 
     // Else, add weapon
     InventoryW.Add(weapon);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You have the %s (ammo = %i)"), *weapon->WeaponName, weapon->ammoCount));
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You have the %s (ammo = %i)"), *weapon->WeaponName, weapon->AmmoCount));
 
     // In standalone or listen host, call OnRep next tick so we can pick amongst new weapons what to swap to.
     if (Cast<ACharacter>(GetOwner()) && Cast<ACharacter>(GetOwner())->IsLocallyControlled())
@@ -86,7 +87,7 @@ void UUR_InventoryComponent::AmmoCountInInventory(AUR_Weapon* weapon)
     {
         /*if (weapon->AmmoName == *ammo->AmmoName)
         {
-            weapon->ammoCount += ammo->amount;
+            weapon->AmmoCount += ammo->amount;
         }*/
     }
 }
@@ -97,7 +98,7 @@ void UUR_InventoryComponent::UpdateWeaponAmmo(AUR_Ammo* ammo)
     {
         /*if (weapon->AmmoName == *ammo->AmmoName)
         {
-            weapon->ammoCount += ammo->amount;
+            weapon->AmmoCount += ammo->amount;
         }*/
     }
 }
@@ -107,7 +108,7 @@ void UUR_InventoryComponent::ShowInventory()
 {
     for (auto& weapon : InventoryW)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Weapons in inventory: %s with Ammo Count: %d"), *weapon->WeaponName, weapon->ammoCount));
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Weapons in inventory: %s with Ammo Count: %d"), *weapon->WeaponName, weapon->AmmoCount));
     }
 
     for (auto& ammo : InventoryA)

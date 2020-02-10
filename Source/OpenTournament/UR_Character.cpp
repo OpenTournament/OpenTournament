@@ -21,6 +21,7 @@
 #include "UR_PlayerController.h"
 #include "UR_GameMode.h"
 #include "UR_Weapon.h"
+#include "UR_Projectile.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -730,11 +731,11 @@ void AUR_Character::Fire()
     {
         if (InventoryComponent->ActiveWeapon)
         {
-            if (InventoryComponent->ActiveWeapon->ProjectileClass)
+            if (InventoryComponent->ActiveWeapon->ProjectileClass != nullptr)
             {
-                GetActorEyesViewPoint(InventoryComponent->ActiveWeapon->Location, InventoryComponent->ActiveWeapon->Rotation);
-                FVector MuzzleLocation = InventoryComponent->ActiveWeapon->Location + FTransform(InventoryComponent->ActiveWeapon->Rotation).TransformVector(MuzzleOffset);
-                FRotator MuzzleRotation = InventoryComponent->ActiveWeapon->Rotation;
+                //GetActorEyesViewPoint(InventoryComponent->ActiveWeapon->GetActorLocation(), FRotator()); //InventoryComponent->ActiveWeapon->GetActorRotation()
+                //FVector MuzzleLocation{ InventoryComponent->ActiveWeapon->GetActorLocation() + FTransform(FRotator()).TransformVector(MuzzleOffset) }; // InventoryComponent->ActiveWeapon->GetActorRotation()
+                //FRotator MuzzleRotation{ InventoryComponent->ActiveWeapon->GetActorRotation() };
 
                 InventoryComponent->ActiveWeapon->Fire();
                 MeshFirstPerson->PlayAnimation(FireAnimation, false);
