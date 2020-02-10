@@ -1,4 +1,6 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -7,41 +9,50 @@
 #include "GameFramework/InputSettings.h"
 #include "UR_PlayerInput.generated.h"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  * 
  */
-UCLASS()
+UCLASS(Config = Input)
 class OPENTOURNAMENT_API UUR_PlayerInput : public UPlayerInput
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
 public:
-	UPROPERTY(config)
-	TArray<struct FInputActionKeyMapping> PlayerActionMappings;
 
-	void SayHello();
+    virtual void PostInitProperties() override;
 
-	void SetupActionMappings();
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	UFUNCTION(BlueprintCallable, Category="UR_PlayerInput")
-	void SetActionKeyMappingKey(const FInputActionKeyMapping ActionKeyMapping, FKey Key);
+    void SetupActionMappings();
 
-	UFUNCTION(BlueprintCallable, Category = "UR_PlayerInput")
-		void ModifyActionKeyMapping(FName ActionName, const FInputActionKeyMapping ModActionKeyMapping);
+    UFUNCTION(BlueprintCallable, Category="UR_PlayerInput")
+    void SetActionKeyMappingKey(const FInputActionKeyMapping ActionKeyMapping, FKey Key);
 
-   /*Modify a key mapping for an action or axis
-	returns true if the key mapping was modified succesfully, otherwise returns false
-	*/
-	bool ModifyKeyMapping(FName MappingName, const FInputChord InputChord);
+    UFUNCTION(BlueprintCallable, Category = "UR_PlayerInput")
+    void ModifyActionKeyMapping(FName ActionName, const FInputActionKeyMapping ModActionKeyMapping);
 
-	void PostInitProperties();
+    UFUNCTION(BlueprintCallable, Category = "UR_PlayerInput")
+    void SaveMappings();
 
-	UFUNCTION(BlueprintCallable, Category = "UR_PlayerInput")
-	void SaveMappings();
+    /**
+    * Modify a key mapping for an action or axis
+    * returns true if the key mapping was modified succesfully, otherwise returns false
+    */
+    bool ModifyKeyMapping(FName MappingName, const FInputChord InputChord);
+
+
+    UPROPERTY(Config)
+    TArray<struct FInputActionKeyMapping> PlayerActionMappings;
 
 private:
-	UInputSettings * InputSettings;
 
-	void RemapAction(FInputActionKeyMapping ActionKeyMapping, const FKey Key);
-	void RemapAxis(FInputAxisKeyMapping AxisKeyMapping, const FKey Key);
+    UPROPERTY()
+    UInputSettings* InputSettings;
+
+    void RemapAction(FInputActionKeyMapping ActionKeyMapping, const FKey Key);
+    void RemapAxis(FInputAxisKeyMapping AxisKeyMapping, const FKey Key);
 };
