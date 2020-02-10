@@ -1,13 +1,11 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-
 #include "Abilities/GameplayAbilityTypes.h"
 
-#include "OpenTournament.h"
 #include "UR_AbilityTypes.h"
 
 #include "UR_TargetType.generated.h"
