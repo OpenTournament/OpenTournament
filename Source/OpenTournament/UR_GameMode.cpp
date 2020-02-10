@@ -1,4 +1,6 @@
-// Copyright (c) 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_GameMode.h"
 
@@ -14,6 +16,9 @@
 #include "UR_PlayerController.h"
 #include "UR_Character.h"
 #include "UR_InventoryComponent.h"
+#include "UR_Weapon.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameMode::AUR_GameMode()
 {
@@ -92,7 +97,7 @@ void AUR_GameMode::SetPlayerDefaults(APawn* PlayerPawn)
                 AUR_Weapon* Weap = GetWorld()->SpawnActor<AUR_Weapon>(Entry.WeaponClass, Char->GetActorLocation(), Char->GetActorRotation(), SpawnParams);
                 if (Weap)
                 {
-                    Weap->ammoCount = Entry.Ammo;
+                    Weap->AmmoCount = Entry.Ammo;
                     Weap->GiveTo(Char);
                 }
             }
