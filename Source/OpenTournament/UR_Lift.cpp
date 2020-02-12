@@ -54,7 +54,7 @@ void AUR_Lift::BeginPlay()
 
 void AUR_Lift::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (bIsTriggered == false && LiftState == ELiftState::LS_Start)
+    if (bIsTriggered == false && LiftState == ELiftState::Start)
     {
         MoveToEndPosition();
     }
@@ -80,14 +80,14 @@ void AUR_Lift::OnTriggerExit(UPrimitiveComponent* HitComp, AActor* Other, UPrimi
 
 void AUR_Lift::MoveToStartPosition()
 {
-    FLatentActionInfo info;
-    info.CallbackTarget = this;
-    info.ExecutionFunction = "OnReachedStart";
-    info.UUID = 1;
-    info.Linkage = 1;
-    UKismetSystemLibrary::MoveComponentTo(RootComponent, StartLocation, FRotator::ZeroRotator, EaseOut, EaseIn, TravelDuration, true, EMoveComponentAction::Type::Move, info);
+    FLatentActionInfo LatentActionInfo;
+    LatentActionInfo.CallbackTarget = this;
+    LatentActionInfo.ExecutionFunction = "OnReachedStart";
+    LatentActionInfo.UUID = 1;
+    LatentActionInfo.Linkage = 1;
+    UKismetSystemLibrary::MoveComponentTo(RootComponent, StartLocation, FRotator::ZeroRotator, EaseOut, EaseIn, TravelDuration, true, EMoveComponentAction::Type::Move, LatentActionInfo);
 
-    LiftState = ELiftState::LS_Moving;
+    LiftState = ELiftState::Moving;
 
     PlayLiftEffects();
 }
@@ -101,19 +101,19 @@ void AUR_Lift::MoveToEndPosition()
     info.Linkage = 1;
     UKismetSystemLibrary::MoveComponentTo(RootComponent, StartLocation + EndRelativeLocation, FRotator::ZeroRotator, EaseOut, EaseIn, TravelDuration, true, EMoveComponentAction::Type::Move, info);
 
-    LiftState = ELiftState::LS_Moving;
+    LiftState = ELiftState::Moving;
     PlayLiftEffects();
 }
 
 void AUR_Lift::OnReachedStart()
 {
-    LiftState = ELiftState::LS_Start;
+    LiftState = ELiftState::Start;
     StopLiftEffects();
 }
 
 void AUR_Lift::OnReachedEnd()
 {
-    LiftState = ELiftState::LS_End;
+    LiftState = ELiftState::End;
     StopLiftEffects();
     GetWorldTimerManager().SetTimer(ReturnTimerHandle, this, &AUR_Lift::MoveToStartPosition, StoppedAtEndPosition);
 }

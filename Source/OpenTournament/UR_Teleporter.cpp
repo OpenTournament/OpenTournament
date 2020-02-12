@@ -27,7 +27,7 @@
 AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer),
     DestinationActor(nullptr),
-    ExitRotationType(EExitRotation::ER_Relative),
+    ExitRotationType(EExitRotation::Relative),
     bKeepMomentum(true),
     TeleportOutSound(nullptr),
     TeleportInSound(nullptr),
@@ -64,7 +64,7 @@ AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
 void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
     // TODO(Pedro): we should store the "teleporting" state in the MovementComponent of the actor in order to query it here
-    bool isTeleporting = (bFromSweep == false);
+    const bool isTeleporting = (bFromSweep == false);
 
     if (isTeleporting)
     {
@@ -191,7 +191,7 @@ void AUR_Teleporter::SetTargetVelocity(AActor* TargetActor, ACharacter* TargetCh
     }
     else
     {
-        if (ExitRotationType == EExitRotation::ER_Relative)
+        if (ExitRotationType == EExitRotation::Relative)
         {
             // Rotate velocity vector relatively to the Exit Direction of the Destination actor
             FRotator MomentumRotator = DesiredRotation - GetRootComponent()->GetComponentRotation();
@@ -208,7 +208,7 @@ void AUR_Teleporter::SetTargetVelocity(AActor* TargetActor, ACharacter* TargetCh
                 TargetActor->GetRootComponent()->ComponentVelocity = NewTargetVelocity;
             }
         }
-        else if (ExitRotationType == EExitRotation::ER_Fixed)
+        else if (ExitRotationType == EExitRotation::Fixed)
         {
             // Rotate velocity vector to face the Exit Direction of the Destination actor
             if (TargetCharacter)
@@ -263,7 +263,7 @@ void AUR_Teleporter::PlayTeleportEffects_Implementation()
 
 void AUR_Teleporter::GetDesiredRotation(FRotator& DesiredRotation, const FRotator& TargetActorRotation, const FRotator& DestinationRotation)
 {
-    if (ExitRotationType == EExitRotation::ER_Relative)
+    if (ExitRotationType == EExitRotation::Relative)
     {
         DesiredRotation = DestinationRotation + TargetActorRotation - this->GetActorRotation();
         DesiredRotation.Yaw += 180;

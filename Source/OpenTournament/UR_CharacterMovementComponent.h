@@ -93,7 +93,7 @@ public:
     /**
     * Handle velocity transformation behavior related to Slope Boosting
     */
-    virtual FVector HandleSlopeBoosting(const FVector& SlideResult, const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const;
+    virtual FVector HandleSlopeBoosting(const FVector& SlideResult, const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     /// Utility

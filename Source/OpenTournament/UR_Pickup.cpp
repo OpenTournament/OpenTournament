@@ -8,6 +8,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "TimerManager.h"
 
 #include "OpenTournament.h"
 #include "UR_Character.h"
@@ -16,7 +17,7 @@
 
 AUR_Pickup::AUR_Pickup(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer),
-    PickupState(EPickupState::EPS_Active),
+    PickupState(EPickupState::Active),
     RespawnInterval(20.f),
     DisplayName("Pickup")
 {
@@ -28,7 +29,8 @@ AUR_Pickup::AUR_Pickup(const FObjectInitializer& ObjectInitializer) :
     CollisionComponent->SetGenerateOverlapEvents(true);
     CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Pickup::OnOverlap);
 
-    StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AmmoMesh1"));
+    StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+    StaticMesh->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
     StaticMesh->SetupAttachment(RootComponent);
 
     ParticleSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleSystemComponent"));
@@ -94,7 +96,7 @@ void AUR_Pickup::Pickup(AUR_Character* PickupCharacter)
     if (IsPickupPermitted(PickupCharacter))
     {
         OnPickup(PickupCharacter);
-        SetPickupState(EPickupState::EPS_Inactive);
+        SetPickupState(EPickupState::Inactive);
 
         // TODO : Actual Pickup change for Character
     }
@@ -121,14 +123,14 @@ void AUR_Pickup::SetPickupState(EPickupState NewState)
 
     PickupState = NewState;
 
-    if (PickupState == EPickupState::EPS_Active)
+    if (PickupState == EPickupState::Active)
     {
         StaticMesh->SetVisibility(true);
         SetActorEnableCollision(true);
 
         GetWorld()->GetTimerManager().ClearTimer(RespawnHandle);
     }
-    else if (PickupState == EPickupState::EPS_Inactive)
+    else if (PickupState == EPickupState::Inactive)
     {
         StaticMesh->SetVisibility(false);
         SetActorEnableCollision(false);
@@ -142,5 +144,5 @@ void AUR_Pickup::SetPickupState(EPickupState NewState)
 
 void AUR_Pickup::RespawnPickup()
 {
-    SetPickupState(EPickupState::EPS_Active);
+    SetPickupState(EPickupState::Active);
 }

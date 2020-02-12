@@ -14,6 +14,6 @@
 UENUM()
 enum class EExitRotation : uint8
 {
-	ER_Relative		UMETA(DisplayName = "Relative"),
-	ER_Fixed 	    UMETA(DisplayName = "Fixed"),
+    Relative	UMETA(DisplayName = "Relative"),
+    Fixed 	    UMETA(DisplayName = "Fixed"),
 };
