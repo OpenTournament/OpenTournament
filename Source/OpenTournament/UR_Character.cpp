@@ -150,7 +150,7 @@ void AUR_Character::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
     UCameraComponent* Camera = PickCamera();
     if (Camera)
     {
-        bool bThirdPerson = IsThirdPersonCamera(Camera);
+        const bool bThirdPerson = IsThirdPersonCamera(Camera);
         if (bThirdPerson != bViewingThirdPerson)
         {
             bViewingThirdPerson = bThirdPerson;
