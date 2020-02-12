@@ -40,7 +40,7 @@ public:
 
     /**
     * Modify a key mapping for an action or axis
-    * returns true if the key mapping was modified succesfully, otherwise returns false
+    * returns true if the key mapping was modified successfully, otherwise returns false
     */
     bool ModifyKeyMapping(FName MappingName, const FInputChord InputChord);
 
