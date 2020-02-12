@@ -15,6 +15,7 @@ class UAudioComponent;
 class USphereComponent;
 class UStaticMeshComponent;
 class UParticleSystemComponent;
+class UPrimitiveComponent;
 class UProjectileMovementComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
