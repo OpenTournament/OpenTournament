@@ -97,7 +97,7 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void BeginPlay();
+    void BeginPlay() override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -122,7 +122,7 @@ public:
     /**
     * Calculate our Jump Velocity
     */
-    FVector CalculateJumpVelocity(const AActor* InCharacter);
+    FVector CalculateJumpVelocity(const AActor* InCharacter) const;
 
     UFUNCTION()
     void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

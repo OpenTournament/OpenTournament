@@ -131,13 +131,13 @@ bool AUR_JumpPad::IsPermittedByGameplayTags(const FGameplayTagContainer& TargetT
     }
 }
 
-FVector AUR_JumpPad::CalculateJumpVelocity(const AActor* InCharacter)
+FVector AUR_JumpPad::CalculateJumpVelocity(const AActor* InCharacter) const
 {
-    float Gravity = GetWorld()->GetGravityZ();
-    FVector TargetVector = (GetActorLocation() + Destination.GetLocation()) - InCharacter->GetActorTransform().GetLocation();
+    const float Gravity = GetWorld()->GetGravityZ();
+    const FVector TargetVector = (GetActorLocation() + Destination.GetLocation()) - InCharacter->GetActorTransform().GetLocation();
 
-    float SizeXY = TargetVector.Size2D() / JumpTime;
-    float SizeZ = TargetVector.Z / JumpTime - Gravity * JumpTime / 2.0f;
+    const float SizeXY = TargetVector.Size2D() / JumpTime;
+    const float SizeZ = TargetVector.Z / JumpTime - Gravity * JumpTime / 2.0f;
 
     return TargetVector.GetSafeNormal2D() * SizeXY + FVector::UpVector * SizeZ;
 }
@@ -149,7 +149,7 @@ void AUR_JumpPad::InitializeDynamicMaterialInstance()
     if (MeshComponent && bUseJumpPadMaterialInstance)
     {
         UMaterialInterface* Material = MeshComponent->GetMaterial(JumpPadMaterialIndex);
-        JumpPadMaterialInstance =  UMaterialInstanceDynamic::Create(Material, NULL);
+        JumpPadMaterialInstance =  UMaterialInstanceDynamic::Create(Material, nullptr);
         JumpPadMaterialInstance->SetVectorParameterValue(JumpPadMaterialParameterName, JumpPadMaterialColorBase);
         MeshComponent->SetMaterial(JumpPadMaterialIndex, JumpPadMaterialInstance);
     }
@@ -184,7 +184,7 @@ bool AUR_JumpPad::CanEditChange(const UProperty* InProperty) const
 // Workarounds to the editor FTransform widget not having a setting to work in world space
 void AUR_JumpPad::EditorApplyTranslation(const FVector& DeltaTranslation, bool bAltDown, bool bShiftDown, bool bCtrlDown)
 {
-    FTransform CachedDestination = Destination * ActorToWorld();
+    const FTransform CachedDestination{ Destination * ActorToWorld() };
     Super::EditorApplyTranslation(DeltaTranslation, bAltDown, bShiftDown, bCtrlDown);
 
     if (bLockDestination)
@@ -196,7 +196,7 @@ void AUR_JumpPad::EditorApplyTranslation(const FVector& DeltaTranslation, bool b
 
 void AUR_JumpPad::EditorApplyRotation(const FRotator& DeltaRotation, bool bAltDown, bool bShiftDown, bool bCtrlDown)
 {
-    FTransform CachedDestination = Destination * ActorToWorld();
+    const FTransform CachedDestination{ Destination * ActorToWorld() };
     Super::EditorApplyRotation(DeltaRotation, bAltDown, bShiftDown, bCtrlDown);
 
     if (bLockDestination)
@@ -208,7 +208,7 @@ void AUR_JumpPad::EditorApplyRotation(const FRotator& DeltaRotation, bool bAltDo
 
 void AUR_JumpPad::EditorApplyScale(const FVector& DeltaScale, const FVector* PivotLocation, bool bAltDown, bool bShiftDown, bool bCtrlDown)
 {
-    FTransform CachedDestination = Destination * ActorToWorld();
+    const FTransform CachedDestination{ Destination * ActorToWorld() };
     Super::EditorApplyScale(DeltaScale, PivotLocation, bAltDown, bShiftDown, bCtrlDown);
 
     if (bLockDestination)
