@@ -368,7 +368,7 @@ void UUR_CharacterMovementComponent::CheckJumpInput(float DeltaTime)
     AUR_Character* URCharacterOwner = Cast<AUR_Character>(CharacterOwner);
     if (URCharacterOwner)
     {
-        EDodgeDirection DodgeDirection = URCharacterOwner->DodgeDirection;
+        const EDodgeDirection DodgeDirection{ URCharacterOwner->DodgeDirection };
         if (CharacterOwner->bPressedJump)
         {
             if ((MovementMode == MOVE_Walking) || (MovementMode == MOVE_Falling))
@@ -383,20 +383,20 @@ void UUR_CharacterMovementComponent::CheckJumpInput(float DeltaTime)
                 // @! TODO edge of water jump
             }
         }
-        else if (DodgeDirection != EDodgeDirection::DD_None)
+        else if (DodgeDirection != EDodgeDirection::None)
         {
             // Standard Dodges
-            if (!(DodgeDirection == EDodgeDirection::DD_Up || DodgeDirection == EDodgeDirection::DD_Down))
+            if (!(DodgeDirection == EDodgeDirection::Up || DodgeDirection == EDodgeDirection::Down))
             {
                 const FRotator TurnRot(0.f, CharacterOwner->GetActorRotation().Yaw, 0.f);
                 const FRotationMatrix TurnRotMatrix = FRotationMatrix(TurnRot);
 
-                const float DodgeDirX = (DodgeDirection == EDodgeDirection::DD_Forward)
+                const float DodgeDirX = (DodgeDirection == EDodgeDirection::Forward)
                     ? 1.f
-                    : (DodgeDirection == EDodgeDirection::DD_Backward ? -1.f : 0.f);
-                const float DodgeDirY = (DodgeDirection == EDodgeDirection::DD_Left)
+                    : (DodgeDirection == EDodgeDirection::Backward ? -1.f : 0.f);
+                const float DodgeDirY = (DodgeDirection == EDodgeDirection::Left)
                     ? -1.f
-                    : (DodgeDirection == EDodgeDirection::DD_Right ? 1.f : 0.f);
+                    : (DodgeDirection == EDodgeDirection::Right ? 1.f : 0.f);
                 const float DodgeCrossX = (DodgeDirY == 1.f || DodgeDirY == -1.f) ? 1.f : 0.f;
                 const float DodgeCrossY = (DodgeDirX == 1.f || DodgeDirX == -1.f) ? 1.f : 0.f;
 
@@ -407,15 +407,15 @@ void UUR_CharacterMovementComponent::CheckJumpInput(float DeltaTime)
                     (DodgeCrossX * XAxis + DodgeCrossY * YAxis).GetSafeNormal());
             }
             // Swim Dodges
-            else if (Is3DMovementMode() && (DodgeDirection != EDodgeDirection::DD_Up || DodgeDirection == EDodgeDirection::DD_Down))
+            else if (Is3DMovementMode() && (DodgeDirection != EDodgeDirection::Up || DodgeDirection == EDodgeDirection::Down))
             {
                 const FRotator TurnRot(0.f, CharacterOwner->GetActorRotation().Yaw, 0.f);
                 const FRotationMatrix TurnRotMatrix = FRotationMatrix(TurnRot);
 
                 const float DodgeDirX = 0.f;
-                const float DodgeDirZ = (DodgeDirection == EDodgeDirection::DD_Up)
+                const float DodgeDirZ = (DodgeDirection == EDodgeDirection::Up)
                     ? 1.f
-                    : (DodgeDirection == EDodgeDirection::DD_Down ? -1.f : 0.f);
+                    : (DodgeDirection == EDodgeDirection::Down ? -1.f : 0.f);
 
                 const float DodgeCrossX = (DodgeDirZ == 1.f || DodgeDirZ == -1.f) ? 1.f : 0.f;
                 const float DodgeCrossZ = 0.f;
@@ -599,6 +599,6 @@ void UUR_CharacterMovementComponent::ClearDodgeInput()
     AUR_Character* URCharacterOwner = Cast<AUR_Character>(CharacterOwner);
     if (URCharacterOwner)
     {
-        URCharacterOwner->DodgeDirection = EDodgeDirection::DD_None;
+        URCharacterOwner->DodgeDirection = EDodgeDirection::None;
     }
 }

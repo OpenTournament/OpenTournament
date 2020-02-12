@@ -14,7 +14,7 @@
 UENUM()
 enum class ELiftState : uint8
 {
-	LS_Start		UMETA(DisplayName = "Start"),
-	LS_Moving		UMETA(DisplayName = "Moving"),
-	LS_End			UMETA(DisplayName = "End"),
+	Start		UMETA(DisplayName = "Start"),
+	Moving		UMETA(DisplayName = "Moving"),
+	End			UMETA(DisplayName = "End"),
 };

@@ -77,19 +77,19 @@ void UUR_PCInputDodgeComponent::SetKeyDodgeInputDirection() const
             // Read cached MovementAxes to determine KeyDodge direction. Default to Forward
             if (MovementStrafeAxis > 0.5f)
             {
-                Character->ServerSetDodgeDirection(EDodgeDirection::DD_Right);
+                Character->ServerSetDodgeDirection(EDodgeDirection::Right);
             }
             else if (MovementStrafeAxis < -0.5f)
             {
-                Character->ServerSetDodgeDirection(EDodgeDirection::DD_Left);
+                Character->ServerSetDodgeDirection(EDodgeDirection::Left);
             }
             else if (MovementForwardAxis < 0.f)
             {
-                Character->ServerSetDodgeDirection(EDodgeDirection::DD_Backward);
+                Character->ServerSetDodgeDirection(EDodgeDirection::Backward);
             }
             else
             {
-                Character->ServerSetDodgeDirection(EDodgeDirection::DD_Forward);
+                Character->ServerSetDodgeDirection(EDodgeDirection::Forward);
             }
         }
     }
@@ -105,7 +105,7 @@ void UUR_PCInputDodgeComponent::OnTapForward()
     KeyTapTime.LastTapUpTime = -10.f;
     KeyTapTime.LastTapDownTime = -10.f;
 
-    SetTapDodgeInputDirection(KeyTapTime.LastTapForwardTime, MaxDodgeClickThresholdTime, EDodgeDirection::DD_Forward);
+    SetTapDodgeInputDirection(KeyTapTime.LastTapForwardTime, MaxDodgeClickThresholdTime, EDodgeDirection::Forward);
     KeyTapTime.LastTapForwardTime = GetWorld()->GetTimeSeconds();
 }
 
@@ -117,7 +117,7 @@ void UUR_PCInputDodgeComponent::OnTapBack()
     KeyTapTime.LastTapUpTime = -10.f;
     KeyTapTime.LastTapDownTime = -10.f;
 
-    SetTapDodgeInputDirection(KeyTapTime.LastTapBackTime, MaxDodgeClickThresholdTime, EDodgeDirection::DD_Backward);
+    SetTapDodgeInputDirection(KeyTapTime.LastTapBackTime, MaxDodgeClickThresholdTime, EDodgeDirection::Backward);
     KeyTapTime.LastTapBackTime = GetWorld()->GetTimeSeconds();
 }
 
@@ -129,7 +129,7 @@ void UUR_PCInputDodgeComponent::OnTapLeft()
     KeyTapTime.LastTapUpTime = -10.f;
     KeyTapTime.LastTapDownTime = -10.f;
 
-    SetTapDodgeInputDirection(KeyTapTime.LastTapLeftTime, MaxDodgeClickThresholdTime, EDodgeDirection::DD_Left);
+    SetTapDodgeInputDirection(KeyTapTime.LastTapLeftTime, MaxDodgeClickThresholdTime, EDodgeDirection::Left);
     KeyTapTime.LastTapLeftTime = GetWorld()->GetTimeSeconds();
 }
 
@@ -141,7 +141,7 @@ void UUR_PCInputDodgeComponent::OnTapRight()
     KeyTapTime.LastTapUpTime = -10.f;
     KeyTapTime.LastTapDownTime = -10.f;
 
-    SetTapDodgeInputDirection(KeyTapTime.LastTapRightTime, MaxDodgeClickThresholdTime, EDodgeDirection::DD_Right);
+    SetTapDodgeInputDirection(KeyTapTime.LastTapRightTime, MaxDodgeClickThresholdTime, EDodgeDirection::Right);
     KeyTapTime.LastTapRightTime = GetWorld()->GetTimeSeconds();
 }
 
@@ -153,7 +153,7 @@ void UUR_PCInputDodgeComponent::OnTapUpward()
     KeyTapTime.LastTapBackTime = -10.f;
     KeyTapTime.LastTapDownTime = -10.f;
 
-    SetTapDodgeInputDirection(KeyTapTime.LastTapUpTime, MaxDodgeClickThresholdTime, EDodgeDirection::DD_Up);
+    SetTapDodgeInputDirection(KeyTapTime.LastTapUpTime, MaxDodgeClickThresholdTime, EDodgeDirection::Up);
     KeyTapTime.LastTapUpTime = GetWorld()->GetTimeSeconds();
 }
 
@@ -165,7 +165,7 @@ void UUR_PCInputDodgeComponent::OnTapDownward()
     KeyTapTime.LastTapBackTime = -10.f;
     KeyTapTime.LastTapUpTime = -10.f;
 
-    SetTapDodgeInputDirection(KeyTapTime.LastTapDownTime, MaxDodgeClickThresholdTime, EDodgeDirection::DD_Down);
+    SetTapDodgeInputDirection(KeyTapTime.LastTapDownTime, MaxDodgeClickThresholdTime, EDodgeDirection::Down);
     KeyTapTime.LastTapDownTime = GetWorld()->GetTimeSeconds();
 }
 

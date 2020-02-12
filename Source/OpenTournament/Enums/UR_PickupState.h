@@ -11,6 +11,6 @@
 UENUM(BlueprintType)
 enum class EPickupState : uint8
 {
-    EPS_Active,
-    EPS_Inactive
+    Active,
+    Inactive
 };
