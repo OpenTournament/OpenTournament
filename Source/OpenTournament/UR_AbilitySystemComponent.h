@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -26,7 +26,7 @@ public:
 	UUR_AbilitySystemComponent();
 
 	/** Returns a list of currently active ability instances that match the tags */
-	void GetActiveAbilitiesWithTags(const FGameplayTagContainer& GameplayTagContainer, TArray<UGameplayAbility*>& ActiveAbilities);
+	void GetActiveAbilitiesWithTags(const FGameplayTagContainer& GameplayTagContainer, TArray<UGameplayAbility*>& ActiveAbilities) const;
 
 	/** Returns the default level used for ability activations, derived from the character */
 	int32 GetDefaultAbilityLevel() const;
