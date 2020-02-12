@@ -3,8 +3,12 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Weap_Shotgun.h"
+
 #include "Camera/CameraComponent.h"
 #include "Components/SphereComponent.h"
+
+#include "UR_Character.h"
+#include "UR_Projectile.h"
 #include "UR_FunctionLibrary.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +49,7 @@ void AUR_Weap_Shotgun::SpawnShot_Projectile()
     SpawnParams.Instigator = GetInstigator() ? GetInstigator() : Cast<APawn>(GetOwner());
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-    FVector CameraLoc = PlayerController->CharacterCameraComponent->GetComponentLocation();
+    const FVector CameraLoc = PlayerController->CharacterCameraComponent->GetComponentLocation();
 
     for (const FShotgunSpawnBox& SpawnBox : SpawnBoxes)
     {
