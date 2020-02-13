@@ -115,7 +115,7 @@ public:
     virtual void Fire();
 
     UFUNCTION()
-    void setEquipped(bool eq);
+    void SetEquipped(bool bEquipped);
 
     UFUNCTION()
     virtual void OnEquip(AUR_Weapon* LastWeapon);
