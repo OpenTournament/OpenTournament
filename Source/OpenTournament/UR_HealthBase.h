@@ -27,8 +27,6 @@ public:
 	UPROPERTY(EditAnywhere)
 	bool bSuperHeal;
 
-protected:
-
 public:
 	virtual bool AllowPickupBy_Implementation(class AActor* Other) override;
 	virtual void GiveTo_Implementation(class AActor* Other) override;
