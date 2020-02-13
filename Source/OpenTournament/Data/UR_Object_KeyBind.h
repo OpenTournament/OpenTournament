@@ -1,4 +1,6 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -7,18 +9,22 @@
 #include "InputCoreTypes.h"
 #include "UR_Object_KeyBind.generated.h"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  * 
  */
 UCLASS()
 class OPENTOURNAMENT_API UUR_Object_KeyBind : public UObject
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+    
 public:
-	UUR_Object_KeyBind();
+    UUR_Object_KeyBind();
 
-	FName Name;
+    UPROPERTY()
+    FName Name;
 
-	FKey Key;
+    UPROPERTY()
+    FKey Key;
 };
