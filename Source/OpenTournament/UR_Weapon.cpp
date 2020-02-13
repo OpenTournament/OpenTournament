@@ -122,7 +122,7 @@ void AUR_Weapon::OnRep_Equipped()
     if (PlayerController->IsLocallyControlled())
         return;	// should already be attached locally
 
-    setEquipped(bIsEquipped);
+    SetEquipped(bIsEquipped);
 }
 
 void AUR_Weapon::Fire()
@@ -307,9 +307,9 @@ bool AUR_Weapon::IsEquipped() const
     return bIsEquipped;
 }
 
-void AUR_Weapon::setEquipped(bool eq)
+void AUR_Weapon::SetEquipped(bool bEquipped)
 {
-    bIsEquipped = eq;
+    bIsEquipped = bEquipped;
 
     if (bIsEquipped)
     {
@@ -317,7 +317,7 @@ void AUR_Weapon::setEquipped(bool eq)
 
         if (AUR_Character* Char = Cast<AUR_Character>(GetOwner()))
         {
-            if (Char->IsLocallyControlled() && Char->isFiring)
+            if (Char->IsLocallyControlled() && Char->bIsFiring)
             {
                 LocalStartFire();
             }
@@ -368,7 +368,7 @@ void AUR_Weapon::LocalFireLoop()
         return;
 
     // Additional checks to stop firing automatically
-    if (!PlayerController || !PlayerController->isFiring || !PlayerController->IsAlive() || !PlayerController->GetController() || !bIsEquipped)
+    if (!PlayerController || !PlayerController->bIsFiring || !PlayerController->IsAlive() || !PlayerController->GetController() || !bIsEquipped)
     {
         bFiring = false;
         return;
