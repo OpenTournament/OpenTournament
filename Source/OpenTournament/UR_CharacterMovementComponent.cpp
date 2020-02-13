@@ -28,7 +28,7 @@ UUR_CharacterMovementComponent::UUR_CharacterMovementComponent(const class FObje
     SlopeImpactNormalZ(0.2f),
     SlopeSlideRadiusScale(1.0f),
     bCanWallDodge(true),
-    WallDodgeBehavior(EWallDodgeBehavior::WD_DisallowSurface),
+    WallDodgeBehavior(EWallDodgeBehavior::DisallowSurface),
     WallDodgeTraceDistance(54.5f),
     WallDodgeMinimumNormal(0.5f),
     WallDodgeImpulseHorizontal(1500.f),
@@ -84,7 +84,7 @@ void UUR_CharacterMovementComponent::SetupMovementPropertiesGeneration0()
     SlopeSlideRadiusScale = 1.0f;
 
     bCanWallDodge = true;
-    WallDodgeBehavior = EWallDodgeBehavior::WD_RequiresSurface;
+    WallDodgeBehavior = EWallDodgeBehavior::RequiresSurface;
     WallDodgeTraceDistance = 54.5f;
     WallDodgeMinimumNormal = 0.5f;
     WallDodgeImpulseHorizontal = 1500.f;
@@ -121,7 +121,7 @@ void UUR_CharacterMovementComponent::SetupMovementPropertiesGeneration1()
     SlopeSlideRadiusScale = 1.0f;
 
     bCanWallDodge = true;
-    WallDodgeBehavior = EWallDodgeBehavior::WD_RequiresSurface;
+    WallDodgeBehavior = EWallDodgeBehavior::RequiresSurface;
     WallDodgeTraceDistance = 54.5f;
     WallDodgeMinimumNormal = 0.5f;
     WallDodgeImpulseHorizontal = 1500.f;
@@ -147,7 +147,7 @@ void UUR_CharacterMovementComponent::SetupMovementPropertiesGeneration2()
     JumpZVelocity = 850.f;
 
     bCanWallDodge = true;
-    WallDodgeBehavior = EWallDodgeBehavior::WD_DisallowSurface;
+    WallDodgeBehavior = EWallDodgeBehavior::DisallowSurface;
     WallDodgeTraceDistance = 80.f; // Based on 32 unit trace from Radius to Wall, scaled by 2.5x
     WallDodgeMinimumNormal = 0.5f;
     WallDodgeImpulseHorizontal = 1500.f;
@@ -178,7 +178,7 @@ void UUR_CharacterMovementComponent::SetupMovementPropertiesGeneration3()
     JumpZVelocity = 850.f;
 
     bCanWallDodge = true;
-    WallDodgeBehavior = EWallDodgeBehavior::WD_DisallowSurface;
+    WallDodgeBehavior = EWallDodgeBehavior::DisallowSurface;
     WallDodgeTraceDistance = 80.f; // Based on 32 unit trace from Radius to Wall, scaled by 2.5x
     WallDodgeMinimumNormal = 0.5f;
     WallDodgeImpulseHorizontal = 1500.f;
@@ -443,7 +443,7 @@ bool UUR_CharacterMovementComponent::DoJump(bool bReplayingMoves)
     return false;
 }
 
-bool UUR_CharacterMovementComponent::CanDodge()
+bool UUR_CharacterMovementComponent::CanDodge() const
 {
     return CanEverJump() && (DodgeResetTime <= 0.f);
 }
@@ -466,13 +466,7 @@ bool UUR_CharacterMovementComponent::PerformDodge(FVector &DodgeDir, FVector &Do
     
     if (IsMovingOnGround())
     {
-        // @! TODO Functionalize to : PerformDodgeImpulse()
-        Velocity = DodgeImpulseHorizontal * DodgeDir + (Velocity | DodgeCross) * DodgeCross;
-        Velocity.Z = 0.f;
-        float SpeedXY = FMath::Min(Velocity.Size(), DodgeImpulseHorizontal); //
-
-        Velocity = SpeedXY*Velocity.GetSafeNormal();
-        Velocity.Z = DodgeImpulseVertical;
+        PerformDodgeImpulse(DodgeDir, DodgeCross);
 
         bIsDodging = true;
         bNotifyApex = true;
@@ -484,87 +478,24 @@ bool UUR_CharacterMovementComponent::PerformDodge(FVector &DodgeDir, FVector &Do
     {
         if (bCanWallDodge && CurrentWallDodgeCount < MaxWallDodges)
         {
-            FVector TraceEnd = -1.f * DodgeDir;
-            float PawnCapsuleRadius = 0;
-            float PawnCapsuleHalfHeight = 0;
-            CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleSize(PawnCapsuleRadius, PawnCapsuleHalfHeight);
-
-            float TraceBoxSize = FMath::Min(0.25f * PawnCapsuleHalfHeight, 0.7f * PawnCapsuleRadius);
-            FVector TraceStart = CharacterOwner->GetActorLocation();
-            TraceStart.Z -= 0.5f * TraceBoxSize;
-            TraceEnd = TraceStart - (WallDodgeTraceDistance + PawnCapsuleRadius - 0.5f * TraceBoxSize) * DodgeDir;
-
-            static const FName DodgeTag = FName(TEXT("Dodge"));
-            FCollisionQueryParams QueryParams(DodgeTag, false, CharacterOwner);
             FHitResult HitResult;
-            const bool bBlockingHit = GetWorld()->SweepSingleByChannel(HitResult, TraceStart, TraceEnd, FQuat::Identity, UpdatedComponent->GetCollisionObjectType(), FCollisionShape::MakeSphere(TraceBoxSize), QueryParams);
+            const bool bHitWallDodgeSurface = TraceWallDodgeSurface(DodgeDir, HitResult);
 
-            if (!bBlockingHit)
+            if (!bHitWallDodgeSurface)
             {
                 return false;
             }
 
-            // Is our HitActor using the WallDodgeSurface interface?
-            // We use "ImplementsInterface" method because it may be implemented in Blueprint
-            if (HitResult.Actor != nullptr && HitResult.Actor->GetClass()->ImplementsInterface(UUR_WallDodgeSurfaceInterface::StaticClass()))
-            {
-                // Invoke the interface function to determine if WallDodging is permitted
-                if (!IUR_WallDodgeSurfaceInterface::Execute_IsWallDodgePermitted(HitResult.Actor.Get()))
-                {
-                    // TODO Event Hook for effects?
-                    return false;
-                }
-
-                // TODO Allow modification of WallDodge by the surface (distance, dodge count, etc)
-            }
-            else if (WallDodgeBehavior == EWallDodgeBehavior::WD_RequiresSurface)
-            {
-                return false;
-            }
-
-            // We got a blocking hit
-            if ((HitResult.ImpactNormal | DodgeDir) < WallDodgeMinimumNormal)
-            {
-                // clamp dodge direction based on wall normal
-                FVector ForwardDir = (HitResult.ImpactNormal ^ FVector(0.f, 0.f, 1.f)).GetSafeNormal();
-                if ((ForwardDir | DodgeDir) < 0.f)
-                {
-                    ForwardDir *= -1.f;
-                }
-                DodgeDir = HitResult.ImpactNormal * WallDodgeMinimumNormal * WallDodgeMinimumNormal + ForwardDir * (1.f - WallDodgeMinimumNormal * WallDodgeMinimumNormal);
-                DodgeDir = DodgeDir.GetSafeNormal();
-                FVector NewDodgeCross = (DodgeDir ^ FVector(0.f, 0.f, 1.f)).GetSafeNormal();
-                DodgeCross = ((NewDodgeCross | DodgeCross) < 0.f) ? -1.f * NewDodgeCross : NewDodgeCross;
-            }
+            // We found a WallDodge permitting surface, now a valid WallDodge angle?
+            SetWallDodgeDirection(DodgeDir, DodgeCross, HitResult);
 
             DodgeResetTime = GetWorld()->TimeSeconds + WallDodgeResetInterval;
             CurrentWallDodgeCount++;
 
-            // TODO Falling Damage
-            // TakeFallingDamage();
+            // Trigger Falling Damage, if any
+            URCharacterOwner->Landed(HitResult);
 
-            const float CurrentVelocityZ = Velocity.Z;
-            float CachedVelocityZ = 0.f;
-            if (CurrentVelocityZ < -1 * WallDodgeImpulseVertical * 0.5)
-            {
-                CachedVelocityZ += CurrentVelocityZ + (WallDodgeImpulseVertical * 0.5);
-            }
-
-            if (bCanBoostDodge || CurrentVelocityZ < WallDodgeVelocityZPreservationThreshold)
-            {
-                CachedVelocityZ = CurrentVelocityZ + WallDodgeImpulseVertical;
-            }
-            else
-            {
-                CachedVelocityZ = WallDodgeImpulseVertical;
-            }
-
-            Velocity = WallDodgeImpulseHorizontal * DodgeDir + (Velocity | DodgeCross) * DodgeCross;
-            Velocity.Z = 0.f;
-            float SpeedXY = FMath::Min(Velocity.Size(), WallDodgeImpulseHorizontal);
-
-            Velocity = SpeedXY * Velocity.GetSafeNormal();
-            Velocity.Z = CachedVelocityZ;
+            PerformWallDodgeImpulse(DodgeDir, DodgeCross);
 
             URCharacterOwner->OnWallDodge(URCharacterOwner->GetActorLocation(), Velocity);
         }
@@ -592,6 +523,103 @@ bool UUR_CharacterMovementComponent::PerformDodge(FVector &DodgeDir, FVector &Do
     }
 
     return true;
+}
+
+void UUR_CharacterMovementComponent::PerformDodgeImpulse(const FVector& DodgeDir, const FVector& DodgeCross)
+{
+    Velocity = DodgeImpulseHorizontal * DodgeDir + (Velocity | DodgeCross) * DodgeCross;
+    Velocity.Z = 0.f;
+    const float SpeedXY = FMath::Min(Velocity.Size(), DodgeImpulseHorizontal); //
+
+    Velocity = SpeedXY * Velocity.GetSafeNormal();
+    Velocity.Z = DodgeImpulseVertical;
+}
+
+void UUR_CharacterMovementComponent::PerformWallDodgeImpulse(FVector& DodgeDir, FVector& DodgeCross)
+{
+    Velocity = WallDodgeImpulseHorizontal * DodgeDir + (Velocity | DodgeCross) * DodgeCross;
+    Velocity.Z = 0.f;
+    const float SpeedXY = FMath::Min(Velocity.Size(), WallDodgeImpulseHorizontal);
+
+    Velocity = SpeedXY * Velocity.GetSafeNormal();
+    Velocity.Z = GetWallDodgeVerticalImpulse();
+}
+
+float UUR_CharacterMovementComponent::GetWallDodgeVerticalImpulse() const
+{
+    const float CurrentVelocityZ{ Velocity.Z };
+    float CachedVelocityZ = 0.f;
+
+    if (CurrentVelocityZ < -1.f * WallDodgeImpulseVertical * 0.5f)
+    {
+        CachedVelocityZ += CurrentVelocityZ + (WallDodgeImpulseVertical * 0.5f);
+    }
+
+    if (bCanBoostDodge || CurrentVelocityZ < WallDodgeVelocityZPreservationThreshold)
+    {
+        CachedVelocityZ = CurrentVelocityZ + WallDodgeImpulseVertical;
+    }
+    else
+    {
+        CachedVelocityZ = WallDodgeImpulseVertical;
+    }
+
+    return CachedVelocityZ;
+}
+
+bool UUR_CharacterMovementComponent::TraceWallDodgeSurface(const FVector& DodgeDir, OUT FHitResult& HitResult) const
+{
+    FVector TraceEnd = -1.f * DodgeDir;
+    float PawnCapsuleRadius = 0;
+    float PawnCapsuleHalfHeight = 0;
+    CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleSize(PawnCapsuleRadius, PawnCapsuleHalfHeight);
+
+    const float TraceBoxSize = FMath::Min(0.25f * PawnCapsuleHalfHeight, 0.7f * PawnCapsuleRadius);
+    FVector TraceStart = CharacterOwner->GetActorLocation();
+    TraceStart.Z -= 0.5f * TraceBoxSize;
+    TraceEnd = TraceStart - (WallDodgeTraceDistance + PawnCapsuleRadius - 0.5f * TraceBoxSize) * DodgeDir;
+
+    static const FName DodgeTag = FName(TEXT("Dodge"));
+    const FCollisionQueryParams QueryParams(DodgeTag, false, CharacterOwner);
+
+    bool bIsWallDodgeSurfaceHit = GetWorld()->SweepSingleByChannel(HitResult, TraceStart, TraceEnd, FQuat::Identity, UpdatedComponent->GetCollisionObjectType(), FCollisionShape::MakeSphere(TraceBoxSize), QueryParams);
+
+    // Is our HitActor using the WallDodgeSurface interface?
+    // We use "ImplementsInterface" method because it may be implemented in Blueprint
+    if (HitResult.Actor != nullptr && HitResult.Actor->GetClass()->ImplementsInterface(UUR_WallDodgeSurfaceInterface::StaticClass()))
+    {
+        // Invoke the interface function to determine if WallDodging is permitted
+        if (!IUR_WallDodgeSurfaceInterface::Execute_IsWallDodgePermitted(HitResult.Actor.Get()))
+        {
+            // @! TODO Event Hook for effects?
+            bIsWallDodgeSurfaceHit = false;
+        }
+
+        // @! TODO Allow modification of WallDodge by the surface (distance, dodge count, etc)
+    }
+    else if (WallDodgeBehavior == EWallDodgeBehavior::RequiresSurface)
+    {
+        bIsWallDodgeSurfaceHit = false;
+    }
+
+    return bIsWallDodgeSurfaceHit;
+}
+
+void UUR_CharacterMovementComponent::SetWallDodgeDirection(OUT FVector& DodgeDir, OUT FVector& DodgeCross, const FHitResult& HitResult) const
+{
+    if ((HitResult.ImpactNormal | DodgeDir) < WallDodgeMinimumNormal)
+    {
+        // clamp dodge direction based on wall normal
+        FVector ForwardDir = (HitResult.ImpactNormal ^ FVector(0.f, 0.f, 1.f)).GetSafeNormal();
+        if ((ForwardDir | DodgeDir) < 0.f)
+        {
+            ForwardDir *= -1.f;
+        }
+        DodgeDir = HitResult.ImpactNormal * WallDodgeMinimumNormal * WallDodgeMinimumNormal + ForwardDir * (1.f - WallDodgeMinimumNormal * WallDodgeMinimumNormal);
+        DodgeDir = DodgeDir.GetSafeNormal();
+        const FVector NewDodgeCross = (DodgeDir ^ FVector(0.f, 0.f, 1.f)).GetSafeNormal();
+        DodgeCross = ((NewDodgeCross | DodgeCross) < 0.f) ? -1.f * NewDodgeCross : NewDodgeCross;
+    }
 }
 
 void UUR_CharacterMovementComponent::ClearDodgeInput()
