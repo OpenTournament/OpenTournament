@@ -80,11 +80,8 @@ void AUR_Lift::OnTriggerExit(UPrimitiveComponent* HitComp, AActor* Other, UPrimi
 
 void AUR_Lift::MoveToStartPosition()
 {
-    FLatentActionInfo LatentActionInfo;
-    LatentActionInfo.CallbackTarget = this;
-    LatentActionInfo.ExecutionFunction = "OnReachedStart";
-    LatentActionInfo.UUID = 1;
-    LatentActionInfo.Linkage = 1;
+    FLatentActionInfo LatentActionInfo{ 1, 1, TEXT("OnReachedStart"), this };
+
     UKismetSystemLibrary::MoveComponentTo(RootComponent, StartLocation, FRotator::ZeroRotator, EaseOut, EaseIn, TravelDuration, true, EMoveComponentAction::Type::Move, LatentActionInfo);
 
     LiftState = ELiftState::Moving;
@@ -94,12 +91,9 @@ void AUR_Lift::MoveToStartPosition()
 
 void AUR_Lift::MoveToEndPosition()
 {
-    FLatentActionInfo info;
-    info.CallbackTarget = this;
-    info.ExecutionFunction = "OnReachedEnd";
-    info.UUID = 1;
-    info.Linkage = 1;
-    UKismetSystemLibrary::MoveComponentTo(RootComponent, StartLocation + EndRelativeLocation, FRotator::ZeroRotator, EaseOut, EaseIn, TravelDuration, true, EMoveComponentAction::Type::Move, info);
+    FLatentActionInfo LatentActionInfo{ 1, 1, TEXT("OnReachedEnd"), this };
+
+    UKismetSystemLibrary::MoveComponentTo(RootComponent, StartLocation + EndRelativeLocation, FRotator::ZeroRotator, EaseOut, EaseIn, TravelDuration, true, EMoveComponentAction::Type::Move, LatentActionInfo);
 
     LiftState = ELiftState::Moving;
     PlayLiftEffects();
