@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include "Runtime/Engine/Classes/Components/ActorComponent.h"
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
 
 #include "UR_InventoryComponent.generated.h"
 
@@ -44,22 +45,22 @@ public:
     UPROPERTY(ReplicatedUsing = OnRep_ActiveWeapon, BlueprintReadOnly, Category = "InventoryComponent")
     AUR_Weapon * ActiveWeapon;
 
-    void Add(AUR_Weapon* weapon);
+    void Add(AUR_Weapon* InWeapon);
 
-    void Add(AUR_Ammo* ammo);
+    void Add(AUR_Ammo* InAmmo);
 
-    void AmmoCountInInventory(AUR_Weapon* weapon);
+    void AmmoCountInInventory(AUR_Weapon* InWeapon);
 
-    void UpdateWeaponAmmo(AUR_Ammo* ammo);
+    void UpdateWeaponAmmo(AUR_Ammo* InAmmo);
 
     UFUNCTION()
     void ShowInventory();
 
     UFUNCTION()
-    int32 SelectWeapon(int32 number);
+    int32 SelectWeapon(int32 WeaponGroup);
 
     UFUNCTION()
-    AUR_Weapon * SelectWeaponG(int32 number);
+    AUR_Weapon* SelectWeaponG(int32 WeaponGroup);
 
     UFUNCTION()
     bool NextWeapon();
@@ -68,10 +69,10 @@ public:
     bool PrevWeapon();
 
     UFUNCTION()
-    void EquipWeapon(AUR_Weapon* Weap);
+    void EquipWeapon(AUR_Weapon* InWeapon);
 
     UFUNCTION(Server, Reliable)
-    void ServerEquipWeapon(AUR_Weapon* Weap);
+    void ServerEquipWeapon(AUR_Weapon* InWeapon);
 
     UFUNCTION()
     virtual void OnRep_InventoryW();
