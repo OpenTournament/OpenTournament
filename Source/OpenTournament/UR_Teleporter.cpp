@@ -133,8 +133,10 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
 
     if (TargetCharacter)
     {
-        CharacterController = TargetCharacter->GetController();
-        TargetActorRotation = CharacterController->GetControlRotation();
+        if (const AController* Controller = TargetCharacter->GetController())
+        {
+            TargetActorRotation = TargetCharacter->GetController()->GetControlRotation();
+        }
     }
     else
     {
