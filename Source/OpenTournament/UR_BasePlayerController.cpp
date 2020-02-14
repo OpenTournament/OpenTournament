@@ -29,7 +29,7 @@ void AUR_BasePlayerController::InitInputSystem()
 	Super::InitInputSystem();
 }
 
-UUR_PlayerInput* AUR_BasePlayerController::GetPlayerInput()
+UUR_PlayerInput* AUR_BasePlayerController::GetPlayerInput() const
 {
 	return Cast<UUR_PlayerInput>(PlayerInput);
 }
