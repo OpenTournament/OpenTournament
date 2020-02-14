@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -519,12 +519,12 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
         return;
     }
 
-    AUR_GameMode* GM = GetWorld()->GetAuthGameMode<AUR_GameMode>();
-    if (GM)
+    AUR_GameMode* URGameMode = GetWorld()->GetAuthGameMode<AUR_GameMode>();
+    if (URGameMode)
     {
         AController* Killed = GetController();
 
-        if (GM->PreventDeath(Killed, Killer, DamageEvent, DamageCauser))
+        if (URGameMode->PreventDeath(Killed, Killer, DamageEvent, DamageCauser))
         {
             // Make sure we don't stay with <=0 health or IsAlive() would return false.
             if (AttributeSet->Health.GetCurrentValue() <= 0)
@@ -534,7 +534,7 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
             return;
         }
 
-        GM->PlayerKilled(Killed, Killer, DamageEvent, DamageCauser);
+        URGameMode->PlayerKilled(Killed, Killer, DamageEvent, DamageCauser);
     }
 
     if (AttributeSet)
@@ -679,9 +679,9 @@ USkeletalMeshComponent* AUR_Character::GetPawnMesh() const
     return MeshFirstPerson;
 }
 
-void AUR_Character::WeaponSelect(int32 number)
+void AUR_Character::WeaponSelect(int32 InWeaponGroup)
 {
-    InventoryComponent->SelectWeapon(number);
+    InventoryComponent->SelectWeapon(InWeaponGroup);
 }
 
 void AUR_Character::NextWeapon()
@@ -702,7 +702,7 @@ void AUR_Character::PrevWeapon()
 
 void AUR_Character::PawnStartFire(uint8 FireModeNum)
 {
-    isFiring = true;
+    bIsFiring = true;
 
     if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
@@ -716,7 +716,7 @@ void AUR_Character::PawnStartFire(uint8 FireModeNum)
 
 void AUR_Character::PawnStopFire(uint8 FireModeNum)
 {
-    isFiring = false;
+    bIsFiring = false;
 
     if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
@@ -727,7 +727,7 @@ void AUR_Character::PawnStopFire(uint8 FireModeNum)
 //deprecated
 void AUR_Character::Fire()
 {
-    if (isFiring)
+    if (bIsFiring)
     {
         if (InventoryComponent->ActiveWeapon)
         {
