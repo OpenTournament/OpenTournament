@@ -33,7 +33,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     UFUNCTION(BlueprintCallable, Category = "PlayerController|Input")
-    UUR_PlayerInput* GetPlayerInput();
+    UUR_PlayerInput* GetPlayerInput() const;
 
     /**
     * Return to main menu.
