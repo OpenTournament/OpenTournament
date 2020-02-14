@@ -6,8 +6,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerInput.h"
-#include "GameFramework/InputSettings.h"
 #include "UR_PlayerInput.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+class UInputSettings;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -50,9 +53,10 @@ public:
 
 private:
 
+    void RemapAction(FInputActionKeyMapping ActionKeyMapping, const FKey Key);
+    void RemapAxis(FInputAxisKeyMapping AxisKeyMapping, const FKey Key);
+
     UPROPERTY()
     UInputSettings* InputSettings;
 
-    void RemapAction(FInputActionKeyMapping ActionKeyMapping, const FKey Key);
-    void RemapAxis(FInputAxisKeyMapping AxisKeyMapping, const FKey Key);
 };
