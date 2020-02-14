@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -189,13 +189,13 @@ public:
     void PlayFootstepEffects(float WalkingSpeedPercentage) const;
 
     /**
-    * Last Foostep Timestamp.
+    * Last Footstep Timestamp.
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Walk")
     float FootstepTimestamp;
 
     /**
-    * Foostep Time Interval 
+    * Footstep Time Interval 
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Walk")
     float FootstepTimeIntervalBase;
@@ -332,9 +332,6 @@ public:
     UPROPERTY()
     UUR_AttributeSet* AttributeSet;
 
-    UPROPERTY()
-    int32 bAbilitiesInitialized;
-
     /** Abilities to grant to this character on creation. These will be activated by tag or event and are not bound to specific inputs */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Abilities")
     TArray<TSubclassOf<UUR_GameplayAbility>> GameplayAbilities;
@@ -396,14 +393,14 @@ public:
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
     UUR_InventoryComponent* InventoryComponent;
 
-    bool isFiring = false;
+    bool bIsFiring = false;
 
     virtual void PawnStartFire(uint8 FireModeNum = 0) override;
     virtual void PawnStopFire(uint8 FireModeNum = 0);
 
     //Weapon select
     UFUNCTION()
-    void WeaponSelect(int32 number);
+    void WeaponSelect(int32 InWeaponGroup);
 
     UFUNCTION(Exec, BlueprintCallable)
     void NextWeapon();
