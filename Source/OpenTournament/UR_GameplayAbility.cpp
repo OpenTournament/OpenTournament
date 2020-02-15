@@ -4,9 +4,8 @@
 
 #include "UR_GameplayAbility.h"
 
-#include "OpenTournament.h"
 #include "UR_AbilitySystemComponent.h"
-#include "UR_AbilityTypes.h"
+//#include "UR_AbilityTypes.h"
 #include "UR_Character.h"
 #include "UR_TargetType.h"
 
@@ -20,9 +19,9 @@ FUR_GameplayEffectContainerSpec UUR_GameplayAbility::MakeEffectContainerSpecFrom
 	FUR_GameplayEffectContainerSpec ReturnSpec;
 	AActor* OwningActor = GetOwningActorFromActorInfo();
 	AUR_Character* OwningCharacter = Cast<AUR_Character>(OwningActor);
-	UUR_AbilitySystemComponent* OwningASC = UUR_AbilitySystemComponent::GetAbilitySystemComponentFromActor(OwningActor);
+	UUR_AbilitySystemComponent* OwningAbilityComponent = UUR_AbilitySystemComponent::GetAbilitySystemComponentFromActor(OwningActor);
 
-	if (OwningASC)
+	if (OwningAbilityComponent)
 	{
 		// If we have a target type, run the targeting logic. This is optional, targets can be added later
 		if (Container.TargetType.Get())
@@ -38,7 +37,7 @@ FUR_GameplayEffectContainerSpec UUR_GameplayAbility::MakeEffectContainerSpecFrom
 		// If we don't have an override level, use the default ont he ability system component
 		if (OverrideGameplayLevel == INDEX_NONE)
 		{
-			OverrideGameplayLevel = OwningASC->GetDefaultAbilityLevel();
+			OverrideGameplayLevel = OwningAbilityComponent->GetDefaultAbilityLevel();
 		}
 
 		// Build GameplayEffectSpecs for each applied effect
