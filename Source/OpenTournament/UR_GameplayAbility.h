@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "GameplayAbility.h"
+#include "Abilities/GameplayAbility.h"
 #include "GameplayTagContainer.h"
 
 #include "UR_AbilityTypes.h"
