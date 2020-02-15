@@ -6,8 +6,8 @@
 
 #include "AbilitySystemComponent.h"
 
-#include "OpenTournament.h"
 #include "UR_AbilityTypes.h"
+
 #include "UR_AbilitySystemComponent.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
