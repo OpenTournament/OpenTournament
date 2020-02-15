@@ -372,7 +372,7 @@ public:
     }
 
     UFUNCTION(BlueprintCallable, BlueprintPure)
-    bool IsAlive();
+    bool IsAlive() const;
 
     UFUNCTION(Exec)
     virtual void Suicide()
