@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "Runtime/Engine/Classes/Components/ActorComponent.h"
+#include "Components/ActorComponent.h"
 
-#include <UR_Type_DodgeDirection.h>
+#include "UR_Type_DodgeDirection.h"
 
 #include "UR_PCInputDodgeComponent.generated.h"
 
