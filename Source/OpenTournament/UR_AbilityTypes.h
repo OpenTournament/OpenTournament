@@ -11,7 +11,7 @@
 // ----------------------------------------------------------------------------------------------------------------
 
 #include "GameplayEffectTypes.h"
-#include "GameplayAbilityTargetTypes.h"
+#include "Abilities/GameplayAbilityTargetTypes.h"
 
 #include "UR_AbilityTypes.generated.h"
 
