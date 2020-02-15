@@ -8,6 +8,7 @@
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 #include "UR_InventoryComponent.h"
+#include "UR_Weapon.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -47,13 +48,13 @@ void UUR_CheatManager::Cheat_Loaded()
     }
 }
 
-void UUR_CheatManager::Cheat_AddScore(int32 n)
+void UUR_CheatManager::Cheat_AddScore(int32 InValue)
 {
     if (auto PC = Cast<AUR_PlayerController>(GetOuter()))
     {
         if (auto PS = Cast<AUR_PlayerState>(PC->PlayerState))
         {
-            PS->Score += n;
+            PS->Score += InValue;
         }
     }
 }
