@@ -7,7 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "GameplayTagAssetInterface.h"
 
-#include <UR_Type_ExitRotation.h>
+#include "UR_Type_ExitRotation.h"
 
 #include "UR_Teleporter.generated.h"
 
