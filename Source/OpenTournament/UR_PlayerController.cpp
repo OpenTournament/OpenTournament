@@ -82,14 +82,14 @@ void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
 {
     Super::SetPlayer(InPlayer);
 
-    UUR_LocalPlayer* LP = Cast<UUR_LocalPlayer>(GetLocalPlayer());
-    if (LP && LP->MessageHistory)
+    UUR_LocalPlayer* LocalPlayer = Cast<UUR_LocalPlayer>(GetLocalPlayer());
+    if (LocalPlayer && LocalPlayer->MessageHistory)
     {
         // bind chat dispatcher to MessageHistory handler
-        ChatComponent->OnReceiveChatMessage.AddUniqueDynamic(LP->MessageHistory, &UUR_MessageHistory::OnReceiveChatMessage);
+        ChatComponent->OnReceiveChatMessage.AddUniqueDynamic(LocalPlayer->MessageHistory, &UUR_MessageHistory::OnReceiveChatMessage);
 
         // bind system message dispatcher to MessageHistory handler
-        OnReceiveSystemMessage.AddUniqueDynamic(LP->MessageHistory, &UUR_MessageHistory::OnReceiveSystemMessage);
+        OnReceiveSystemMessage.AddUniqueDynamic(LocalPlayer->MessageHistory, &UUR_MessageHistory::OnReceiveSystemMessage);
     }
     else
     {
