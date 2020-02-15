@@ -35,23 +35,19 @@ AUR_Pickup::AUR_Pickup(const FObjectInitializer& ObjectInitializer) :
 
     ParticleSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleSystemComponent"));
     ParticleSystemComponent->SetupAttachment(RootComponent);
-
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_Pickup::OnOverlap(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    //GAME_PRINT(2.f, FColor::White, "On Overlap");
-
     if (AUR_Character* URCharacter = Cast<AUR_Character>(Other))
     {
-        //GAME_PRINT(2.f, FColor::White, "On Overlap - Character Valid");
+        GAME_LOG(Game, Log, "Overlap on Pickup (%s) by Character (%s)", *GetName(), *URCharacter->GetName());
 
         if (IsPickupValid(URCharacter))
         {
-            //GAME_PRINT(2.f, FColor::White, "On Overlap - Pickup Valid");
+            GAME_LOG(Game, Log, "Valid Pickup of PickupActor (%s) by Character (%s)", *GetName(), *URCharacter->GetName());
 
             Pickup(URCharacter);
         }
@@ -136,9 +132,6 @@ void AUR_Pickup::SetPickupState(EPickupState NewState)
         SetActorEnableCollision(false);
 
         GetWorld()->GetTimerManager().SetTimer(RespawnHandle, this, &AUR_Pickup::RespawnPickup, RespawnInterval, false);
-        // Set Visiblity
-        // Set Timer
-
     }
 }
 
