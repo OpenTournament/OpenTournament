@@ -1,10 +1,14 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Widget_BaseMenu.h"
 
-#include "WidgetBlueprintLibrary.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+
 #include "UR_FunctionLibrary.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_Widget_BaseMenu::UUR_Widget_BaseMenu(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
