@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InputCoreTypes.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "UR_FunctionLibrary.generated.h"
@@ -12,7 +13,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Forward Declarations
 
-struct FKey;
 class APlayerState;
 class AUR_GameModeBase;
 
@@ -60,7 +60,7 @@ public:
     * - customizeable self color in non team games
     */
     UFUNCTION(BlueprintPure)
-    static FColor GetPlayerDisplayTextColor(APlayerState* PS);
+    static FColor GetPlayerDisplayTextColor(const APlayerState* PS);
 
 
     /**
@@ -126,7 +126,7 @@ public:
     * using realtime binds and not hardcoded.
     */
     UFUNCTION(BlueprintPure)
-    static bool IsKeyMappedToAction(const FKey& Key, FName ActionName);
+    static bool IsKeyMappedToAction(const FKey& Key, const FName ActionName);
 
 
     /**
@@ -137,7 +137,7 @@ public:
     * using realtime binds and not hardcoded.
     */
     UFUNCTION(BlueprintPure)
-    static bool IsKeyMappedToAxis(const FKey& Key, FName AxisName, float Direction=1.f);
+    static bool IsKeyMappedToAxis(const FKey& Key, const FName AxisName, const float Direction = 1.f);
 
 
     /**
@@ -154,7 +154,7 @@ public:
     * Returns true if actor is currently viewed by local player controller.
     */
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
-    static bool IsLocallyViewed(AActor* Other);
+    static bool IsLocallyViewed(const AActor* Other);
 
 
     /**

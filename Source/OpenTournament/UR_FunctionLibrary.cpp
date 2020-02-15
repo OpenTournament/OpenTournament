@@ -4,9 +4,10 @@
 
 #include "UR_FunctionLibrary.h"
 
+#include "Engine/Engine.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/InputSettings.h"
-#include "Regex.h"
+#include "Internationalization/Regex.h"
 
 #include "UR_GameModeBase.h"
 #include "UR_PlayerController.h"
@@ -32,7 +33,7 @@ AUR_GameModeBase* UUR_FunctionLibrary::GetGameModeDefaultObject(const UObject* W
     return GameModeDefaultObject;
 }
 
-FColor UUR_FunctionLibrary::GetPlayerDisplayTextColor(APlayerState* PS)
+FColor UUR_FunctionLibrary::GetPlayerDisplayTextColor(const APlayerState* PS)
 {
     if (!PS)
     {
@@ -44,7 +45,7 @@ FColor UUR_FunctionLibrary::GetPlayerDisplayTextColor(APlayerState* PS)
     }
     else
     {
-        AUR_PlayerState* URPlayerState = Cast<AUR_PlayerState>(PS);
+        const AUR_PlayerState* URPlayerState = Cast<AUR_PlayerState>(PS);
         if (URPlayerState)
         {
             //TODO: if team game, return team color, something like URPS->Team->GetDisplayTextColor();
@@ -132,7 +133,7 @@ AUR_PlayerController* UUR_FunctionLibrary::GetLocalPlayerController(const UObjec
     return nullptr;
 }
 
-bool UUR_FunctionLibrary::IsLocallyViewed(AActor* Other)
+bool UUR_FunctionLibrary::IsLocallyViewed(const AActor* Other)
 {
     AUR_PlayerController* PC = GetLocalPlayerController(Other);
     return PC && PC->GetViewTarget() == Other;
