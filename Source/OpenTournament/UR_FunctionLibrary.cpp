@@ -1,23 +1,17 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_FunctionLibrary.h"
 
-#include "Engine/DataTable.h"
-#include "Engine/World.h"
 #include "GameFramework/GameStateBase.h"
+#include "GameFramework/InputSettings.h"
+#include "Regex.h"
+#include "UEdMode.h"
 
 #include "UR_GameModeBase.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
-
-#include "UnrealString.h"
-#include "Regex.h"
-
-#include "GameFramework/InputSettings.h"
-
-#include "Engine.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -29,7 +23,7 @@ AUR_GameModeBase* UUR_FunctionLibrary::GetGameModeDefaultObject(const UObject* W
     {
         if (const auto GameState = World->GetGameState())
         {
-            if (auto GameModeClass = GameState->GameModeClass)
+            if (const auto GameModeClass = GameState->GameModeClass)
             {
                 GameModeDefaultObject = Cast<AUR_GameModeBase>(GameModeClass->GetDefaultObject());
             }
@@ -51,8 +45,8 @@ FColor UUR_FunctionLibrary::GetPlayerDisplayTextColor(APlayerState* PS)
     }
     else
     {
-        AUR_PlayerState* URPS = Cast<AUR_PlayerState>(PS);
-        if (URPS)
+        AUR_PlayerState* URPlayerState = Cast<AUR_PlayerState>(PS);
+        if (URPlayerState)
         {
             //TODO: if team game, return team color, something like URPS->Team->GetDisplayTextColor();
 
@@ -78,7 +72,7 @@ FString UUR_FunctionLibrary::StripRichTextDecorators(const FString& InText)
     TArray<FTextRange> LineRanges;
     FTextRange::CalculateLineRangesFromString(InText, LineRanges);
 
-    FRegexPattern ElementRegexPattern(TEXT("<([\\w\\d\\.-]+)((?: (?:[\\w\\d\\.-]+=(?>\".*?\")))+)?(?:(?:/>)|(?:>(.*?)</>))"));
+    const FRegexPattern ElementRegexPattern(TEXT("<([\\w\\d\\.-]+)((?: (?:[\\w\\d\\.-]+=(?>\".*?\")))+)?(?:(?:/>)|(?:>(.*?)</>))"));
     FRegexMatcher ElementRegexMatcher(ElementRegexPattern, InText);
 
     for (int32 i = 0; i < LineRanges.Num(); i++)
