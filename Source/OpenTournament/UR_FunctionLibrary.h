@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -7,16 +7,14 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
-#include "OpenTournament.h"
-
-#include "UR_GameModeBase.h"
-
 #include "UR_FunctionLibrary.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Forward Declarations
 
-class AUR_GameMode;
+struct FKey;
+class APlayerState;
+class AUR_GameModeBase;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -31,19 +29,25 @@ class OPENTOURNAMENT_API UUR_FunctionLibrary : public UBlueprintFunctionLibrary
 
 public:
 
-    // Utility for retrieving GameMode CDO
+    /**
+     * Utility for retrieving GameMode CDO
+     */
     UFUNCTION(BlueprintPure, Category = "Utility")
     static AUR_GameModeBase* GetGameModeDefaultObject(const UObject* WorldContextObject);
 
+
+    /**
+     * Utility to retrieve the String value of a given Enum
+     */
     template<typename TEnum>
     static FORCEINLINE FString GetEnumValueAsString(const FString& Name, TEnum Value)
     {
-        const UEnum* enumPtr = FindObject<UEnum>(ANY_PACKAGE, *Name, true);
-        if (!enumPtr)
+        const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, *Name, true);
+        if (!EnumPtr)
         {
             return FString("Invalid");
         }
-        return enumPtr->GetNameByValue(static_cast<int64>(Value)).ToString();
+        return EnumPtr->GetNameByValue(static_cast<int64>(Value)).ToString();
     }
 
 
@@ -82,6 +86,7 @@ public:
             .Replace(TEXT(">"), TEXT("&gt;"));
     }
 
+
     /**
     * Returns a modified version of the string, where encoded rich-text special characters are restored.
     */
@@ -94,6 +99,7 @@ public:
             .Replace(TEXT("&amp;"), TEXT("&"));
     }
 
+
     /**
     * Returns a modified version of the string, where rich-text decorators are visible but undetectable.
     */
@@ -102,6 +108,7 @@ public:
     {
         return InText.Replace(TEXT("/>"), TEXT("/\u200B>"));	// zero width space
     }
+
 
     /**
     * Returns a modified version of the string without any rich-text decorators.
@@ -121,6 +128,7 @@ public:
     UFUNCTION(BlueprintPure)
     static bool IsKeyMappedToAction(const FKey& Key, FName ActionName);
 
+
     /**
     * Returns true if given key is mapped to given axis.
     * Use direction 0 for any.
@@ -131,6 +139,7 @@ public:
     UFUNCTION(BlueprintPure)
     static bool IsKeyMappedToAxis(const FKey& Key, FName AxisName, float Direction=1.f);
 
+
     /**
     * Get local player controller as UR_PlayerController.
     *
@@ -140,17 +149,20 @@ public:
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game", Meta = (WorldContext = "WorldContextObject", UnsafeDuringActorConstruction = "true"))
     static class AUR_PlayerController* GetLocalPlayerController(const UObject* WorldContextObject);
 
+
     /**
     * Returns true if actor is currently viewed by local player controller.
     */
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
     static bool IsLocallyViewed(AActor* Other);
 
+
     /**
     * Get the Time as a String
     */
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "FunctionLibrary")
     static FString GetTimeString(const float TimeSeconds);
+
 
     /**
     * Random vector between 2 vectors.
