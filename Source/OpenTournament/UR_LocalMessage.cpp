@@ -1,9 +1,13 @@
-// Copyright (c) 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_LocalMessage.h"
 
 #include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/PlayerState.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_LocalMessage::K2_ClientReceive_Implementation(APlayerController* LocalPC, int32 Switch, APlayerState* RelatedPlayer1, APlayerState* RelatedPlayer2, UObject* OptionalObject) const
 {

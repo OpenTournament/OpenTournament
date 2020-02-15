@@ -1,10 +1,15 @@
-// Copyright (c) 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/LocalMessage.h"
+
 #include "UR_LocalMessage.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
 * Engine struct is not exposed to BP...
