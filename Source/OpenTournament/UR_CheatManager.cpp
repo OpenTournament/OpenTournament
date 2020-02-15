@@ -18,12 +18,10 @@ void UUR_CheatManager::God()
     {
         if (URCharacter->CanBeDamaged())
         {
-            //URCharacter->SetCanBeDamaged(false);
             GetOuterAPlayerController()->ClientMessage(TEXT("God mode on"));
         }
         else
         {
-            //URCharacter->SetCanBeDamaged(true);
             GetOuterAPlayerController()->ClientMessage(TEXT("God Mode off"));
         }
     }
