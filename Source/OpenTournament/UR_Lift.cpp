@@ -7,8 +7,10 @@
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "TimerManager.h"
 
 #include "OpenTournament.h"
 
@@ -62,7 +64,7 @@ void AUR_Lift::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrim
     bIsTriggered = true;
     ActorsOnTrigger.AddUnique(Other);
 
-    GAME_PRINT(1.f, FColor::White, "[Lift] Entered Lift %s", *GetName());
+    GAME_LOG(Game, Log, "Entered Lift (%s) Trigger Region", *GetName());
 }
 
 void AUR_Lift::OnTriggerExit(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -70,17 +72,17 @@ void AUR_Lift::OnTriggerExit(UPrimitiveComponent* HitComp, AActor* Other, UPrimi
     ActorsOnTrigger.Remove(Other);
     bIsTriggered = ActorsOnTrigger.Num() > 0;
 
-    GAME_PRINT(1.f, FColor::White, "[Lift] Exited Lift %s", *GetName());
+    GAME_LOG(Game, Log, "Exited Lift (%s) Trigger Region", *GetName());
 
     if (bIsTriggered)
     {
-        GAME_PRINT(1.f, FColor::White, "[Lift] Lift %s is not Empty", *GetName());
+        GAME_LOG(Game, Log, "Exited Lift (%s) is not Empty", *GetName());
     }
 }
 
 void AUR_Lift::MoveToStartPosition()
 {
-    FLatentActionInfo LatentActionInfo{ 1, 1, TEXT("OnReachedStart"), this };
+    const FLatentActionInfo LatentActionInfo{ 1, 1, TEXT("OnReachedStart"), this };
 
     UKismetSystemLibrary::MoveComponentTo(RootComponent, StartLocation, FRotator::ZeroRotator, EaseOut, EaseIn, TravelDuration, true, EMoveComponentAction::Type::Move, LatentActionInfo);
 
@@ -91,7 +93,7 @@ void AUR_Lift::MoveToStartPosition()
 
 void AUR_Lift::MoveToEndPosition()
 {
-    FLatentActionInfo LatentActionInfo{ 1, 1, TEXT("OnReachedEnd"), this };
+    const FLatentActionInfo LatentActionInfo{ 1, 1, TEXT("OnReachedEnd"), this };
 
     UKismetSystemLibrary::MoveComponentTo(RootComponent, StartLocation + EndRelativeLocation, FRotator::ZeroRotator, EaseOut, EaseIn, TravelDuration, true, EMoveComponentAction::Type::Move, LatentActionInfo);
 
@@ -109,7 +111,7 @@ void AUR_Lift::OnReachedEnd()
 {
     LiftState = ELiftState::End;
     StopLiftEffects();
-    GetWorldTimerManager().SetTimer(ReturnTimerHandle, this, &AUR_Lift::MoveToStartPosition, StoppedAtEndPosition);
+    GetWorld()->GetTimerManager().SetTimer(ReturnTimerHandle, this, &AUR_Lift::MoveToStartPosition, StoppedAtEndPosition);
 }
 
 void AUR_Lift::PlayLiftEffects_Implementation()
