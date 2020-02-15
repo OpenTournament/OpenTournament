@@ -594,7 +594,7 @@ void AUR_Character::PlayDeath()
     SetLifeSpan(5.0f);
 }
 
-bool AUR_Character::IsAlive() const
+bool AUR_Character::IsAlive()
 {
     if (GetTearOff() || IsPendingKillPending() || AttributeSet == nullptr)
     {
@@ -710,7 +710,7 @@ void AUR_Character::PawnStartFire(uint8 FireModeNum)
     }
     else
     {
-        GAME_LOG(Game, Log, "No Weapon Selected");
+        GAME_PRINT(1.f, FColor::White, "No Weapon Selected");
     }
 }
 
@@ -743,7 +743,7 @@ void AUR_Character::Fire()
         }
         else
         {
-            GAME_LOG(Game, Log, "No Weapon Selected");
+            GAME_PRINT(1.f, FColor::White, "No Weapon Selected");
         }
     }
 }

@@ -10,7 +10,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "TimerManager.h"
 
-//#include "OpenTournament.h"
+#include "OpenTournament.h"
 #include "UR_Character.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,6 +35,8 @@ AUR_Pickup::AUR_Pickup(const FObjectInitializer& ObjectInitializer) :
 
     ParticleSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleSystemComponent"));
     ParticleSystemComponent->SetupAttachment(RootComponent);
+
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
