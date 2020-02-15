@@ -19,7 +19,7 @@
 #include "UR_Character.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
-#include "AutomationTest.h"
+#include "Misc/AutomationTest.h"
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
