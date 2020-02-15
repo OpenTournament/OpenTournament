@@ -1,17 +1,22 @@
-// Copyright (c) 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_PickupBase.h"
-#include "UnrealNetwork.h"
+
+#include "Net/UnrealNetwork.h"
+#include "Components/SceneComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "UR_Character.h"
-#include "GameFramework/LocalMessage.h"
 #include "GameFramework/PlayerState.h"
-#include "Engine.h"
+#include "TimerManager.h"
+
+#include "UR_Character.h"
 #include "UR_FunctionLibrary.h"
 #include "UR_PlayerController.h"
 #include "UR_LocalMessage.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
 * NOTES about rotating movement :
@@ -64,6 +69,8 @@ AUR_PickupBase::AUR_PickupBase()
     PickupMessage = UUR_LocalMessage::StaticClass();
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 void AUR_PickupBase::OnConstruction(const FTransform& Transform)
 {
     RespawnTime = FMath::Max(0.0f, RespawnTime);
@@ -76,6 +83,8 @@ void AUR_PickupBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
     DOREPLIFETIME_CONDITION(AUR_PickupBase, bRepInitialPickupAvailable, COND_InitialOnly);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_PickupBase::BeginPlay()
 {
@@ -97,12 +106,14 @@ void AUR_PickupBase::BeginPlay()
 
         // Singleplayer
         if (IsNetMode(NM_Standalone))
+        {
             ShowPickupAvailable(bPickupAvailable);
+        }
 
         // Initial spawn delay
         if (InitialSpawnDelay > 0.0f)
         {
-            float PreSpawnTime = InitialSpawnDelay - PreRespawnEffectDuration;
+            const float PreSpawnTime = InitialSpawnDelay - PreRespawnEffectDuration;
             if (PreSpawnTime > 0.0f)
             {
                 GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &AUR_PickupBase::PreRespawnTimer, PreSpawnTime, false);
@@ -138,6 +149,7 @@ void AUR_PickupBase::Tick(float DeltaTime)
         {
             RotatingComponent->AddLocalRotation(FRotator(0.0f, RotationRate * DeltaTime, 0.0f));
         }
+
         if (BobbingHeight > 0.0f)
         {
             FVector Loc(InitialRelativeLocation);
@@ -151,7 +163,9 @@ void AUR_PickupBase::Tick(float DeltaTime)
 bool AUR_PickupBase::ShouldSkipTick()
 {
     if (!RotatingComponent || !RotatingComponent->IsVisible())
+    {
         return true;
+    }
 
     const float RenderTimeThreshold = 0.41f;
     UWorld* TheWorld = GetWorld();
@@ -159,7 +173,9 @@ bool AUR_PickupBase::ShouldSkipTick()
     if (const UPrimitiveComponent* PrimitiveComp = Cast<UPrimitiveComponent>(RotatingComponent))
     {
         if (TheWorld->TimeSince(PrimitiveComp->GetLastRenderTime()) <= RenderTimeThreshold)
+        {
             return false; // Rendered, don't skip it.
+        }
     }
 
     // Most components used with movement components don't actually render, so check attached children render times.
@@ -170,7 +186,9 @@ bool AUR_PickupBase::ShouldSkipTick()
         if (const UPrimitiveComponent* PrimitiveChild = Cast<UPrimitiveComponent>(Child))
         {
             if (PrimitiveChild->IsRegistered() && TheWorld->TimeSince(PrimitiveChild->GetLastRenderTime()) <= RenderTimeThreshold)
+            {
                 return false; // Rendered, don't skip it.
+            }
         }
     }
 
@@ -180,22 +198,29 @@ bool AUR_PickupBase::ShouldSkipTick()
 
 void AUR_PickupBase::OnBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (HasAuthority() ? !bPickupAvailable : !bPickupAvailableLocally)
+    const bool bShouldDisallowPickup = HasAuthority() ? !bPickupAvailable : !bPickupAvailableLocally;
+    if (bShouldDisallowPickup)
+    {
         return;
+    }
 
     if (AllowPickupBy(OtherActor))
     {
         if (HasAuthority())
+        {
             GiveTo(OtherActor);
+        }
         else
+        {
             SimulateGiveTo(OtherActor);
+        }
     }
 }
 
 bool AUR_PickupBase::AllowPickupBy_Implementation(AActor* Other)
 {
-    AUR_Character* Char = Cast<AUR_Character>(Other);
-    if (Char && Char->IsAlive())
+    AUR_Character* URCharacter = Cast<AUR_Character>(Other);
+    if (URCharacter && URCharacter->IsAlive())
     {
         if (HasAuthority())
         {
@@ -203,7 +228,7 @@ bool AUR_PickupBase::AllowPickupBy_Implementation(AActor* Other)
         }
         else
         {
-            return Char->IsLocallyControlled();
+            return URCharacter->IsLocallyControlled();
         }
     }
     return false;
@@ -277,7 +302,7 @@ void AUR_PickupBase::MulticastPickedUp_Implementation(AActor* Picker)
     bPickupAvailable = false;
     bRepInitialPickupAvailable = false;
 
-    float PreRespawnTime = RespawnTime - PreRespawnEffectDuration;
+    const float PreRespawnTime = RespawnTime - PreRespawnEffectDuration;
     if (PreRespawnTime > 0.0f)
     {
         // if we have a respawn time, only trust authority to run timer and multicast at the end
@@ -343,8 +368,12 @@ void AUR_PickupBase::RespawnTimer()
         for (AActor* Other : Overlaps)
         {
             OnBeginOverlap_Implementation(nullptr, Other, nullptr, 0, false, FHitResult());
-            if (HasAuthority() ? !bPickupAvailable : !bPickupAvailableLocally)
+
+            const bool bShouldBreak{ HasAuthority() ? !bPickupAvailable : !bPickupAvailableLocally };
+            if (bShouldBreak)
+            {
                 break;
+            }
         }
     }
 }
@@ -359,10 +388,10 @@ FText AUR_PickupBase::GetPickupText_Implementation(AActor* Picker)
 
     FString PickerName(TEXT("Something"));
 
-    APawn* P = Cast<APawn>(Picker);
-    if (P && P->GetPlayerState())
+    APawn* Pawn = Cast<APawn>(Picker);
+    if (Pawn && Pawn->GetPlayerState())
     {
-        PickerName = P->GetPlayerState()->GetPlayerName();
+        PickerName = Pawn->GetPlayerState()->GetPlayerName();
     }
 
     return FText::FromString(FString::Printf(TEXT("%s picked up %s"), *PickerName, *GetItemName().ToString()));
