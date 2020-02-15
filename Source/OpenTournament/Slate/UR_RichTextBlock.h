@@ -1,10 +1,14 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/RichTextBlock.h"
 #include "UR_RichTextBlock.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * UE 4.23 now provides builtin default text style property,
