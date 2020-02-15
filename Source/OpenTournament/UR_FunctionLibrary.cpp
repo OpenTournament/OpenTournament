@@ -7,7 +7,6 @@
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/InputSettings.h"
 #include "Regex.h"
-#include "UEdMode.h" 
 
 #include "UR_GameModeBase.h"
 #include "UR_PlayerController.h"
@@ -125,8 +124,10 @@ bool UUR_FunctionLibrary::IsKeyMappedToAxis(const FKey& Key, FName AxisName, flo
 
 AUR_PlayerController* UUR_FunctionLibrary::GetLocalPlayerController(const UObject* WorldContextObject)
 {
-    if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
+    if (const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
+    {
         return World->GetFirstPlayerController<AUR_PlayerController>();
+    }
 
     return nullptr;
 }
