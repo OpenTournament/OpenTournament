@@ -200,12 +200,12 @@ void AUR_Teleporter::SetTargetVelocity(AActor* TargetActor, ACharacter* TargetCh
 
             if (TargetCharacter)
             {
-                FVector NewTargetVelocity = MomentumRotator.RotateVector(CharacterMovement->Velocity);
+                const FVector NewTargetVelocity{ MomentumRotator.RotateVector(CharacterMovement->Velocity) };
                 CharacterMovement->Velocity = NewTargetVelocity;
             }
             else
             {
-                FVector NewTargetVelocity = MomentumRotator.RotateVector(TargetActor->GetRootComponent()->ComponentVelocity);
+                const FVector NewTargetVelocity{ MomentumRotator.RotateVector(TargetActor->GetRootComponent()->ComponentVelocity) };
                 TargetActor->GetRootComponent()->ComponentVelocity = NewTargetVelocity;
             }
         }
@@ -231,7 +231,7 @@ void AUR_Teleporter::SetTargetVelocity(AActor* TargetActor, ACharacter* TargetCh
 void AUR_Teleporter::ApplyGameplayTag(AActor* TargetActor)
 {
     FGameplayTagContainer TargetTags;
-    if (auto TagActor = Cast<IGameplayTagAssetInterface>(TargetActor))
+    if (const auto TagActor = Cast<IGameplayTagAssetInterface>(TargetActor))
     {
         TagActor->GetOwnedGameplayTags(TargetTags);
         TargetTags.AddTag(TeleportTag);
