@@ -83,7 +83,7 @@ USkeletalMesh* AUR_WeaponBase::GetMeshForWeapon(const TSubclassOf<AUR_Weapon> In
     {
         if (USkeletalMeshComponent* MeshComp = InWeaponClass->GetDefaultObject<AUR_Weapon>()->GetWeaponMesh())
         {
-            MeshComp->SkeletalMesh;
+            return MeshComp->SkeletalMesh;
         }
     }
     return nullptr;
