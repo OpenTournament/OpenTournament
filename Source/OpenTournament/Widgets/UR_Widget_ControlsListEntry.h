@@ -28,8 +28,8 @@ class OPENTOURNAMENT_API UUR_Widget_ControlsListEntry : public UUserWidget, publ
 public:
     UUR_Widget_ControlsListEntry(const FObjectInitializer& ObjectInitializer);
 
-    void NativeConstruct();
-    void NativeOnListItemObjectSet(UObject* InObject);
+    void NativeConstruct() override;
+    void NativeOnListItemObjectSet(UObject* InObject) override;
 
     UPROPERTY(meta = (BindWidget))
     UTextBlock* EntryName;
