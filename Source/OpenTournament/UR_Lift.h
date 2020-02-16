@@ -4,8 +4,9 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/BoxComponent.h"
+
 #include "UR_Type_LiftState.h"
 #include "UR_Lift.generated.h"
 
@@ -13,6 +14,7 @@
 
 class UAudioComponent;
 class UBoxComponent;
+class UPrimitiveComponent;
 class UStaticMeshComponent;
 class USoundBase;
 
