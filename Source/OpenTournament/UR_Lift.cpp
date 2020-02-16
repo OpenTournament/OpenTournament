@@ -9,7 +9,6 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
-#include "Particles/ParticleSystemComponent.h"
 #include "TimerManager.h"
 
 #include "OpenTournament.h"
@@ -37,10 +36,10 @@ AUR_Lift::AUR_Lift(const FObjectInitializer& ObjectInitializer) :
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMeshComponent"));
     MeshComponent->SetupAttachment(RootComponent);
 
-    EndRelativeLocation = RootComponent->GetComponentLocation() + FVector::UpVector * 100;
-
     AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
     AudioComponent->SetupAttachment(RootComponent);
+
+    EndRelativeLocation = RootComponent->GetComponentLocation() + FVector::UpVector * 100;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
