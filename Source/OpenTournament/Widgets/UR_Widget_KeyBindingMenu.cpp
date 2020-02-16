@@ -73,7 +73,6 @@ void UUR_Widget_KeyBindingMenu::CreateKeyBindObject(FName Name, FKey Key)
 void UUR_Widget_KeyBindingMenu::PopulateKeyBindingList()
 {
     AUR_BasePlayerController* Player = Cast<AUR_BasePlayerController>(GetOwningPlayer());
-    UUR_PlayerInput* PlayerInput = Player->GetPlayerInput();
     const UInputSettings * Settings = GetDefault<UInputSettings>();
 
     for (TIndexedContainerIterator<TArray<FName>, FName, int32> IterAxis = AxisNames.CreateIterator(); IterAxis; ++IterAxis)
