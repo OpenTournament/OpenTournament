@@ -56,8 +56,8 @@ public:
     * Used for chat, death messages... [insert more]
     * Use to keep consistency around interfaces.
     * Especially considering that later on, players might have :
-    * - customizeable team colors
-    * - customizeable self color in non team games
+    * - Customizable team colors
+    * - Customizable self color in non team games
     */
     UFUNCTION(BlueprintPure)
     static FColor GetPlayerDisplayTextColor(const APlayerState* PS);
