@@ -123,12 +123,11 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
         return false;
     }
 
-    AController* CharacterController{ nullptr };
     const auto TargetCharacter{ Cast<ACharacter>(TargetActor) };
 
     const FVector DestinationLocation{ DestinationActor ? DestinationActor->GetActorLocation() : DestinationTransform.GetLocation() + GetActorLocation() };
     FRotator TargetActorRotation{ FRotator::ZeroRotator };
-    FRotator DestinationRotation{ DestinationActor ? DestinationActor->GetActorRotation() : DestinationTransform.GetRotation().Rotator() };
+    const FRotator DestinationRotation{ DestinationActor ? DestinationActor->GetActorRotation() : DestinationTransform.GetRotation().Rotator() };
     FRotator DesiredRotation{ DestinationRotation };
 
     if (TargetCharacter)
