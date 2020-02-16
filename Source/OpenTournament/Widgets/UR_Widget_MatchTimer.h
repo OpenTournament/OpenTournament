@@ -23,9 +23,6 @@ public:
 
     UUR_Widget_MatchTimer(const FObjectInitializer& ObjectInitializer);
 
-    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "MatchTimer")
-    FString GetTimeString(const float TimeSeconds) const;
-
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "MatchTimer")
     int32 RemainingTime;
 };
