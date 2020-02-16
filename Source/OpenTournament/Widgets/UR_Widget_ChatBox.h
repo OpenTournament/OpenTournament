@@ -1,16 +1,20 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "UR_WidgetChatBox.generated.h"
+#include "UR_Widget_ChatBox.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * 
+ * Chat Box Widget
  */
 UCLASS()
-class OPENTOURNAMENT_API UUR_WidgetChatBox : public UUserWidget
+class OPENTOURNAMENT_API UUR_Widget_ChatBox : public UUserWidget
 {
 	GENERATED_BODY()
 
