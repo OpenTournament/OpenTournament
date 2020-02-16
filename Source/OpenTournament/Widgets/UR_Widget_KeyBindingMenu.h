@@ -1,48 +1,59 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Widgets/UR_Widget_BaseMenu.h"
-#include "Components/Button.h"
-#include "Components/ListView.h"
-#include "UR_PlayerController.h"
-#include "Data/UR_Object_KeyBind.h"
+
 #include "UR_Widget_KeyBindingMenu.generated.h"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+class APlayerController;
+class UButton;
+class UListView;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
- * 
+ * Keybinding Menu
  */
 UCLASS()
 class OPENTOURNAMENT_API UUR_Widget_KeyBindingMenu : public UUR_Widget_BaseMenu
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+    
 public:
-	UUR_Widget_KeyBindingMenu(const FObjectInitializer& ObjectInitializer);
 
-	UPROPERTY(meta = (BindWidget))
-		UButton * CloseButton;
+    UUR_Widget_KeyBindingMenu(const FObjectInitializer& ObjectInitializer);
 
-	UPROPERTY(meta = (BindWidget))
-		UListView * ControlsList;
+    void NativeOnInitialized() override;
 
-	UFUNCTION()
-		void OnCloseButtonClicked();
+    UPROPERTY(meta = (BindWidget))
+    UButton* CloseButton;
 
-	UFUNCTION(BlueprintCallable, Category="UnrealRemake|UI")
-		void OpenMenu();
+    UPROPERTY(meta = (BindWidget))
+    UListView* ControlsList;
 
-	void NativeOnInitialized();
+    UFUNCTION()
+    void OnCloseButtonClicked();
+
+    UFUNCTION(BlueprintCallable, Category="UnrealRemake|UI")
+    void OpenMenu();
 
 private:
-	UPROPERTY(EditDefaultsOnly)
-	TArray<FName> AxisNames;
-	UPROPERTY(EditDefaultsOnly)
-	TArray<FName> ActionNames;
 
-	APlayerController * OwningPlayer;
+    void CreateKeyBindObject(FName Name, FKey Key);
+    void PopulateKeyBindingList();
 
-	void CreateKeyBindObject(FName Name, FKey Key);
-	void PopulateKeyBindingList();
+    UPROPERTY(EditDefaultsOnly)
+    TArray<FName> AxisNames;
+
+    UPROPERTY(EditDefaultsOnly)
+    TArray<FName> ActionNames;
+
+    UPROPERTY()
+    APlayerController* OwningPlayer;
 };
