@@ -5,9 +5,13 @@ using System.Collections.Generic;
 
 public class OpenTournamentEditorTarget : TargetRules
 {
-	public OpenTournamentEditorTarget(TargetInfo Target) : base(Target)
-	{
-		Type = TargetType.Editor;
-		ExtraModuleNames.Add("OpenTournament");
-	}
+    public OpenTournamentEditorTarget(TargetInfo Target) : base(Target)
+    {
+        DefaultBuildSettings = BuildSettingsVersion.V2;
+        bEnforceIWYU = true;
+        ShadowVariableWarningLevel = WarningLevel.Error;
+
+        Type = TargetType.Editor;
+        ExtraModuleNames.Add("OpenTournament");
+    }
 }
