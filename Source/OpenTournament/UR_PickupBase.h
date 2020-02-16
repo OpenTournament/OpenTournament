@@ -62,7 +62,7 @@ public:
     /**
     * Replicates the state of the pickup to late-joining players.
     * Replication is initial-only.
-    * This slightly differs from bPickupAvailable as it has to handle player joining right inbetween MulticastWillRespawn and actual respawn.
+    * This slightly differs from bPickupAvailable as it has to handle player joining right in-between MulticastWillRespawn and actual respawn.
     */
     UPROPERTY(Replicated, ReplicatedUsing = OnRep_bRepInitialPickupAvailable, BlueprintReadWrite)
     bool bRepInitialPickupAvailable;
@@ -150,7 +150,7 @@ public:
     virtual void CheckClientPredictionError();
 
     /**
-    * Broadcasted when pickup is being given away.
+    * Broadcast when pickup is being given away.
     */
     UFUNCTION(NetMulticast, Reliable)
     void MulticastPickedUp(AActor* Picker);
@@ -179,7 +179,7 @@ public:
     virtual void PreRespawnTimer();
 
     /**
-    * Broadcasted when pickup is about to respawn (RespawnTime minus PreRespawnEffectDuration).
+    * Broadcast when pickup is about to respawn (RespawnTime minus PreRespawnEffectDuration).
     */
     UFUNCTION(NetMulticast, Reliable)
     void MulticastWillRespawn();
