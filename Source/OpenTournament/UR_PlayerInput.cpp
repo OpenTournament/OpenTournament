@@ -110,8 +110,8 @@ This will also map a corresponding Tap action to the given axis (ex: MoveForward
 */
 void UUR_PlayerInput::RemapAxis(FInputAxisKeyMapping AxisKeyMapping, const FKey Key)
 {
-    FString AxisString = AxisKeyMapping.AxisName.ToString();
-    FString TapActionString = AxisString.Replace(TEXT("Move"), TEXT("Tap"));
+    const FString AxisString = AxisKeyMapping.AxisName.ToString();
+    const FString TapActionString = AxisString.Replace(TEXT("Move"), TEXT("Tap"));
     FInputActionKeyMapping TapActionMapping = FInputActionKeyMapping(FName(*TapActionString), AxisKeyMapping.Key);
     InputSettings->RemoveAxisMapping(AxisKeyMapping, false);
     InputSettings->RemoveActionMapping(TapActionMapping, false);
