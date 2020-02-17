@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "GameplayTagAssetInterface.h"
 
@@ -14,10 +15,16 @@
 
 class UCapsuleComponent;
 class UParticleSystemComponent;
+class UPrimitiveComponent;
 class AUR_Character;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Pickup Base Class - Actor representing a given Inventory class within the game world.
+ *                     Pickups handle behavior such as whether pickup is allowed, timers
+ *                     for respawning, etc.
+ */
 UCLASS(Abstract, Blueprintable)
 class OPENTOURNAMENT_API AUR_Pickup : public AActor,
     public IGameplayTagAssetInterface
