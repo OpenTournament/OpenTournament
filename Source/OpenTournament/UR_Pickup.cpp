@@ -24,6 +24,9 @@ AUR_Pickup::AUR_Pickup(const FObjectInitializer& ObjectInitializer) :
     CollisionComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Collision"));
     CollisionComponent->SetCapsuleSize(20.f, 20.f, true);
     CollisionComponent->Mobility = EComponentMobility::Static;
+    CollisionComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+    CollisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+
     RootComponent = CollisionComponent;
 
     CollisionComponent->SetGenerateOverlapEvents(true);
