@@ -48,6 +48,8 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     CapsuleComponent->SetCapsuleSize(55.f, 55.f, false);
     CapsuleComponent->SetupAttachment(RootComponent);
     CapsuleComponent->SetGenerateOverlapEvents(true);
+    CapsuleComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+    CapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Overlap);
     CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_JumpPad::OnTriggerEnter);
 
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMeshComponent"));
