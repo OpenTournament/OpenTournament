@@ -49,6 +49,13 @@ UUR_CharacterMovementComponent::UUR_CharacterMovementComponent(const class FObje
     AirControl = 0.35f;
     MaxAcceleration = 5120.f;
     MaxStepHeight = 62.5f;
+
+    NavAgentProps.bCanCrouch = true;
+    NavAgentProps.bCanSwim = true;
+    NavAgentProps.bCanJump = true;
+    NavAgentProps.bCanWalk = true;
+
+    bUseFlatBaseForFloorChecks = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
