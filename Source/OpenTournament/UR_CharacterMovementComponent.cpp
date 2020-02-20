@@ -50,6 +50,8 @@ UUR_CharacterMovementComponent::UUR_CharacterMovementComponent(const class FObje
     MaxAcceleration = 5120.f;
     MaxStepHeight = 62.5f;
 
+    CrouchedHalfHeight = 53.625;
+
     NavAgentProps.bCanCrouch = true;
     NavAgentProps.bCanSwim = true;
     NavAgentProps.bCanJump = true;

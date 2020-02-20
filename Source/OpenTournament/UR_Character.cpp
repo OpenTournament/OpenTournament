@@ -30,7 +30,8 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer.SetDefaultSubobjectClass<UUR_CharacterMovementComponent>(ACharacter::CharacterMovementComponentName)),
     FootstepTimestamp(0.f),
     FootstepTimeIntervalBase(0.300f),
-    FallDamageSpeedThreshold(2675.f)
+    FallDamageSpeedThreshold(2675.f),
+    CrouchTransitionSpeed(12.f)
 {
     // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
@@ -48,8 +49,10 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     // Create a CameraComponent	
     CharacterCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     CharacterCameraComponent->SetupAttachment(GetCapsuleComponent());
-    CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, 64.f)); // Position the camera
+    CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, BaseEyeHeight)); // Position the camera
     CharacterCameraComponent->bUsePawnControlRotation = true;
+    BaseEyeHeight = 64.f;
+    CrouchedEyeHeight = 64.f;
 
     // Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
     MeshFirstPerson = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshFirstPerson"));
@@ -111,6 +114,7 @@ void AUR_Character::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
 
     TickFootsteps(DeltaTime);
+    TickEyePosition(DeltaTime);
 }
 
 UAbilitySystemComponent* AUR_Character::GetAbilitySystemComponent() const
@@ -265,8 +269,25 @@ void AUR_Character::TickFootsteps(const float DeltaTime)
 
 void AUR_Character::PlayFootstepEffects(const float WalkingSpeedPercentage) const
 {
-    const float FootstepVolume = FMath::Clamp(0.2f, 1.f, WalkingSpeedPercentage);
+    const float FootstepVolume = FMath::Clamp<float>(0.2f, 1.f, WalkingSpeedPercentage);
     UGameplayStatics::PlaySound2D(GetWorld(), CharacterVoice.FootstepSound, FootstepVolume, 1.f);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_Character::RecalculateBaseEyeHeight()
+{
+    const float DefaultHalfHeight{ GetDefaultHalfHeight() };
+    const float AbsoluteDifference = DefaultHalfHeight - ((GetCharacterMovement()->CrouchedHalfHeight / DefaultHalfHeight) * DefaultHalfHeight);
+    EyeOffsetZ += bIsCrouched ? AbsoluteDifference : -1.f * AbsoluteDifference;
+}
+
+void AUR_Character::TickEyePosition(const float DeltaTime)
+{
+    const float StandingBonus{ bIsCrouched ? CrouchTransitionSpeed : 0.f };
+    EyeOffsetZ =  FMath::FInterpTo(EyeOffsetZ, BaseEyeHeight, DeltaTime, CrouchTransitionSpeed + StandingBonus);
+
+    CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, EyeOffsetZ));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
