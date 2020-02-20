@@ -201,6 +201,19 @@ public:
     float FootstepTimeIntervalBase;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+    // General - EyeHeight Adjustment
+
+    virtual void RecalculateBaseEyeHeight() override;
+
+    void TickEyePosition(const float DeltaTime);
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Eyeheight")
+    float EyeOffsetZ;
+
+    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Character|Eyeheight")
+    float CrouchTransitionSpeed;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
     // Jump & Crouch
 
     /**
