@@ -279,7 +279,11 @@ void AUR_Character::RecalculateBaseEyeHeight()
 {
     const float DefaultHalfHeight{ GetDefaultHalfHeight() };
     const float AbsoluteDifference = DefaultHalfHeight - ((GetCharacterMovement()->CrouchedHalfHeight / DefaultHalfHeight) * DefaultHalfHeight);
-    EyeOffsetZ += bIsCrouched ? AbsoluteDifference : -1.f * AbsoluteDifference;
+
+    if (GetMovementComponent()->IsMovingOnGround())
+    {
+        EyeOffsetZ += bIsCrouched ? AbsoluteDifference : -1.f * AbsoluteDifference;
+    }
 }
 
 void AUR_Character::TickEyePosition(const float DeltaTime)
