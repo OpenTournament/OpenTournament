@@ -341,8 +341,9 @@ void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
 
     if (FallingSpeed * -1.f > FallDamageSpeedThreshold)
     {
+        // @! TODO Variable for -0.15 value?
         const float FallingDamage = -0.15f * (FallDamageSpeedThreshold + FallingSpeed);
-        //GAME_PRINT(10.f, FColor::Red, "Fall Damage (%f)", FallingDamage);
+        GAME_LOG(Game, Log, "Character received Fall Damage (%f)!", FallingDamage);
 
         if (FallingDamage >= 1.0f)
         {
@@ -481,6 +482,12 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
                 GAME_LOG(Game, Log, "Damage to Health (%f)", Damage);
 
                 AttributeSet->SetHealth(FMath::FloorToFloat(FMath::Max(CurrentHealth - Damage, 0.f)));
+
+                // @! TODO Limit Pain by time, vary by damage etc.
+                if (Damage > 10.f)
+                {
+                    UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.PainSound, GetActorLocation(), GetActorRotation());
+                }
             }
         }
     }
