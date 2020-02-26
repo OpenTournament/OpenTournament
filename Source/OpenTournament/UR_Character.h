@@ -33,6 +33,9 @@ struct FCharacterVoice
     USoundBase* FootstepSound;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
+    USoundBase* LandingSound;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
     USoundBase* JumpSound;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
@@ -207,14 +210,38 @@ public:
 
     void TickEyePosition(const float DeltaTime);
 
+    /**
+    * Called on Landing. Calculate the View Offset.
+    */
+    void LandedViewOffset();
+
+    UPROPERTY()
+    FVector DefaultCameraPosition;
+
+    UPROPERTY()
+    float EyeOffsetLandingBobMinimum;
+
+    UPROPERTY()
+    float EyeOffsetLandingBobMaximum;
+
+    UPROPERTY()
+    FVector EyeOffset;
+
+    UPROPERTY()
+    FVector TargetEyeOffset;
+
+    UPROPERTY()
+    FVector CrouchEyeOffset;
+
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Eyeheight")
     float EyeOffsetZ;
 
-    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Character|Eyeheight")
-    float CrouchTransitionSpeed;
+    UPROPERTY()
+    float OldLocationZ;
+
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-    // Jump & Crouch
+    // Jump
 
     /**
     * Speed beyond which player begins taking fall damage (note: absolute value)
@@ -233,15 +260,52 @@ public:
     virtual void ClearJumpInput(float DeltaTime) override;
 
     /**
-    * Override to take Falling Damage 
+    * Override to take Falling Damage, calculate LandedViewOffset, etc.
     */
     virtual void Landed(const FHitResult& Hit) override;
+
+    /**
+    * Cosmetic effects related to Landing
+    */
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Character|Jump")
+    void PlayLandedEffects(const FHitResult& Hit);
 
     /**
     * Take Falling Damage
     */
     UFUNCTION(BlueprintCallable, Category = Pawn)
     virtual void TakeFallingDamage(const FHitResult& Hit, float FallingSpeed);
+
+    UPROPERTY()
+    UParticleSystem* LandedParticleSystemClass;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Crouch
+
+    virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+
+    /**
+    * Effects on Starting a Crouch
+    */
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Character|Crouch")
+    virtual void OnStartCrouchEffects();
+
+    virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+
+    /**
+    * Effects on Ending a Crouch
+    */
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Character|Crouch")
+    virtual void OnEndCrouchEffects();
+
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Character|Crouch")
+    float PriorCrouchTime;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Character|Crouch")
+    USoundBase* CrouchTransitionSound;
+
+    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Character|Crouch")
+    float CrouchTransitionSpeed;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Dodge
