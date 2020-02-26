@@ -51,8 +51,14 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     CharacterCameraComponent->SetupAttachment(GetCapsuleComponent());
     CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, BaseEyeHeight)); // Position the camera
     CharacterCameraComponent->bUsePawnControlRotation = true;
+
+    DefaultCameraPosition = FVector(-39.56f, 1.75f, BaseEyeHeight);
     BaseEyeHeight = 64.f;
     CrouchedEyeHeight = 64.f;
+    EyeOffset = FVector(0.f, 0.f, 0.f);
+    TargetEyeOffset = EyeOffset;
+    EyeOffsetLandingBobMaximum = BaseEyeHeight + GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+    EyeOffsetLandingBobMinimum = EyeOffsetLandingBobMaximum / 10.f;
 
     // Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
     MeshFirstPerson = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshFirstPerson"));
@@ -288,10 +294,39 @@ void AUR_Character::RecalculateBaseEyeHeight()
 
 void AUR_Character::TickEyePosition(const float DeltaTime)
 {
+    OldLocationZ = GetActorLocation().Z;
+
+    if (GetCharacterMovement()->bJustTeleported && (FMath::Abs(OldLocationZ - GetActorLocation().Z) > GetCharacterMovement()->MaxStepHeight))
+    {
+        EyeOffset.Z = 0.f;
+    }
+    else
+    {
+        EyeOffset.Z += (OldLocationZ - GetActorLocation().Z);
+    }
+
+    // Crouch Stuff
     const float StandingBonus{ bIsCrouched ? CrouchTransitionSpeed : 0.f };
     EyeOffsetZ =  FMath::FInterpTo(EyeOffsetZ, BaseEyeHeight, DeltaTime, CrouchTransitionSpeed + StandingBonus);
 
-    CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, EyeOffsetZ));
+    // 
+    float InterpTime = FMath::Min(1.f, 12.f*DeltaTime); //EyeOffsetInterpRate
+    EyeOffset = (1.f - InterpTime)*EyeOffset + InterpTime*TargetEyeOffset;
+    TargetEyeOffset *= FMath::Max(0.f, 1.f - 12.f*DeltaTime);
+
+    CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, EyeOffsetZ) + EyeOffset, false);
+}
+
+void AUR_Character::LandedViewOffset()
+{
+    const float FallingVelocityZ = FMath::Abs(URMovementComponent->Velocity.Z);
+    if (FallingVelocityZ > (URMovementComponent->JumpZVelocity / 2.f))
+    {
+        const float LandingBobAlpha = FMath::Clamp<float>(FallingVelocityZ / FallDamageSpeedThreshold, 0.f, 1.f);
+
+        TargetEyeOffset.Z = -1.f * FMath::Lerp(EyeOffsetLandingBobMinimum, EyeOffsetLandingBobMaximum, LandingBobAlpha);
+        GAME_LOG(Game, Log, "Landing Bob EyeOffset.Z: %f", TargetEyeOffset.Z);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -327,9 +362,27 @@ void AUR_Character::ClearJumpInput(float DeltaTime)
 
 void AUR_Character::Landed(const FHitResult& Hit)
 {
+    PlayLandedEffects(Hit);
+
     TakeFallingDamage(Hit, GetCharacterMovement()->Velocity.Z);
 
+    OldLocationZ = GetActorLocation().Z;
+
+    // Landing View Bob
+    LandedViewOffset();
+
     Super::Landed(Hit);
+}
+
+void AUR_Character::PlayLandedEffects(const FHitResult& Hit)
+{
+    if (LandedParticleSystemClass)
+    {
+        UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), LandedParticleSystemClass, Hit.Location, Hit.Normal.ToOrientationRotator());
+    }
+
+    const float LandingVolume = FMath::Clamp<float>(0.2f, 1.f, FMath::Abs(GetVelocity().Z) / FallDamageSpeedThreshold);
+    UGameplayStatics::PlaySound2D(GetWorld(), CharacterVoice.FootstepSound, LandingVolume, 1.f);
 }
 
 void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
@@ -351,6 +404,44 @@ void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
             TakeDamage(FallingDamage, DamageEvent, Controller, this);
         }
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_Character::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+    OnStartCrouchEffects();
+
+    Super::OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+
+    CrouchEyeOffset.Z += 64.f - BaseEyeHeight + HalfHeightAdjust; // @! TODO 64.f = StartingBaseEyeHeight
+
+    OldLocationZ = GetActorLocation().Z;
+
+    // Anims, sounds
+}
+
+void AUR_Character::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+    OnEndCrouchEffects();
+
+    Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+
+    CrouchEyeOffset.Z += 64.f - BaseEyeHeight + HalfHeightAdjust; // @! TODO 64.f = StartingBaseEyeHeight
+
+    OldLocationZ = GetActorLocation().Z;
+
+    // Anims, sounds
+}
+
+void AUR_Character::OnStartCrouchEffects()
+{
+    UGameplayStatics::PlaySound2D(GetWorld(), CrouchTransitionSound, 1.0f, 1.f);
+}
+
+void AUR_Character::OnEndCrouchEffects()
+{
+    UGameplayStatics::PlaySound2D(GetWorld(), CrouchTransitionSound, 1.0f, 1.f);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -427,6 +518,8 @@ void AUR_Character::OnWallDodge_Implementation(const FVector& DodgeLocation, con
         if (GetLocalRole() == ROLE_Authority)
         {
             UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.DodgeSound, GetActorLocation(), GetActorRotation());
+
+            // Modify player view for Dodge
         }
     }
 }
