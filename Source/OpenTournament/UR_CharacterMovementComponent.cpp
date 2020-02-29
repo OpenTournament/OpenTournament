@@ -218,7 +218,7 @@ void UUR_CharacterMovementComponent::SetupMovementPropertiesGeneration4_Scaled()
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void UUR_CharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
+void UUR_CharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     const auto URCharacterOwner = Cast<AUR_Character>(CharacterOwner);
     const bool bIsClient = (GetNetMode() == NM_Client && CharacterOwner->GetLocalRole() == ROLE_AutonomousProxy);
@@ -259,7 +259,7 @@ void UUR_CharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelT
             }
             else
             {
-                AdjustMovementTimers(1.f*DeltaTime);
+                AdjustMovementTimers(1.f * DeltaTime);
                 CurrentServerMoveTime = GetWorld()->GetTimeSeconds();
             }
 
@@ -318,6 +318,19 @@ void UUR_CharacterMovementComponent::ProcessLanded(const FHitResult& Hit, float 
         bIsDodging = false;
     }
     CurrentWallDodgeCount = 0;
+}
+
+FVector UUR_CharacterMovementComponent::ComputeSlideVector(const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const
+{
+    FVector Result = Super::ComputeSlideVector(Delta, Time, Normal, Hit);
+
+    // prevent boosting up slopes
+    //if (IsFalling())
+    //{
+    //    Result = HandleSlopeBoosting(Result, Delta, Time, Normal, Hit);
+    //}
+
+    return Result;
 }
 
 FVector UUR_CharacterMovementComponent::HandleSlopeBoosting(const FVector& SlideResult, const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const
@@ -457,13 +470,13 @@ bool UUR_CharacterMovementComponent::CanDodge() const
     return CanEverJump() && (DodgeResetTime <= 0.f);
 }
 
-bool UUR_CharacterMovementComponent::PerformDodge(FVector &DodgeDir, FVector &DodgeCross)
+bool UUR_CharacterMovementComponent::PerformDodge(FVector& DodgeDir, FVector& DodgeCross)
 {
     if (!HasValidData())
     {
         return false;
     }
-    
+
     AUR_Character* URCharacterOwner = Cast<AUR_Character>(CharacterOwner);
 
     if (!URCharacterOwner)
@@ -472,7 +485,7 @@ bool UUR_CharacterMovementComponent::PerformDodge(FVector &DodgeDir, FVector &Do
     }
 
     float PreviousVelocityZ = Velocity.Z;
-    
+
     if (IsMovingOnGround())
     {
         PerformDodgeImpulse(DodgeDir, DodgeCross);
@@ -508,11 +521,10 @@ bool UUR_CharacterMovementComponent::PerformDodge(FVector &DodgeDir, FVector &Do
 
             URCharacterOwner->OnWallDodge(URCharacterOwner->GetActorLocation(), Velocity);
         }
-        
     }
     else if (IsSwimming())
     {
-        Velocity = DodgeImpulseHorizontal*DodgeDir + (Velocity | DodgeCross)*DodgeCross;
+        Velocity = DodgeImpulseHorizontal * DodgeDir + (Velocity | DodgeCross) * DodgeCross;
         float SpeedXY = FMath::Min(Velocity.Size(), DodgeImpulseHorizontal); //
 
         bIsDodging = true;
