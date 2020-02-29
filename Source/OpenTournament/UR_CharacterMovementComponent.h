@@ -86,9 +86,14 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
+    virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
     virtual void ProcessLanded(const FHitResult& Hit, float RemainingTime, int32 Iterations) override;
+
+    /**
+    * Override Slope Boosting Behavior
+    */
+    virtual FVector ComputeSlideVector(const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const override;
 
     /**
     * Handle velocity transformation behavior related to Slope Boosting
@@ -146,7 +151,7 @@ public:
     /**
     * Actually try to calculate & apply our Dodge velocity. True if successful
     */
-    bool PerformDodge(FVector & DodgeDir, FVector& DodgeCross);
+    bool PerformDodge(FVector& DodgeDir, FVector& DodgeCross);
 
     /**
      * Modify Velocity (inherited from UCharacterMovementComponent) for Dodge
