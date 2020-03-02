@@ -52,13 +52,16 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, BaseEyeHeight)); // Position the camera
     CharacterCameraComponent->bUsePawnControlRotation = true;
 
-    DefaultCameraPosition = FVector(-39.56f, 1.75f, BaseEyeHeight);
+    // FVector(-39.56f, 1.75f, BaseEyeHeight)
+    DefaultCameraPosition = FVector(-0.f, 0.f, BaseEyeHeight);
     BaseEyeHeight = 64.f;
     CrouchedEyeHeight = 64.f;
     EyeOffset = FVector(0.f, 0.f, 0.f);
     TargetEyeOffset = EyeOffset;
     EyeOffsetLandingBobMaximum = BaseEyeHeight + GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
     EyeOffsetLandingBobMinimum = EyeOffsetLandingBobMaximum / 10.f;
+    EyeOffsetToTargetInterpolationRate = FVector(18.f, 10.f, 10.f);
+    TargetEyeOffsetToNeutralInterpolationRate = FVector(5.f, 5.f, 5.f);
 
     // Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
     MeshFirstPerson = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshFirstPerson"));
@@ -288,14 +291,12 @@ void AUR_Character::RecalculateBaseEyeHeight()
 
     if (GetMovementComponent()->IsMovingOnGround())
     {
-        EyeOffsetZ += bIsCrouched ? AbsoluteDifference : -1.f * AbsoluteDifference;
+        CrouchEyeOffsetZ += bIsCrouched ? AbsoluteDifference : -1.f * AbsoluteDifference;
     }
 }
 
 void AUR_Character::TickEyePosition(const float DeltaTime)
 {
-    OldLocationZ = GetActorLocation().Z;
-
     if (GetCharacterMovement()->bJustTeleported && (FMath::Abs(OldLocationZ - GetActorLocation().Z) > GetCharacterMovement()->MaxStepHeight))
     {
         EyeOffset.Z = 0.f;
@@ -307,14 +308,20 @@ void AUR_Character::TickEyePosition(const float DeltaTime)
 
     // Crouch Stuff
     const float StandingBonus{ bIsCrouched ? CrouchTransitionSpeed : 0.f };
-    EyeOffsetZ =  FMath::FInterpTo(EyeOffsetZ, BaseEyeHeight, DeltaTime, CrouchTransitionSpeed + StandingBonus);
+    CrouchEyeOffsetZ =  FMath::FInterpTo(CrouchEyeOffsetZ, BaseEyeHeight, DeltaTime, CrouchTransitionSpeed + StandingBonus);
 
-    // 
-    float InterpTime = FMath::Min(1.f, 12.f*DeltaTime); //EyeOffsetInterpRate
-    EyeOffset = (1.f - InterpTime)*EyeOffset + InterpTime*TargetEyeOffset;
-    TargetEyeOffset *= FMath::Max(0.f, 1.f - 12.f*DeltaTime);
+    EyeOffset.X = FMath::FInterpTo(EyeOffset.X, TargetEyeOffset.X, DeltaTime, EyeOffsetToTargetInterpolationRate.X);
+    EyeOffset.Y = FMath::FInterpTo(EyeOffset.Y, TargetEyeOffset.Y, DeltaTime, EyeOffsetToTargetInterpolationRate.Y);
+    EyeOffset.Z = FMath::FInterpTo(EyeOffset.Z, TargetEyeOffset.Z, DeltaTime, EyeOffsetToTargetInterpolationRate.Z);
+    TargetEyeOffset.X = FMath::FInterpTo(TargetEyeOffset.X, 0.f, DeltaTime, TargetEyeOffsetToNeutralInterpolationRate.X);
+    TargetEyeOffset.Y = FMath::FInterpTo(TargetEyeOffset.Y, 0.f, DeltaTime, TargetEyeOffsetToNeutralInterpolationRate.Y);
+    TargetEyeOffset.Z = FMath::FInterpTo(TargetEyeOffset.Z, 0.f, DeltaTime, TargetEyeOffsetToNeutralInterpolationRate.Z);
 
-    CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, EyeOffsetZ) + EyeOffset, false);
+    //GAME_LOG(Game, Log, "Ticking EyeOffset: %f, %f, %f)", EyeOffset.X, EyeOffset.Y, EyeOffset.Z);
+    CharacterCameraComponent->SetRelativeLocation(FVector(-0.f, 0.f, CrouchEyeOffsetZ) + EyeOffset, false);
+
+    // Update OldLocationZ. Order of operations is important here, this must follow our EyeOffset updates
+    OldLocationZ = GetActorLocation().Z;
 }
 
 void AUR_Character::LandedViewOffset()
@@ -366,6 +373,7 @@ void AUR_Character::Landed(const FHitResult& Hit)
 
     TakeFallingDamage(Hit, GetCharacterMovement()->Velocity.Z);
 
+    GAME_LOG(Game, Log, "Updating OldLocationZ: %f (Old), %f (New)", OldLocationZ, GetActorLocation().Z);
     OldLocationZ = GetActorLocation().Z;
 
     // Landing View Bob

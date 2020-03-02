@@ -231,10 +231,16 @@ public:
     FVector TargetEyeOffset;
 
     UPROPERTY()
+    FVector EyeOffsetToTargetInterpolationRate;
+
+    UPROPERTY()
+    FVector TargetEyeOffsetToNeutralInterpolationRate;
+
+    UPROPERTY()
     FVector CrouchEyeOffset;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Eyeheight")
-    float EyeOffsetZ;
+    float CrouchEyeOffsetZ;
 
     UPROPERTY()
     float OldLocationZ;
