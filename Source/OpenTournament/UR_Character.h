@@ -1,18 +1,16 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
-#include "Net/UnrealNetwork.h"
+#include "GameFramework/Character.h"
 #include "GameplayAbilitySpec.h"
 #include "GameplayEffect.h"
 #include "GameplayTagAssetInterface.h"
 
-#include <UR_Type_DodgeDirection.h>
+#include "UR_Type_DodgeDirection.h"
 
 #include "UR_Character.generated.h"
 
@@ -33,6 +31,9 @@ struct FCharacterVoice
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
     USoundBase* FootstepSound;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
+    USoundBase* LandingSound;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
     USoundBase* JumpSound;
@@ -191,19 +192,62 @@ public:
     void PlayFootstepEffects(float WalkingSpeedPercentage) const;
 
     /**
-    * Last Foostep Timestamp.
+    * Last Footstep Timestamp.
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Walk")
     float FootstepTimestamp;
 
     /**
-    * Foostep Time Interval 
+    * Footstep Time Interval 
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Walk")
     float FootstepTimeIntervalBase;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-    // Jump & Crouch
+    // General - EyeHeight Adjustment
+
+    virtual void RecalculateBaseEyeHeight() override;
+
+    void TickEyePosition(const float DeltaTime);
+
+    /**
+    * Called on Landing. Calculate the View Offset.
+    */
+    void LandedViewOffset();
+
+    UPROPERTY()
+    FVector DefaultCameraPosition;
+
+    UPROPERTY()
+    float EyeOffsetLandingBobMinimum;
+
+    UPROPERTY()
+    float EyeOffsetLandingBobMaximum;
+
+    UPROPERTY()
+    FVector EyeOffset;
+
+    UPROPERTY()
+    FVector TargetEyeOffset;
+
+    UPROPERTY()
+    FVector EyeOffsetToTargetInterpolationRate;
+
+    UPROPERTY()
+    FVector TargetEyeOffsetToNeutralInterpolationRate;
+
+    UPROPERTY()
+    FVector CrouchEyeOffset;
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Eyeheight")
+    float CrouchEyeOffsetZ;
+
+    UPROPERTY()
+    float OldLocationZ;
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Jump
 
     /**
     * Speed beyond which player begins taking fall damage (note: absolute value)
@@ -222,15 +266,52 @@ public:
     virtual void ClearJumpInput(float DeltaTime) override;
 
     /**
-    * Override to take Falling Damage 
+    * Override to take Falling Damage, calculate LandedViewOffset, etc.
     */
     virtual void Landed(const FHitResult& Hit) override;
+
+    /**
+    * Cosmetic effects related to Landing
+    */
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Character|Jump")
+    void PlayLandedEffects(const FHitResult& Hit);
 
     /**
     * Take Falling Damage
     */
     UFUNCTION(BlueprintCallable, Category = Pawn)
     virtual void TakeFallingDamage(const FHitResult& Hit, float FallingSpeed);
+
+    UPROPERTY()
+    UParticleSystem* LandedParticleSystemClass;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Crouch
+
+    virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+
+    /**
+    * Effects on Starting a Crouch
+    */
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Character|Crouch")
+    virtual void OnStartCrouchEffects();
+
+    virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+
+    /**
+    * Effects on Ending a Crouch
+    */
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Character|Crouch")
+    virtual void OnEndCrouchEffects();
+
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Character|Crouch")
+    float PriorCrouchTime;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Character|Crouch")
+    USoundBase* CrouchTransitionSound;
+
+    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Character|Crouch")
+    float CrouchTransitionSpeed;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Dodge
@@ -334,9 +415,6 @@ public:
     UPROPERTY()
     UUR_AttributeSet* AttributeSet;
 
-    UPROPERTY()
-    int32 bAbilitiesInitialized;
-
     /** Abilities to grant to this character on creation. These will be activated by tag or event and are not bound to specific inputs */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Abilities")
     TArray<TSubclassOf<UUR_GameplayAbility>> GameplayAbilities;
@@ -377,7 +455,7 @@ public:
     }
 
     UFUNCTION(BlueprintCallable, BlueprintPure)
-    bool IsAlive();
+    bool IsAlive() const;
 
     UFUNCTION(Exec)
     virtual void Suicide()
@@ -398,14 +476,14 @@ public:
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
     UUR_InventoryComponent* InventoryComponent;
 
-    bool isFiring = false;
+    bool bIsFiring = false;
 
     virtual void PawnStartFire(uint8 FireModeNum = 0) override;
     virtual void PawnStopFire(uint8 FireModeNum = 0);
 
     //Weapon select
     UFUNCTION()
-    void WeaponSelect(int32 number);
+    void WeaponSelect(int32 InWeaponGroup);
 
     UFUNCTION(Exec, BlueprintCallable)
     void NextWeapon();

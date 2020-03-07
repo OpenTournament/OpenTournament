@@ -1,10 +1,13 @@
-// Copyright (c) 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_GameMode_DM.h"
 
 #include "UR_PlayerState.h"
 #include "UR_GameState.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_GameMode_DM::PlayerKilled_Implementation(AController* Victim, AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser)
 {

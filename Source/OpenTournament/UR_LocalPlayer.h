@@ -1,8 +1,9 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "Engine/LocalPlayer.h"
 #include "UR_LocalPlayer.generated.h"
 
@@ -29,5 +30,4 @@ public:
 	*/
 	UPROPERTY(BlueprintReadOnly)
 	UUR_MessageHistory* MessageHistory;
-
 };

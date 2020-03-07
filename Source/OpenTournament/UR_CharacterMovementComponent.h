@@ -1,4 +1,4 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -15,8 +15,8 @@
 UENUM(BlueprintType)
 enum class EWallDodgeBehavior : uint8
 {
-    WD_DisallowSurface,
-    WD_RequiresSurface
+    DisallowSurface,
+    RequiresSurface
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,14 +86,19 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
+    virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
     virtual void ProcessLanded(const FHitResult& Hit, float RemainingTime, int32 Iterations) override;
 
     /**
+    * Override Slope Boosting Behavior
+    */
+    virtual FVector ComputeSlideVector(const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const override;
+
+    /**
     * Handle velocity transformation behavior related to Slope Boosting
     */
-    virtual FVector HandleSlopeBoosting(const FVector& SlideResult, const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const;
+    virtual FVector HandleSlopeBoosting(const FVector& SlideResult, const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     /// Utility
@@ -141,12 +146,39 @@ public:
     /**
     * Return true if character can dodge
     */
-    virtual bool CanDodge();
+    virtual bool CanDodge() const;
 
     /**
     * Actually try to calculate & apply our Dodge velocity. True if successful
     */
-    bool PerformDodge(FVector & DodgeDir, FVector& DodgeCross);
+    bool PerformDodge(FVector& DodgeDir, FVector& DodgeCross);
+
+    /**
+     * Modify Velocity (inherited from UCharacterMovementComponent) for Dodge
+     */
+    void PerformDodgeImpulse(const FVector& DodgeDir, const FVector& DodgeCross);
+
+    /**
+     * Modify Velocity (inherited from UCharacterMovementComponent) for WallDodge
+     */
+    void PerformWallDodgeImpulse(FVector& DodgeDir, FVector& DodgeCross);
+
+    /**
+     * Find VelocityZ based on Configurable Movement Parameters.
+     * This supports different behaviors such as Z-Override, partial Z-Override, and
+     * Z-Inheritance on WallDodges.
+     */
+    float GetWallDodgeVerticalImpulse() const;
+
+    /**
+     * Trace to determine if a WallDodge-permitting surface was hit. Modify HitResult for additional information.
+     */
+    bool TraceWallDodgeSurface(const FVector& DodgeDir, OUT FHitResult& HitResult) const;
+
+    /**
+    * Determine a valid Direction for WallDodge
+    */
+    void SetWallDodgeDirection(OUT FVector& DodgeDir, OUT FVector& DodgeCross, const FHitResult& HitResult) const;
 
     /**
     * Clear the dodge input direction flag

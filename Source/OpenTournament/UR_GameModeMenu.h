@@ -1,4 +1,4 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -19,7 +19,7 @@ class UAudioComponent;
 
 
 /**
- * 
+ * GameMode for Menus
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_GameModeMenu : public AUR_GameModeBase

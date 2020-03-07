@@ -1,4 +1,4 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -21,11 +21,11 @@ class OPENTOURNAMENT_API UUR_GameInstance : public UGameInstance
     GENERATED_BODY()
     
 public:
-	virtual void Init() override;
+    virtual void Init() override;
 
-	UFUNCTION()
-	virtual void BeginLoadingScreen(const FString& MapName);
+    UFUNCTION()
+    virtual void BeginLoadingScreen(const FString& MapName);
 
-	UFUNCTION()
-	virtual void EndLoadingScreen(UWorld* InLoadedWorld);
+    UFUNCTION()
+    virtual void EndLoadingScreen(UWorld* InLoadedWorld);
 };

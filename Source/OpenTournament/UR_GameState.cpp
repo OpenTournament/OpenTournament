@@ -1,10 +1,10 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_GameState.h"
 
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
 
@@ -24,9 +24,9 @@ void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 void AUR_GameState::OnRep_MatchState()
 {
-	OnMatchStateChanged.Broadcast(this);
-	
-	Super::OnRep_MatchState();
+    OnMatchStateChanged.Broadcast(this);
+    
+    Super::OnRep_MatchState();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
