@@ -1,10 +1,10 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_AttributeSet.h"
 
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -100,7 +100,7 @@ void UUR_AttributeSet::AdjustAttributeForMaxChange(FGameplayAttributeData& Affec
     {
         // Change current value to maintain the current Val / Max percent
         const float CurrentValue = AffectedAttribute.GetCurrentValue();
-        float NewDelta = (CurrentMaxValue > 0.f) ? (CurrentValue * NewMaxValue / CurrentMaxValue) - CurrentValue : NewMaxValue;
+        const float NewDelta = (CurrentMaxValue > 0.f) ? (CurrentValue * NewMaxValue / CurrentMaxValue) - CurrentValue : NewMaxValue;
 
         AbilityComponent->ApplyModToAttributeUnsafe(AffectedAttributeProperty, EGameplayModOp::Additive, NewDelta);
     }

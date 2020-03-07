@@ -1,14 +1,25 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Weapon.h"
 
-#include "UnrealNetwork.h"
+#include "Camera/CameraComponent.h"
+#include "Components/AudioComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/ShapeComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/Engine.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Net/UnrealNetwork.h"
+#include "TimerManager.h"
 
 #include "OpenTournament.h"
-#include "UR_InventoryComponent.h"
 #include "UR_Character.h"
+#include "UR_InventoryComponent.h"
+#include "UR_Projectile.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,15 +33,15 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
 
     RootComponent = Tbox;
 
-    Mesh1P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh1P"));
+    Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh1P"));
     Mesh1P->SetupAttachment(RootComponent);
     Mesh1P->bOnlyOwnerSee = true;
 
-    Mesh3P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh3P"));
+    Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh3P"));
     Mesh3P->SetupAttachment(RootComponent);
     Mesh3P->bOwnerNoSee = true;
 
-    Sound = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("Sound"));
+    Sound = CreateDefaultSubobject<UAudioComponent>(TEXT("Sound"));
     Sound->SetupAttachment(RootComponent);
 
     ProjectileClass = AUR_Projectile::StaticClass();
@@ -42,39 +53,30 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
     FireInterval = 1.0f;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 void AUR_Weapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(AUR_Weapon, ammoCount, COND_OwnerOnly);
-    DOREPLIFETIME_CONDITION(AUR_Weapon, equipped, COND_SkipOwner);
+    DOREPLIFETIME_CONDITION(AUR_Weapon, AmmoCount, COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(AUR_Weapon, bIsEquipped, COND_SkipOwner);
 }
 
-// Called when the game starts or when spawned
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 void AUR_Weapon::BeginPlay()
 {
     Super::BeginPlay();
     Sound->SetActive(false);
 }
 
-// Called every frame
 void AUR_Weapon::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
-    if (HasAuthority() && PlayerController != NULL)
-    {
-        if (bItemIsWithinRange)
-        {
-            Pickup();
-        }
-    }
 }
 
-void AUR_Weapon::PostInitializeComponents()
-{
-    Super::PostInitializeComponents();
-}
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool AUR_Weapon::CanFire() const
 {
@@ -83,12 +85,13 @@ bool AUR_Weapon::CanFire() const
 
 void AUR_Weapon::Pickup()
 {
-    Sound->SetActive(true);
-    Sound = UGameplayStatics::SpawnSoundAtLocation(this, Sound->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
+    GAME_LOG(Game, Log, "Pickup Occurred");
+
+    UGameplayStatics::PlaySoundAtLocation(this, PickupSound, PlayerController->GetActorLocation());
+
     PlayerController->InventoryComponent->Add(this);
     AttachWeaponToPawn();
 }
-
 
 void AUR_Weapon::GiveTo(AUR_Character* NewOwner)
 {
@@ -102,7 +105,6 @@ void AUR_Weapon::GiveTo(AUR_Character* NewOwner)
 
     //tmp - prevent Pickup() call
     Tbox->SetGenerateOverlapEvents(false);
-    bItemIsWithinRange = false;
 }
 
 void AUR_Weapon::OnRep_Owner()
@@ -122,27 +124,33 @@ void AUR_Weapon::OnRep_Equipped()
     if (PlayerController->IsLocallyControlled())
         return;	// should already be attached locally
 
-    setEquipped(equipped);
+    SetEquipped(bIsEquipped);
 }
 
 void AUR_Weapon::Fire()
 {
+    GAME_LOG(Game, Log, "Fire Weapon");
+
     if (auto World = GetWorld())
     {
         FVector MuzzleLocation{};
         FRotator MuzzleRotation{};
 
-        if (ammoCount > 0)
+        if (AmmoCount > 0)
         {
             FActorSpawnParameters ProjectileSpawnParameters;
 
             AUR_Projectile* Projectile = World->SpawnActor<AUR_Projectile>(ProjectileClass, MuzzleLocation, MuzzleRotation, ProjectileSpawnParameters);
 
+            UGameplayStatics::PlaySoundAtLocation(this, FireSound, PlayerController->GetActorLocation());
+
+            GAME_LOG(Game, Log, "Fire Occurred");
+
             if (Projectile)
             {
                 FVector Direction = MuzzleRotation.Vector();
                 Projectile->FireAt(Direction);
-                ammoCount--;
+                AmmoCount--;
             }
         }
         else
@@ -151,7 +159,6 @@ void AUR_Weapon::Fire()
         }
     }
 }
-
 
 void AUR_Weapon::GetPlayer(AActor* Player)
 {
@@ -177,7 +184,7 @@ EWeaponState::Type AUR_Weapon::GetCurrentState() const
 
 int32 AUR_Weapon::GetCurrentAmmo() const
 {
-    return int32();
+    return AmmoCount;
 }
 
 int32 AUR_Weapon::GetMaxAmmo() const
@@ -185,7 +192,7 @@ int32 AUR_Weapon::GetMaxAmmo() const
     return int32();
 }
 
-USkeletalMeshComponent * AUR_Weapon::GetWeaponMesh() const
+USkeletalMeshComponent* AUR_Weapon::GetWeaponMesh() const
 {
     return Mesh1P;
 }
@@ -299,20 +306,20 @@ void AUR_Weapon::OnUnEquip()
 
 bool AUR_Weapon::IsEquipped() const
 {
-    return equipped;
+    return bIsEquipped;
 }
 
-void AUR_Weapon::setEquipped(bool eq)
+void AUR_Weapon::SetEquipped(bool bEquipped)
 {
-    equipped = eq;
+    bIsEquipped = bEquipped;
 
-    if (equipped)
+    if (bIsEquipped)
     {
         AttachMeshToPawn();
 
         if (AUR_Character* Char = Cast<AUR_Character>(GetOwner()))
         {
-            if (Char->IsLocallyControlled() && Char->isFiring)
+            if (Char->IsLocallyControlled() && Char->bIsFiring)
             {
                 LocalStartFire();
             }
@@ -329,7 +336,6 @@ bool AUR_Weapon::IsAttachedToPawn() const
 {
     return false;
 }
-
 
 //============================================================
 // Basic firing loop for basic fire mode.
@@ -364,7 +370,7 @@ void AUR_Weapon::LocalFireLoop()
         return;
 
     // Additional checks to stop firing automatically
-    if (!PlayerController || !PlayerController->isFiring || !PlayerController->IsAlive() || !PlayerController->GetController() || !equipped)
+    if (!PlayerController || !PlayerController->bIsFiring || !PlayerController->IsAlive() || !PlayerController->GetController() || !bIsEquipped)
     {
         bFiring = false;
         return;
@@ -374,7 +380,7 @@ void AUR_Weapon::LocalFireLoop()
     //if (!CanFire())
         //return;
 
-    if (ammoCount <= 0)
+    if (AmmoCount <= 0)
     {
         // Play out-of-ammo sound ?
         GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Red, FString::Printf(TEXT("%s out of ammo"), *WeaponName));
@@ -400,19 +406,19 @@ void AUR_Weapon::ServerFire_Implementation()
         //return;
 
     // No ammo, discard this shot
-    if (ammoCount <= 0)
+    if (AmmoCount <= 0)
     {
         return;
     }
 
     // Client asking to fire while not equipped
     // Could be a slightly desynced swap, try to delay a bit
-    if (!equipped)
+    if (!bIsEquipped)
     {
         FTimerDelegate TimerCallback;
         TimerCallback.BindLambda([this]
         {
-            if (equipped)
+            if (bIsEquipped)
                 ServerFire_Implementation();
         });
         GetWorld()->GetTimerManager().SetTimer(DelayedFireTimerHandle, TimerCallback, 0.1f, false);
@@ -451,7 +457,7 @@ void AUR_Weapon::SpawnShot()
 
 void AUR_Weapon::ConsumeAmmo()
 {
-    ammoCount -= 1;
+    AmmoCount -= 1;
 }
 
 void AUR_Weapon::MulticastFired_Implementation()
@@ -482,7 +488,7 @@ void AUR_Weapon::PlayFireEffects()
 
     if (PlayerController && PlayerController->MeshFirstPerson)
     {
-        PlayerController->MeshFirstPerson->PlayAnimation(PlayerController->FireAnimation, false);
+        //PlayerController->MeshFirstPerson->PlayAnimation(PlayerController->FireAnimation, false);
         //TODO: play 3p anim when we have one
     }
 }

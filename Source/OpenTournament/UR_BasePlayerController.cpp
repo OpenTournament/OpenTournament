@@ -1,17 +1,23 @@
-// Copyright (c) 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_BasePlayerController.h"
 
-#include "UR_PlayerInput.h"
-
 #include "GameMapsSettings.h"
 #include "Kismet/GameplayStatics.h"
+
+#include "UR_PlayerInput.h"
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_BasePlayerController::AUR_BasePlayerController(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_BasePlayerController::InitInputSystem()
 {
@@ -23,7 +29,7 @@ void AUR_BasePlayerController::InitInputSystem()
 	Super::InitInputSystem();
 }
 
-UUR_PlayerInput* AUR_BasePlayerController::GetPlayerInput()
+UUR_PlayerInput* AUR_BasePlayerController::GetPlayerInput() const
 {
 	return Cast<UUR_PlayerInput>(PlayerInput);
 }

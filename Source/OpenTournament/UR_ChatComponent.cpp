@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 
 #include "UR_ChatComponent.h"
@@ -36,9 +36,9 @@ void UUR_ChatComponent::BeginPlay()
 
     OwnerController = Cast<AController>(GetOwner());
 
-    if (AUR_GameModeBase* GM = GetWorld()->GetAuthGameMode<AUR_GameModeBase>())
+    if (AUR_GameModeBase* URGameMode = GetWorld()->GetAuthGameMode<AUR_GameModeBase>())
     {
-        GM->RegisterChatComponent(this);
+        URGameMode->RegisterChatComponent(this);
     }
 }
 
@@ -46,15 +46,15 @@ void UUR_ChatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     Super::EndPlay(EndPlayReason);
 
-    if (AUR_GameModeBase* GM = GetWorld()->GetAuthGameMode<AUR_GameModeBase>())
+    if (AUR_GameModeBase* URGameMode = GetWorld()->GetAuthGameMode<AUR_GameModeBase>())
     {
-        GM->UnregisterChatComponent(this);
+        URGameMode->UnregisterChatComponent(this);
     }
 }
 
 void UUR_ChatComponent::Send(const FString& Message, bool bTeamMessage)
 {
-    FString ValidatedMessage = Validate(ProcessChatParameters(Message), bTeamMessage);
+    const FString ValidatedMessage = Validate(ProcessChatParameters(Message), bTeamMessage);
     if (!ValidatedMessage.IsEmpty())
     {
         LastSendTime = GetWorld()->RealTimeSeconds;

@@ -1,8 +1,9 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "GameplayTagAssetInterface.h"
 
@@ -10,10 +11,10 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-class AActor;
 class UAudioComponent;
 class UCapsuleComponent;
 class UMaterialInstanceDynamic;
+class UParticleSystem;
 class UParticleSystemComponent;
 class USoundBase;
 class UStaticMeshComponent;
@@ -26,6 +27,7 @@ class OPENTOURNAMENT_API AUR_JumpPad : public AActor,
 {
     GENERATED_BODY()
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 public:
 
     UPROPERTY(BlueprintReadOnly, Category = JumpPad)
@@ -81,6 +83,12 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad")
     USoundBase* JumpPadLaunchSound;
 
+    /**
+    * Particle System created on Launch
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad")
+    UParticleSystem* JumpPadLaunchParticleClass;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
@@ -89,8 +97,7 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void BeginPlay();
-    void Tick(float deltaTime);
+    void BeginPlay() override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -115,7 +122,7 @@ public:
     /**
     * Calculate our Jump Velocity
     */
-    FVector CalculateJumpVelocity(const AActor* InCharacter);
+    FVector CalculateJumpVelocity(const AActor* InCharacter) const;
 
     UFUNCTION()
     void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

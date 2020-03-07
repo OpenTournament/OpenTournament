@@ -1,10 +1,9 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Teleporter.h"
 
-#include "Engine/Engine.h"
 #include "Components/ArrowComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -12,6 +11,7 @@
 #include "GameFramework/Actor.h"
 #include "GameFramework/Controller.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
 
 #include "OpenTournament.h"
@@ -19,7 +19,7 @@
 #include "UR_CharacterMovementComponent.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
-#include "AutomationTest.h"
+#include "Misc/AutomationTest.h"
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,12 +27,12 @@
 AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer),
     DestinationActor(nullptr),
-    ExitRotationType(EExitRotation::ER_Relative),
+    ExitRotationType(EExitRotation::Relative),
     bKeepMomentum(true),
     TeleportOutSound(nullptr),
     TeleportInSound(nullptr),
-	bRequiredTagsExact(false),
-	bExcludedTagsExact(true)
+    bRequiredTagsExact(false),
+    bExcludedTagsExact(true)
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = false;
@@ -42,6 +42,8 @@ AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
     CapsuleComponent->SetCapsuleSize(45.f, 90.f, false);
     SetRootComponent(CapsuleComponent);
     CapsuleComponent->SetGenerateOverlapEvents(true);
+    CapsuleComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+    CapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
     CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Teleporter::OnTriggerEnter);
 
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMeshComponent"));
@@ -64,9 +66,9 @@ AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
 void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
     // TODO(Pedro): we should store the "teleporting" state in the MovementComponent of the actor in order to query it here
-    bool isTeleporting = (bFromSweep == false);
+    const bool bIsTeleporting = (bFromSweep == false);
 
-    if (isTeleporting)
+    if (bIsTeleporting)
     {
         return;
     }
@@ -89,8 +91,8 @@ void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other,
 bool AUR_Teleporter::IsPermittedToTeleport_Implementation(const AActor* TargetActor) const
 {
     // @! TODO : Check to see if the component/actor overlapping here matches a LD-specifiable list of classes
-	// (e.g. if we want to teleport only characters, or if things such as projectiles, vehicles, etc. may also pass through).
-	// This function may also be overridden to determine conditions such as only characters of Red/Blue team may pass through
+    // (e.g. if we want to teleport only characters, or if things such as projectiles, vehicles, etc. may also pass through).
+    // This function may also be overridden to determine conditions such as only characters of Red/Blue team may pass through
     const AUR_Character* Character = Cast<AUR_Character>(TargetActor);
     if (Character == nullptr)
     {
@@ -98,22 +100,22 @@ bool AUR_Teleporter::IsPermittedToTeleport_Implementation(const AActor* TargetAc
         return false;
     }
 
-	// Check if the actor being teleported has any Required or Excluded GameplayTags
-	FGameplayTagContainer TargetTags;
-	Character->GetOwnedGameplayTags(TargetTags);
-	return IsPermittedByGameplayTags(TargetTags);
+    // Check if the actor being teleported has any Required or Excluded GameplayTags
+    FGameplayTagContainer TargetTags;
+    Character->GetOwnedGameplayTags(TargetTags);
+    return IsPermittedByGameplayTags(TargetTags);
 }
 
 bool AUR_Teleporter::IsPermittedByGameplayTags(const FGameplayTagContainer& TargetTags) const
 {
-	if (RequiredTags.Num() == 0 || (bRequiredTagsExact && TargetTags.HasAnyExact(RequiredTags)) || (!bRequiredTagsExact && TargetTags.HasAny(RequiredTags)))
-	{
-		return (ExcludedTags.Num() == 0 || (bExcludedTagsExact && !TargetTags.HasAnyExact(ExcludedTags)) || (!bExcludedTagsExact && TargetTags.HasAny(RequiredTags)));
-	}
-	else
-	{
-		return false;
-	}
+    if (RequiredTags.Num() == 0 || (bRequiredTagsExact && TargetTags.HasAnyExact(RequiredTags)) || (!bRequiredTagsExact && TargetTags.HasAny(RequiredTags)))
+    {
+        return (ExcludedTags.Num() == 0 || (bExcludedTagsExact && !TargetTags.HasAnyExact(ExcludedTags)) || (!bExcludedTagsExact && TargetTags.HasAny(RequiredTags)));
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
@@ -123,20 +125,19 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
         return false;
     }
 
-    AController* CharacterController{ nullptr };
-    UPawnMovementComponent* CharacterMovement{ nullptr };
     const auto TargetCharacter{ Cast<ACharacter>(TargetActor) };
 
-	const FVector DestinationLocation{ DestinationActor ? DestinationActor->GetActorLocation() : DestinationTransform.GetLocation() + GetActorLocation() };
+    const FVector DestinationLocation{ DestinationActor ? DestinationActor->GetActorLocation() : DestinationTransform.GetLocation() + GetActorLocation() };
     FRotator TargetActorRotation{ FRotator::ZeroRotator };
-    FRotator DestinationRotation{ DestinationActor ? DestinationActor->GetActorRotation() : DestinationTransform.GetRotation().Rotator() };
+    const FRotator DestinationRotation{ DestinationActor ? DestinationActor->GetActorRotation() : DestinationTransform.GetRotation().Rotator() };
     FRotator DesiredRotation{ DestinationRotation };
 
     if (TargetCharacter)
     {
-        CharacterController = TargetCharacter->GetController();
-        CharacterMovement = TargetCharacter->GetMovementComponent();
-        TargetActorRotation = CharacterController->GetControlRotation();
+        if (const AController* Controller = TargetCharacter->GetController())
+        {
+            TargetActorRotation = TargetCharacter->GetController()->GetControlRotation();
+        }
     }
     else
     {
@@ -152,17 +153,34 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
     // Find out Desired Rotation
     GetDesiredRotation(DesiredRotation, TargetActorRotation, DestinationRotation);
 
+    // Set the Desired Rotation
+    SetTargetRotation(TargetActor, TargetCharacter, DesiredRotation);
+    
+    // Rotate velocity vector relative to the destination teleporter exit heading
+    SetTargetVelocity(TargetActor, TargetCharacter, DesiredRotation, DestinationRotation);
+
+    ApplyGameplayTag(TargetActor);
+
+    return true;
+}
+
+void AUR_Teleporter::SetTargetRotation(AActor* TargetActor, ACharacter* TargetCharacter, const FRotator& DesiredRotation)
+{
     // Rotate the TargetActor to face the Exit Direction vector
     if (TargetCharacter)
     {
-        CharacterController->SetControlRotation(DesiredRotation);
+        TargetCharacter->GetController()->SetControlRotation(DesiredRotation);
     }
     else
     {
         TargetActor->SetActorRotation(DesiredRotation);
     }
-    
-    // Rotate velocity vector relative to the destination teleporter exit heading
+}
+
+void AUR_Teleporter::SetTargetVelocity(AActor* TargetActor, ACharacter* TargetCharacter, const FRotator& DesiredRotation, const FRotator& DestinationRotation)
+{
+    UPawnMovementComponent* CharacterMovement{ TargetCharacter->GetMovementComponent() };
+
     if (!bKeepMomentum)
     {
         if (TargetCharacter)
@@ -174,26 +192,26 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
             TargetActor->GetRootComponent()->ComponentVelocity = FVector::ZeroVector;
         }
     }
-    else 
+    else
     {
-        if (ExitRotationType == EExitRotation::ER_Relative)
-        {			
+        if (ExitRotationType == EExitRotation::Relative)
+        {
             // Rotate velocity vector relatively to the Exit Direction of the Destination actor
             FRotator MomentumRotator = DesiredRotation - GetRootComponent()->GetComponentRotation();
             MomentumRotator.Yaw = FMath::UnwindDegrees(MomentumRotator.Yaw + 180);
 
             if (TargetCharacter)
             {
-                FVector NewTargetVelocity = MomentumRotator.RotateVector(CharacterMovement->Velocity);
+                const FVector NewTargetVelocity{ MomentumRotator.RotateVector(CharacterMovement->Velocity) };
                 CharacterMovement->Velocity = NewTargetVelocity;
             }
             else
             {
-                FVector NewTargetVelocity = MomentumRotator.RotateVector(TargetActor->GetRootComponent()->ComponentVelocity);
+                const FVector NewTargetVelocity{ MomentumRotator.RotateVector(TargetActor->GetRootComponent()->ComponentVelocity) };
                 TargetActor->GetRootComponent()->ComponentVelocity = NewTargetVelocity;
             }
         }
-        else
+        else if (ExitRotationType == EExitRotation::Fixed)
         {
             // Rotate velocity vector to face the Exit Direction of the Destination actor
             if (TargetCharacter)
@@ -210,20 +228,16 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
             }
         }
     }
-
-	ApplyGameplayTag(TargetActor);
-
-    return true;
 }
 
-void AUR_Teleporter::ApplyGameplayTag(AActor * TargetActor)
+void AUR_Teleporter::ApplyGameplayTag(AActor* TargetActor)
 {
-	FGameplayTagContainer TargetTags;
-	if (auto TagActor = Cast<IGameplayTagAssetInterface>(TargetActor))
-	{
-		TagActor->GetOwnedGameplayTags(TargetTags);
-		TargetTags.AddTag(TeleportTag);
-	}
+    FGameplayTagContainer TargetTags;
+    if (const auto TagActor = Cast<IGameplayTagAssetInterface>(TargetActor))
+    {
+        TagActor->GetOwnedGameplayTags(TargetTags);
+        TargetTags.AddTag(TeleportTag);
+    }
 }
 
 void AUR_Teleporter::PlayTeleportEffects_Implementation()
@@ -233,16 +247,26 @@ void AUR_Teleporter::PlayTeleportEffects_Implementation()
         UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportOutSound, GetActorLocation());
     }
 
-	const FVector DestinationLocation{ DestinationActor ? DestinationActor->GetActorLocation() : DestinationTransform.GetLocation() + GetActorLocation() };
+    if (TeleportOutParticleSystemClass)
+    {
+        UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TeleportOutParticleSystemClass, CapsuleComponent->GetComponentTransform());
+    }
+
+    const FVector DestinationLocation{ DestinationActor ? DestinationActor->GetActorLocation() : DestinationTransform.GetLocation() + GetActorLocation() };
     if (TeleportInSound)
     {
         UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportInSound, DestinationLocation);
+    }
+
+    if (TeleportInParticleSystemClass)
+    {
+        UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TeleportInParticleSystemClass, DestinationLocation, FRotator(), FVector(1.f, 1.f, 1.f));
     }
 }
 
 void AUR_Teleporter::GetDesiredRotation(FRotator& DesiredRotation, const FRotator& TargetActorRotation, const FRotator& DestinationRotation)
 {
-    if (ExitRotationType == EExitRotation::ER_Relative)
+    if (ExitRotationType == EExitRotation::Relative)
     {
         DesiredRotation = DestinationRotation + TargetActorRotation - this->GetActorRotation();
         DesiredRotation.Yaw += 180;
@@ -262,27 +286,27 @@ void AUR_Teleporter::GetDesiredRotation(FRotator& DesiredRotation, const FRotato
 #if WITH_EDITOR
 bool AUR_Teleporter::CanEditChange(const UProperty* InProperty) const
 {
-	const bool ParentVal = Super::CanEditChange(InProperty);
+    const bool ParentVal = Super::CanEditChange(InProperty);
 
-	// Can we edit bRequiredTagsExact?
-	if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_Teleporter, bRequiredTagsExact))
-	{
-		return RequiredTags.Num() > 0;
-	}
+    // Can we edit bRequiredTagsExact?
+    if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_Teleporter, bRequiredTagsExact))
+    {
+        return RequiredTags.Num() > 0;
+    }
 
-	// Can we edit bExcludedTagsExact?
-	if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_Teleporter, bExcludedTagsExact))
-	{
-		return ExcludedTags.Num() > 0;
-	}
+    // Can we edit bExcludedTagsExact?
+    if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_Teleporter, bExcludedTagsExact))
+    {
+        return ExcludedTags.Num() > 0;
+    }
 
-	// Can we edit DestinationTransform?
-	if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_Teleporter, DestinationTransform))
-	{
-		return DestinationActor == nullptr;
-	}
+    // Can we edit DestinationTransform?
+    if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_Teleporter, DestinationTransform))
+    {
+        return DestinationActor == nullptr;
+    }
 
-	return ParentVal;
+    return ParentVal;
 }
 #endif
 

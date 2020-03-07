@@ -1,10 +1,10 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_PlayerController.h"
 
-#include "Engine/World.h"
+#include "Components/AudioComponent.h"
 
 //UMG
 #include "SlateBasics.h"
@@ -14,16 +14,13 @@
 #include "Runtime/UMG/Public/IUMGModule.h"
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 
-#include "Components/AudioComponent.h"
-
-#include "OpenTournament.h"
 #include "UR_Character.h"
-#include "UR_HUD.h"
-#include "UR_PCInputDodgeComponent.h"
 #include "UR_ChatComponent.h"
+#include "UR_HUD.h"
 #include "UR_LocalPlayer.h"
-#include "Widgets/UR_Widget_BaseMenu.h"
 #include "UR_MessageHistory.h"
+#include "UR_PCInputDodgeComponent.h"
+#include "Widgets/UR_Widget_BaseMenu.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -86,14 +83,14 @@ void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
 {
     Super::SetPlayer(InPlayer);
 
-    UUR_LocalPlayer* LP = Cast<UUR_LocalPlayer>(GetLocalPlayer());
-    if (LP && LP->MessageHistory)
+    UUR_LocalPlayer* LocalPlayer = Cast<UUR_LocalPlayer>(GetLocalPlayer());
+    if (LocalPlayer && LocalPlayer->MessageHistory)
     {
         // bind chat dispatcher to MessageHistory handler
-        ChatComponent->OnReceiveChatMessage.AddUniqueDynamic(LP->MessageHistory, &UUR_MessageHistory::OnReceiveChatMessage);
+        ChatComponent->OnReceiveChatMessage.AddUniqueDynamic(LocalPlayer->MessageHistory, &UUR_MessageHistory::OnReceiveChatMessage);
 
         // bind system message dispatcher to MessageHistory handler
-        OnReceiveSystemMessage.AddUniqueDynamic(LP->MessageHistory, &UUR_MessageHistory::OnReceiveSystemMessage);
+        OnReceiveSystemMessage.AddUniqueDynamic(LocalPlayer->MessageHistory, &UUR_MessageHistory::OnReceiveSystemMessage);
     }
     else
     {
@@ -277,6 +274,13 @@ void AUR_PlayerController::UnCrouch()
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_PlayerController::PressedFire()
+{
+    StartFire(0);
+}
+
 void AUR_PlayerController::ReleasedFire()
 {
     if (URCharacter)
@@ -307,21 +311,4 @@ void AUR_PlayerController::ClientMessage_Implementation(const FString& S, FName 
         Super::ClientMessage_Implementation(S, Type, MsgLifeTime);
 }
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
-//TODO: delete this now that it is accessible from other menus.
-
-void AUR_PlayerController::OpenControlBindingMenu()
-{
-    if (KeyBindingMenu == nullptr)
-    {
-        return;
-    }
-
-    ControlsMenu = CreateWidget<UUR_Widget_BaseMenu>(GetWorld(), KeyBindingMenu);
-    if (ControlsMenu)
-    {
-        ControlsMenu->Show(nullptr);
-    }
-}

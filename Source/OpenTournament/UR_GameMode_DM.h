@@ -1,18 +1,24 @@
-// Copyright (c) 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "UR_GameMode.h"
+
 #include "UR_GameMode_DM.generated.h"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
- * 
+ * DeathMatch GameMode
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_GameMode_DM : public AUR_GameMode
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
 

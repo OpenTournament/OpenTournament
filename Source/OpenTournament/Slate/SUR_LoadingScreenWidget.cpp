@@ -1,5 +1,6 @@
-// Copyright (c) 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "SUR_LoadingScreenWidget.h"
 #include "SlateOptMacros.h"
@@ -7,6 +8,8 @@
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Images/SThrobber.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SUR_LoadingScreenWidget::Construct(const FArguments& InArgs)

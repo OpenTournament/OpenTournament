@@ -1,12 +1,14 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Character.h"
 
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/GameState.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -18,6 +20,8 @@
 #include "UR_GameplayAbility.h"
 #include "UR_PlayerController.h"
 #include "UR_GameMode.h"
+#include "UR_Weapon.h"
+#include "UR_Projectile.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,7 +30,8 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer.SetDefaultSubobjectClass<UUR_CharacterMovementComponent>(ACharacter::CharacterMovementComponentName)),
     FootstepTimestamp(0.f),
     FootstepTimeIntervalBase(0.300f),
-    FallDamageSpeedThreshold(2675.f)
+    FallDamageSpeedThreshold(2675.f),
+    CrouchTransitionSpeed(12.f)
 {
     // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
@@ -44,8 +49,19 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     // Create a CameraComponent	
     CharacterCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     CharacterCameraComponent->SetupAttachment(GetCapsuleComponent());
-    CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, 64.f)); // Position the camera
+    CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, BaseEyeHeight)); // Position the camera
     CharacterCameraComponent->bUsePawnControlRotation = true;
+
+    // FVector(-39.56f, 1.75f, BaseEyeHeight)
+    DefaultCameraPosition = FVector(-0.f, 0.f, BaseEyeHeight);
+    BaseEyeHeight = 64.f;
+    CrouchedEyeHeight = 64.f;
+    EyeOffset = FVector(0.f, 0.f, 0.f);
+    TargetEyeOffset = EyeOffset;
+    EyeOffsetLandingBobMaximum = BaseEyeHeight + GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+    EyeOffsetLandingBobMinimum = EyeOffsetLandingBobMaximum / 10.f;
+    EyeOffsetToTargetInterpolationRate = FVector(18.f, 10.f, 10.f);
+    TargetEyeOffsetToNeutralInterpolationRate = FVector(5.f, 5.f, 5.f);
 
     // Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
     MeshFirstPerson = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshFirstPerson"));
@@ -107,6 +123,7 @@ void AUR_Character::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
 
     TickFootsteps(DeltaTime);
+    TickEyePosition(DeltaTime);
 }
 
 UAbilitySystemComponent* AUR_Character::GetAbilitySystemComponent() const
@@ -130,6 +147,13 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
     PlayerInputComponent->BindAction("SRifle", IE_Pressed, this, &AUR_Character::SelectWeapon5);
     PlayerInputComponent->BindAction("Pistol", IE_Pressed, this, &AUR_Character::SelectWeapon0);
 
+    // Select Weapon Bind
+    // Throw Weapon
+
+    // Voice
+    // Ping
+    // Emote
+
     PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
     PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
 }
@@ -139,7 +163,7 @@ void AUR_Character::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
     UCameraComponent* Camera = PickCamera();
     if (Camera)
     {
-        bool bThirdPerson = IsThirdPersonCamera(Camera);
+        const bool bThirdPerson = IsThirdPersonCamera(Camera);
         if (bThirdPerson != bViewingThirdPerson)
         {
             bViewingThirdPerson = bThirdPerson;
@@ -254,11 +278,65 @@ void AUR_Character::TickFootsteps(const float DeltaTime)
 
 void AUR_Character::PlayFootstepEffects(const float WalkingSpeedPercentage) const
 {
-    const float FootstepVolume = FMath::Clamp(0.2f, 1.f, WalkingSpeedPercentage);
+    const float FootstepVolume = FMath::Clamp<float>(0.2f, 1.f, WalkingSpeedPercentage);
     UGameplayStatics::PlaySound2D(GetWorld(), CharacterVoice.FootstepSound, FootstepVolume, 1.f);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
+void AUR_Character::RecalculateBaseEyeHeight()
+{
+    const float DefaultHalfHeight{ GetDefaultHalfHeight() };
+    const float AbsoluteDifference = DefaultHalfHeight - ((GetCharacterMovement()->CrouchedHalfHeight / DefaultHalfHeight) * DefaultHalfHeight);
+
+    if (GetMovementComponent()->IsMovingOnGround())
+    {
+        CrouchEyeOffsetZ += bIsCrouched ? AbsoluteDifference : -1.f * AbsoluteDifference;
+    }
+}
+
+void AUR_Character::TickEyePosition(const float DeltaTime)
+{
+    if (GetCharacterMovement()->bJustTeleported && (FMath::Abs(OldLocationZ - GetActorLocation().Z) > GetCharacterMovement()->MaxStepHeight))
+    {
+        EyeOffset.Z = 0.f;
+    }
+    else
+    {
+        EyeOffset.Z += (OldLocationZ - GetActorLocation().Z);
+    }
+
+    // Crouch Stuff
+    const float StandingBonus{ bIsCrouched ? CrouchTransitionSpeed : 0.f };
+    CrouchEyeOffsetZ =  FMath::FInterpTo(CrouchEyeOffsetZ, BaseEyeHeight, DeltaTime, CrouchTransitionSpeed + StandingBonus);
+
+    EyeOffset.X = FMath::FInterpTo(EyeOffset.X, TargetEyeOffset.X, DeltaTime, EyeOffsetToTargetInterpolationRate.X);
+    EyeOffset.Y = FMath::FInterpTo(EyeOffset.Y, TargetEyeOffset.Y, DeltaTime, EyeOffsetToTargetInterpolationRate.Y);
+    EyeOffset.Z = FMath::FInterpTo(EyeOffset.Z, TargetEyeOffset.Z, DeltaTime, EyeOffsetToTargetInterpolationRate.Z);
+    TargetEyeOffset.X = FMath::FInterpTo(TargetEyeOffset.X, 0.f, DeltaTime, TargetEyeOffsetToNeutralInterpolationRate.X);
+    TargetEyeOffset.Y = FMath::FInterpTo(TargetEyeOffset.Y, 0.f, DeltaTime, TargetEyeOffsetToNeutralInterpolationRate.Y);
+    TargetEyeOffset.Z = FMath::FInterpTo(TargetEyeOffset.Z, 0.f, DeltaTime, TargetEyeOffsetToNeutralInterpolationRate.Z);
+
+    //GAME_LOG(Game, Log, "Ticking EyeOffset: %f, %f, %f)", EyeOffset.X, EyeOffset.Y, EyeOffset.Z);
+    CharacterCameraComponent->SetRelativeLocation(FVector(-0.f, 0.f, CrouchEyeOffsetZ) + EyeOffset, false);
+
+    // Update OldLocationZ. Order of operations is important here, this must follow our EyeOffset updates
+    OldLocationZ = GetActorLocation().Z;
+}
+
+void AUR_Character::LandedViewOffset()
+{
+    const float FallingVelocityZ = FMath::Abs(URMovementComponent->Velocity.Z);
+    if (FallingVelocityZ > (URMovementComponent->JumpZVelocity / 2.f))
+    {
+        const float LandingBobAlpha = FMath::Clamp<float>(FallingVelocityZ / FallDamageSpeedThreshold, 0.f, 1.f);
+
+        TargetEyeOffset.Z = -1.f * FMath::Lerp(EyeOffsetLandingBobMinimum, EyeOffsetLandingBobMaximum, LandingBobAlpha);
+        GAME_LOG(Game, Log, "Landing Bob EyeOffset.Z: %f", TargetEyeOffset.Z);
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_Character::CheckJumpInput(float DeltaTime)
 {
@@ -291,9 +369,28 @@ void AUR_Character::ClearJumpInput(float DeltaTime)
 
 void AUR_Character::Landed(const FHitResult& Hit)
 {
+    PlayLandedEffects(Hit);
+
     TakeFallingDamage(Hit, GetCharacterMovement()->Velocity.Z);
 
+    GAME_LOG(Game, Log, "Updating OldLocationZ: %f (Old), %f (New)", OldLocationZ, GetActorLocation().Z);
+    OldLocationZ = GetActorLocation().Z;
+
+    // Landing View Bob
+    LandedViewOffset();
+
     Super::Landed(Hit);
+}
+
+void AUR_Character::PlayLandedEffects(const FHitResult& Hit)
+{
+    if (LandedParticleSystemClass)
+    {
+        UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), LandedParticleSystemClass, Hit.Location, Hit.Normal.ToOrientationRotator());
+    }
+
+    const float LandingVolume = FMath::Clamp<float>(0.2f, 1.f, FMath::Abs(GetVelocity().Z) / FallDamageSpeedThreshold);
+    UGameplayStatics::PlaySound2D(GetWorld(), CharacterVoice.FootstepSound, LandingVolume, 1.f);
 }
 
 void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
@@ -305,8 +402,9 @@ void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
 
     if (FallingSpeed * -1.f > FallDamageSpeedThreshold)
     {
+        // @! TODO Variable for -0.15 value?
         const float FallingDamage = -0.15f * (FallDamageSpeedThreshold + FallingSpeed);
-        //GAME_PRINT(10.f, FColor::Red, "Fall Damage (%f)", FallingDamage);
+        GAME_LOG(Game, Log, "Character received Fall Damage (%f)!", FallingDamage);
 
         if (FallingDamage >= 1.0f)
         {
@@ -314,6 +412,44 @@ void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
             TakeDamage(FallingDamage, DamageEvent, Controller, this);
         }
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_Character::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+    OnStartCrouchEffects();
+
+    Super::OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+
+    CrouchEyeOffset.Z += 64.f - BaseEyeHeight + HalfHeightAdjust; // @! TODO 64.f = StartingBaseEyeHeight
+
+    OldLocationZ = GetActorLocation().Z;
+
+    // Anims, sounds
+}
+
+void AUR_Character::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+    OnEndCrouchEffects();
+
+    Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+
+    CrouchEyeOffset.Z += 64.f - BaseEyeHeight + HalfHeightAdjust; // @! TODO 64.f = StartingBaseEyeHeight
+
+    OldLocationZ = GetActorLocation().Z;
+
+    // Anims, sounds
+}
+
+void AUR_Character::OnStartCrouchEffects()
+{
+    UGameplayStatics::PlaySound2D(GetWorld(), CrouchTransitionSound, 1.0f, 1.f);
+}
+
+void AUR_Character::OnEndCrouchEffects()
+{
+    UGameplayStatics::PlaySound2D(GetWorld(), CrouchTransitionSound, 1.0f, 1.f);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -335,7 +471,6 @@ bool AUR_Character::IsDodgePermitted_Implementation() const
     }
 
     return IsPermitted;
-    return !URMovementComponent->IsFlying();
 }
 
 bool AUR_Character::CanDodge() const
@@ -391,6 +526,8 @@ void AUR_Character::OnWallDodge_Implementation(const FVector& DodgeLocation, con
         if (GetLocalRole() == ROLE_Authority)
         {
             UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.DodgeSound, GetActorLocation(), GetActorRotation());
+
+            // Modify player view for Dodge
         }
     }
 }
@@ -446,6 +583,12 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
                 GAME_LOG(Game, Log, "Damage to Health (%f)", Damage);
 
                 AttributeSet->SetHealth(FMath::FloorToFloat(FMath::Max(CurrentHealth - Damage, 0.f)));
+
+                // @! TODO Limit Pain by time, vary by damage etc.
+                if (Damage > 10.f)
+                {
+                    UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.PainSound, GetActorLocation(), GetActorRotation());
+                }
             }
         }
     }
@@ -509,12 +652,12 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
         return;
     }
 
-    AUR_GameMode* GM = GetWorld()->GetAuthGameMode<AUR_GameMode>();
-    if (GM)
+    AUR_GameMode* URGameMode = GetWorld()->GetAuthGameMode<AUR_GameMode>();
+    if (URGameMode)
     {
         AController* Killed = GetController();
 
-        if (GM->PreventDeath(Killed, Killer, DamageEvent, DamageCauser))
+        if (URGameMode->PreventDeath(Killed, Killer, DamageEvent, DamageCauser))
         {
             // Make sure we don't stay with <=0 health or IsAlive() would return false.
             if (AttributeSet->Health.GetCurrentValue() <= 0)
@@ -524,7 +667,7 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
             return;
         }
 
-        GM->PlayerKilled(Killed, Killer, DamageEvent, DamageCauser);
+        URGameMode->PlayerKilled(Killed, Killer, DamageEvent, DamageCauser);
     }
 
     if (AttributeSet)
@@ -584,7 +727,7 @@ void AUR_Character::PlayDeath()
     SetLifeSpan(5.0f);
 }
 
-bool AUR_Character::IsAlive()
+bool AUR_Character::IsAlive() const
 {
     if (GetTearOff() || IsPendingKillPending() || AttributeSet == nullptr)
     {
@@ -669,26 +812,30 @@ USkeletalMeshComponent* AUR_Character::GetPawnMesh() const
     return MeshFirstPerson;
 }
 
-void AUR_Character::WeaponSelect(int32 number)
+void AUR_Character::WeaponSelect(int32 InWeaponGroup)
 {
-    InventoryComponent->SelectWeapon(number);
+    InventoryComponent->SelectWeapon(InWeaponGroup);
 }
 
 void AUR_Character::NextWeapon()
 {
     if (InventoryComponent)
+    {
         InventoryComponent->NextWeapon();
+    }
 }
 
 void AUR_Character::PrevWeapon()
 {
     if (InventoryComponent)
+    {
         InventoryComponent->PrevWeapon();
+    }
 }
 
 void AUR_Character::PawnStartFire(uint8 FireModeNum)
 {
-    isFiring = true;
+    bIsFiring = true;
 
     if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
@@ -696,13 +843,13 @@ void AUR_Character::PawnStartFire(uint8 FireModeNum)
     }
     else
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("NO WEAPON SELECTED!")));
+        GAME_LOG(Game, Log, "No Weapon Selected");
     }
 }
 
 void AUR_Character::PawnStopFire(uint8 FireModeNum)
 {
-    isFiring = false;
+    bIsFiring = false;
 
     if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
@@ -713,22 +860,24 @@ void AUR_Character::PawnStopFire(uint8 FireModeNum)
 //deprecated
 void AUR_Character::Fire()
 {
-    if (isFiring)
+    if (bIsFiring)
     {
-        if (InventoryComponent->ActiveWeapon != NULL)
+        if (InventoryComponent->ActiveWeapon)
         {
-            if (InventoryComponent->ActiveWeapon->ProjectileClass)
+            if (InventoryComponent->ActiveWeapon->ProjectileClass != nullptr)
             {
-                GetActorEyesViewPoint(InventoryComponent->ActiveWeapon->Location, InventoryComponent->ActiveWeapon->Rotation);
-                FVector MuzzleLocation = InventoryComponent->ActiveWeapon->Location + FTransform(InventoryComponent->ActiveWeapon->Rotation).TransformVector(MuzzleOffset);
-                FRotator MuzzleRotation = InventoryComponent->ActiveWeapon->Rotation;
+                //GetActorEyesViewPoint(InventoryComponent->ActiveWeapon->GetActorLocation(), FRotator()); //InventoryComponent->ActiveWeapon->GetActorRotation()
+                //FVector MuzzleLocation{ InventoryComponent->ActiveWeapon->GetActorLocation() + FTransform(FRotator()).TransformVector(MuzzleOffset) }; // InventoryComponent->ActiveWeapon->GetActorRotation()
+                //FRotator MuzzleRotation{ InventoryComponent->ActiveWeapon->GetActorRotation() };
 
                 InventoryComponent->ActiveWeapon->Fire();
                 MeshFirstPerson->PlayAnimation(FireAnimation, false);
             }
         }
         else
-            GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Yellow, FString::Printf(TEXT("NO WEAPON SELECTED!")));
+        {
+            GAME_LOG(Game, Log, "No Weapon Selected");
+        }
     }
 }
 

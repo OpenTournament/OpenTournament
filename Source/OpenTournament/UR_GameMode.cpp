@@ -1,19 +1,21 @@
-// Copyright (c) 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_GameMode.h"
 
-#include "Engine/World.h"
-#include "Kismet/KismetSystemLibrary.h"
-#include "GameFramework/LocalMessage.h"
 #include "EngineUtils.h"    // for TActorIterator<>
 
-#include "UR_PlayerState.h"
-#include "UR_GameState.h"
-#include "UR_LocalMessage.h"
-#include "UR_Projectile.h"
-#include "UR_PlayerController.h"
 #include "UR_Character.h"
+#include "UR_GameState.h"
 #include "UR_InventoryComponent.h"
+#include "UR_LocalMessage.h"
+#include "UR_PlayerController.h"
+#include "UR_PlayerState.h"
+#include "UR_Projectile.h"
+#include "UR_Weapon.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameMode::AUR_GameMode()
 {
@@ -74,26 +76,26 @@ void AUR_GameMode::OnMatchTimeUp_Implementation(AUR_GameState* GS)
 
 void AUR_GameMode::SetPlayerDefaults(APawn* PlayerPawn)
 {
-    if (AUR_Character* Char = Cast<AUR_Character>(PlayerPawn))
+    if (AUR_Character* URCharacter = Cast<AUR_Character>(PlayerPawn))
     {
         //NOTE: Technically RestartPlayer() supports restarting a player that is not dead.
         // In that case, the existing Pawn is not touched, but this method is still called.
         // I'm not sure if we should try to support that.
-        if (Char->InventoryComponent)
+        if (URCharacter->InventoryComponent)
         {
-            Char->InventoryComponent->Clear();
+            URCharacter->InventoryComponent->Clear();
 
             FActorSpawnParameters SpawnParams;
             SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-            SpawnParams.Owner = Char;
-            SpawnParams.Instigator = Char;
+            SpawnParams.Owner = URCharacter;
+            SpawnParams.Instigator = URCharacter;
             for (const FStartingWeaponEntry& Entry : StartingWeapons)
             {
-                AUR_Weapon* Weap = GetWorld()->SpawnActor<AUR_Weapon>(Entry.WeaponClass, Char->GetActorLocation(), Char->GetActorRotation(), SpawnParams);
-                if (Weap)
+                AUR_Weapon* StartingWeapon = GetWorld()->SpawnActor<AUR_Weapon>(Entry.WeaponClass, URCharacter->GetActorLocation(), URCharacter->GetActorRotation(), SpawnParams);
+                if (StartingWeapon)
                 {
-                    Weap->ammoCount = Entry.Ammo;
-                    Weap->GiveTo(Char);
+                    StartingWeapon->AmmoCount = Entry.Ammo;
+                    StartingWeapon->GiveTo(URCharacter);
                 }
             }
         }

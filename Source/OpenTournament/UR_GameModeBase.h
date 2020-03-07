@@ -1,4 +1,4 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -14,7 +14,7 @@
 
 
 /**
- * 
+ * Base GameMode class for all OpenTournament GameModes
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_GameModeBase : public AGameMode
@@ -34,5 +34,4 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Chat")
     virtual void UnregisterChatComponent(class UUR_ChatComponent* Comp);
-
 };

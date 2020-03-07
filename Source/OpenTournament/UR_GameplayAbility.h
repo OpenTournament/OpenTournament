@@ -1,10 +1,10 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "GameplayAbility.h"
+#include "Abilities/GameplayAbility.h"
 #include "GameplayTagContainer.h"
 
 #include "UR_AbilityTypes.h"
@@ -44,7 +44,7 @@ public:
     UUR_GameplayAbility();
 
     /** Map of gameplay tags to gameplay effect containers */
-    //UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = GameplayEffects)
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = GameplayEffects)
     TMap<FGameplayTag, FUR_GameplayEffectContainer> EffectContainerMap;
 
     /** Make gameplay effect container spec to be applied later, using the passed in container */

@@ -1,17 +1,21 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/IUserObjectListEntry.h"
-#include "Components/TextBlock.h"
-#include "Components/InputKeySelector.h"
-#include "Runtime/Core/Public/Misc/Paths.h"
-#include "Data/UR_Object_KeyBind.h"
-#include "UR_PlayerController.h"
-#include "UR_PlayerInput.h"
+
 #include "UR_Widget_ControlsListEntry.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+class UInputKeySelector;
+class UTextBlock;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * 
@@ -23,6 +27,9 @@ class OPENTOURNAMENT_API UUR_Widget_ControlsListEntry : public UUserWidget, publ
     
 public:
     UUR_Widget_ControlsListEntry(const FObjectInitializer& ObjectInitializer);
+
+    void NativeConstruct() override;
+    void NativeOnListItemObjectSet(UObject* InObject) override;
 
     UPROPERTY(meta = (BindWidget))
     UTextBlock* EntryName;
@@ -38,12 +45,10 @@ public:
     UFUNCTION()
     void OnEntryKeySelectorIsSelectingKeyChanged();
 
-    void NativeConstruct();
-    void NativeOnListItemObjectSet(UObject* InObject);
 
 private:
 
-    bool IsSelectingKey;
-
     void UpdateEntry();
+
+    bool IsSelectingKey;
 };

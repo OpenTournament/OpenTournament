@@ -1,30 +1,22 @@
-// Copyright 2019 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "Engine/World.h"
-
-
-#include "Components/PrimitiveComponent.h"
-#include "Components/ShapeComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
-#include "UR_Character.h"
-#include "UR_Projectile.h"
-
-#include "Engine/Canvas.h" // for FCanvasIcon
 
 #include "UR_Weapon.generated.h"
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
+// Forward Declarations
 
-class AUR_Weapon;
+class AUR_Character;
 class AUR_Projectile;
+class UShapeComponent;
+class UAudioComponent;
+class USkeletalMeshComponent;
+class USoundBase;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,12 +33,17 @@ namespace EWeaponState
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- *
+ * Weapon Base Class
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_Weapon : public AActor
 {
     GENERATED_BODY()
+
+public:	
+    AUR_Weapon(const FObjectInitializer& ObjectInitializer);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
     enum class EAmmoType
     {
@@ -54,8 +51,6 @@ class OPENTOURNAMENT_API AUR_Weapon : public AActor
         ERocket,
         EMax,
     };
-
-    virtual void PostInitializeComponents() override;
 
     virtual EAmmoType GetAmmoType() const
     {
@@ -72,61 +67,55 @@ protected:
     UFUNCTION()
     virtual void OnRep_Equipped();
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
-public:	
-    AUR_Weapon(const FObjectInitializer & ObjectInitializer);
-
-    // Called every frame
+    virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
 
-    UPROPERTY(EditAnywhere)
-    AUR_Character* PlayerController;
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+public:
 
     UPROPERTY(EditAnywhere)
     UShapeComponent* Tbox;
 
-
-
-    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Weapon")
-    int32 ammoCount;
-
-    UPROPERTY(EditAnywhere, Category = "Weapon")
-    FString WeaponName = FString(TEXT(""));
-
-    UPROPERTY(EditAnywhere, Category = "Weapon")
-    FString AmmoName = FString(TEXT(""));
-
     UPROPERTY(EditAnywhere, Category = "Weapon")
     UAudioComponent* Sound;
 
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Weapon")
+    int32 AmmoCount;
+
     UPROPERTY(EditAnywhere, Category = "Weapon")
-    UAudioComponent* SoundFire;
+    FString WeaponName;
+
+    UPROPERTY(EditAnywhere, Category = "Weapon")
+    FString AmmoName;
+
+
+    UPROPERTY(EditAnywhere, Category = "Weapon")
+    USoundBase* PickupSound;
+
+    UPROPERTY(EditAnywhere, Category = "Weapon")
+    USoundBase* FireSound;
 
     UPROPERTY(EditAnywhere, Category = "Weapon")
     TSubclassOf<AUR_Projectile> ProjectileClass;
 
-    UPROPERTY(EditAnywhere, Category = "Weapon")
-    FVector Location;
-
-    UPROPERTY(EditAnywhere, Category = "Weapon")
-    FRotator Rotation;
-
     bool bItemIsWithinRange = false;
 
     UPROPERTY(ReplicatedUsing = OnRep_Equipped)
-    bool equipped = false;
+    bool bIsEquipped = false;
 
     UFUNCTION()
     void Pickup();
 
     UFUNCTION(BlueprintAuthorityOnly)
-    void GiveTo(class AUR_Character* NewOwner);
+    void GiveTo(AUR_Character* NewOwner);
 
     UFUNCTION()
     virtual void Fire();
 
     UFUNCTION()
-    void setEquipped(bool eq);
+    void SetEquipped(bool bEquipped);
 
     UFUNCTION()
     virtual void OnEquip(AUR_Weapon* LastWeapon);
@@ -158,6 +147,9 @@ public:
     UFUNCTION()
     void OnTriggerExit(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+    UPROPERTY(EditAnywhere)
+    AUR_Character* PlayerController;
+
 
     /** get current weapon state */
     EWeaponState::Type GetCurrentState() const;
@@ -173,12 +165,13 @@ public:
 
     /** get pawn owner */
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Game|Weapon")
-    class AUR_Character* GetPawnOwner() const;
+    AUR_Character* GetPawnOwner() const;
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Game|Weapon")
     bool IsLocallyControlled() const;
 
 protected:
+
     /** weapon mesh: 1st person view */
     UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
     USkeletalMeshComponent* Mesh1P;
@@ -192,8 +185,6 @@ protected:
     /** Returns Mesh3P subobject **/
     FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
     
-    // Called when the game starts or when spawned
-    virtual void BeginPlay() override;
 
 
     //============================================================

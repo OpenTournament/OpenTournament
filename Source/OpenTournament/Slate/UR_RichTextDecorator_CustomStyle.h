@@ -1,4 +1,6 @@
-// Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -6,9 +8,10 @@
 #include "Components/RichTextBlockDecorator.h"
 #include "UR_RichTextDecorator_CustomStyle.generated.h"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * 
+ * RichTextDecorator
  */
 UCLASS(BlueprintType)
 class OPENTOURNAMENT_API UUR_RichTextDecorator_CustomStyle : public URichTextBlockDecorator
