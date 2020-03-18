@@ -4,6 +4,7 @@
 
 #include "UR_Weapon.h"
 
+#include "Animation/AnimMontage.h"
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
@@ -20,6 +21,7 @@
 #include "UR_Character.h"
 #include "UR_InventoryComponent.h"
 #include "UR_Projectile.h"
+#include "UR_PlayerController.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -488,7 +490,7 @@ void AUR_Weapon::PlayFireEffects()
 
     if (PlayerController && PlayerController->MeshFirstPerson)
     {
-        //PlayerController->MeshFirstPerson->PlayAnimation(PlayerController->FireAnimation, false);
+        PlayerController->MeshFirstPerson->PlayAnimation(PlayerController->FireAnimation, false);
         //TODO: play 3p anim when we have one
     }
 }
