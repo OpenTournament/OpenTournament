@@ -33,10 +33,10 @@ public:
     void SetupActionMappings();
 
     UFUNCTION(BlueprintCallable, Category="UR_PlayerInput")
-    void SetActionKeyMappingKey(const FInputActionKeyMapping ActionKeyMapping, FKey Key);
+    void SetActionKeyMappingKey(const FInputActionKeyMapping& ActionKeyMapping, const FKey& Key);
 
     UFUNCTION(BlueprintCallable, Category = "UR_PlayerInput")
-    void ModifyActionKeyMapping(FName ActionName, const FInputActionKeyMapping ModActionKeyMapping);
+    void ModifyActionKeyMapping(const FName& ActionName, const FInputActionKeyMapping& ModActionKeyMapping);
 
     UFUNCTION(BlueprintCallable, Category = "UR_PlayerInput")
     void SaveMappings();
@@ -45,7 +45,7 @@ public:
     * Modify a key mapping for an action or axis
     * returns true if the key mapping was modified successfully, otherwise returns false
     */
-    bool ModifyKeyMapping(FName MappingName, const FInputChord InputChord);
+    bool ModifyKeyMapping(const FName& MappingName, const FInputChord& InputChord);
 
 
     UPROPERTY(Config)
@@ -53,8 +53,8 @@ public:
 
 private:
 
-    void RemapAction(FInputActionKeyMapping ActionKeyMapping, const FKey Key);
-    void RemapAxis(FInputAxisKeyMapping AxisKeyMapping, const FKey Key);
+    void RemapAction(FInputActionKeyMapping ActionKeyMapping, const FKey& Key);
+    void RemapAxis(FInputAxisKeyMapping AxisKeyMapping, const FKey& Key);
 
     UPROPERTY()
     UInputSettings* InputSettings;
