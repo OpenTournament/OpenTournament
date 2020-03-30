@@ -16,7 +16,6 @@
 class UPrimitiveComponent;
 class UShapeComponent;
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Delegates
 
@@ -68,7 +67,7 @@ public:
     /**
     * Check for Errors to find instances where this actor is configured incorrectly.
     */
-    virtual void CheckForErrors() override;
+    virtual void CheckForErrors();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
