@@ -21,7 +21,7 @@ class UStaticMeshComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-UCLASS()
+UCLASS(HideCategories = (Actor, Rendering, Replication, Collision, Input, LOD, Cooking))
 class OPENTOURNAMENT_API AUR_JumpPad : public AActor,
     public IGameplayTagAssetInterface
 {

@@ -24,7 +24,7 @@ class UParticleSystemComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-UCLASS()
+UCLASS(HideCategories = (Actor, Rendering, Replication, Collision, Input, LOD, Cooking))
 class OPENTOURNAMENT_API AUR_Teleporter : public AActor,
     public IGameplayTagAssetInterface
 {
