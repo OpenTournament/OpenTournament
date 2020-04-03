@@ -8,8 +8,8 @@
 #include "Components/ListView.h"
 #include "GameFramework/InputSettings.h"
 
-#include "Data/UR_Object_KeyBind.h"
-#include "UR_BasePlayerController.h"
+#include "OpenTournament/Data/UR_Object_KeyBind.h"
+#include "OpenTournament/UR_BasePlayerController.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

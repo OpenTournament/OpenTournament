@@ -6,7 +6,7 @@
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
-#include "UR_FunctionLibrary.h"
+#include "OpenTournament/UR_FunctionLibrary.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

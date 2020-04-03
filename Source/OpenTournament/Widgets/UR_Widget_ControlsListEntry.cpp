@@ -4,12 +4,11 @@
 
 #include "UR_Widget_ControlsListEntry.h"
 
-#include "Data/UR_Object_KeyBind.h"
 #include "Components/InputKeySelector.h"
 #include "Components/TextBlock.h"
-
-#include "UR_BasePlayerController.h"
-#include "UR_PlayerInput.h"
+#include "OpenTournament/Data/UR_Object_KeyBind.h"
+#include "OpenTournament/UR_BasePlayerController.h"
+#include "OpenTournament/UR_PlayerInput.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -1,9 +1,8 @@
 // Copyright 2019-2020 Open Tournament Project, All Rights Reserved.
 
-
 #include "UR_ArmorComponent.h"
-#include "UnrealNetwork.h"
 
+#include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
 UUR_ArmorComponent::UUR_ArmorComponent()

@@ -7,7 +7,7 @@
 #include "Components/RichTextBlock.h"
 #include "Framework/Text/SlateTextRun.h"
 
-#include "UR_FunctionLibrary.h"
+#include "OpenTournament/UR_FunctionLibrary.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // FUR_RichTextDecorator_CustomStyle
