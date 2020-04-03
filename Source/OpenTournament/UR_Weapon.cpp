@@ -22,6 +22,7 @@
 #include "UR_InventoryComponent.h"
 #include "UR_Projectile.h"
 #include "UR_PlayerController.h"
+#include "UR_FunctionLibrary.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -247,17 +248,23 @@ void AUR_Weapon::AttachMeshToPawn()
         // Be aware that "owner" means not only the local player, but also anybody looking through character via ViewTarget.
         // And both spectators/localplayer might be in either 1P or 3P, so I believe we cannot rely on bOwnerSee/bOwnerNoSee for this.
 
-        //TODO: See camera management in UR_Character.
-        // Here we can use UR_Character::bViewingThirdPerson.
-
         Mesh1P->AttachToComponent(PlayerController->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, PlayerController->GetWeaponAttachPoint());
-        Mesh1P->SetHiddenInGame(false);
+        Mesh3P->AttachToComponent(PlayerController->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(TEXT("ik_hand_gun")));
+        //Mesh3P->AttachToComponent(PlayerController->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, PlayerController->GetWeaponAttachPoint());
 
-        //NOTE: We don't have proper anim and grip point for 3P weapon.
-        //Mesh3P->AttachToComponent(PlayerController->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(TEXT("ik_hand_gun")));
-        //NOTE2: We'll attach to the (invisible) 1P arms for now otherwise it goes all over the place.
-        Mesh3P->AttachToComponent(PlayerController->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, PlayerController->GetWeaponAttachPoint());
-        Mesh3P->SetHiddenInGame(false);
+        //UPDATE: Now using this, we shouldn't use bOwnerNoSee anymore on 3p. 1p can keep bOnlyOwnerSee.
+        //TODO: Need some sort of hook on camera mode change / view target change so we can update 1p/3p visibility.
+        if (UUR_FunctionLibrary::IsLocallyViewed(PlayerController) && !PlayerController->bViewingThirdPerson)
+        {
+            Mesh1P->SetHiddenInGame(false);
+            Mesh3P->SetHiddenInGame(true);
+        }
+        else
+        {
+            Mesh1P->SetHiddenInGame(true);
+            Mesh3P->SetHiddenInGame(false);
+            Mesh3P->bOwnerNoSee = false;
+        }
     }
 }
 
