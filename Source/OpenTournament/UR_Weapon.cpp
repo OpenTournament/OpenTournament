@@ -42,7 +42,7 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
 
     Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh3P"));
     Mesh3P->SetupAttachment(RootComponent);
-    Mesh3P->bOwnerNoSee = true;
+    //Mesh3P->bOwnerNoSee = true;
 
     Sound = CreateDefaultSubobject<UAudioComponent>(TEXT("Sound"));
     Sound->SetupAttachment(RootComponent);
@@ -218,7 +218,7 @@ void AUR_Weapon::AttachMeshToPawn()
     if (PlayerController)
     {
         // Remove and hide both first and third person meshes
-        DetachMeshFromPawn();
+        //DetachMeshFromPawn();
 
         /*
         // For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
@@ -253,18 +253,22 @@ void AUR_Weapon::AttachMeshToPawn()
         //Mesh3P->AttachToComponent(PlayerController->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, PlayerController->GetWeaponAttachPoint());
 
         //UPDATE: Now using this, we shouldn't use bOwnerNoSee anymore on 3p. 1p can keep bOnlyOwnerSee.
-        //TODO: Need some sort of hook on camera mode change / view target change so we can update 1p/3p visibility.
-        if (UUR_FunctionLibrary::IsLocallyViewed(PlayerController) && !PlayerController->bViewingThirdPerson)
-        {
-            Mesh1P->SetHiddenInGame(false);
-            Mesh3P->SetHiddenInGame(true);
-        }
-        else
-        {
-            Mesh1P->SetHiddenInGame(true);
-            Mesh3P->SetHiddenInGame(false);
-            Mesh3P->bOwnerNoSee = false;
-        }
+        UpdateMeshVisibility();
+    }
+}
+
+void AUR_Weapon::UpdateMeshVisibility()
+{
+    if (PlayerController && UUR_FunctionLibrary::IsLocallyViewed(PlayerController) && !PlayerController->bViewingThirdPerson)
+    {
+        Mesh1P->SetHiddenInGame(false);
+        Mesh3P->SetHiddenInGame(true);
+    }
+    else
+    {
+        Mesh1P->SetHiddenInGame(true);
+        Mesh3P->SetHiddenInGame(false);
+        Mesh3P->bOwnerNoSee = false;
     }
 }
 
