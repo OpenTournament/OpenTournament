@@ -60,9 +60,9 @@ public:
     //virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
     /**
-    * Override BeginPlay to Bind ShapeComponent Events
+    * Override PostInitializeComponents to Bind ShapeComponent Events
     */
-    virtual void BeginPlay() override;
+    virtual void PostInitializeComponents() override;
 
     /**
     * Check for Errors to find instances where this actor is configured incorrectly.
