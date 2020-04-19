@@ -27,15 +27,17 @@ AUR_ControlPoint::AUR_ControlPoint(const FObjectInitializer& ObjectInitializer) 
     PrimaryActorTick.bStartWithTickEnabled = false;
 
     TriggerZoneComponent = CreateDefaultSubobject<UChildActorComponent>(TEXT("TriggerZoneComponent"));
-    TriggerZoneComponent->SetChildActorClass(TriggerZoneClass);
-    TriggerZoneComponent->CreateChildActor();
+    if (TriggerZoneClass)
+    {
+        TriggerZoneComponent->SetChildActorClass(TriggerZoneClass);
+        TriggerZoneComponent->CreateChildActor();
+    }
     SetRootComponent(TriggerZoneComponent);
 
     TriggerZone = Cast<AUR_TriggerZone>(TriggerZoneComponent->GetChildActor());
-    TriggerZone->TriggerActorClass = TriggerZoneActorClass;
-
     if (TriggerZone)
     {
+        TriggerZone->TriggerActorClass = TriggerZoneActorClass;
         TriggerZone->OnActorEnter.AddDynamic(this, &AUR_ControlPoint::ActorEnter);
         TriggerZone->OnActorExit.AddDynamic(this, &AUR_ControlPoint::ActorExit);
     }
