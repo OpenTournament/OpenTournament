@@ -149,7 +149,7 @@ public:
     void OnTriggerExit(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
     UPROPERTY(EditAnywhere)
-    AUR_Character* PlayerController;
+    AUR_Character* URCharOwner;
 
 
     /** get current weapon state */
@@ -185,7 +185,6 @@ protected:
     FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
     /** Returns Mesh3P subobject **/
     FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
-    
 
 
     //============================================================

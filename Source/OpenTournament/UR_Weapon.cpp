@@ -89,16 +89,16 @@ void AUR_Weapon::Pickup()
 {
     GAME_LOG(Game, Log, "Pickup Occurred");
 
-    UGameplayStatics::PlaySoundAtLocation(this, PickupSound, PlayerController->GetActorLocation());
+    UGameplayStatics::PlaySoundAtLocation(this, PickupSound, URCharOwner->GetActorLocation());
 
-    PlayerController->InventoryComponent->Add(this);
+    URCharOwner->InventoryComponent->Add(this);
     AttachWeaponToPawn();
 }
 
 void AUR_Weapon::GiveTo(AUR_Character* NewOwner)
 {
     SetOwner(NewOwner);
-    PlayerController = NewOwner;
+    URCharOwner = NewOwner;
     AttachWeaponToPawn();
     if (NewOwner && NewOwner->InventoryComponent)
     {
@@ -111,7 +111,7 @@ void AUR_Weapon::GiveTo(AUR_Character* NewOwner)
 
 void AUR_Weapon::OnRep_Owner()
 {
-    PlayerController = Cast<AUR_Character>(GetOwner());
+    URCharOwner = Cast<AUR_Character>(GetOwner());
     AttachWeaponToPawn();
 
     // In case Equipped was replicated before Owner
@@ -120,10 +120,10 @@ void AUR_Weapon::OnRep_Owner()
 
 void AUR_Weapon::OnRep_Equipped()
 {
-    if (!PlayerController)
+    if (!URCharOwner)
         return;	// owner not replicated yet
 
-    if (PlayerController->IsLocallyControlled())
+    if (URCharOwner->IsLocallyControlled())
         return;	// should already be attached locally
 
     SetEquipped(bIsEquipped);
@@ -144,7 +144,7 @@ void AUR_Weapon::Fire()
 
             AUR_Projectile* Projectile = World->SpawnActor<AUR_Projectile>(ProjectileClass, MuzzleLocation, MuzzleRotation, ProjectileSpawnParameters);
 
-            UGameplayStatics::PlaySoundAtLocation(this, FireSound, PlayerController->GetActorLocation());
+            UGameplayStatics::PlaySoundAtLocation(this, FireSound, URCharOwner->GetActorLocation());
 
             GAME_LOG(Game, Log, "Fire Occurred");
 
@@ -164,7 +164,7 @@ void AUR_Weapon::Fire()
 
 void AUR_Weapon::GetPlayer(AActor* Player)
 {
-    PlayerController = Cast<AUR_Character>(Player);
+    URCharOwner = Cast<AUR_Character>(Player);
 }
 
 void AUR_Weapon::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor * Other, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
@@ -214,18 +214,18 @@ void AUR_Weapon::AttachMeshToPawn()
 {
     this->SetActorHiddenInGame(false);
 
-    if (PlayerController)
+    if (URCharOwner)
     {
         // Remove and hide both first and third person meshes
         DetachMeshFromPawn();
 
         /*
         // For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
-        FName AttachPoint = PlayerController->GetWeaponAttachPoint();
-        if (PlayerController->IsLocallyControlled())
+        FName AttachPoint = URCharOwner->GetWeaponAttachPoint();
+        if (URCharOwner->IsLocallyControlled())
         {
-            USkeletalMeshComponent* PawnMesh1p = PlayerController->GetSpecifcPawnMesh(true);
-            USkeletalMeshComponent* PawnMesh3p = PlayerController->GetSpecifcPawnMesh(false);
+            USkeletalMeshComponent* PawnMesh1p = URCharOwner->GetSpecifcPawnMesh(true);
+            USkeletalMeshComponent* PawnMesh3p = URCharOwner->GetSpecifcPawnMesh(false);
             Mesh1P->SetHiddenInGame(false);
             Mesh3P->SetHiddenInGame(false);
             Mesh1P->AttachToComponent(PawnMesh1p, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
@@ -234,7 +234,7 @@ void AUR_Weapon::AttachMeshToPawn()
         else
         {
             USkeletalMeshComponent* UseWeaponMesh = GetWeaponMesh();
-            USkeletalMeshComponent* UsePawnMesh = PlayerController->GetPawnMesh();
+            USkeletalMeshComponent* UsePawnMesh = URCharOwner->GetPawnMesh();
             UseWeaponMesh->AttachToComponent(UsePawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
             UseWeaponMesh->SetHiddenInGame(false);
         }
@@ -250,13 +250,13 @@ void AUR_Weapon::AttachMeshToPawn()
         //TODO: See camera management in UR_Character.
         // Here we can use UR_Character::bViewingThirdPerson.
 
-        Mesh1P->AttachToComponent(PlayerController->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, PlayerController->GetWeaponAttachPoint());
+        Mesh1P->AttachToComponent(URCharOwner->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, URCharOwner->GetWeaponAttachPoint());
         Mesh1P->SetHiddenInGame(false);
 
         //NOTE: We don't have proper anim and grip point for 3P weapon.
-        //Mesh3P->AttachToComponent(PlayerController->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(TEXT("ik_hand_gun")));
+        //Mesh3P->AttachToComponent(URCharOwner->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(TEXT("ik_hand_gun")));
         //NOTE2: We'll attach to the (invisible) 1P arms for now otherwise it goes all over the place.
-        Mesh3P->AttachToComponent(PlayerController->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, PlayerController->GetWeaponAttachPoint());
+        Mesh3P->AttachToComponent(URCharOwner->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, URCharOwner->GetWeaponAttachPoint());
         Mesh3P->SetHiddenInGame(false);
     }
 }
@@ -266,19 +266,19 @@ void AUR_Weapon::AttachWeaponToPawn()
     this->SetActorHiddenInGame(true);
     Tbox->SetGenerateOverlapEvents(false);
 
-    if (PlayerController)
+    if (URCharOwner)
     {
         /*
         // For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
-        FName AttachPoint = PlayerController->GetWeaponAttachPoint();
-        if (PlayerController->IsLocallyControlled() == true)
+        FName AttachPoint = URCharOwner->GetWeaponAttachPoint();
+        if (URCharOwner->IsLocallyControlled() == true)
         {
-            //USkeletalMeshComponent* PawnMesh = PlayerController->GetSpecifcPawnMesh(true);
+            //USkeletalMeshComponent* PawnMesh = URCharOwner->GetSpecifcPawnMesh(true);
             //this->AttachToComponent(PawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
         }
         else
         {
-            //USkeletalMeshComponent* UsePawnMesh = PlayerController->GetPawnMesh();
+            //USkeletalMeshComponent* UsePawnMesh = URCharOwner->GetPawnMesh();
             //this->AttachToComponent(UsePawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
         }
         */
@@ -372,7 +372,7 @@ void AUR_Weapon::LocalFireLoop()
         return;
 
     // Additional checks to stop firing automatically
-    if (!PlayerController || !PlayerController->bIsFiring || !PlayerController->IsAlive() || !PlayerController->GetController() || !bIsEquipped)
+    if (!URCharOwner || !URCharOwner->bIsFiring || !URCharOwner->IsAlive() || !URCharOwner->GetController() || !bIsEquipped)
     {
         bFiring = false;
         return;
@@ -467,7 +467,7 @@ void AUR_Weapon::MulticastFired_Implementation()
     if (!IsNetMode(NM_Client))
         return;
 
-    if (PlayerController && PlayerController->IsLocallyControlled())
+    if (URCharOwner && URCharOwner->IsLocallyControlled())
     {
         // Server just fired, adjust our fire loop accordingly
         float FirePing = GetWorld()->TimeSince(LocalFireTime);
@@ -488,9 +488,9 @@ void AUR_Weapon::PlayFireEffects()
     //TODO: Play muzzle flash
     //TODO: Play fire sound
 
-    if (PlayerController && PlayerController->MeshFirstPerson)
+    if (URCharOwner && URCharOwner->MeshFirstPerson)
     {
-        PlayerController->MeshFirstPerson->PlayAnimation(PlayerController->FireAnimation, false);
+        URCharOwner->MeshFirstPerson->PlayAnimation(URCharOwner->FireAnimation, false);
         //TODO: play 3p anim when we have one
     }
 }
@@ -501,24 +501,24 @@ void AUR_Weapon::PlayFireEffects()
 
 void AUR_Weapon::GetFireVector(FVector& FireLoc, FRotator& FireRot)
 {
-    if (PlayerController)
+    if (URCharOwner)
     {
         // Careful, in URCharacter we are using a custom 1p camera.
         // This means GetActorEyesViewPoint is wrong because it uses a hardcoded offest.
         // Either access camera directly, or override GetActorEyesViewPoint.
-        FVector CameraLoc = PlayerController->CharacterCameraComponent->GetComponentLocation();
+        FVector CameraLoc = URCharOwner->CharacterCameraComponent->GetComponentLocation();
         FireLoc = CameraLoc;
-        FireRot = PlayerController->GetViewRotation();
+        FireRot = URCharOwner->GetViewRotation();
 
         if (ProjectileClass)
         {
             // Use centered projectiles as it is a lot simpler with less edge cases.
-            FireLoc += FireRot.Vector() * PlayerController->MuzzleOffset.Size();	//TODO: muzzle offset should be part of weapon, not character
+            FireLoc += FireRot.Vector() * URCharOwner->MuzzleOffset.Size();	//TODO: muzzle offset should be part of weapon, not character
 
             // Avoid spawning projectile within/behind geometry because of the offset.
             FCollisionQueryParams TraceParams(FCollisionQueryParams::DefaultQueryParam);
             TraceParams.AddIgnoredActor(this);
-            TraceParams.AddIgnoredActor(PlayerController);
+            TraceParams.AddIgnoredActor(URCharOwner);
             FHitResult Hit;
             if (GetWorld()->LineTraceSingleByChannel(Hit, CameraLoc, FireLoc, ECollisionChannel::ECC_Visibility, TraceParams))
             {

@@ -238,5 +238,3 @@ void AUR_Projectile::PlayImpactEffects_Implementation(const FVector& HitLocation
         );
     }
 }
-
-

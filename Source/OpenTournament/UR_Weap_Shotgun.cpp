@@ -49,7 +49,7 @@ void AUR_Weap_Shotgun::SpawnShot_Projectile()
     SpawnParams.Instigator = GetInstigator() ? GetInstigator() : Cast<APawn>(GetOwner());
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-    const FVector CameraLoc = PlayerController->CharacterCameraComponent->GetComponentLocation();
+    const FVector CameraLoc = URCharOwner->CharacterCameraComponent->GetComponentLocation();
 
     for (const FShotgunSpawnBox& SpawnBox : SpawnBoxes)
     {
