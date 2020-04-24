@@ -22,6 +22,7 @@
 #include "UR_InventoryComponent.h"
 #include "UR_Projectile.h"
 #include "UR_PlayerController.h"
+#include "UR_FunctionLibrary.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -53,6 +54,8 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
     bReplicates = true;
 
     FireInterval = 1.0f;
+
+    MuzzleSocketName = FName(TEXT("Muzzle"));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -485,13 +488,17 @@ void AUR_Weapon::MulticastFired_Implementation()
 
 void AUR_Weapon::PlayFireEffects()
 {
-    //TODO: Play muzzle flash
-    //TODO: Play fire sound
-
-    if (URCharOwner && URCharOwner->MeshFirstPerson)
+    if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
     {
+        UGameplayStatics::SpawnSoundAttached(FireSound, Mesh1P, MuzzleSocketName, FVector(0, 0, 0), EAttachLocation::SnapToTarget);
+        UGameplayStatics::SpawnEmitterAttached(MuzzleFlashFX, Mesh1P, MuzzleSocketName, FVector(0, 0, 0), FRotator(0, 0, 0), EAttachLocation::SnapToTargetIncludingScale);
         URCharOwner->MeshFirstPerson->PlayAnimation(URCharOwner->FireAnimation, false);
-        //TODO: play 3p anim when we have one
+    }
+    else
+    {
+        UGameplayStatics::SpawnSoundAttached(FireSound, Mesh3P, MuzzleSocketName, FVector(0, 0, 0), EAttachLocation::SnapToTarget);
+        UGameplayStatics::SpawnEmitterAttached(MuzzleFlashFX, Mesh3P, MuzzleSocketName, FVector(0, 0, 0), FRotator(0, 0, 0), EAttachLocation::SnapToTargetIncludingScale);
+        //TODO: play 3p anim
     }
 }
 

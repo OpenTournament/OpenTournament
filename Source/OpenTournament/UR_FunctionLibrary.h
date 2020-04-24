@@ -15,6 +15,7 @@
 
 class APlayerState;
 class AUR_GameModeBase;
+class AUR_Character;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -155,6 +156,13 @@ public:
     */
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
     static bool IsLocallyViewed(const AActor* Other);
+
+
+    /**
+    * Returns true if we are currently viewing this character in first person.
+    */
+    UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
+    static bool IsViewingFirstPerson(const AUR_Character* Other);
 
 
     /**

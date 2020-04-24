@@ -12,6 +12,7 @@
 #include "UR_GameModeBase.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
+#include "UR_Character.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -137,6 +138,11 @@ bool UUR_FunctionLibrary::IsLocallyViewed(const AActor* Other)
 {
     AUR_PlayerController* PC = GetLocalPlayerController(Other);
     return PC && PC->GetViewTarget() == Other;
+}
+
+bool UUR_FunctionLibrary::IsViewingFirstPerson(const AUR_Character* Other)
+{
+    return Other && IsLocallyViewed(Other) && !Other->bViewingThirdPerson;
 }
 
 FString UUR_FunctionLibrary::GetTimeString(const float TimeSeconds)

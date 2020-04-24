@@ -91,12 +91,19 @@ public:
     UPROPERTY(EditAnywhere, Category = "Weapon")
     FString AmmoName;
 
-
     UPROPERTY(EditAnywhere, Category = "Weapon")
     USoundBase* PickupSound;
 
+    //TODO: this will be per-firemode
     UPROPERTY(EditAnywhere, Category = "Weapon")
     USoundBase* FireSound;
+
+    UPROPERTY(EditAnywhere, Category = "Weapon")
+    FName MuzzleSocketName;
+
+    //TODO: this will be per-firemode
+    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UParticleSystem* MuzzleFlashFX;
 
     UPROPERTY(EditAnywhere, Category = "Weapon")
     TSubclassOf<AUR_Projectile> ProjectileClass;
@@ -186,6 +193,7 @@ protected:
     /** Returns Mesh3P subobject **/
     FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
     //============================================================
     // Basic firing loop with network support.
@@ -198,7 +206,7 @@ public:
     UPROPERTY()
     bool bFiring;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "Weapon")
     float FireInterval;
 
     /**
