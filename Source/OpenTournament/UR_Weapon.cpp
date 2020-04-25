@@ -46,7 +46,7 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
 
     Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh3P"));
     Mesh3P->SetupAttachment(RootComponent);
-    Mesh3P->bOwnerNoSee = true;
+    //Mesh3P->bOwnerNoSee = true;
 
     Sound = CreateDefaultSubobject<UAudioComponent>(TEXT("Sound"));
     Sound->SetupAttachment(RootComponent);
@@ -222,7 +222,7 @@ void AUR_Weapon::AttachMeshToPawn()
     if (URCharOwner)
     {
         // Remove and hide both first and third person meshes
-        DetachMeshFromPawn();
+        //DetachMeshFromPawn();
 
         /*
         // For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
@@ -252,17 +252,27 @@ void AUR_Weapon::AttachMeshToPawn()
         // Be aware that "owner" means not only the local player, but also anybody looking through character via ViewTarget.
         // And both spectators/localplayer might be in either 1P or 3P, so I believe we cannot rely on bOwnerSee/bOwnerNoSee for this.
 
-        //TODO: See camera management in UR_Character.
-        // Here we can use UR_Character::bViewingThirdPerson.
-
         Mesh1P->AttachToComponent(URCharOwner->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, URCharOwner->GetWeaponAttachPoint());
-        Mesh1P->SetHiddenInGame(false);
+        Mesh3P->AttachToComponent(URCharOwner->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(TEXT("ik_hand_gun")));
+        //Mesh3P->AttachToComponent(URCharOwner->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, URCharOwner->GetWeaponAttachPoint());
 
-        //NOTE: We don't have proper anim and grip point for 3P weapon.
-        //Mesh3P->AttachToComponent(URCharOwner->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(TEXT("ik_hand_gun")));
-        //NOTE2: We'll attach to the (invisible) 1P arms for now otherwise it goes all over the place.
-        Mesh3P->AttachToComponent(URCharOwner->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, URCharOwner->GetWeaponAttachPoint());
+        //UPDATE: Now using this, we shouldn't use bOwnerNoSee anymore on 3p. 1p can keep bOnlyOwnerSee.
+        UpdateMeshVisibility();
+    }
+}
+
+void AUR_Weapon::UpdateMeshVisibility()
+{
+    if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
+    {
+        Mesh1P->SetHiddenInGame(false);
+        Mesh3P->SetHiddenInGame(true);
+    }
+    else
+    {
+        Mesh1P->SetHiddenInGame(true);
         Mesh3P->SetHiddenInGame(false);
+        Mesh3P->bOwnerNoSee = false;
     }
 }
 

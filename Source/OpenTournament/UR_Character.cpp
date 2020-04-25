@@ -214,7 +214,11 @@ void AUR_Character::CameraViewChanged_Implementation()
 {
     GetMesh()->SetOwnerNoSee(!bViewingThirdPerson);
     MeshFirstPerson->SetVisibility(!bViewingThirdPerson, true);
-    //TODO: weapon
+
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
+    {
+        InventoryComponent->ActiveWeapon->UpdateMeshVisibility();
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

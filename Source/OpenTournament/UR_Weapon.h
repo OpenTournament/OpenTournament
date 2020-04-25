@@ -160,6 +160,14 @@ public:
     UFUNCTION()
     void AttachMeshToPawn();
 
+    /**
+    * Update 1P and 3P mesh visibility according to current view mode.
+    * If local player is viewing weapon owner in 1P mode, show 1P mesh and hide 3P mesh.
+    * Or the contrary.
+    */
+    UFUNCTION(BlueprintCosmetic)
+    void UpdateMeshVisibility();
+
     UFUNCTION()
     void AttachWeaponToPawn();
 
