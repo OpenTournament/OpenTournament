@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "GameplayTagAssetInterface.h"
 
@@ -190,12 +191,11 @@ public:
     FLinearColor JumpPadMaterialColorInactive;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-// Conditional Edit Properties
+    // Conditional Edit Properties
 
 #if WITH_EDITOR
     virtual bool CanEditChange(const UProperty* InProperty) const override;
 #endif
-
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 

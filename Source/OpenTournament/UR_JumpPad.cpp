@@ -3,7 +3,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_JumpPad.h"
-#include "OpenTournament.h"
 
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -220,3 +219,18 @@ void AUR_JumpPad::EditorApplyScale(const FVector& DeltaScale, const FVector* Piv
     }
 }
 #endif
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if WITH_DEV_AUTOMATION_TESTS
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOpenTournamentJumpPadTest, "OpenTournament.Feature.Levels.LevelFeatures.Actor", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+
+bool FOpenTournamentJumpPadTest::RunTest(const FString& Parameters)
+{
+    // TODO : Automated Tests
+
+    return true;
+}
+
+#endif WITH_DEV_AUTOMATION_TESTS
