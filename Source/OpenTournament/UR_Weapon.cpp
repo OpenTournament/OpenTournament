@@ -17,6 +17,10 @@
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
 
+//tmp. for hitscan
+#include "GameFramework/DamageType.h"
+#include "Particles/ParticleSystemComponent.h"
+
 #include "OpenTournament.h"
 #include "UR_Character.h"
 #include "UR_InventoryComponent.h"
@@ -46,8 +50,6 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
 
     Sound = CreateDefaultSubobject<UAudioComponent>(TEXT("Sound"));
     Sound->SetupAttachment(RootComponent);
-
-    ProjectileClass = AUR_Projectile::StaticClass();
 
     PrimaryActorTick.bCanEverTick = true;
 
@@ -401,7 +403,19 @@ void AUR_Weapon::LocalFireLoop()
 void AUR_Weapon::LocalFire()
 {
     ServerFire();
-    PlayFireEffects();
+
+    if (ProjectileClass)
+    {
+        PlayFireEffects();
+    }
+    else
+    {
+        FHitResult Hit;
+        HitscanTrace(Hit);
+        PlayFireEffects();
+        PlayHitscanEffects(FReplicatedHitscanInfo(Hit.TraceStart, Hit.bBlockingHit ? Hit.Location : Hit.TraceEnd, Hit.ImpactNormal));
+    }
+
     LocalFireTime = GetWorld()->GetTimeSeconds();
 }
 
@@ -442,22 +456,20 @@ void AUR_Weapon::ServerFire_Implementation()
         return;
     }
 
-    SpawnShot();
-    LastFireTime = GetWorld()->GetTimeSeconds();
-    ConsumeAmmo();
-    MulticastFired();
-}
-
-void AUR_Weapon::SpawnShot()
-{
     if (ProjectileClass)
     {
         SpawnShot_Projectile();
+        MulticastFired_Projectile();
     }
     else
     {
-        UKismetSystemLibrary::PrintString(this, TEXT("SpawnShot() not implemented"));
+        FReplicatedHitscanInfo HitscanInfo;
+        SpawnShot_Hitscan(HitscanInfo);
+        MulticastFired_Hitscan(HitscanInfo);
     }
+
+    LastFireTime = GetWorld()->GetTimeSeconds();
+    ConsumeAmmo();
 }
 
 void AUR_Weapon::ConsumeAmmo()
@@ -465,25 +477,46 @@ void AUR_Weapon::ConsumeAmmo()
     AmmoCount -= 1;
 }
 
-void AUR_Weapon::MulticastFired_Implementation()
+void AUR_Weapon::MulticastFired_Projectile_Implementation()
 {
-    if (!IsNetMode(NM_Client))
-        return;
-
-    if (URCharOwner && URCharOwner->IsLocallyControlled())
+    if (IsNetMode(NM_Client))
     {
-        // Server just fired, adjust our fire loop accordingly
-        float FirePing = GetWorld()->TimeSince(LocalFireTime);
-        float Delay = FireInterval - FirePing / 2.f;
-        if (Delay > 0.0f)
-            GetWorld()->GetTimerManager().SetTimer(FireLoopTimerHandle, this, &AUR_Weapon::LocalFireLoop, Delay, false);
+        if (URCharOwner && URCharOwner->IsLocallyControlled())
+        {
+            LocalConfirmFired();
+        }
         else
-            LocalFireLoop();
+        {
+            PlayFireEffects();
+        }
     }
-    else
+}
+
+void AUR_Weapon::MulticastFired_Hitscan_Implementation(const FReplicatedHitscanInfo& HitscanInfo)
+{
+    if (IsNetMode(NM_Client))
     {
-        PlayFireEffects();
+        if (URCharOwner && URCharOwner->IsLocallyControlled())
+        {
+            LocalConfirmFired();
+        }
+        else
+        {
+            PlayFireEffects();
+            PlayHitscanEffects(HitscanInfo);
+        }
     }
+}
+
+void AUR_Weapon::LocalConfirmFired()
+{
+    // Server just fired, adjust our fire loop accordingly
+    float FirePing = GetWorld()->TimeSince(LocalFireTime);
+    float Delay = FireInterval - FirePing / 2.f;
+    if (Delay > 0.0f)
+        GetWorld()->GetTimerManager().SetTimer(FireLoopTimerHandle, this, &AUR_Weapon::LocalFireLoop, Delay, false);
+    else
+        LocalFireLoop();
 }
 
 void AUR_Weapon::PlayFireEffects()
@@ -500,6 +533,34 @@ void AUR_Weapon::PlayFireEffects()
         UGameplayStatics::SpawnEmitterAttached(MuzzleFlashFX, Mesh3P, MuzzleSocketName, FVector(0, 0, 0), FRotator(0, 0, 0), EAttachLocation::SnapToTargetIncludingScale);
         //TODO: play 3p anim
     }
+}
+
+void AUR_Weapon::PlayHitscanEffects(const FReplicatedHitscanInfo& HitscanInfo)
+{
+    FVector BeamStart;
+    if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
+    {
+        BeamStart = Mesh1P->GetSocketLocation(MuzzleSocketName);
+    }
+    else
+    {
+        BeamStart = Mesh3P->GetSocketLocation(MuzzleSocketName);
+    }
+
+    FVector BeamEnd = HitscanInfo.End;
+    FVector BeamVector = BeamEnd - BeamStart;
+
+    UFXSystemComponent* BeamComp = UUR_FunctionLibrary::SpawnEffectAtLocation(GetWorld(), BeamTemplate, FTransform(BeamStart));
+    if (BeamComp)
+    {
+        //TODO: configurable
+        FName BeamVectorParamName = FName(TEXT("User.BeamVector"));
+        BeamComp->SetVectorParameter(BeamVectorParamName, BeamVector);
+    }
+
+    // Impact fx & sound
+    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamImpactTemplate, FTransform(HitscanInfo.ImpactNormal.Rotation(), BeamEnd));
+    UGameplayStatics::PlaySoundAtLocation(GetWorld(), BeamImpactSound, BeamEnd);
 }
 
 //============================================================
@@ -566,4 +627,64 @@ void AUR_Weapon::SpawnShot_Projectile()
     {
         UE_LOG(LogTemp, Warning, TEXT("Failed to spawn projectile ??"));
     }
+}
+
+void AUR_Weapon::SpawnShot_Hitscan(FReplicatedHitscanInfo& OutHitscanInfo)
+{
+    FHitResult Hit;
+    HitscanTrace(Hit);
+
+    if (HasAuthority() && Hit.bBlockingHit && Hit.GetActor())
+    {
+        //TODO: config
+        float Damage = 70;
+        TSubclassOf<UDamageType> DamageType = UDamageType::StaticClass();
+
+        FVector Dir = Hit.TraceEnd - Hit.TraceStart;
+        Dir.Normalize();
+
+        UGameplayStatics::ApplyPointDamage(Hit.GetActor(), Damage, Dir, Hit, GetInstigatorController(), this, DamageType);
+    }
+
+    OutHitscanInfo.Start = Hit.TraceStart;
+    OutHitscanInfo.End = Hit.bBlockingHit ? Hit.Location : Hit.TraceEnd;
+    OutHitscanInfo.ImpactNormal = Hit.ImpactNormal;
+}
+
+void AUR_Weapon::HitscanTrace(FHitResult& OutHit)
+{
+    FVector TraceStart;
+    FRotator FireRot;
+    GetFireVector(TraceStart, FireRot);
+
+    //TODO: these might need to be configurable to some extent
+    float MaxDist = 10000;
+    FVector TraceEnd = TraceStart + MaxDist * FireRot.Vector();
+    ECollisionChannel TraceChannel = ECollisionChannel::ECC_GameTraceChannel2;  //WeaponTrace
+    FCollisionShape SweepShape = FCollisionShape::MakeSphere(5.f);
+
+    // fill in info in case we get 0 results from sweep
+    OutHit.TraceStart = TraceStart;
+    OutHit.TraceEnd = TraceEnd;
+    OutHit.bBlockingHit = false;
+    OutHit.ImpactNormal = TraceStart - TraceEnd;
+    OutHit.ImpactNormal.Normalize();
+
+    TArray<FHitResult> Hits;
+    GetWorld()->SweepMultiByChannel(Hits, TraceStart, TraceEnd, FQuat(), TraceChannel, SweepShape);
+    for (const FHitResult& Hit : Hits)
+    {
+        if (Hit.bBlockingHit || HitscanShouldHitActor(Hit.GetActor()))
+        {
+            OutHit = Hit;
+            OutHit.bBlockingHit = true;
+            break;
+        }
+    }
+}
+
+bool AUR_Weapon::HitscanShouldHitActor_Implementation(AActor* Other)
+{
+    //NOTE: here we can implement firing through teammates
+    return Other != GetInstigator();
 }

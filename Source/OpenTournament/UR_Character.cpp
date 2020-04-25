@@ -619,6 +619,9 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
 
             // Always use shot direction for knockback
             KnockbackDir = PointDamageEvent->ShotDirection;
+            // Bias towards +Z
+            KnockbackDir = 0.75*KnockbackDir + FVector(0, 0, 0.25);
+
             GetCharacterMovement()->AddImpulse(KnockbackPower*KnockbackDir);
         }
         else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))

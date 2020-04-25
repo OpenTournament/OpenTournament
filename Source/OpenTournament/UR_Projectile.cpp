@@ -8,7 +8,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "GameFramework/DamageType.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"

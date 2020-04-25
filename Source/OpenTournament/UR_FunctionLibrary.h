@@ -16,6 +16,7 @@
 class APlayerState;
 class AUR_GameModeBase;
 class AUR_Character;
+class UFXSystemComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -180,4 +181,11 @@ public:
     {
         return FVector(FMath::RandRange(Vector1.X, Vector2.X), FMath::RandRange(Vector1.Y, Vector2.Y), FMath::RandRange(Vector1.Z, Vector2.Z));
     }
+
+
+    /**
+    * Spawn effect at location - niagara/particle independent.
+    */
+    UFUNCTION(BlueprintCallable, Category = "Effects")
+    static UFXSystemComponent* SpawnEffectAtLocation(UWorld* World, UFXSystemAsset* Template, const FTransform& Transform);
 };

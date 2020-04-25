@@ -18,6 +18,7 @@ class UShapeComponent;
 class UAudioComponent;
 class USkeletalMeshComponent;
 class USoundBase;
+class UFXSystemAsset;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -30,6 +31,25 @@ namespace EWeaponState
         Equipping,
     };
 }
+
+USTRUCT()
+struct FReplicatedHitscanInfo
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FVector Start;
+
+    UPROPERTY()
+    FVector End;
+
+    UPROPERTY()
+    FVector ImpactNormal;
+
+    FReplicatedHitscanInfo() {}
+    FReplicatedHitscanInfo(const FVector& Start, const FVector& End, const FVector& ImpactNormal)
+        : Start(Start), End(End), ImpactNormal(ImpactNormal) {}
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -258,13 +278,6 @@ public:
     void ServerFire();
 
     /**
-    * Spawn projectile or perform hitscan trace and apply damage.
-    * Authority only.
-    */
-    UFUNCTION(BlueprintAuthorityOnly)
-    virtual void SpawnShot();
-
-    /**
     * Consume ammo for shot.
     */
     UFUNCTION(BlueprintAuthorityOnly)
@@ -276,14 +289,30 @@ public:
     * Owner client should update his fire loop timer to avoid lingering desync.
     */
     UFUNCTION(NetMulticast, Reliable)
-    void MulticastFired();
+    void MulticastFired_Projectile();
+
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastFired_Hitscan(const FReplicatedHitscanInfo& HitscanInfo);
 
     /**
-    * Play fire sound, muzzle flash, possibly beam/trace if hitscan.
+    * Factor code for both above methods :
+    * Owner client should update his fire loop timer to avoid lingering desync.
+    */
+    UFUNCTION()
+    void LocalConfirmFired();
+
+    /**
+    * Play fire sound, muzzle flash.
     * Client only.
     */
     UFUNCTION(BlueprintCosmetic)
     virtual void PlayFireEffects();
+
+    /**
+    * Play hitscan effects (beam, impact).
+    */
+    UFUNCTION(BlueprintCosmetic)
+    virtual void PlayHitscanEffects(const FReplicatedHitscanInfo& HitscanInfo);
 
     //============================================================
     // Helper methods
@@ -293,8 +322,41 @@ public:
     virtual void GetFireVector(FVector& FireLoc, FRotator& FireRot);
 
     /**
-    * Factor code for all basic projectile-based weapons.
+    * Spawn projectile.
+    * Authority only.
+    */
+    UFUNCTION(BlueprintAuthorityOnly)
+    virtual void SpawnShot_Projectile();
+
+    /**
+    * Perform hitscan trace and apply damage.
+    * Authority only.
+    */
+    UFUNCTION(BlueprintAuthorityOnly)
+    virtual void SpawnShot_Hitscan(FReplicatedHitscanInfo& OutHitscanInfo);
+
+    /**
+    * 
     */
     UFUNCTION()
-    virtual void SpawnShot_Projectile();
+    void HitscanTrace(FHitResult& OutHit);
+
+    /**
+    * On hitscan trace overlap,
+    * Return whether hitscan should hit target or fire through.
+    */
+    UFUNCTION(BlueprintNativeEvent, Category = "Weapon")
+    bool HitscanShouldHitActor(AActor* Other);
+
+    /**
+    * For hitscan test implem.
+    */
+    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UFXSystemAsset* BeamTemplate;
+
+    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UParticleSystem* BeamImpactTemplate;
+
+    UPROPERTY(EditAnywhere, Category = "Weapon")
+    USoundBase* BeamImpactSound;
 };
