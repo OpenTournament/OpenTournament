@@ -13,6 +13,7 @@
 // Forward declarations
 
 class UUserWidget;
+class UTexture2D;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -25,9 +26,13 @@ class OPENTOURNAMENT_API AUR_HUD : public AHUD
 {
     GENERATED_BODY()
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
 public:
 
     AUR_HUD();
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
     * Primary draw call for the HUD
@@ -38,8 +43,25 @@ public:
     * Crosshair asset pointer
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "HUD")
-    class UTexture2D* CrosshairTex;
+    UTexture2D* CrosshairTex;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * [Client] Call to restart the HUD
+    */
+    UFUNCTION(Client, Reliable, BlueprintCallable, Category = "HUD")
+    void Client_RestartHUD();
+
+    /**
+    * BP-Implementable Event for Restarting HUD
+    */
+    UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "HUD")
+    void OnHUDRestart();
 
 protected:
     void DrawCrosshair();
+
+    UPROPERTY()
+    TArray<UUserWidget*> HUDWidgets;
 };

@@ -47,3 +47,10 @@ void AUR_HUD::DrawCrosshair()
     TileItem.BlendMode = SE_BLEND_Translucent;
     Canvas->DrawItem(TileItem);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_HUD::Client_RestartHUD_Implementation()
+{
+    OnHUDRestart();
+}

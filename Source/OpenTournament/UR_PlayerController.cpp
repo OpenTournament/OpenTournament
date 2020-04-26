@@ -16,6 +16,7 @@
 
 #include "UR_Character.h"
 #include "UR_ChatComponent.h"
+#include "UR_HUD.h"
 #include "UR_LocalPlayer.h"
 #include "UR_MessageHistory.h"
 #include "UR_PCInputDodgeComponent.h"
@@ -155,6 +156,14 @@ void AUR_PlayerController::SetPawn(APawn* InPawn)
     AController::SetPawn(InPawn);
 
     URCharacter = Cast<AUR_Character>(InPawn);
+
+    if (InPawn != nullptr)
+    {
+        if (auto URHUD = Cast<AUR_HUD>(GetHUD()))
+        {
+            URHUD->OnHUDRestart();
+        }
+    }
 
     // Set Spectating Pawn
 }

@@ -4,6 +4,8 @@
 
 #include "UR_MessageHistory.h"
 
+#include "GameFramework/DamageType.h"
+
 #include "UR_FunctionLibrary.h"
 #include "UR_ChatComponent.h"
 #include "UR_PlayerState.h"
