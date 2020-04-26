@@ -46,6 +46,7 @@ Temporary Items
 Intermediate
 Saved
 
+#Basic Exclusions
 OpenTournament.VC.db
 Saved/
 DerivedDataCache/
@@ -58,8 +59,15 @@ Source/LastSaved
 Config/DefaultEditorPerProjectUserSettings.ini
 
 # Ignore Source Files Installed from Asset Packs
-SourceFiles/InPlace
-SourceFiles/RootMotion
+SourceFiles/*
+Source/FBX
+Source/Maya
+Source/Motionbuilder
+Source/SKMannequin_A_Pose
+Source/SKMannequin_T_Pose
+Source/SK_Mannequin_A_Pose_README.txt
+Source/SK_Mannequin_T_Pose_README.txt
+Source/UE4_MocapOnline_Tech_Notes.txt
 
 # Ignore UE4 Asset Packs
 AutomotiveMaterials.png
