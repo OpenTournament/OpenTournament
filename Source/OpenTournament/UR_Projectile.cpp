@@ -8,9 +8,10 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "GameFramework/DamageType.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,7 +23,7 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
     CollisionComponent->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
     CollisionComponent->SetGenerateOverlapEvents(true);
     CollisionComponent->InitSphereRadius(15.0f);
-    CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Projectile::Overlap);
+    CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Projectile::OnOverlap);
     CollisionComponent->OnComponentHit.AddDynamic(this, &AUR_Projectile::OnHit);
     bIgnoreInstigator = true;
     bCollideInstigatorAfterBounce = true;
@@ -58,6 +59,15 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
     SplashMinimumDamage = 1.0f;
     SplashFalloff = 1.0f;
     DamageTypeClass = UDamageType::StaticClass();
+
+    BounceSoundVelocityThreshold = 80.f;
+}
+
+void AUR_Projectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME_CONDITION(AUR_Projectile, ServerExplosionInfo, COND_None);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,31 +76,9 @@ void AUR_Projectile::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (bIgnoreInstigator)
-    {
-        SetIgnoreInstigator(true);
-    }
-
     if (ProjectileMovementComponent->bShouldBounce)
     {
         ProjectileMovementComponent->OnProjectileBounce.AddDynamic(this, &AUR_Projectile::OnBounceInternal);
-    }
-}
-
-void AUR_Projectile::SetIgnoreInstigator(bool bIgnore)
-{
-    bIgnoreInstigator = bIgnore;
-    if (GetInstigator())
-    {
-        CollisionComponent->IgnoreActorWhenMoving(GetInstigator(), bIgnoreInstigator);
-        if (bIgnoreInstigator)
-        {
-            GetInstigator()->MoveIgnoreActorAdd(this);
-        }
-        else
-        {
-            GetInstigator()->MoveIgnoreActorRemove(this);
-        }
     }
 }
 
@@ -99,31 +87,43 @@ void AUR_Projectile::FireAt(const FVector& ShootDirection)
     ProjectileMovementComponent->Velocity = ShootDirection * ProjectileMovementComponent->InitialSpeed;
 }
 
-void AUR_Projectile::Overlap(UPrimitiveComponent * HitComp, AActor * Other, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+void AUR_Projectile::OnOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    // TODO
+    if (OverlapShouldExplodeOn(OtherActor))
+    {
+        if (SplashRadius > 0.0f)
+        {
+            DealSplashDamage();
+        }
+        else
+        {
+            DealPointDamage(OtherActor, SweepResult);
+        }
+
+        Explode(bFromSweep ? SweepResult.Location : GetActorLocation(), SweepResult.ImpactNormal);
+    }
+}
+
+bool AUR_Projectile::OverlapShouldExplodeOn_Implementation(AActor* Other)
+{
+    //NOTE: here we can implement team projectiles going through teammates
+    return Other && Other->CanBeDamaged() && (!bIgnoreInstigator || Other != GetInstigator());
 }
 
 void AUR_Projectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
 {
-    if (ProjectileMovementComponent->bShouldBounce && !ShouldExplodeOn(OtherActor))
+    if (ProjectileMovementComponent->bShouldBounce && !HitShouldExplodeOn(OtherActor))
     {
         return;
     }
 
-    if (SplashRadius <= 0.0f)
+    if (SplashRadius > 0.0f)
     {
-        //TODO: not sure what to put in HitFromDirection.
-        FVector HitFromDirection = (Hit.Location - GetActorLocation());
-        if (!HitFromDirection.IsNearlyZero())
-        {
-            HitFromDirection.Normalize();
-        }
-        else
-        {
-            HitFromDirection = GetActorRotation().Vector();
-        }
-        UGameplayStatics::ApplyPointDamage(OtherActor, BaseDamage, HitFromDirection, Hit, GetInstigatorController(), this, DamageTypeClass);
+        DealSplashDamage();
+    }
+    else
+    {
+        DealPointDamage(OtherActor, Hit);
     }
 
     Explode(Hit.Location, Hit.ImpactNormal);
@@ -131,44 +131,105 @@ void AUR_Projectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 
 void AUR_Projectile::OnBounceInternal(const FHitResult& ImpactResult, const FVector& ImpactVelocity)
 {
+    float BounceNormalVelocity = FMath::Abs(FVector::DotProduct(ImpactVelocity, ImpactResult.Normal));
+    if (GetNetMode() != NM_DedicatedServer && BounceNormalVelocity > BounceSoundVelocityThreshold)
+    {
+        //TODO: attenuation & concurrency settings, unless we do that in BP/SoundCue?
+        //TODO: might want to factor BounceNormalVelocity into the sound somehow
+        UGameplayStatics::PlaySoundAtLocation(this, BounceSound, ImpactResult.Location);
+    }
+
     if (bCollideInstigatorAfterBounce && bIgnoreInstigator)
     {
-        SetIgnoreInstigator(false);
+        bIgnoreInstigator = false;
+
+        if (CollisionComponent->IsOverlappingActor(GetInstigator()))
+        {
+            //NOTE: at this point the projectile hasn't been rotated yet by the bounce.
+            // We need to rotate manually so ApplyPointDamage gets the proper hit direction.
+            FVector BouncedDir = GetActorRotation().Vector().MirrorByVector(ImpactResult.ImpactNormal);
+
+            // Only do that if we are sure we are gonna pointdamage instigator.
+            if (OverlapShouldExplodeOn(GetInstigator()) && SplashRadius <= 0.0f)
+            {
+                SetActorRotation(BouncedDir.Rotation());
+            }
+
+            // Now trigger a fake overlap
+            FHitResult FakeHitInfo(GetInstigator(), nullptr, GetActorLocation(), -BouncedDir);
+            OnOverlap(nullptr, GetInstigator(), nullptr, 0, true, FakeHitInfo);
+        }
+
+        /*
+        TArray<FOverlapInfo> Overlaps;
+        CollisionComponent->GetOverlapsWithActor(GetInstigator(), Overlaps);
+        if (Overlaps.Num() > 0)
+        {
+            FOverlapInfo& Overlap = Overlaps[0];
+            OnOverlap(nullptr, Overlap.OverlapInfo.GetActor(), Overlap.OverlapInfo.GetComponent(), Overlap.GetBodyIndex(), true, Overlap.OverlapInfo);
+        }
+        */
     }
-    //TODO: bounce sound
 }
 
-bool AUR_Projectile::ShouldExplodeOn_Implementation(AActor* Other)
+bool AUR_Projectile::HitShouldExplodeOn_Implementation(AActor* Other)
 {
-    return Other && (Cast<APawn>(Other) || Other->CanBeDamaged());
+    return Other && Other->CanBeDamaged();
+}
+
+void AUR_Projectile::DealPointDamage(AActor* HitActor, const FHitResult& HitInfo)
+{
+    UGameplayStatics::ApplyPointDamage(HitActor, BaseDamage, GetActorRotation().Vector(), HitInfo, GetInstigatorController(), this, DamageTypeClass);
+}
+
+void AUR_Projectile::DealSplashDamage()
+{
+    TArray<AActor*> IgnoreActors;
+    IgnoreActors.Add(this);
+
+    UGameplayStatics::ApplyRadialDamageWithFalloff(
+        this,
+        BaseDamage,
+        SplashMinimumDamage,
+        GetActorLocation(),
+        InnerSplashRadius,
+        SplashRadius,
+        SplashFalloff,
+        DamageTypeClass,
+        IgnoreActors,
+        this,
+        GetInstigatorController(),
+        ECollisionChannel::ECC_Visibility
+    );
 }
 
 void AUR_Projectile::Explode(const FVector& HitLocation, const FVector& HitNormal)
 {
-    // Old RocketProjectile code
-    /*
-    SoundHit->SetActive(true);
-    SoundFire = UGameplayStatics::SpawnSoundAtLocation(this, SoundHit->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
-    Particles->SetTemplate(explosion);
+    PlayImpactEffects(HitLocation, HitNormal);
 
-    OtherActor->TakeDamage(100, FDamageEvent::FDamageEvent() , NULL, this);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Event ROCKET LAUNCHER")));
-    if (ExplosionComponent->IsOverlappingActor(OtherActor))
-        DamageNearActors();
+    if (HasAuthority())
+    {
+        ServerExplosionInfo.HitLocation = HitLocation;
+        ServerExplosionInfo.HitNormal = HitNormal;
+        ForceNetUpdate();
 
-    ProjMesh->DestroyComponent();
-    DestroyAfter(3);
-    */
+        SetActorEnableCollision(false);
+        ProjectileMovementComponent->StopSimulating(FHitResult());
+        SetActorHiddenInGame(true);
+        SetLifeSpan(0.2f);
+    }
+    else
+    {
+        Destroy();
+    }
+}
 
-    // Some notes :
-    // - SoundHit => ImpactSound
-    // - ProjMesh => StaticMeshComponent
-    // - Particles => now spawning independent emitter with ImpactTemplate.
-
+void AUR_Projectile::PlayImpactEffects_Implementation(const FVector& HitLocation, const FVector& HitNormal)
+{
     if (GetNetMode() != NM_DedicatedServer)
     {
-        //TODO: attenuation & concurrency settings
-        UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+        //TODO: attenuation & concurrency settings, unless we do that in BP/SoundCue?
+        UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, HitLocation);
 
         UGameplayStatics::SpawnEmitterAtLocation(
             GetWorld(),
@@ -176,34 +237,4 @@ void AUR_Projectile::Explode(const FVector& HitLocation, const FVector& HitNorma
             FTransform(HitNormal.Rotation(), HitLocation, GetActorScale3D())
         );
     }
-
-    if (SplashRadius > 0.0f)
-    {
-        TArray<AActor*> IgnoreActors;
-        IgnoreActors.Add(this);
-
-        UGameplayStatics::ApplyRadialDamageWithFalloff(
-            this,
-            BaseDamage,
-            SplashMinimumDamage,
-            GetActorLocation(),
-            InnerSplashRadius,
-            SplashRadius,
-            SplashFalloff,
-            DamageTypeClass,
-            IgnoreActors,
-            this,
-            GetInstigatorController(),
-            ECollisionChannel::ECC_Visibility
-        );
-    }
-
-    Destroy();
-}
-
-// might be deprecated
-void AUR_Projectile::DestroyAfter(const int32 Delay)
-{
-    SetActorEnableCollision(false);
-    SetLifeSpan(Delay);
 }

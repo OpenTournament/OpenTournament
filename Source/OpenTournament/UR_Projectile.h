@@ -20,19 +20,35 @@ class UProjectileMovementComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+USTRUCT()
+struct FReplicatedExplosionInfo
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FVector HitLocation;
+
+    UPROPERTY()
+    FVector HitNormal;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 UCLASS()
 class OPENTOURNAMENT_API AUR_Projectile : public AActor
 {
     GENERATED_BODY()
 
-protected:
-    virtual void BeginPlay() override;
-
 public:
-
     AUR_Projectile(const FObjectInitializer& ObjectInitializer);
 
+protected:
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    virtual void BeginPlay() override;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
 
     // Sphere collision component.
     UPROPERTY(VisibleDefaultsOnly, Category = "Projectile|Collision")
@@ -59,6 +75,7 @@ public:
     /**
     * Set projectile to not collide with shooter.
     * This should always be true by default, otherwise projectile can collide shooter on spawn.
+    * Can be updated on the fly.
     */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile|Collision")
     bool bIgnoreInstigator;
@@ -72,20 +89,18 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    UFUNCTION(BlueprintCallable)
-    virtual void SetIgnoreInstigator(bool bIgnore);
-
     UFUNCTION()
     virtual void FireAt(const FVector& ShootDirection);
 
-    UFUNCTION()
-    void Overlap(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+    UFUNCTION(BlueprintNativeEvent, Category = "Projectile")
+    void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-    // Hook for Blueprint. This will need to be elaborated further
-    UFUNCTION(BlueprintImplementableEvent, Category = "Projectile")
-    void OnOverlap(AActor* HitActor);
+    /**
+    * On overlap, return whether we should explode or continue through.
+    */
+    UFUNCTION(BlueprintNativeEvent, Category = "Projectile")
+    bool OverlapShouldExplodeOn(AActor* Other);
 
-    //NOTE: Currently we are using this, not the Overlap events.
     UFUNCTION()
     virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
 
@@ -93,23 +108,66 @@ public:
     virtual void OnBounceInternal(const FHitResult& ImpactResult, const FVector& ImpactVelocity);
 
     /**
-    * Only for bouncing projectiles.
+    * On hit, only for bouncing projectiles.
     * Return whether we should explode on the hit actor, or bounce off it.
+    * (Non-bouncing projectiles always explode on hit)
     */
-    UFUNCTION(BlueprintNativeEvent)
-    bool ShouldExplodeOn(AActor* Other);
+    UFUNCTION(BlueprintNativeEvent, Category = "Projectile")
+    bool HitShouldExplodeOn(AActor* Other);
 
     /**
-    * Call this to trigger explosion/impact effects and splash damage.
-    * If there is no splash radius, no damage is applied. Point damage should be applied on hit.
+    * Deal BaseDamage as point damage to actor.
+    */
+    UFUNCTION(BlueprintCallable, Category = "Projectile")
+    void DealPointDamage(AActor* HitActor, const FHitResult& HitInfo);
+
+    /**
+    * Deal splash damage.
+    */
+    UFUNCTION(BlueprintCallable, Category = "Projectile")
+    void DealSplashDamage();
+
+    /**
+    * Authority: replicate explosion & delayed destroy.
+    * Client: play impact effects & destroy.
     */
     UFUNCTION(BlueprintCallable, Category = "Projectile")
     virtual void Explode(const FVector& HitLocation, const FVector& HitNormal);
 
-    UFUNCTION()
-    virtual void DestroyAfter(const int32 Delay);
+    /**
+    * Client only.
+    * Play explosion/impact effects.
+    * Hit location & normal can be used to alter/orient the explosion.
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintCosmetic, Category = "Projectile")
+    void PlayImpactEffects(const FVector& HitLocation, const FVector& HitNormal);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+protected:
+
+    /**
+     * Replicate this var to ensure that when projectile explodes on server, it explodes on clients as well.
+     * Most of the time however, it is expected to explode on client beforehand.
+     *
+     * Sometimes, it might explode on client without exploding on server (unreg).
+     * Not sure how to fix unless we skip overlaps on client, but that will harm smoothness of game.
+     *
+     * NOTE: We use a var instead of a multicast explode,
+     * because multicast apparently re-creates the projectile on clients where it already exploded...
+     */
+    UPROPERTY(ReplicatedUsing = OnRep_ServerExplosionInfo)
+    FReplicatedExplosionInfo ServerExplosionInfo;
+
+    UFUNCTION()
+    void OnRep_ServerExplosionInfo()
+    {
+        Explode(ServerExplosionInfo.HitLocation, ServerExplosionInfo.HitNormal);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
 
     /**
     * Damage for direct hits and for actors within InnerSplashRadius if applicable.
@@ -151,6 +209,18 @@ public:
     TSubclassOf<UDamageType> DamageTypeClass;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * Bounce sound.
+    */
+    UPROPERTY(EditAnywhere, Category = "Projectile|Audio")
+    USoundBase* BounceSound;
+
+    /**
+    * Avoid sound spam when rolling on ground.
+    */
+    UPROPERTY(EditAnywhere, Category = "Projectile|Audio")
+    float BounceSoundVelocityThreshold;
 
     /**
     * Impact/explosion sound.

@@ -8,10 +8,13 @@
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/InputSettings.h"
 #include "Internationalization/Regex.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "UR_GameModeBase.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
+#include "UR_Character.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -139,6 +142,11 @@ bool UUR_FunctionLibrary::IsLocallyViewed(const AActor* Other)
     return PC && PC->GetViewTarget() == Other;
 }
 
+bool UUR_FunctionLibrary::IsViewingFirstPerson(const AUR_Character* Other)
+{
+    return Other && IsLocallyViewed(Other) && !Other->bViewingThirdPerson;
+}
+
 FString UUR_FunctionLibrary::GetTimeString(const float TimeSeconds)
 {
     // only minutes and seconds are relevant
@@ -148,4 +156,22 @@ FString UUR_FunctionLibrary::GetTimeString(const float TimeSeconds)
 
     const FString TimeDesc = FString::Printf(TEXT("%02d:%02d"), NumMinutes, NumSeconds);
     return TimeDesc;
+}
+
+
+//FIXME: niagara includes borked pls fix
+#include "../Plugins/FX/Niagara/Source/Niagara/Public/NiagaraFunctionLibrary.h"
+#include "../Plugins/FX/Niagara/Source/Niagara/Classes/NiagaraSystem.h"
+
+UFXSystemComponent* UUR_FunctionLibrary::SpawnEffectAtLocation(UWorld* World, UFXSystemAsset* Template, const FTransform& Transform)
+{
+    if (auto PS = Cast<UParticleSystem>(Template))
+    {
+        return UGameplayStatics::SpawnEmitterAtLocation(World, PS, Transform);
+    }
+    else if (auto NS = Cast<UNiagaraSystem>(Template))
+    {
+        return (UFXSystemComponent*)UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, NS, Transform.GetLocation(), Transform.GetRotation().Rotator(), Transform.GetScale3D());
+    }
+    return nullptr;
 }

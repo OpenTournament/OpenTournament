@@ -15,6 +15,8 @@
 
 class APlayerState;
 class AUR_GameModeBase;
+class AUR_Character;
+class UFXSystemComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -158,6 +160,13 @@ public:
 
 
     /**
+    * Returns true if we are currently viewing this character in first person.
+    */
+    UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
+    static bool IsViewingFirstPerson(const AUR_Character* Other);
+
+
+    /**
     * Get the Time as a String
     */
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "FunctionLibrary")
@@ -172,4 +181,11 @@ public:
     {
         return FVector(FMath::RandRange(Vector1.X, Vector2.X), FMath::RandRange(Vector1.Y, Vector2.Y), FMath::RandRange(Vector1.Z, Vector2.Z));
     }
+
+
+    /**
+    * Spawn effect at location - niagara/particle independent.
+    */
+    UFUNCTION(BlueprintCallable, Category = "Effects")
+    static UFXSystemComponent* SpawnEffectAtLocation(UWorld* World, UFXSystemAsset* Template, const FTransform& Transform);
 };
