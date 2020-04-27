@@ -111,7 +111,7 @@ public:
     UPROPERTY(EditAnywhere, Category = "Weapon")
     FString AmmoName;
 
-    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
     USoundBase* PickupSound;
 
     //TODO: this will be per-firemode
