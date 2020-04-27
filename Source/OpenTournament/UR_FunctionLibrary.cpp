@@ -10,6 +10,8 @@
 #include "Internationalization/Regex.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 #include "UR_GameModeBase.h"
 #include "UR_PlayerController.h"
@@ -158,11 +160,6 @@ FString UUR_FunctionLibrary::GetTimeString(const float TimeSeconds)
     return TimeDesc;
 }
 
-
-//FIXME: niagara includes borked pls fix
-#include "../Plugins/FX/Niagara/Source/Niagara/Public/NiagaraFunctionLibrary.h"
-#include "../Plugins/FX/Niagara/Source/Niagara/Classes/NiagaraSystem.h"
-
 UFXSystemComponent* UUR_FunctionLibrary::SpawnEffectAtLocation(UWorld* World, UFXSystemAsset* Template, const FTransform& Transform)
 {
     if (auto PS = Cast<UParticleSystem>(Template))
@@ -171,7 +168,7 @@ UFXSystemComponent* UUR_FunctionLibrary::SpawnEffectAtLocation(UWorld* World, UF
     }
     else if (auto NS = Cast<UNiagaraSystem>(Template))
     {
-        return (UFXSystemComponent*)UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, NS, Transform.GetLocation(), Transform.GetRotation().Rotator(), Transform.GetScale3D());
+        return UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, NS, Transform.GetLocation(), Transform.GetRotation().Rotator(), Transform.GetScale3D());
     }
     return nullptr;
 }
