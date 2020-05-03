@@ -41,7 +41,7 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     PrimaryActorTick.bStartWithTickEnabled = false;
 
     SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
-    RootComponent = SceneRoot;
+    SetRootComponent(SceneRoot);
 
     CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
     CapsuleComponent->SetCapsuleSize(55.f, 55.f, false);

@@ -22,7 +22,22 @@ class UStaticMeshComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-UCLASS(HideCategories = (Actor, Rendering, Replication, Collision, Input, LOD, Cooking))
+/**
+* Jump Pad Base Class
+* A JumpPad is an actor that imparts velocity to a given TargetActor such that they may
+* reach a given destination in the world.
+*
+* Destination is a transform in the world that may be moved by editor widget.
+*
+* @! TODO: Issues to address:
+* - JumpPad behavior for non-character actors, and specifiable affected actor classes
+* - JumpPad arc in-editor visualization
+* - API for changing JumpPad destination
+* - Visualization for displaying (in-game) to nearby local clients the path of the JumpPad (use arc visualization?)
+* - Expose API to permit adjustments to Character air control from JumpPad
+* - Updating NavMesh and other interfacing with AI
+*/
+UCLASS(Blueprintable, Abstract, HideCategories = (Actor, Rendering, Replication, Collision, Input, LOD, Cooking))
 class OPENTOURNAMENT_API AUR_JumpPad : public AActor,
     public IGameplayTagAssetInterface
 {
@@ -69,11 +84,11 @@ public:
     /**
     * If set then lock the Destination when moving/rotating the JumpPad
     */
-    UPROPERTY(EditAnywhere, Category = "JumpPadEditor")
+    UPROPERTY(EditAnywhere, Category = "JumpPad|Editor")
     bool bLockDestination;
 
     /*
-    * Duration of the Jump - in seconds
+    * Desired duration of the Jump (in seconds). Used to calculate velocity needed to impart
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "JumpPad")
     float JumpTime;
