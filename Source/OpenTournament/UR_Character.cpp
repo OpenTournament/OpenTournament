@@ -387,6 +387,8 @@ void AUR_Character::Landed(const FHitResult& Hit)
     GAME_LOG(Game, Log, "Updating OldLocationZ: %f (Old), %f (New)", OldLocationZ, GetActorLocation().Z);
     OldLocationZ = GetActorLocation().Z;
 
+    FootstepTimestamp = GetWorld()->TimeSeconds;
+
     // Landing View Bob
     LandedViewOffset();
 
