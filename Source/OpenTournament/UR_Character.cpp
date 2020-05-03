@@ -214,7 +214,11 @@ void AUR_Character::CameraViewChanged_Implementation()
 {
     GetMesh()->SetOwnerNoSee(!bViewingThirdPerson);
     MeshFirstPerson->SetVisibility(!bViewingThirdPerson, true);
-    //TODO: weapon
+
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
+    {
+        InventoryComponent->ActiveWeapon->UpdateMeshVisibility();
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -561,6 +565,8 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     //GAME_PRINT(10.f, FColor::Purple, "Damage Floor (%f)", DamageToArmor);
     GAME_LOG(Game, Log, "Damage Incoming Floor (%f)", Damage);
 
+    float TotalDamage = Damage;
+
     if (AttributeSet)
     {
         if (AttributeSet->Health.GetCurrentValue() > 0.f)
@@ -617,7 +623,7 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     // And finally, apply knockback manually with a custom impulse.
 
     // For now, let's try basic values
-    float KnockbackPower = 1500.f * Damage;
+    float KnockbackPower = 1500.f * TotalDamage;
 
     // Avoid very small knockbacks
     if (KnockbackPower / GetCharacterMovement()->Mass >= 100.f)
@@ -629,6 +635,9 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
 
             // Always use shot direction for knockback
             KnockbackDir = PointDamageEvent->ShotDirection;
+            // Bias towards +Z
+            KnockbackDir = 0.75*KnockbackDir + FVector(0, 0, 0.25);
+
             GetCharacterMovement()->AddImpulse(KnockbackPower*KnockbackDir);
         }
         else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
