@@ -79,7 +79,7 @@ void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other,
 
         if (PerformTeleport(Other))
         {
-            GAME_LOG(Game, Log, "Teleported of Character (%s) success", *Other->GetName());
+            GAME_LOG(Game, Log, "Teleport of Character (%s) succeeded", *Other->GetName());
         }
         else
         {
@@ -148,7 +148,14 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
     PlayTeleportEffects();
 
     // Move Actor to Destination actor
-    TargetActor->SetActorLocation(DestinationLocation);
+    if (TargetActor->SetActorLocation(DestinationLocation))
+    {
+        // If we successfully teleported, notify our actor.
+        // We need to do this to update CharacterMovementComponent.bJustTeleported property
+        // Which is used to update EyePosition
+        // (Otherwise our EyePosition interpolates through the world)
+        TargetActor->TeleportSucceeded(false);
+    }
 
     // Find out Desired Rotation
     GetDesiredRotation(DesiredRotation, TargetActorRotation, DestinationRotation);
