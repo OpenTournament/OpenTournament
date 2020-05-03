@@ -25,6 +25,21 @@ class UParticleSystemComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+* Teleporter Base Class
+* A Teleporter is an actor that teleports a given TargetActor to a destination in the world.
+*
+* Destination may be a point in space or another actor (typically another Teleporter).
+* The TargetActor's rotation may be transformed according to the facing of the destination
+* Or preserved in world space.
+* 
+* @! TODO: Issues to address:
+* - Class-specific occlusion in IsPermittedToTeleport
+* - API for changing Teleporter destination (?)
+* - API for enabling/disabling Teleporter (including visuals & effects)
+* - Updating NavMesh and other interfacing with AI
+* - MaterialInstance for teleporter base so base material can exhibit behaviors on teleportation (see JumpPad)
+*/
 UCLASS(HideCategories = (Actor, Rendering, Replication, Collision, Input, LOD, Cooking))
 class OPENTOURNAMENT_API AUR_Teleporter : public AActor,
     public IGameplayTagAssetInterface

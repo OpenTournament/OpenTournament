@@ -65,7 +65,7 @@ AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
 
 void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    // TODO(Pedro): we should store the "teleporting" state in the MovementComponent of the actor in order to query it here
+    // @! TODO(Pedro): we should store the "teleporting" state in the MovementComponent of the actor in order to query it here
     const bool bIsTeleporting = (bFromSweep == false);
 
     if (bIsTeleporting)
