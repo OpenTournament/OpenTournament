@@ -10,17 +10,6 @@ void UUR_FireModeBasic::StartFire_Implementation()
     SetBusy(true);
 
     FSimulatedShotInfo SimulatedInfo;
-    /*
-    SimulateShotDelegate.ExecuteIfBound(this, SimulatedInfo);
-
-    OnPlayFireEffects.Broadcast(this);
-
-    if (bIsHitscan)
-    {
-        FHitscanVisualInfo HitscanInfo(SimulatedInfo);
-        OnPlayHitscanEffects.Broadcast(this, HitscanInfo);
-    }
-    */
 
     if (BasicInterface)
     {
@@ -60,7 +49,7 @@ void UUR_FireModeBasic::CooldownTimer()
     SetBusy(false);
     /**
     * NOTE: There is no actual timer loop here, the fire loop is event-based.
-    * When weapon receives OnFireModeChangedStatus(false),
+    * When weapon receives FireModeChangedStatus(false),
     * it should check if player is still firing, and call StartFire again if so.
     */
 }
@@ -86,12 +75,6 @@ float UUR_FireModeBasic::GetCooldownStartTime_Implementation()
 void UUR_FireModeBasic::ServerFire_Implementation(const FSimulatedShotInfo& SimulatedInfo)
 {
     float Delay;
-    /*
-    if (TimeUntilReadyToFireDelegate.IsBound())
-    {
-        Delay = TimeUntilReadyToFireDelegate.Execute();
-    }
-    */
     if (BaseInterface)
     {
         Delay = IUR_FireModeBaseInterface::Execute_TimeUntilReadyToFire(BaseInterface.GetObject(), this);
@@ -124,7 +107,6 @@ void UUR_FireModeBasic::ServerFire_Implementation(const FSimulatedShotInfo& Simu
     if (bIsHitscan)
     {
         FHitscanVisualInfo HitscanInfo;
-        //AuthorityHitscanShotDelegate.ExecuteIfBound(this, SimulatedInfo, HitscanInfo);
         if (BasicInterface)
         {
             IUR_FireModeBasicInterface::Execute_AuthorityHitscanShot(BasicInterface.GetObject(), this, SimulatedInfo, HitscanInfo);
@@ -133,7 +115,6 @@ void UUR_FireModeBasic::ServerFire_Implementation(const FSimulatedShotInfo& Simu
     }
     else
     {
-        //AuthorityShotDelegate.ExecuteIfBound(this, SimulatedInfo);
         if (BasicInterface)
         {
             IUR_FireModeBasicInterface::Execute_AuthorityShot(BasicInterface.GetObject(), this, SimulatedInfo);
@@ -154,7 +135,6 @@ void UUR_FireModeBasic::MulticastFired_Implementation()
         }
         else
         {
-            //OnPlayFireEffects.Broadcast(this);
             if (BasicInterface)
             {
                 IUR_FireModeBasicInterface::Execute_PlayFireEffects(BasicInterface.GetObject(), this);
@@ -173,8 +153,6 @@ void UUR_FireModeBasic::MulticastFiredHitscan_Implementation(const FHitscanVisua
         }
         else
         {
-            //OnPlayFireEffects.Broadcast(this);
-            //OnPlayHitscanEffects.Broadcast(this, HitscanInfo);
             if (BasicInterface)
             {
                 IUR_FireModeBasicInterface::Execute_PlayFireEffects(BasicInterface.GetObject(), this);

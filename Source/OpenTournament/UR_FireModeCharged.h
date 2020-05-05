@@ -6,16 +6,7 @@
 #include "UR_FireModeBasic.h"
 #include "UR_FireModeCharged.generated.h"
 
-
-/**
-* Event dispatcher.
-* Called at charge start (0) and every new charge level.
-*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FChargeLevelSignature, UUR_FireModeCharged*, FireMode);
-
-
 class IUR_FireModeChargedInterface;
-
 
 /**
  * 
@@ -115,11 +106,6 @@ protected:
     UPROPERTY(Replicated)
     int32 ChargePausedAt;
 
-public:
-
-    UPROPERTY(BlueprintAssignable)
-    FChargeLevelSignature OnChargeLevel;
-
 };
 
 
@@ -135,6 +121,9 @@ class OPENTOURNAMENT_API IUR_FireModeChargedInterface : public IUR_FireModeBasic
 
 public:
 
+    /**
+    * Called at charge start (0) and every new charge level.
+    */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     void ChargeLevel(UUR_FireModeCharged* FireMode);
 

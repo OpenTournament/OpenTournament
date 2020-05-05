@@ -9,41 +9,52 @@
 
 class AUR_Projectile;
 class UFXSystemAsset;
-
-/**
-* Single delegate.
-* Simulate shot on local client.
-* Do not play fire effects, the appropriate delegate will be called right after.
-* Return netcode/hitreg info in the FSimulatedShotInfo struct, to be passed to server.
-*/
-DECLARE_DELEGATE_TwoParams(FSimulateShotDelegate, UUR_FireModeBasic*, FSimulatedShotInfo&);
-
-/**
-* Event dispatcher.
-* Firemode just fired, and clients should play fire effects (muzzle flash, sound, animations).
-*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayFireEffectsSignature, UUR_FireModeBasic*, FireMode);
-
-/**
-* Single delegate.
-* Perform shot on authority side, using the info passed from client.
-*/
-DECLARE_DELEGATE_TwoParams(FAuthorityShotDelegate, UUR_FireModeBasic*, const FSimulatedShotInfo&);
-
-/**
-* Single delegate.
-* Perform hitscan shot on authority side, using the info passed from client.
-* Return visual info in the HitscanVisualInfo struct, to replicate visuals on all clients.
-*/
-DECLARE_DELEGATE_ThreeParams(FAuthorityHitscanShotDelegate, UUR_FireModeBasic*, const FSimulatedShotInfo&, FHitscanVisualInfo&);
-
-/**
-* Event dispatcher.
-* Hitscan just fired, and clients should play hitscan effects (beam, impact).
-*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPlayHitscanEffectsSignature, UUR_FireModeBasic*, FireMode, const FHitscanVisualInfo&, HitscanInfo);
-
 class IUR_FireModeBasicInterface;
+
+/**
+* Stores information about a simulated shot,
+* which will be passed to server for processing.
+*
+* This should be used at the very least to pass client exact fire location & rotation to server.
+* Can also be used to implement clientside hitscan registration.
+*
+* It is intentionally very generic to support many sorts of hitscan implementations.
+* eg. piercing rail, bouncing beam, seeded shotgun
+*/
+USTRUCT(BlueprintType)
+struct FSimulatedShotInfo
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    TArray<FVector> Vectors;
+
+    UPROPERTY()
+    TArray<AActor*> Actors;
+
+    UPROPERTY()
+    int32 Seed;
+};
+
+/**
+* Stores information about a hitscan shot,
+* which will be passed to clients for reproducing accurate visuals.
+*
+* Intentionally also generic to support many sorts of hitscan implementations.
+* eg. bouncing beam, seeded shotgun
+*/
+USTRUCT(BlueprintType)
+struct FHitscanVisualInfo
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    TArray<FVector> Vectors;
+
+    UPROPERTY()
+    int32 Seed;
+};
+
 
 /**
  * 
@@ -147,18 +158,6 @@ protected:
     UFUNCTION()
     void LocalConfirmFired();
 
-public:
-
-    FSimulateShotDelegate SimulateShotDelegate;
-    FAuthorityShotDelegate AuthorityShotDelegate;
-    FAuthorityHitscanShotDelegate AuthorityHitscanShotDelegate;
-
-    UPROPERTY(BlueprintAssignable)
-    FPlayFireEffectsSignature OnPlayFireEffects;
-
-    UPROPERTY(BlueprintAssignable)
-    FPlayHitscanEffectsSignature OnPlayHitscanEffects;
-
 };
 
 
@@ -174,21 +173,49 @@ class OPENTOURNAMENT_API IUR_FireModeBasicInterface : public IUR_FireModeBaseInt
 
 public:
 
+    /**
+    * Simulate a non-hitscan shot on local client.
+    * Do not play fire effects here.
+    * Return netcode/hitreg info in the FSimulatedShotInfo struct, to be passed to server.
+    */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     void SimulateShot(UUR_FireModeBasic* FireMode, FSimulatedShotInfo& OutSimulatedInfo);
 
+    /**
+    * Simulate a hitscan shot on local client.
+    * Do not play fire effects or hitscan effects here.
+    * Return netcode/hitreg info in the FSimulatedShotInfo struct, to be passed to server.
+    * Also return hitscan visual info, to be passed directly to PlayHitscanEffects.
+    */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     void SimulateHitscanShot(UUR_FireModeBasic* FireMode, FSimulatedShotInfo& OutSimulatedInfo, FHitscanVisualInfo& OutHitscanInfo);
 
+    /**
+    * Perform non-hitscan shot on authority side, using simulated info passed from client.
+    */
     UFUNCTION(BlueprintNativeEvent, BlueprintAuthorityOnly, BlueprintCallable)
     void AuthorityShot(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo);
-   
+
+    /**
+    * Perform hitscan shot on authority side, using simulated info passed from client.
+    * Return visual info in the HitscanVisualInfo struct, to replicate visuals on other clients.
+    */
     UFUNCTION(BlueprintNativeEvent, BlueprintAuthorityOnly, BlueprintCallable)
     void AuthorityHitscanShot(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo, FHitscanVisualInfo& OutHitscanInfo);
 
+    /**
+    * Play client-side fire effects (muzzle flash, sound, animations).
+    * Called on owning client before simulating any shot,
+    * and on remote clients when any shot is multicasted.
+    */
     UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic, BlueprintCallable)
     void PlayFireEffects(UUR_FireModeBasic* FireMode);
 
+    /**
+    * Play client-side hitscan effects (beam, impact).
+    * Called on owning client after simulating a hitscan shot,
+    * and on remote clients when a hitscan shot is multicasted.
+    */
     UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic, BlueprintCallable)
     void PlayHitscanEffects(UUR_FireModeBasic* FireMode, const FHitscanVisualInfo& HitscanInfo);
 

@@ -6,74 +6,6 @@
 #include "Components/ActorComponent.h"
 #include "UR_FireModeBase.generated.h"
 
-
-/**
-* Stores information about a simulated shot,
-* which will be passed to server for processing.
-*
-* This should be used at the very least to pass client exact fire location & rotation to server.
-* Can also be used to implement clientside hitscan registration.
-*
-* It is intentionally very generic to support many sorts of hitscan implementations.
-* eg. piercing rail, bouncing beam, seeded shotgun
-*/
-USTRUCT(BlueprintType)
-struct FSimulatedShotInfo
-{
-    GENERATED_BODY()
-
-    UPROPERTY()
-    TArray<FVector> Vectors;
-
-    UPROPERTY()
-    TArray<AActor*> Actors;
-
-    UPROPERTY()
-    int32 Seed;
-};
-
-
-/**
-* Stores information about a hitscan shot,
-* which will be passed to clients for reproducing accurate visuals.
-*
-* Intentionally also generic to support many sorts of hitscan implementations.
-* eg. bouncing beam, seeded shotgun
-*/
-USTRUCT(BlueprintType)
-struct FHitscanVisualInfo
-{
-    GENERATED_BODY()
-
-    UPROPERTY()
-    TArray<FVector> Vectors;
-
-    UPROPERTY()
-    int32 Seed;
-};
-
-
-/**
-* Event dispatcher.
-* Notify the firemode has changed its busy status.
-* Firemode becomes busy when it starts firing.
-* Firemode becomes idle when it is ready to refire (cooldown over).
-*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFireModeChangedStatusSignature, UUR_FireModeBase*, FireMode);
-
-
-/**
-* Single delegate.
-* Tell the firemode if it is allowed to fire, or how long it has to wait.
-*
-* Used during network synchronisation to ensure game integrity,
-* eg. to prevent server firing during weapon BringUp, or faster than fire interval across multiple firemodes.
-* Depending on value returned, server might delay the shot a bit, or discard the shot.
-*
-* Not used on client.
-*/
-DECLARE_DELEGATE_RetVal(float, FTimeUntilReadyToFireDelegate);
-
 class IUR_FireModeBaseInterface;
 
 /**
@@ -150,33 +82,22 @@ protected:
 
     UFUNCTION(BlueprintCallable)
     virtual void SetBusy(bool bNewBusy);
-    /*
-    {
-        if (bNewBusy != bIsBusy)
-        {
-            bIsBusy = bNewBusy;
-            OnFireModeChangedStatus.Broadcast(this);
-        }
-    }
-    */
-
-public:
-
-    UPROPERTY(BlueprintAssignable)
-    FFireModeChangedStatusSignature OnFireModeChangedStatus;
-
-    FTimeUntilReadyToFireDelegate TimeUntilReadyToFireDelegate;
 
 };
 
 
 /**
+* NOTE:
+*
 * Blueprint does not support single-cast delegates or even multi-cast with by-ref parameters.
 * That means it is straight up impossible to bind delegates/events with return values in BP.
 *
 * Some of our FireModes will need some data back from the controlling object,
 * therefore our only option is to rely on interfaces.
+*
+* Each type of firemode may come with its own extended interface to communicate with the controlling object.
 */
+
 
 /**
 *
@@ -193,9 +114,21 @@ class OPENTOURNAMENT_API IUR_FireModeBaseInterface
 
 public:
 
+    /**
+    * Called when the firemode has changed its busy status.
+    * Firemode becomes busy when it starts firing.
+    * Firemode becomes idle when it is ready to refire (cooldown over).
+    */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     void FireModeChangedStatus(UUR_FireModeBase* FireMode);
 
+    /**
+    * Called when the firemode needs to know if it is allowed to fire, or how long it has to wait.
+    *
+    * Used during network synchronisation to ensure game integrity,
+    * eg. to prevent server firing during weapon BringUp, or faster than fire interval across multiple firemodes.
+    * Depending on value returned, server might delay the shot a bit, or discard the shot.
+    */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     float TimeUntilReadyToFire(UUR_FireModeBase* FireMode);
     virtual float TimeUntilReadyToFire_Implementation(UUR_FireModeBase* FireMode)
