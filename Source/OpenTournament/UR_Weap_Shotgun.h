@@ -51,11 +51,27 @@ class OPENTOURNAMENT_API AUR_Weap_Shotgun : public AUR_Weapon
 
     AUR_Weap_Shotgun(const FObjectInitializer& ObjectInitializer);
 
+public:
+
     UPROPERTY(EditAnywhere, Category = "Weapon|Shotgun")
     TArray<FShotgunSpawnBox> SpawnBoxes;
 
     UPROPERTY(EditAnywhere, Category = "Weapon|Shotgun")
     float Spread;
 
+    /**
+    * For best results, this value should reflect the average distance from camera to weapon muzzle.
+    * The actual muzzle cannot be used because animations could generate janky results.
+    */
+    UPROPERTY(EditAnywhere, Category = "Weapon|Shotgun")
+    float UseMuzzleDistance;
+
+    //deprecated
     virtual void SpawnShot_Projectile() override;
+
+    UPROPERTY(VisibleAnywhere)
+    UUR_FireModeBasic* ShotgunFireMode;
+
+    virtual void AuthorityShot_Implementation(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo) override;
+
 };

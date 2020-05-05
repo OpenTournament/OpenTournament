@@ -14,7 +14,7 @@ IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, OpenTournament, "OpenTour
 DEFINE_LOG_CATEGORY(Game);
 DEFINE_LOG_CATEGORY(GameUI);
 DEFINE_LOG_CATEGORY(Net);
-DEFINE_LOG_CATEGORY(Weapon);
+DEFINE_LOG_CATEGORY(LogWeapon);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

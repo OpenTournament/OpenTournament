@@ -188,4 +188,24 @@ public:
     */
     UFUNCTION(BlueprintCallable, Category = "Effects")
     static UFXSystemComponent* SpawnEffectAtLocation(UWorld* World, UFXSystemAsset* Template, const FTransform& Transform);
+
+
+    /**
+    * C++ utility to cast (checked) a TScriptInterface<IBase> to a TScriptInterface<IDerived>
+    */
+    template<class IBase, class IDerived> static void CastScriptInterface(const TScriptInterface<IBase>& Base, TScriptInterface<IDerived>& OutDerived)
+    {
+        UObject* Object = Base.GetObject();
+        IDerived* Casted = Cast<IDerived>(Object);
+        if (Casted)
+        {
+            OutDerived.SetObject(Object);
+            OutDerived.SetInterface(Casted);
+        }
+        else
+        {
+            OutDerived.SetObject(NULL);
+            //OutDerived.SetInterface(NULL); //unnecessary
+        }
+    }
 };

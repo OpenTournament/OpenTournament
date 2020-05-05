@@ -476,7 +476,14 @@ public:
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
     UUR_InventoryComponent* InventoryComponent;
 
+    //deprecated
     bool bIsFiring = false;
+
+    /**
+    * Track firing inputs in a stack to know if/which one should be active now.
+    */
+    UPROPERTY()
+    TArray<uint8> DesiredFireModeNum;
 
     virtual void PawnStartFire(uint8 FireModeNum = 0) override;
     virtual void PawnStopFire(uint8 FireModeNum = 0);
@@ -490,9 +497,6 @@ public:
 
     UFUNCTION(Exec, BlueprintCallable)
     void PrevWeapon();
-
-    UFUNCTION()
-    void Fire();
 
     /** get weapon attach point */
     UFUNCTION()

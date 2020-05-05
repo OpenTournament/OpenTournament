@@ -7,6 +7,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
+#include "UR_FireModeBase.h"
+#include "UR_FireModeBasic.h"
+#include "UR_FireModeCharged.h"
+#include "UR_FireModeContinuous.h"
+
 #include "UR_Weapon.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,18 +24,32 @@ class UAudioComponent;
 class USkeletalMeshComponent;
 class USoundBase;
 class UFXSystemAsset;
+class UAnimMontage;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace EWeaponState
+UENUM(BlueprintType)
+enum class EWeaponState : uint8
 {
-    enum Type
-    {
-        Idle,
-        Firing,
-        Equipping,
-    };
-}
+    /** Weapon is not in the hands */
+    Inactive,
+    /** Weapon is currently being equipped, will be able to fire soon */
+    BringUp,
+    /** Weapon can start firing anytime */
+    Idle,
+    /** Weapon is currently firing/charging/on cooldown - a FireMode is active */
+    Firing,
+    /** Generic state to prevent firing, can be used to implement eg. reloading */
+    Busy,
+    /** Weapon is currently being unequipped */
+    PutDown,
+};
+
+/**
+* Event dispatcher.
+* Notify the weapon has changed state.
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponStateChangedSignature, AUR_Weapon*, Weapon, EWeaponState, NewState);
 
 USTRUCT()
 struct FReplicatedHitscanInfo
@@ -58,11 +77,84 @@ struct FReplicatedHitscanInfo
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_Weapon : public AActor
+    //, public IUR_FireModeBaseInterface
+    //, public IUR_FireModeBasicInterface
+    , public IUR_FireModeChargedInterface
 {
     GENERATED_BODY()
 
 public:	
     AUR_Weapon(const FObjectInitializer& ObjectInitializer);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * Firemode callback: set current active firemode
+    * Called on client & server when firemode is about to fire.
+    * Update weapon state to Firing.
+    */
+    UFUNCTION()
+    virtual void FireMode_SetCurrentFireMode(UUR_FireModeBase* FireMode) {}
+
+    /**
+    * Firemode callback: spawn projectile
+    */
+    UFUNCTION(BlueprintAuthorityOnly)
+    virtual void FireMode_SpawnProjectile() {}
+
+    /**
+    * Firemode callback: spawn hitscan shot
+    * Perform hitscan trace and apply damage.
+    */
+    UFUNCTION(BlueprintAuthorityOnly)
+    virtual void FireMode_SpawnHitscan(FReplicatedHitscanInfo& OutHitscanInfo) {}
+
+    /**
+    * Firemode callback: play fire sound, muzzle flash, animations...
+    * NOTE: not called by continuous firemode, use FiringTick instead.
+    */
+    UFUNCTION(BlueprintCosmetic)
+    virtual void FireMode_PlayFireEffects() {}
+
+    /**
+    * Firemode callback: play hitscan effects (beam, impact...)
+    * NOTE: not called by continuous firemode, use FiringTick instead.
+    */
+    UFUNCTION(BlueprintCosmetic)
+    virtual void FireMode_PlayHitscanEffects(const FReplicatedHitscanInfo& HitscanInfo) {}
+
+    /**
+    * Firemode callback: update continuous firing effects
+    * Called by continuous & charging firemodes.
+    * Not called during cooldown.
+    */
+    UFUNCTION(BlueprintCosmetic)
+    virtual void FireMode_FiringTick() {}
+
+    /**
+    * Firemode callback: ready to refire
+    * If we are holding a fire button, tell firemode to refire immediately.
+    * Else, go to idle state.
+    */
+    UFUNCTION()
+    virtual void FireMode_ReadyToRefire() {}
+
+    /**
+    * Firemode query: how long until the weapon can fire ?
+    * This is used during network synchronisation to ensure game integrity,
+    * eg. to prevent server firing during BringUp, or faster than fire interval.
+    *
+    * Returning 0 or negative value means it is OK to fire right now.
+    * Returning small value (below 0.2s) might delay the firing by that value.
+    * Returning high value (above 0.2s) should discard the shot.
+    *
+    * In BringUp state, return the bring up time left.
+    * In Idle state, return 0.
+    * In Firing state, return CurrentFireMode's cooldown time left.
+    * In other states, return some high value.
+    */
+    UFUNCTION()
+    virtual float FireMode_TimeUntilReadyToFire() { return 0.f;  }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -90,16 +182,21 @@ protected:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
+    virtual void PostInitializeComponents() override;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
+
+#if WITH_EDITOR
+    //virtual void CheckForErrors() override;
+#endif
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 public:
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(VisibleAnywhere)
     UShapeComponent* Tbox;
 
-    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UPROPERTY(VisibleAnywhere)
     UAudioComponent* Sound;
 
     UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Weapon")
@@ -115,17 +212,17 @@ public:
     USoundBase* PickupSound;
 
     //TODO: this will be per-firemode
-    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
     USoundBase* FireSound;
 
-    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
     FName MuzzleSocketName;
 
     //TODO: this will be per-firemode
-    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
     UParticleSystem* MuzzleFlashFX;
 
-    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
     TSubclassOf<AUR_Projectile> ProjectileClass;
 
     bool bItemIsWithinRange = false;
@@ -187,9 +284,6 @@ public:
     AUR_Character* URCharOwner;
 
 
-    /** get current weapon state */
-    EWeaponState::Type GetCurrentState() const;
-
     /** get current ammo amount (total) */
     int32 GetCurrentAmmo() const;
 
@@ -200,10 +294,10 @@ public:
     USkeletalMeshComponent* GetWeaponMesh() const;
 
     /** get pawn owner */
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Game|Weapon")
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Deprecated")
     AUR_Character* GetPawnOwner() const;
 
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Game|Weapon")
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
     bool IsLocallyControlled() const;
 
 protected:
@@ -234,7 +328,7 @@ public:
     UPROPERTY()
     bool bFiring;
 
-    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
     float FireInterval;
 
     /**
@@ -289,7 +383,7 @@ public:
     * Consume ammo for shot.
     */
     UFUNCTION(BlueprintAuthorityOnly)
-    virtual void ConsumeAmmo();
+    virtual void Old_ConsumeAmmo();
 
     /**
     * Server just fired.
@@ -314,20 +408,20 @@ public:
     * Client only.
     */
     UFUNCTION(BlueprintCosmetic)
-    virtual void PlayFireEffects();
+    virtual void Old_PlayFireEffects();
 
     /**
     * Play hitscan effects (beam, impact).
     */
     UFUNCTION(BlueprintCosmetic)
-    virtual void PlayHitscanEffects(const FReplicatedHitscanInfo& HitscanInfo);
+    virtual void Old_PlayHitscanEffects(const FReplicatedHitscanInfo& HitscanInfo);
 
     //============================================================
     // Helper methods
     //============================================================
 
     UFUNCTION()
-    virtual void GetFireVector(FVector& FireLoc, FRotator& FireRot);
+    virtual void Old_GetFireVector(FVector& FireLoc, FRotator& FireRot);
 
     /**
     * Spawn projectile.
@@ -347,24 +441,216 @@ public:
     * 
     */
     UFUNCTION()
-    void HitscanTrace(FHitResult& OutHit);
+    void Old_HitscanTrace(FHitResult& OutHit);
 
     /**
     * On hitscan trace overlap,
     * Return whether hitscan should hit target or fire through.
     */
-    UFUNCTION(BlueprintNativeEvent, Category = "Weapon")
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Weapon")
     bool HitscanShouldHitActor(AActor* Other);
 
     /**
     * For hitscan test implem.
     */
-    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
     UFXSystemAsset* BeamTemplate;
 
-    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
     UParticleSystem* BeamImpactTemplate;
 
-    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
     USoundBase* BeamImpactSound;
+
+    //============================================================
+    // Weapon sounds
+    //============================================================
+
+    UPROPERTY(EditAnywhere, Category = "Weapon")
+    USoundBase* OutOfAmmoSound;
+
+    //============================================================
+    // Weapon animations & timings
+    //============================================================
+
+    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UAnimMontage* BringUpMontage;
+
+    UPROPERTY(EditAnywhere, Category = "Weapon")
+    float BringUpTime;
+
+    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UAnimMontage* PutDownMontage;
+
+    UPROPERTY(EditAnywhere, Category = "Weapon")
+    float PutDownTime;
+
+    /**
+    * When requesting putdown during cooldown, delay by a percentage of that cooldown.
+    * If cooldown is 1 second and this is at 75%, you can putdown 0.75s after firing.
+    */
+    UPROPERTY(EditAnywhere, Category = "Weapon", Meta = (ClampMin = "0", ClampMax = "1"))
+    float CooldownDelaysPutDownByPercent;
+
+    /**
+    * Whether to automatically reduce the above delay by the PutDownTime itself.
+    * In the above scenario and with 0.3 put down time, you can putdown 0.45s after firing.
+    */
+    UPROPERTY(EditAnywhere, Category = "Weapon", Meta = (EditCondition = "CooldownDelaysPutDownByPercent>0"))
+    bool bReducePutDownDelayByPutDownTime;
+
+    //============================================================
+    // Weapon states
+    //============================================================
+
+    UPROPERTY(BlueprintReadOnly)
+    EWeaponState WeaponState;
+
+    UFUNCTION()
+    virtual void SetWeaponState(EWeaponState NewState);
+
+    UPROPERTY(BlueprintAssignable)
+    FWeaponStateChangedSignature OnWeaponStateChanged;
+
+    UFUNCTION()
+    void BringUp(float FromPosition);
+
+    UFUNCTION()
+    void BringUpCallback();
+
+    UFUNCTION()
+    void PutDown(float FromPosition);
+
+    UFUNCTION()
+    void PutDownCallback();
+
+    /** BringUp/PutDown animation timer */
+    FTimerHandle SwapAnimTimerHandle;
+
+    /** Delay before putdown due to cooldown */
+    FTimerHandle PutDownDelayTimerHandle;
+
+    /**
+    * Force stop fire on all firemodes.
+    * Use when changing or dropping weapon, or when dying, to ensure no firing loop remains.
+    */
+    UFUNCTION()
+    void StopAllFire();
+
+    UFUNCTION()
+    void TryStartFire(UUR_FireModeBase* FireMode);
+
+    FTimerHandle RetryStartFireTimerHandle;
+
+    //============================================================
+    // External API
+    //============================================================
+
+    /**
+    * Request to bring the weapon up.
+    * If weapon is Inactive (not equipped), bring up happens immediately.
+    * If weapon is on PutDown, bring up also happens immediately, and should recover from its current position.
+    * In all other cases, this just cancels any previous call to RequestPutDown, and nothing happens.
+    */
+    UFUNCTION()
+    virtual void RequestBringUp();
+
+    /**
+    * Request to put the weapon down whenever possible.
+    * After waiting on firemodes cooldowns, weapon will go to PutDown state.
+    * Once finished, weapon will go to Inactive state.
+    * Use the OnWeaponStateChanged dispatcher to track progress.
+    */
+    UFUNCTION()
+    virtual void RequestPutDown();
+
+    UFUNCTION()
+    virtual void RequestStartFire(uint8 FireModeIndex);
+
+    UFUNCTION()
+    virtual void RequestStopFire(uint8 FireModeIndex);
+
+    //============================================================
+    // Firemodes
+    //============================================================
+
+    /**
+    * Array of fire modes components, where indices are reflecting FireMode->Index.
+    * Built automatically from the components list.
+    * Might contain null elements, if indices are skipped.
+    * Eg. if only one firemode with index 1 is present, 0 will be null.
+    */
+    UPROPERTY(BlueprintReadOnly)
+    TArray<UUR_FireModeBase*> FireModes;
+
+    /**
+    * Current active firemode. There should only be one at a time.
+    * Only relevant in weapon state Firing. Should be null otherwise.
+    */
+    UPROPERTY(BlueprintReadOnly)
+    UUR_FireModeBase* CurrentFireMode;
+
+    /**
+    * Stack of desired fire modes (controlled by RequestStartFire/StopFire).
+    * First is newest. No duplicates.
+    */
+    UPROPERTY(BlueprintReadOnly)
+    TArray<UUR_FireModeBase*> DesiredFireModes;
+
+    //============================================================
+    // FireModeBase interface
+    //============================================================
+
+    virtual void FireModeChangedStatus_Implementation(UUR_FireModeBase* FireMode) override;
+
+    virtual float TimeUntilReadyToFire_Implementation(UUR_FireModeBase* FireMode) override;
+
+    //============================================================
+    // FireModeBasic interface
+    //============================================================
+
+    virtual void SimulateShot_Implementation(UUR_FireModeBasic* FireMode, FSimulatedShotInfo& OutSimulatedInfo) override;
+
+    virtual void SimulateHitscanShot_Implementation(UUR_FireModeBasic* FireMode, FSimulatedShotInfo& OutSimulatedInfo, FHitscanVisualInfo& OutHitscanInfo) override;
+
+    virtual void AuthorityShot_Implementation(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo) override;
+
+    virtual void AuthorityHitscanShot_Implementation(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo, FHitscanVisualInfo& OutHitscanInfo) override;
+
+    virtual void PlayFireEffects_Implementation(UUR_FireModeBasic* FireMode) override;
+
+    virtual void PlayHitscanEffects_Implementation(UUR_FireModeBasic* FireMode, const FHitscanVisualInfo& HitscanInfo) override;
+
+    //============================================================
+    // FireModeCharged interface
+    //============================================================
+
+    virtual void ChargeLevel_Implementation(UUR_FireModeCharged* FireMode) override;
+
+    //============================================================
+    // FireModeContinuous interface
+    //============================================================
+
+    UFUNCTION()
+    virtual void FiringTick(UUR_FireModeContinuous* FireMode);
+
+    //============================================================
+    // Helpers v2
+    //============================================================
+
+    UFUNCTION(BlueprintCallable)
+    virtual void GetFireVector(FVector& FireLoc, FRotator& FireRot);
+
+    UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
+    virtual AUR_Projectile* SpawnProjectile(TSubclassOf<AUR_Projectile> InProjectileClass, const FVector& StartLoc, const FRotator& StartRot);
+
+    UFUNCTION(BlueprintCallable)
+    void HitscanTrace(const FVector& TraceStart, const FVector& TraceEnd, FHitResult& OutHit);
+
+    UFUNCTION(BlueprintCallable)
+    bool HasEnoughAmmoFor(UUR_FireModeBase* FireMode);
+
+    UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
+    virtual void ConsumeAmmo(UUR_FireModeBase* FireMode);
+
 };

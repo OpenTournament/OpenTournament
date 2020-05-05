@@ -844,51 +844,47 @@ void AUR_Character::PrevWeapon()
 
 void AUR_Character::PawnStartFire(uint8 FireModeNum)
 {
+    /*
     bIsFiring = true;
 
     if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
         InventoryComponent->ActiveWeapon->LocalStartFire();
     }
-    else
+    */
+
+    DesiredFireModeNum.Insert(FireModeNum, 0);
+
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
-        GAME_LOG(Game, Log, "No Weapon Selected");
+        InventoryComponent->ActiveWeapon->RequestStartFire(FireModeNum);
     }
 }
 
 void AUR_Character::PawnStopFire(uint8 FireModeNum)
 {
+    /*
     bIsFiring = false;
 
     if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
         InventoryComponent->ActiveWeapon->LocalStopFire();
     }
-}
+    */
 
-//deprecated
-void AUR_Character::Fire()
-{
-    if (bIsFiring)
+    DesiredFireModeNum.RemoveSingle(FireModeNum);
+
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
-        if (InventoryComponent->ActiveWeapon)
-        {
-            if (InventoryComponent->ActiveWeapon->ProjectileClass != nullptr)
-            {
-                //GetActorEyesViewPoint(InventoryComponent->ActiveWeapon->GetActorLocation(), FRotator()); //InventoryComponent->ActiveWeapon->GetActorRotation()
-                //FVector MuzzleLocation{ InventoryComponent->ActiveWeapon->GetActorLocation() + FTransform(FRotator()).TransformVector(MuzzleOffset) }; // InventoryComponent->ActiveWeapon->GetActorRotation()
-                //FRotator MuzzleRotation{ InventoryComponent->ActiveWeapon->GetActorRotation() };
+        InventoryComponent->ActiveWeapon->RequestStopFire(FireModeNum);
 
-                InventoryComponent->ActiveWeapon->Fire();
-                MeshFirstPerson->PlayAnimation(FireAnimation, false);
-            }
-        }
-        else
+        if (DesiredFireModeNum.Num() > 0)
         {
-            GAME_LOG(Game, Log, "No Weapon Selected");
+            InventoryComponent->ActiveWeapon->RequestStartFire(DesiredFireModeNum[0]);
         }
     }
 }
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -4,10 +4,6 @@
 
 #include "UR_Weap_Shotgun.h"
 
-#include "Camera/CameraComponent.h"
-#include "Components/SphereComponent.h"
-
-#include "UR_Character.h"
 #include "UR_Projectile.h"
 #include "UR_FunctionLibrary.h"
 
@@ -36,10 +32,16 @@ AUR_Weap_Shotgun::AUR_Weap_Shotgun(const FObjectInitializer& ObjectInitializer)
         { FVector(5.0f, +15.0f, +15.0f), FVector(5.f, 15.f, 15.f), 2 },
     };
     Spread = 0.2f;
+
+    UseMuzzleDistance = 100.f;
+
+    ShotgunFireMode = CreateDefaultSubobject<UUR_FireModeBasic>(TEXT("ShotgunFireMode"));
 }
 
+//deprecated
 void AUR_Weap_Shotgun::SpawnShot_Projectile()
 {
+    /*
     FVector FireLoc;
     FRotator FireRot;
     GetFireVector(FireLoc, FireRot);
@@ -72,6 +74,45 @@ void AUR_Weap_Shotgun::SpawnShot_Projectile()
             else
             {
                 UE_LOG(LogTemp, Warning, TEXT("Failed to spawn projectile ??"));
+            }
+        }
+    }
+    */
+}
+
+void AUR_Weap_Shotgun::AuthorityShot_Implementation(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo)
+{
+    if (FireMode != ShotgunFireMode)
+    {
+        Super::AuthorityShot_Implementation(FireMode, SimulatedInfo);
+        return;
+    }
+
+    if (FireMode->ProjectileClass)
+    {
+        //TODO: validate passed in fire location
+        FVector FireLoc = SimulatedInfo.Vectors[0];
+
+        // Fire direction doesn't need validation
+        const FVector& FireDir = SimulatedInfo.Vectors[1];
+        FRotator FireRot = FireDir.Rotation();
+
+        FVector SpreadReferencePoint = FireLoc - UseMuzzleDistance * FireDir;
+
+        for (const FShotgunSpawnBox& SpawnBox : SpawnBoxes)
+        {
+            for (int32 j = 0; j < SpawnBox.Count; j++)
+            {
+                FVector RelOffset(SpawnBox.RelativeLoc);
+                RelOffset += UUR_FunctionLibrary::RandomVectorInRange(-SpawnBox.Extent, SpawnBox.Extent);
+
+                FVector SpawnLoc = FireLoc + FireRot.RotateVector(RelOffset);
+
+                FRotator MinimumDir = FireRot;
+                FRotator MaximumDir = (SpawnLoc - SpreadReferencePoint).Rotation();
+                FRotator SpawnRot = FMath::Lerp(MinimumDir, MaximumDir, Spread);
+
+                SpawnProjectile(FireMode->ProjectileClass, SpawnLoc, SpawnRot);
             }
         }
     }
