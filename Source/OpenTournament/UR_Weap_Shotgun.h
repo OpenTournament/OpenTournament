@@ -66,9 +66,6 @@ public:
     UPROPERTY(EditAnywhere, Category = "Weapon|Shotgun")
     float UseMuzzleDistance;
 
-    //deprecated
-    virtual void SpawnShot_Projectile() override;
-
     UPROPERTY(VisibleAnywhere)
     UUR_FireModeBasic* ShotgunFireMode;
 

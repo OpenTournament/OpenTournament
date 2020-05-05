@@ -51,25 +51,6 @@ enum class EWeaponState : uint8
 */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponStateChangedSignature, AUR_Weapon*, Weapon, EWeaponState, NewState);
 
-USTRUCT()
-struct FReplicatedHitscanInfo
-{
-    GENERATED_BODY()
-
-    UPROPERTY()
-    FVector Start;
-
-    UPROPERTY()
-    FVector End;
-
-    UPROPERTY()
-    FVector ImpactNormal;
-
-    FReplicatedHitscanInfo() {}
-    FReplicatedHitscanInfo(const FVector& Start, const FVector& End, const FVector& ImpactNormal)
-        : Start(Start), End(End), ImpactNormal(ImpactNormal) {}
-};
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -85,76 +66,6 @@ class OPENTOURNAMENT_API AUR_Weapon : public AActor
 
 public:	
     AUR_Weapon(const FObjectInitializer& ObjectInitializer);
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-    * Firemode callback: set current active firemode
-    * Called on client & server when firemode is about to fire.
-    * Update weapon state to Firing.
-    */
-    UFUNCTION()
-    virtual void FireMode_SetCurrentFireMode(UUR_FireModeBase* FireMode) {}
-
-    /**
-    * Firemode callback: spawn projectile
-    */
-    UFUNCTION(BlueprintAuthorityOnly)
-    virtual void FireMode_SpawnProjectile() {}
-
-    /**
-    * Firemode callback: spawn hitscan shot
-    * Perform hitscan trace and apply damage.
-    */
-    UFUNCTION(BlueprintAuthorityOnly)
-    virtual void FireMode_SpawnHitscan(FReplicatedHitscanInfo& OutHitscanInfo) {}
-
-    /**
-    * Firemode callback: play fire sound, muzzle flash, animations...
-    * NOTE: not called by continuous firemode, use FiringTick instead.
-    */
-    UFUNCTION(BlueprintCosmetic)
-    virtual void FireMode_PlayFireEffects() {}
-
-    /**
-    * Firemode callback: play hitscan effects (beam, impact...)
-    * NOTE: not called by continuous firemode, use FiringTick instead.
-    */
-    UFUNCTION(BlueprintCosmetic)
-    virtual void FireMode_PlayHitscanEffects(const FReplicatedHitscanInfo& HitscanInfo) {}
-
-    /**
-    * Firemode callback: update continuous firing effects
-    * Called by continuous & charging firemodes.
-    * Not called during cooldown.
-    */
-    UFUNCTION(BlueprintCosmetic)
-    virtual void FireMode_FiringTick() {}
-
-    /**
-    * Firemode callback: ready to refire
-    * If we are holding a fire button, tell firemode to refire immediately.
-    * Else, go to idle state.
-    */
-    UFUNCTION()
-    virtual void FireMode_ReadyToRefire() {}
-
-    /**
-    * Firemode query: how long until the weapon can fire ?
-    * This is used during network synchronisation to ensure game integrity,
-    * eg. to prevent server firing during BringUp, or faster than fire interval.
-    *
-    * Returning 0 or negative value means it is OK to fire right now.
-    * Returning small value (below 0.2s) might delay the firing by that value.
-    * Returning high value (above 0.2s) should discard the shot.
-    *
-    * In BringUp state, return the bring up time left.
-    * In Idle state, return 0.
-    * In Firing state, return CurrentFireMode's cooldown time left.
-    * In other states, return some high value.
-    */
-    UFUNCTION()
-    virtual float FireMode_TimeUntilReadyToFire() { return 0.f;  }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -186,10 +97,6 @@ protected:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
 
-#if WITH_EDITOR
-    //virtual void CheckForErrors() override;
-#endif
-
     /////////////////////////////////////////////////////////////////////////////////////////////////
 public:
 
@@ -211,20 +118,6 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
     USoundBase* PickupSound;
 
-    //TODO: this will be per-firemode
-    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
-    USoundBase* FireSound;
-
-    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
-    FName MuzzleSocketName;
-
-    //TODO: this will be per-firemode
-    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
-    UParticleSystem* MuzzleFlashFX;
-
-    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
-    TSubclassOf<AUR_Projectile> ProjectileClass;
-
     bool bItemIsWithinRange = false;
 
     UPROPERTY(ReplicatedUsing = OnRep_Equipped)
@@ -235,9 +128,6 @@ public:
 
     UFUNCTION(BlueprintAuthorityOnly)
     void GiveTo(AUR_Character* NewOwner);
-
-    UFUNCTION()
-    virtual void Fire();
 
     UFUNCTION()
     void SetEquipped(bool bEquipped);
@@ -316,132 +206,11 @@ protected:
     FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //============================================================
-    // Basic firing loop with network support.
-    // - Not fit for fast fire-rate like mini/beams.
-    // - No support for custom systems like charging.
-    // - No blueprint support yet.
-    //============================================================
 public:
-
-    UPROPERTY()
-    bool bFiring;
-
-    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
-    float FireInterval;
-
-    /**
-    * Used to calculate server response time to our ServerFire() call, and adjust fire loop.
-    * Owner client only.
-    */
-    UPROPERTY()
-    float LocalFireTime;
-
-    /**
-    * Used to make sure server/authority never fires faster than FireInterval.
-    * Authority only.
-    */
-    UPROPERTY()
-    float LastFireTime;
-
-    FTimerHandle FireLoopTimerHandle;
-    FTimerHandle DelayedFireTimerHandle;
-
-    /**
-    * Start the fire loop on owning client.
-    */
-    UFUNCTION()
-    virtual void LocalStartFire();
-
-    /**
-    * Stop the fire loop on owning client.
-    */
-    UFUNCTION()
-    virtual void LocalStopFire();
-
-    /**
-    * Fire loop.
-    * Fully simulated on owning client.
-    */
-    UFUNCTION()
-    virtual void LocalFireLoop();
-
-    /**
-    * Simulate fire on owning client.
-    */
-    UFUNCTION()
-    virtual void LocalFire();
-
-    /**
-    * Fire on server.
-    */
-    UFUNCTION(Server, Reliable)
-    void ServerFire();
-
-    /**
-    * Consume ammo for shot.
-    */
-    UFUNCTION(BlueprintAuthorityOnly)
-    virtual void Old_ConsumeAmmo();
-
-    /**
-    * Server just fired.
-    * Remote clients should spawn muzzle flash effect.
-    * Owner client should update his fire loop timer to avoid lingering desync.
-    */
-    UFUNCTION(NetMulticast, Reliable)
-    void MulticastFired_Projectile();
-
-    UFUNCTION(NetMulticast, Reliable)
-    void MulticastFired_Hitscan(const FReplicatedHitscanInfo& HitscanInfo);
-
-    /**
-    * Factor code for both above methods :
-    * Owner client should update his fire loop timer to avoid lingering desync.
-    */
-    UFUNCTION()
-    void LocalConfirmFired();
-
-    /**
-    * Play fire sound, muzzle flash.
-    * Client only.
-    */
-    UFUNCTION(BlueprintCosmetic)
-    virtual void Old_PlayFireEffects();
-
-    /**
-    * Play hitscan effects (beam, impact).
-    */
-    UFUNCTION(BlueprintCosmetic)
-    virtual void Old_PlayHitscanEffects(const FReplicatedHitscanInfo& HitscanInfo);
 
     //============================================================
     // Helper methods
     //============================================================
-
-    UFUNCTION()
-    virtual void Old_GetFireVector(FVector& FireLoc, FRotator& FireRot);
-
-    /**
-    * Spawn projectile.
-    * Authority only.
-    */
-    UFUNCTION(BlueprintAuthorityOnly)
-    virtual void SpawnShot_Projectile();
-
-    /**
-    * Perform hitscan trace and apply damage.
-    * Authority only.
-    */
-    UFUNCTION(BlueprintAuthorityOnly)
-    virtual void SpawnShot_Hitscan(FReplicatedHitscanInfo& OutHitscanInfo);
-
-    /**
-    * 
-    */
-    UFUNCTION()
-    void Old_HitscanTrace(FHitResult& OutHit);
 
     /**
     * On hitscan trace overlap,
@@ -449,18 +218,6 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Weapon")
     bool HitscanShouldHitActor(AActor* Other);
-
-    /**
-    * For hitscan test implem.
-    */
-    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
-    UFXSystemAsset* BeamTemplate;
-
-    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
-    UParticleSystem* BeamImpactTemplate;
-
-    UPROPERTY(EditAnywhere, Category = "Weapon|Deprecated")
-    USoundBase* BeamImpactSound;
 
     //============================================================
     // Weapon sounds
@@ -603,6 +360,12 @@ public:
 
     virtual void FireModeChangedStatus_Implementation(UUR_FireModeBase* FireMode) override;
 
+    /**
+    * In BringUp state, return the bring up time left.
+    * In Idle state, return 0.
+    * In Firing state, return CurrentFireMode's cooldown time left.
+    * In other states, return some high value to prevent any shot.
+    */
     virtual float TimeUntilReadyToFire_Implementation(UUR_FireModeBase* FireMode) override;
 
     //============================================================
@@ -617,8 +380,10 @@ public:
 
     virtual void AuthorityHitscanShot_Implementation(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo, FHitscanVisualInfo& OutHitscanInfo) override;
 
+    /** Play firing effects (muzzle flash, fire sound, animations...) */
     virtual void PlayFireEffects_Implementation(UUR_FireModeBasic* FireMode) override;
 
+    /** Play hitscan effects (beam, impact...) */
     virtual void PlayHitscanEffects_Implementation(UUR_FireModeBasic* FireMode, const FHitscanVisualInfo& HitscanInfo) override;
 
     //============================================================

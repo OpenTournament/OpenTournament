@@ -38,48 +38,6 @@ AUR_Weap_Shotgun::AUR_Weap_Shotgun(const FObjectInitializer& ObjectInitializer)
     ShotgunFireMode = CreateDefaultSubobject<UUR_FireModeBasic>(TEXT("ShotgunFireMode"));
 }
 
-//deprecated
-void AUR_Weap_Shotgun::SpawnShot_Projectile()
-{
-    /*
-    FVector FireLoc;
-    FRotator FireRot;
-    GetFireVector(FireLoc, FireRot);
-
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.Owner = GetOwner();
-    SpawnParams.Instigator = GetInstigator() ? GetInstigator() : Cast<APawn>(GetOwner());
-    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-    const FVector CameraLoc = URCharOwner->CharacterCameraComponent->GetComponentLocation();
-
-    for (const FShotgunSpawnBox& SpawnBox : SpawnBoxes)
-    {
-        for (int32 j = 0; j < SpawnBox.Count; j++)
-        {
-            FVector RelOffset(SpawnBox.RelativeLoc);
-            RelOffset += UUR_FunctionLibrary::RandomVectorInRange(-SpawnBox.Extent, SpawnBox.Extent);
-
-            FVector SpawnLoc = FireLoc + FireRot.RotateVector(RelOffset);
-
-            FRotator MinimumDir = FireRot;
-            FRotator MaximumDir = (SpawnLoc - CameraLoc).Rotation();
-            FRotator SpawnRot = FMath::Lerp(MinimumDir, MaximumDir, Spread);
-
-            AUR_Projectile* Projectile = GetWorld()->SpawnActor<AUR_Projectile>(ProjectileClass, SpawnLoc, SpawnRot, SpawnParams);
-            if (Projectile)
-            {
-                Projectile->FireAt(SpawnRot.Vector());
-            }
-            else
-            {
-                UE_LOG(LogTemp, Warning, TEXT("Failed to spawn projectile ??"));
-            }
-        }
-    }
-    */
-}
-
 void AUR_Weap_Shotgun::AuthorityShot_Implementation(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo)
 {
     if (FireMode != ShotgunFireMode)
