@@ -64,10 +64,13 @@ class OPENTOURNAMENT_API AUR_Weapon : public AActor
 {
     GENERATED_BODY()
 
-public:	
+protected:	
     AUR_Weapon(const FObjectInitializer& ObjectInitializer);
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    virtual void PostInitializeComponents() override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+    // ???
 
     enum class EAmmoType
     {
@@ -81,32 +84,54 @@ public:
         return EAmmoType::EBullet;
     }
 
-    bool CanFire() const;
-
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Very, very basic support for picking up weapons on the ground.
 
 protected:
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-    virtual void OnRep_Owner() override;
+
+    UPROPERTY(VisibleAnywhere)
+    UShapeComponent* TriggerBox;
+
+    virtual void BeginPlay() override;
 
     UFUNCTION()
-    virtual void OnRep_Equipped();
+    void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Weapon possession
 
-    virtual void PostInitializeComponents() override;
-    virtual void BeginPlay() override;
-    virtual void Tick(float DeltaTime) override;
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
 public:
 
-    UPROPERTY(VisibleAnywhere)
-    UShapeComponent* Tbox;
+    UPROPERTY(BlueprintReadOnly)
+    AUR_Character* URCharOwner;
 
-    UPROPERTY(VisibleAnywhere)
-    UAudioComponent* Sound;
+    UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
+    void GiveTo(AUR_Character* NewOwner);
 
-    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Weapon")
+protected:
+
+    virtual void OnRep_Owner() override;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // General properties
+
+protected:
+
+    UPROPERTY(VisibleAnywhere, Category = "Weapon")
+    USkeletalMeshComponent* Mesh1P;
+
+    UPROPERTY(VisibleAnywhere, Category = "Weapon")
+    USkeletalMeshComponent* Mesh3P;
+
+    UPROPERTY(VisibleAnywhere, Category = "Weapon")
+    USoundBase* OutOfAmmoSound;
+
+public:
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+    USoundBase* PickupSound;
+
+    UPROPERTY(EditAnywhere, Replicated, Category = "Weapon")
     int32 AmmoCount;
 
     UPROPERTY(EditAnywhere, Category = "Weapon")
@@ -115,37 +140,52 @@ public:
     UPROPERTY(EditAnywhere, Category = "Weapon")
     FString AmmoName;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
-    USoundBase* PickupSound;
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Some getters
 
-    bool bItemIsWithinRange = false;
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    int32 GetCurrentAmmo() const { return AmmoCount; }
+
+    /** DEPRECATED. Use GetMesh1P() or GetMesh3P() instead */
+    USkeletalMeshComponent* GetWeaponMesh() const { return Mesh1P; }
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    bool IsLocallyControlled() const;
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    bool IsEquipped() const { return bIsEquipped; }
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Equipping (placeholder)
+
+protected:
 
     UPROPERTY(ReplicatedUsing = OnRep_Equipped)
     bool bIsEquipped = false;
 
-    UFUNCTION()
-    void Pickup();
-
-    UFUNCTION(BlueprintAuthorityOnly)
-    void GiveTo(AUR_Character* NewOwner);
+public:
 
     UFUNCTION()
     void SetEquipped(bool bEquipped);
 
-    UFUNCTION()
-    virtual void OnEquip(AUR_Weapon* LastWeapon);
+protected:
 
     UFUNCTION()
-    virtual void OnUnEquip();
-
-    UFUNCTION()
-    bool IsEquipped() const;
-
-    UFUNCTION()
-    bool IsAttachedToPawn() const;
+    virtual void OnRep_Equipped();
 
     UFUNCTION()
     void AttachMeshToPawn();
+
+    UFUNCTION()
+    void DetachMeshFromPawn();
+
+public:
 
     /**
     * Update 1P and 3P mesh visibility according to current view mode.
@@ -155,65 +195,9 @@ public:
     UFUNCTION(BlueprintCosmetic)
     void UpdateMeshVisibility();
 
-    UFUNCTION()
-    void AttachWeaponToPawn();
-
-    UFUNCTION()
-    void DetachMeshFromPawn();
-
-    UFUNCTION()
-    void GetPlayer(AActor* Player);
-
-    UFUNCTION()
-    void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-    UFUNCTION()
-    void OnTriggerExit(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-    UPROPERTY(EditAnywhere)
-    AUR_Character* URCharOwner;
-
-
-    /** get current ammo amount (total) */
-    int32 GetCurrentAmmo() const;
-
-    /** get max ammo amount */
-    int32 GetMaxAmmo() const;
-
-    /** get weapon mesh (needs pawn owner to determine variant) */
-    USkeletalMeshComponent* GetWeaponMesh() const;
-
-    /** get pawn owner */
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Deprecated")
-    AUR_Character* GetPawnOwner() const;
-
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
-    bool IsLocallyControlled() const;
-
-protected:
-
-    /** weapon mesh: 1st person view */
-    UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-    USkeletalMeshComponent* Mesh1P;
-
-    /** weapon mesh: 3rd person view */
-    UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-    USkeletalMeshComponent* Mesh3P;
-
-    /** Returns Mesh1P subobject **/
-    FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
-    /** Returns Mesh3P subobject **/
-    FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
-
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
 public:
-
-    //============================================================
-    // Weapon sounds
-    //============================================================
-
-    UPROPERTY(EditAnywhere, Category = "Weapon")
-    USoundBase* OutOfAmmoSound;
 
     //============================================================
     // Weapon animations & timings
