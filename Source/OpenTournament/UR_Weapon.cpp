@@ -347,106 +347,10 @@ bool AUR_Weapon::IsAttachedToPawn() const
 }
 
 
-//============================================================
-// Helpers
-//============================================================
-
-bool AUR_Weapon::HitscanShouldHitActor_Implementation(AActor* Other)
-{
-    //NOTE: here we can implement firing through teammates
-
-    if (APawn* Pawn = Cast<APawn>(Other))
-    {
-        return Pawn != GetInstigator();
-    }
-    else if (AUR_Projectile* Proj = Cast<AUR_Projectile>(Other))
-    {
-        return Proj->CanBeDamaged();
-    }
-    return false;
-}
-
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 //============================================================
-// Helpers v2
-//============================================================
-
-void AUR_Weapon::GetFireVector(FVector& FireLoc, FRotator& FireRot)
-{
-    if (URCharOwner)
-    {
-        // Careful, in URCharacter we are using a custom 1p camera.
-        // This means GetActorEyesViewPoint is wrong because it uses a hardcoded offest.
-        // Either access camera directly, or override GetActorEyesViewPoint.
-        FVector CameraLoc = URCharOwner->CharacterCameraComponent->GetComponentLocation();
-        FireLoc = CameraLoc;
-        FireRot = URCharOwner->GetViewRotation();
-    }
-    else
-    {
-        GetActorEyesViewPoint(FireLoc, FireRot);
-    }
-}
-
-AUR_Projectile* AUR_Weapon::SpawnProjectile(TSubclassOf<AUR_Projectile> InProjectileClass, const FVector& StartLoc, const FRotator& StartRot)
-{
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.Owner = GetOwner();
-    SpawnParams.Instigator = GetInstigator() ? GetInstigator() : Cast<APawn>(GetOwner());
-    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-    AUR_Projectile* Projectile = GetWorld()->SpawnActor<AUR_Projectile>(InProjectileClass, StartLoc, StartRot, SpawnParams);
-    if (Projectile)
-    {
-        Projectile->FireAt(StartRot.Vector());
-        return Projectile;
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Failed to spawn projectile ??"));
-    }
-
-    return nullptr;
-}
-
-void AUR_Weapon::HitscanTrace(const FVector& TraceStart, const FVector& TraceEnd, FHitResult& OutHit)
-{
-    ECollisionChannel TraceChannel = ECollisionChannel::ECC_GameTraceChannel2;  //WeaponTrace
-    FCollisionShape SweepShape = FCollisionShape::MakeSphere(5.f);
-
-    // fill in info in case we get 0 results from sweep
-    OutHit.TraceStart = TraceStart;
-    OutHit.TraceEnd = TraceEnd;
-    OutHit.bBlockingHit = false;
-    OutHit.ImpactNormal = TraceStart - TraceEnd;
-    OutHit.ImpactNormal.Normalize();
-
-    TArray<FHitResult> Hits;
-    GetWorld()->SweepMultiByChannel(Hits, TraceStart, TraceEnd, FQuat(), TraceChannel, SweepShape);
-    for (const FHitResult& Hit : Hits)
-    {
-        if (Hit.bBlockingHit || HitscanShouldHitActor(Hit.GetActor()))
-        {
-            OutHit = Hit;
-            OutHit.bBlockingHit = true;
-            break;
-        }
-    }
-}
-
-bool AUR_Weapon::HasEnoughAmmoFor(UUR_FireModeBase* FireMode)
-{
-    return AmmoCount >= 1;
-}
-
-void AUR_Weapon::ConsumeAmmo(UUR_FireModeBase* FireMode)
-{
-    AmmoCount -= 1;
-}
-
-
-//============================================================
-// WeaponStates core
+// WeaponStates Core
 //============================================================
 
 void AUR_Weapon::SetWeaponState(EWeaponState NewState)
@@ -593,36 +497,6 @@ void AUR_Weapon::StopAllFire()
     */
 }
 
-// Factor method for ammo checking before starting fire
-// And looping when out of ammo
-void AUR_Weapon::TryStartFire(UUR_FireModeBase* FireMode)
-{
-    if (WeaponState == EWeaponState::Idle)
-    {
-        if (HasEnoughAmmoFor(FireMode))
-        {
-            FireMode->StartFire();
-        }
-        else
-        {
-            // Out of ammo
-            UGameplayStatics::PlaySound2D(GetWorld(), OutOfAmmoSound);
-
-            // loop as long as user is holding fire
-            FTimerDelegate TimerCallback;
-            TimerCallback.BindLambda([this, FireMode]
-            {
-                if (DesiredFireModes.Num() > 0 && DesiredFireModes[0] == FireMode)
-                {
-                    TryStartFire(FireMode);
-                }
-            });
-            GetWorld()->GetTimerManager().SetTimer(RetryStartFireTimerHandle, TimerCallback, 0.5f, false);
-            return;
-        }
-    }
-}
-
 
 //============================================================
 // External API
@@ -751,7 +625,128 @@ void AUR_Weapon::RequestPutDown()
 
 
 //============================================================
-// FireModeBase callbacks
+// Helpers
+//============================================================
+
+void AUR_Weapon::TryStartFire(UUR_FireModeBase* FireMode)
+{
+    if (WeaponState == EWeaponState::Idle)
+    {
+        if (HasEnoughAmmoFor(FireMode))
+        {
+            FireMode->StartFire();
+        }
+        else
+        {
+            // Out of ammo
+            UGameplayStatics::PlaySound2D(GetWorld(), OutOfAmmoSound);
+
+            // loop as long as user is holding fire
+            FTimerDelegate TimerCallback;
+            TimerCallback.BindLambda([this, FireMode]
+            {
+                if (DesiredFireModes.Num() > 0 && DesiredFireModes[0] == FireMode)
+                {
+                    TryStartFire(FireMode);
+                }
+            });
+            GetWorld()->GetTimerManager().SetTimer(RetryStartFireTimerHandle, TimerCallback, 0.5f, false);
+            return;
+        }
+    }
+}
+
+
+void AUR_Weapon::GetFireVector(FVector& FireLoc, FRotator& FireRot)
+{
+    if (URCharOwner)
+    {
+        // Careful, in URCharacter we are using a custom 1p camera.
+        // This means GetActorEyesViewPoint is wrong because it uses a hardcoded offest.
+        // Either access camera directly, or override GetActorEyesViewPoint.
+        FVector CameraLoc = URCharOwner->CharacterCameraComponent->GetComponentLocation();
+        FireLoc = CameraLoc;
+        FireRot = URCharOwner->GetViewRotation();
+    }
+    else
+    {
+        GetActorEyesViewPoint(FireLoc, FireRot);
+    }
+}
+
+AUR_Projectile* AUR_Weapon::SpawnProjectile(TSubclassOf<AUR_Projectile> InProjectileClass, const FVector& StartLoc, const FRotator& StartRot)
+{
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Owner = GetOwner();
+    SpawnParams.Instigator = GetInstigator() ? GetInstigator() : Cast<APawn>(GetOwner());
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    AUR_Projectile* Projectile = GetWorld()->SpawnActor<AUR_Projectile>(InProjectileClass, StartLoc, StartRot, SpawnParams);
+    if (Projectile)
+    {
+        Projectile->FireAt(StartRot.Vector());
+        return Projectile;
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to spawn projectile ??"));
+    }
+
+    return nullptr;
+}
+
+void AUR_Weapon::HitscanTrace(const FVector& TraceStart, const FVector& TraceEnd, FHitResult& OutHit)
+{
+    ECollisionChannel TraceChannel = ECollisionChannel::ECC_GameTraceChannel2;  //WeaponTrace
+    FCollisionShape SweepShape = FCollisionShape::MakeSphere(5.f);
+
+    // fill in info in case we get 0 results from sweep
+    OutHit.TraceStart = TraceStart;
+    OutHit.TraceEnd = TraceEnd;
+    OutHit.bBlockingHit = false;
+    OutHit.ImpactNormal = TraceStart - TraceEnd;
+    OutHit.ImpactNormal.Normalize();
+
+    TArray<FHitResult> Hits;
+    GetWorld()->SweepMultiByChannel(Hits, TraceStart, TraceEnd, FQuat(), TraceChannel, SweepShape);
+    for (const FHitResult& Hit : Hits)
+    {
+        if (Hit.bBlockingHit || HitscanShouldHitActor(Hit.GetActor()))
+        {
+            OutHit = Hit;
+            OutHit.bBlockingHit = true;
+            break;
+        }
+    }
+}
+
+bool AUR_Weapon::HitscanShouldHitActor_Implementation(AActor* Other)
+{
+    //NOTE: here we can implement firing through teammates
+    if (APawn* Pawn = Cast<APawn>(Other))
+    {
+        return Pawn != GetInstigator();
+    }
+    else if (AUR_Projectile* Proj = Cast<AUR_Projectile>(Other))
+    {
+        return Proj->CanBeDamaged();
+    }
+    return false;
+}
+
+bool AUR_Weapon::HasEnoughAmmoFor(UUR_FireModeBase* FireMode)
+{
+    return AmmoCount >= 1;
+}
+
+void AUR_Weapon::ConsumeAmmo(UUR_FireModeBase* FireMode)
+{
+    AmmoCount -= 1;
+}
+
+
+//============================================================
+// FireModeBase interface
 //============================================================
 
 void AUR_Weapon::FireModeChangedStatus_Implementation(UUR_FireModeBase* FireMode)
@@ -803,7 +798,7 @@ float AUR_Weapon::TimeUntilReadyToFire_Implementation(UUR_FireModeBase* FireMode
 
 
 //============================================================
-// FireModeBasic callbacks
+// FireModeBasic interface
 //============================================================
 
 void AUR_Weapon::SimulateShot_Implementation(UUR_FireModeBasic* FireMode, FSimulatedShotInfo& OutSimulatedInfo)
@@ -944,7 +939,7 @@ void AUR_Weapon::PlayHitscanEffects_Implementation(UUR_FireModeBasic* FireMode, 
 
 
 //============================================================
-// FireModeCharged callbacks
+// FireModeCharged interface
 //============================================================
 
 void AUR_Weapon::ChargeLevel_Implementation(UUR_FireModeCharged* FireMode)
@@ -954,10 +949,10 @@ void AUR_Weapon::ChargeLevel_Implementation(UUR_FireModeCharged* FireMode)
 
 
 //============================================================
-// FireModeContinuous callbacks
+// FireModeContinuous interface
 //============================================================
 
-void AUR_Weapon::FiringTick(UUR_FireModeContinuous* FireMode)
+void AUR_Weapon::FiringTick_Implementation(UUR_FireModeContinuous* FireMode)
 {
 
 }

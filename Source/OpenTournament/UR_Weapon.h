@@ -209,17 +209,6 @@ protected:
 public:
 
     //============================================================
-    // Helper methods
-    //============================================================
-
-    /**
-    * On hitscan trace overlap,
-    * Return whether hitscan should hit target or fire through.
-    */
-    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Weapon")
-    bool HitscanShouldHitActor(AActor* Other);
-
-    //============================================================
     // Weapon sounds
     //============================================================
 
@@ -257,7 +246,7 @@ public:
     bool bReducePutDownDelayByPutDownTime;
 
     //============================================================
-    // Weapon states
+    // WeaponStates Core
     //============================================================
 
     UPROPERTY(BlueprintReadOnly)
@@ -294,11 +283,6 @@ public:
     UFUNCTION()
     void StopAllFire();
 
-    UFUNCTION()
-    void TryStartFire(UUR_FireModeBase* FireMode);
-
-    FTimerHandle RetryStartFireTimerHandle;
-
     //============================================================
     // External API
     //============================================================
@@ -326,6 +310,42 @@ public:
 
     UFUNCTION()
     virtual void RequestStopFire(uint8 FireModeIndex);
+
+
+    //============================================================
+    // Helpers
+    //============================================================
+
+    /**
+    * Factor method for ammo checking before starting fire,
+    * and looping while out of ammo.
+    */
+    UFUNCTION()
+    void TryStartFire(UUR_FireModeBase* FireMode);
+
+    FTimerHandle RetryStartFireTimerHandle;
+
+    UFUNCTION(BlueprintCallable)
+    virtual void GetFireVector(FVector& FireLoc, FRotator& FireRot);
+
+    UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
+    virtual AUR_Projectile* SpawnProjectile(TSubclassOf<AUR_Projectile> InProjectileClass, const FVector& StartLoc, const FRotator& StartRot);
+
+    UFUNCTION(BlueprintCallable)
+    void HitscanTrace(const FVector& TraceStart, const FVector& TraceEnd, FHitResult& OutHit);
+
+    /**
+    * On hitscan trace overlap,
+    * Return whether hitscan should hit target or fire through.
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Weapon")
+    bool HitscanShouldHitActor(AActor* Other);
+
+    UFUNCTION(BlueprintCallable)
+    bool HasEnoughAmmoFor(UUR_FireModeBase* FireMode);
+
+    UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
+    virtual void ConsumeAmmo(UUR_FireModeBase* FireMode);
 
     //============================================================
     // Firemodes
@@ -396,26 +416,6 @@ public:
     // FireModeContinuous interface
     //============================================================
 
-    UFUNCTION()
-    virtual void FiringTick(UUR_FireModeContinuous* FireMode);
-
-    //============================================================
-    // Helpers v2
-    //============================================================
-
-    UFUNCTION(BlueprintCallable)
-    virtual void GetFireVector(FVector& FireLoc, FRotator& FireRot);
-
-    UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
-    virtual AUR_Projectile* SpawnProjectile(TSubclassOf<AUR_Projectile> InProjectileClass, const FVector& StartLoc, const FRotator& StartRot);
-
-    UFUNCTION(BlueprintCallable)
-    void HitscanTrace(const FVector& TraceStart, const FVector& TraceEnd, FHitResult& OutHit);
-
-    UFUNCTION(BlueprintCallable)
-    bool HasEnoughAmmoFor(UUR_FireModeBase* FireMode);
-
-    UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
-    virtual void ConsumeAmmo(UUR_FireModeBase* FireMode);
+    virtual void FiringTick_Implementation(UUR_FireModeContinuous* FireMode);
 
 };
