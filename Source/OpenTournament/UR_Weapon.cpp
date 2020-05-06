@@ -778,7 +778,11 @@ void AUR_Weapon::PlayFireEffects_Implementation(UUR_FireModeBasic* FireMode)
     {
         UGameplayStatics::SpawnSoundAttached(FireMode->FireSound, Mesh1P, FireMode->MuzzleSocketName, FVector(0, 0, 0), EAttachLocation::SnapToTarget);
         UGameplayStatics::SpawnEmitterAttached(FireMode->MuzzleFlashFX, Mesh1P, FireMode->MuzzleSocketName, FVector(0, 0, 0), FRotator(0, 0, 0), EAttachLocation::SnapToTargetIncludingScale);
-        URCharOwner->MeshFirstPerson->PlayAnimation(URCharOwner->FireAnimation, false);
+        if (URCharOwner->MeshFirstPerson && URCharOwner->MeshFirstPerson->GetAnimInstance())
+        {
+            //TODO: fire animation should be in weapon, maybe even in firemode?
+            URCharOwner->MeshFirstPerson->GetAnimInstance()->Montage_Play(URCharOwner->FireAnimation);
+        }
     }
     else
     {
