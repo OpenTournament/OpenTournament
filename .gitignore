@@ -46,6 +46,15 @@ Temporary Items
 Intermediate
 Saved
 
+# =========================
+# Rider
+# =========================
+
+.idea
+Plugins/Developer/RiderLink/
+
+# =========================
+
 #Basic Exclusions
 OpenTournament.VC.db
 Saved/
