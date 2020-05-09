@@ -194,9 +194,7 @@ void AUR_Weapon::AttachMeshToPawn()
     if (URCharOwner)
     {
         Mesh1P->AttachToComponent(URCharOwner->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, URCharOwner->GetWeaponAttachPoint());
-        //TODO: merge in Mogno's socket thing
-        Mesh3P->AttachToComponent(URCharOwner->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(TEXT("ik_hand_gun")));
-
+        Mesh3P->AttachToComponent(URCharOwner->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(TEXT("hand_r_Socket")));
         UpdateMeshVisibility();
     }
 }
