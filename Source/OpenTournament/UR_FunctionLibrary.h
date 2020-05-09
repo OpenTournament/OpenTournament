@@ -17,6 +17,8 @@ class APlayerState;
 class AUR_GameModeBase;
 class AUR_Character;
 class UFXSystemComponent;
+class UAnimInstance;
+class UAnimMontage;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -208,4 +210,12 @@ public:
             //OutDerived.SetInterface(NULL); //unnecessary
         }
     }
+
+
+    /**
+    * Get the current active montage in specified slot.
+    */
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Animation", Meta = (NotBlueprintThreadSafe))
+    static UAnimMontage* GetCurrentActiveMontageInSlot(UAnimInstance* AnimInstance, FName SlotName, bool& bIsValid, float& Weight);
+
 };

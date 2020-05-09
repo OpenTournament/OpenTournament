@@ -12,6 +12,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "Animation/AnimInstance.h"
+#include "Animation/AnimMontage.h"
 
 #include "UR_GameModeBase.h"
 #include "UR_PlayerController.h"
@@ -171,4 +173,25 @@ UFXSystemComponent* UUR_FunctionLibrary::SpawnEffectAtLocation(UWorld* World, UF
         return UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, NS, Transform.GetLocation(), Transform.GetRotation().Rotator(), Transform.GetScale3D());
     }
     return nullptr;
+}
+
+UAnimMontage* UUR_FunctionLibrary::GetCurrentActiveMontageInSlot(UAnimInstance* AnimInstance, FName SlotName, bool& bIsValid, float& Weight)
+{
+    for (int32 i = AnimInstance->MontageInstances.Num() - 1; i >= 0; i--)
+    {
+        const FAnimMontageInstance* MontageInstance = AnimInstance->MontageInstances[i];
+        if (MontageInstance && MontageInstance->IsActive())
+        {
+            UAnimMontage* Montage = MontageInstance->Montage;
+            if (Montage && Montage->GetAnimationData(SlotName))
+            {
+                bIsValid = true;
+                Weight = MontageInstance->GetWeight();
+                return Montage;
+            }
+        }
+    }
+    bIsValid = false;
+    Weight = 0.f;
+    return NULL;
 }
