@@ -26,7 +26,7 @@ void UUR_InventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME_CONDITION(UUR_InventoryComponent, InventoryW, COND_OwnerOnly);
-    DOREPLIFETIME_CONDITION(UUR_InventoryComponent, ActiveWeapon, COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(UUR_InventoryComponent, ActiveWeapon, COND_None);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
