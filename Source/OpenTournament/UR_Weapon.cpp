@@ -52,8 +52,10 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
 
     bReplicates = true;
 
-    BringUpTime = 0.3f;
-    PutDownTime = 0.3f;
+    BringUpTime = 0.25f;
+    PutDownTime = 0.25f;
+    CooldownDelaysPutDownByPercent = 0.5f;
+    bReducePutDownDelayByPutDownTime = false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +65,6 @@ void AUR_Weapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME_CONDITION(AUR_Weapon, AmmoCount, COND_OwnerOnly);
-    DOREPLIFETIME_CONDITION(AUR_Weapon, bIsEquipped, COND_SkipOwner);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -143,9 +144,7 @@ void AUR_Weapon::OnRep_Owner()
 {
     URCharOwner = Cast<AUR_Character>(GetOwner());
     SetActorHiddenInGame(true);
-
-    // In case Equipped was replicated before Owner
-    OnRep_Equipped();
+    CheckWeaponAttachment();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,44 +157,37 @@ bool AUR_Weapon::IsLocallyControlled() const
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// Equipping (placeholder)
+// Weapon Attachment
 
-void AUR_Weapon::SetEquipped(bool bEquipped)
+void AUR_Weapon::CheckWeaponAttachment()
 {
-    bIsEquipped = bEquipped;
-
-    if (bIsEquipped)
+    switch (WeaponState)
     {
-        AttachMeshToPawn();
-        RequestBringUp();
+    case EWeaponState::Inactive:
+        if (bIsAttached)
+        {
+            DetachMeshFromPawn();
+        }
+        break;
+
+    default:
+        if (!bIsAttached)
+        {
+            AttachMeshToPawn();
+        }
+        break;
     }
-    else
-    {
-        SetWeaponState(EWeaponState::Inactive);
-        DetachMeshFromPawn();
-    }
-}
-
-void AUR_Weapon::OnRep_Equipped()
-{
-    if (!GetOwner())
-        return;	// owner not replicated yet
-
-    if (IsLocallyControlled())
-        return;	// should already be attached locally
-
-    SetEquipped(bIsEquipped);
 }
 
 void AUR_Weapon::AttachMeshToPawn()
 {
-    this->SetActorHiddenInGame(false);
-
     if (URCharOwner)
     {
+        this->SetActorHiddenInGame(false);
         Mesh1P->AttachToComponent(URCharOwner->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, URCharOwner->GetWeaponAttachPoint());
         Mesh3P->AttachToComponent(URCharOwner->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(TEXT("hand_r_Socket")));
         UpdateMeshVisibility();
+        bIsAttached = true;
     }
 }
 
@@ -221,6 +213,8 @@ void AUR_Weapon::DetachMeshFromPawn()
 
     Mesh3P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
     Mesh3P->SetHiddenInGame(true);
+
+    bIsAttached = false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -237,6 +231,9 @@ void AUR_Weapon::SetWeaponState(EWeaponState NewState)
         UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponState: %s"), *UUR_FunctionLibrary::GetEnumValueAsString(TEXT("EWeaponState"), WeaponState)), true, false, FColor::Purple, 2.f);
         OnWeaponStateChanged.Broadcast(this, NewState);
     }
+
+    // check this every state change to support all edge cases
+    CheckWeaponAttachment();
 
     switch (WeaponState)
     {
@@ -280,16 +277,21 @@ void AUR_Weapon::BringUp(float FromPosition)
 
     SetWeaponState(EWeaponState::BringUp);
 
-    if (BringUpMontage && URCharOwner && URCharOwner->MeshFirstPerson && URCharOwner->MeshFirstPerson->GetAnimInstance())
+    if (GetNetMode() != NM_DedicatedServer
+        && BringUpMontage
+        && URCharOwner
+        && URCharOwner->MeshFirstPerson
+        && URCharOwner->MeshFirstPerson->GetAnimInstance())
     {
         float Duration = BringUpMontage->GetPlayLength();
         float PlayRate = Duration / BringUpTime;
         float StartTime = FromPosition * Duration;
-        //TODO: not sure if start time accounts for the play rate or not. need check
+        //note: start time must not account for the play rate
         URCharOwner->MeshFirstPerson->GetAnimInstance()->Montage_Play(BringUpMontage, PlayRate, EMontagePlayReturnType::MontageLength, StartTime);
+        //TODO: 3p animation
     }
 
-    float Delay = (1.f - FromPosition)*BringUpTime;
+    float Delay = (1.f - FromPosition) * BringUpTime;
     if (Delay > 0.f)
     {
         GetWorld()->GetTimerManager().SetTimer(SwapAnimTimerHandle, this, &AUR_Weapon::BringUpCallback, Delay, false);
@@ -322,13 +324,17 @@ void AUR_Weapon::PutDown(float FromPosition)
 
     SetWeaponState(EWeaponState::PutDown);
 
-    if (PutDownMontage && URCharOwner && URCharOwner->MeshFirstPerson && URCharOwner->MeshFirstPerson->GetAnimInstance())
+    if (GetNetMode() != NM_DedicatedServer
+        && PutDownMontage
+        && URCharOwner
+        && URCharOwner->MeshFirstPerson
+        && URCharOwner->MeshFirstPerson->GetAnimInstance())
     {
         float Duration = PutDownMontage->GetPlayLength();
         float PlayRate = Duration / PutDownTime;
-        float StartTime = FromPosition * Duration;
-        //TODO: not sure if start time accounts for the play rate or not. need check
+        float StartTime = (1.f - FromPosition) * Duration;
         URCharOwner->MeshFirstPerson->GetAnimInstance()->Montage_Play(PutDownMontage, PlayRate, EMontagePlayReturnType::MontageLength, StartTime);
+        //TODO: 3p animation
     }
 
     float Delay = FromPosition * PutDownTime;
@@ -408,18 +414,6 @@ void AUR_Weapon::RequestStopFire(uint8 FireModeIndex)
         }
     }
 }
-
-/**
-* TODO: RequestPutDown()
-*
-* weapon swap procedure :
-* - character requests inventory to swap
-* - inventory requests weapon to putdown
-* - weapon putdown when possible
-* - weapon notify inventory when done (event dispatcher?)
-* - inventory changes active weapon
-* - inventory requests new weapon to bring up
-*/
 
 void AUR_Weapon::RequestBringUp()
 {

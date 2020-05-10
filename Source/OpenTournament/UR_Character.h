@@ -68,7 +68,14 @@ public:
 
     bool bIsPickingUp = false;
 
+    /** DEPRECATED. Use GetMesh1P() or GetMesh3P() instead */
     USkeletalMeshComponent* GetPawnMesh() const;
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return MeshFirstPerson; }
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
 
     /**
     * First person Camera
@@ -79,7 +86,7 @@ public:
     /**
     * Character's first-person mesh (arms; seen only by self)
     */
-    UPROPERTY(VisibleDefaultsOnly, Category = "Mesh")
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Mesh")
     class USkeletalMeshComponent* MeshFirstPerson;
 
     /**

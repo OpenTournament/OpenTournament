@@ -135,6 +135,10 @@ void UUR_FireModeBasic::MulticastFired_Implementation()
         }
         else
         {
+            // Set busy+cooldown on remote clients as well so they can track state accurately
+            SetBusy(true);
+            GetWorld()->GetTimerManager().SetTimer(CooldownTimerHandle, this, &UUR_FireModeBasic::CooldownTimer, FireInterval, false);
+            // Remote clients visual callback
             if (BasicInterface)
             {
                 IUR_FireModeBasicInterface::Execute_PlayFireEffects(BasicInterface.GetObject(), this);
@@ -153,6 +157,10 @@ void UUR_FireModeBasic::MulticastFiredHitscan_Implementation(const FHitscanVisua
         }
         else
         {
+            // Set busy+cooldown on remote clients as well so they can track state accurately
+            SetBusy(true);
+            GetWorld()->GetTimerManager().SetTimer(CooldownTimerHandle, this, &UUR_FireModeBasic::CooldownTimer, FireInterval, false);
+            // Remote clients visual callbacks
             if (BasicInterface)
             {
                 IUR_FireModeBasicInterface::Execute_PlayFireEffects(BasicInterface.GetObject(), this);

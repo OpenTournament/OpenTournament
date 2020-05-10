@@ -7,6 +7,9 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 
+//TODO: move enum EWeaponState to a shared header
+#include "UR_Weapon.h"
+
 #include "UR_InventoryComponent.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,8 +45,18 @@ public:
     UPROPERTY(BlueprintReadOnly, Category = "InventoryComponent")
     TArray<AUR_Ammo*> InventoryA;
 
-    UPROPERTY(ReplicatedUsing = OnRep_ActiveWeapon, BlueprintReadOnly, Category = "InventoryComponent")
-    AUR_Weapon * ActiveWeapon;
+    UPROPERTY(BlueprintReadOnly, Category = "InventoryComponent")
+    AUR_Weapon* ActiveWeapon;
+
+    /**
+    * User current desired weapon.
+    * It will become ActiveWeapon after the current weapon PutDown procedure is finished.
+    */
+    UPROPERTY(ReplicatedUsing = OnRep_DesiredWeapon, BlueprintReadOnly, Category = "InventoryComponent")
+    AUR_Weapon* DesiredWeapon;
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    bool IsLocallyControlled() const;
 
     void Add(AUR_Weapon* InWeapon);
 
@@ -69,17 +82,30 @@ public:
     bool PrevWeapon();
 
     UFUNCTION()
-    void EquipWeapon(AUR_Weapon* InWeapon);
+    void SetDesiredWeapon(AUR_Weapon* InWeapon);
 
     UFUNCTION(Server, Reliable)
-    void ServerEquipWeapon(AUR_Weapon* InWeapon);
+    void ServerSetDesiredWeapon(AUR_Weapon* InWeapon);
+
+    /**
+    * Callback bound to ActiveWeapon's delegate.
+    * Primarily used to wait for PutDown during swap procedures.
+    */
+    UFUNCTION()
+    void OnActiveWeaponStateChanged(AUR_Weapon* Weapon, EWeaponState NewState);
+
+    UFUNCTION()
+    void SetActiveWeapon(AUR_Weapon* InWeapon);
+
+    UFUNCTION(BlueprintAuthorityOnly, BlueprintNativeEvent, BlueprintCallable)
+    void Clear();
+
+protected:
 
     UFUNCTION()
     virtual void OnRep_InventoryW();
 
     UFUNCTION()
-    virtual void OnRep_ActiveWeapon();
+    virtual void OnRep_DesiredWeapon();
 
-    UFUNCTION(BlueprintAuthorityOnly, BlueprintNativeEvent, BlueprintCallable)
-    void Clear();
 };

@@ -26,10 +26,16 @@ void UUR_InventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME_CONDITION(UUR_InventoryComponent, InventoryW, COND_OwnerOnly);
-    DOREPLIFETIME_CONDITION(UUR_InventoryComponent, ActiveWeapon, COND_None);
+    DOREPLIFETIME_CONDITION(UUR_InventoryComponent, DesiredWeapon, COND_SkipOwner);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool UUR_InventoryComponent::IsLocallyControlled() const
+{
+    APawn* P = Cast<APawn>(GetOwner());
+    return P && P->IsLocallyControlled();
+}
 
 void UUR_InventoryComponent::Add(AUR_Weapon* InWeapon)
 {
@@ -58,7 +64,7 @@ void UUR_InventoryComponent::Add(AUR_Weapon* InWeapon)
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You have the %s (ammo = %i)"), *InWeapon->WeaponName, InWeapon->AmmoCount));
 
     // In standalone or listen host, call OnRep next tick so we can pick amongst new weapons what to swap to.
-    if (Cast<ACharacter>(GetOwner()) && Cast<ACharacter>(GetOwner())->IsLocallyControlled())
+    if (IsLocallyControlled())
     {
         GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UUR_InventoryComponent::OnRep_InventoryW);
     }
@@ -134,7 +140,7 @@ int32 UUR_InventoryComponent::SelectWeapon(int32 WeaponGroup)
     {
         if (IterWeapon->WeaponName == DesiredWeaponName)
         {
-            EquipWeapon(IterWeapon);
+            SetDesiredWeapon(IterWeapon);
             return WeaponGroup;
         }
     }
@@ -156,7 +162,7 @@ AUR_Weapon * UUR_InventoryComponent::SelectWeaponG(int32 WeaponGroup)
     {
         if (IterWeapon->WeaponName == DesiredWeaponName)
         {
-            EquipWeapon(IterWeapon);
+            SetDesiredWeapon(IterWeapon);
             break;
         }
     }
@@ -169,16 +175,16 @@ bool UUR_InventoryComponent::NextWeapon()
 
     for (int32 i = 0; i < InventoryW.Num(); i++)
     {
-        if (InventoryW[i] == ActiveWeapon)
+        if (InventoryW[i] == DesiredWeapon)
             NewWeapon = InventoryW[(i + 1) % InventoryW.Num()];
     }
     if (!NewWeapon && InventoryW.Num() > 0)
         NewWeapon = InventoryW[0];
 
-    if (NewWeapon && NewWeapon != ActiveWeapon)
+    if (NewWeapon && NewWeapon != DesiredWeapon)
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Next weapon -> %s"), *NewWeapon->WeaponName));
-        EquipWeapon(NewWeapon);
+        SetDesiredWeapon(NewWeapon);
         return true;
     }
     return false;
@@ -190,48 +196,96 @@ bool UUR_InventoryComponent::PrevWeapon()
 
     for (int32 i = 0; i < InventoryW.Num(); i++)
     {
-        if (InventoryW[i] == ActiveWeapon)
+        if (InventoryW[i] == DesiredWeapon)
             NewWeapon = InventoryW[(i + InventoryW.Num() - 1) % InventoryW.Num()];
     }
     if (!NewWeapon && InventoryW.Num() > 0)
         NewWeapon = InventoryW.Last();
 
-    if (NewWeapon && NewWeapon != ActiveWeapon)
+    if (NewWeapon && NewWeapon != DesiredWeapon)
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Prev weapon -> %s"), *NewWeapon->WeaponName));
-        EquipWeapon(NewWeapon);
+        SetDesiredWeapon(NewWeapon);
         return true;
     }
     return false;
 }
 
-void UUR_InventoryComponent::EquipWeapon(AUR_Weapon* InWeapon)
+void UUR_InventoryComponent::SetDesiredWeapon(AUR_Weapon* InWeapon)
 {
-    if (ActiveWeapon)
+    DesiredWeapon = InWeapon;
+
+    if (ActiveWeapon && ActiveWeapon->WeaponState != EWeaponState::Inactive)
     {
-        ActiveWeapon->SetEquipped(false);
-    }
-
-    ServerEquipWeapon(InWeapon);
-
-    InWeapon->SetEquipped(true);
-    ActiveWeapon = InWeapon;
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Equipped: %s"), *InWeapon->WeaponName));
-}
-
-void UUR_InventoryComponent::ServerEquipWeapon_Implementation(AUR_Weapon* Weap)
-{
-    if (Weap && InventoryW.Contains(Weap))
-    {
-        if (ActiveWeapon)
-            ActiveWeapon->SetEquipped(false);
-
-        ActiveWeapon = Weap;
-        ActiveWeapon->SetEquipped(true);
+        if ( ActiveWeapon != DesiredWeapon )
+        {
+            ActiveWeapon->RequestPutDown();
+        }
+        else
+        {
+            ActiveWeapon->RequestBringUp();
+        }
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("Client equipping invalid weapon: %s"), Weap ? *Weap->GetName() : TEXT("NULL"));
+        SetActiveWeapon(DesiredWeapon);
+    }
+
+    if (GetNetMode() == NM_Client && IsLocallyControlled())
+    {
+        ServerSetDesiredWeapon(InWeapon);
+    }
+}
+
+void UUR_InventoryComponent::ServerSetDesiredWeapon_Implementation(AUR_Weapon* InWeapon)
+{
+    // On server
+    SetDesiredWeapon(InWeapon);
+}
+
+void UUR_InventoryComponent::OnRep_DesiredWeapon()
+{
+    // On remote clients
+    SetDesiredWeapon(DesiredWeapon);
+}
+
+void UUR_InventoryComponent::OnActiveWeaponStateChanged(AUR_Weapon* Weapon, EWeaponState NewState)
+{
+    if (Weapon && Weapon == ActiveWeapon && NewState == EWeaponState::Inactive)
+    {
+        SetActiveWeapon(DesiredWeapon);
+    }
+}
+
+void UUR_InventoryComponent::SetActiveWeapon(AUR_Weapon* InWeapon)
+{
+    if (ActiveWeapon)
+    {
+        ActiveWeapon->OnWeaponStateChanged.RemoveDynamic(this, &UUR_InventoryComponent::OnActiveWeaponStateChanged);
+
+        // Edge case - eg. weapondrop doesn't go through the putdown procedure.
+        if (ActiveWeapon->WeaponState != EWeaponState::Inactive)
+        {
+            // this ensures the mesh is detached from pawn
+            ActiveWeapon->SetWeaponState(EWeaponState::Inactive);
+        }
+
+        ActiveWeapon = NULL;
+    }
+
+    //NOTE: InventoryW is not replicated for non-owning clients
+    if (InWeapon && (GetNetMode() == NM_Client || InventoryW.Contains(InWeapon)))
+    {
+        ActiveWeapon = InWeapon;
+        ActiveWeapon->RequestBringUp();
+        ActiveWeapon->OnWeaponStateChanged.AddUniqueDynamic(this, &UUR_InventoryComponent::OnActiveWeaponStateChanged);
+    }
+
+    //modsupport - case where SetActiveWeapon is called without setting DesiredWeapon.
+    // We need to replicate to remote clients via DesiredWeapon.
+    if (GetNetMode() != NM_Client)
+    {
+        DesiredWeapon = ActiveWeapon;
     }
 }
 
@@ -245,17 +299,11 @@ void UUR_InventoryComponent::OnRep_InventoryW()
         {
             if (IterWeapon)
             {
-                EquipWeapon(IterWeapon);
+                SetDesiredWeapon(IterWeapon);
                 break;
             }
         }
     }
-}
-
-void UUR_InventoryComponent::OnRep_ActiveWeapon()
-{
-    // Here we can make sure server has the same equipped weapon as us.
-    // If not, we might want to re-equip, or replace local equipped weapon...
 }
 
 void UUR_InventoryComponent::OnComponentDestroyed(bool bDestroyingHierarchy)

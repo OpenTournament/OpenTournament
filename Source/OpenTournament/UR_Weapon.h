@@ -43,6 +43,8 @@ enum class EWeaponState : uint8
     Busy,
     /** Weapon is currently being unequipped */
     PutDown,
+
+    MAX             UMETA(Hidden)
 };
 
 /**
@@ -153,31 +155,32 @@ public:
     bool IsLocallyControlled() const;
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
-    bool IsEquipped() const { return bIsEquipped; }
-
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
     FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
     FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-    // Equipping (placeholder)
-
-protected:
-
-    UPROPERTY(ReplicatedUsing = OnRep_Equipped)
-    bool bIsEquipped = false;
+    // Weapon Attachment
 
 public:
 
-    UFUNCTION()
-    void SetEquipped(bool bEquipped);
+    UPROPERTY()
+    bool bIsAttached;
 
 protected:
 
+    /**
+    * Verify if weapon is attached according to its current state.
+    * in state Inactive, ensure weapon is detached.
+    * in any other states, ensure weapon is attached.
+    *
+    * In normal situations we only need to attach on BringUp and detach after PutDown.
+    * However this can also be used to support more edgy cases.
+    * For example, dropping weapon will go straight to Inactive without the putdown procedure.
+    */
     UFUNCTION()
-    virtual void OnRep_Equipped();
+    void CheckWeaponAttachment();
 
     UFUNCTION()
     void AttachMeshToPawn();
