@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "UR_FireModeBase.generated.h"
 
+class UFXSystemAsset;
 class IUR_FireModeBaseInterface;
 
 /**
@@ -17,7 +18,16 @@ class OPENTOURNAMENT_API UUR_FireModeBase : public UActorComponent
     GENERATED_BODY()
 
 public:
-    UUR_FireModeBase();
+    UUR_FireModeBase()
+    {
+        SetAutoActivate(true);
+        SetIsReplicatedByDefault(true);
+
+        Index = 0;
+
+        InitialAmmoCost = 1;
+        MuzzleSocketName = FName(TEXT("Muzzle"));
+    }
 
     /**
     * The blueprint components tree does not support re-ordering of components.
@@ -25,6 +35,41 @@ public:
     */
     UPROPERTY(EditAnywhere, Category = "FireMode", Meta = (DisplayPriority = "1"))
     uint8 Index;
+
+public:
+
+    /**
+    * NOTE: The category "FireMode" is intended for configuring how the fire mode behaves.
+    *
+    * The category "Content" on the other hand is only here to provide some storage of the
+    * most common properties, for the actors using firemodes. It's up to them to implement.
+    * The idea was to avoid weapons having to declare additional arrays of data to go along with the firemodes.
+    *
+    * NOTE: This may change in the future, as I could see the interfaces providing actual
+    * default implementations, by moving chunks of code from Weapon to them.
+    * In that case, those default implementations *would* actually use the "Content" properties.
+    *
+    * That wouldn't technically hurt the modularity of the system, since each interface
+    * method can still be overriden by the implementer.
+    * If methods are overriden, then it's up to the implementer to use, or not,
+    * these "Content" properties in whatever way they want.
+    */
+
+    /**
+    * Minimum necessary ammo for weapon to allow firing this firemode at all.
+    * If weapon ammo is below that value, it should click as out-of-ammo.
+    */
+    UPROPERTY(EditAnywhere, Category = "Content")
+    int32 InitialAmmoCost;
+
+    UPROPERTY(EditAnywhere, Category = "Content")
+    float Spread;
+
+    UPROPERTY(EditAnywhere, Category = "Content")
+    FName MuzzleSocketName;
+
+    UPROPERTY(EditAnywhere, Category = "Content")
+    UFXSystemAsset* MuzzleFlashTemplate;
 
 public:
 

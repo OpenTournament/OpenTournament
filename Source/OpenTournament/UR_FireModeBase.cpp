@@ -3,12 +3,6 @@
 
 #include "UR_FireModeBase.h"
 
-UUR_FireModeBase::UUR_FireModeBase()
-{
-    SetAutoActivate(true);
-    SetIsReplicatedByDefault(true);
-}
-
 void UUR_FireModeBase::SetBusy(bool bNewBusy)
 {
     if (bNewBusy != bIsBusy)

@@ -63,6 +63,7 @@ class OPENTOURNAMENT_API AUR_Weapon : public AActor
     //, public IUR_FireModeBaseInterface
     //, public IUR_FireModeBasicInterface
     , public IUR_FireModeChargedInterface
+    , public IUR_FireModeContinuousInterface
 {
     GENERATED_BODY()
 
@@ -150,9 +151,6 @@ public:
 
     /** DEPRECATED. Use GetMesh1P() or GetMesh3P() instead */
     USkeletalMeshComponent* GetWeaponMesh() const { return Mesh1P; }
-
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
-    bool IsLocallyControlled() const;
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
     FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
@@ -332,7 +330,7 @@ public:
     bool HasEnoughAmmoFor(UUR_FireModeBase* FireMode);
 
     UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
-    virtual void ConsumeAmmo(UUR_FireModeBase* FireMode);
+    virtual void ConsumeAmmo(int32 Amount);
 
     //============================================================
     // Firemodes
@@ -403,6 +401,18 @@ public:
     // FireModeContinuous interface
     //============================================================
 
-    virtual void FiringTick_Implementation(UUR_FireModeContinuous* FireMode);
+    virtual void SimulateContinuousHitCheck_Implementation(UUR_FireModeContinuous* FireMode) override;
+
+    virtual void AuthorityStartContinuousFire_Implementation(UUR_FireModeContinuous* FireMode) override;
+
+    virtual void AuthorityContinuousHitCheck_Implementation(UUR_FireModeContinuous* FireMode) override;
+
+    virtual void AuthorityStopContinuousFire_Implementation(UUR_FireModeContinuous* FireMode) override;
+
+    virtual void StartContinuousEffects_Implementation(UUR_FireModeContinuous* FireMode) override;
+
+    virtual void UpdateContinuousEffects_Implementation(UUR_FireModeContinuous* FireMode, float DeltaTime) override;
+
+    virtual void StopContinuousEffects_Implementation(UUR_FireModeContinuous* FireMode) override;
 
 };

@@ -148,15 +148,6 @@ void AUR_Weapon::OnRep_Owner()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// Some getters
-
-bool AUR_Weapon::IsLocallyControlled() const
-{
-    APawn* P = Cast<APawn>(GetOwner());
-    return P && P->IsLocallyControlled();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
 // Weapon Attachment
 
 void AUR_Weapon::CheckWeaponAttachment()
@@ -240,7 +231,7 @@ void AUR_Weapon::SetWeaponState(EWeaponState NewState)
 
     case EWeaponState::BringUp:
         // On BringUp, read current desired fire mode from player
-        if (IsLocallyControlled() && URCharOwner)
+        if (UUR_FunctionLibrary::IsLocallyControlled(this) && URCharOwner)
         {
             if (URCharOwner->DesiredFireModeNum.Num() > 0)
             {
@@ -536,7 +527,9 @@ void AUR_Weapon::GetFireVector(FVector& FireLoc, FRotator& FireRot)
         // Either access camera directly, or override GetActorEyesViewPoint.
         FVector CameraLoc = URCharOwner->CharacterCameraComponent->GetComponentLocation();
         FireLoc = CameraLoc;
-        FireRot = URCharOwner->GetViewRotation();
+        //FireRot = URCharOwner->GetViewRotation();
+        FireRot = URCharOwner->GetBaseAimRotation();
+        //UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("%f , %f , %f"), FireRot.Yaw, FireRot.Pitch, FireRot.Roll));
     }
     else
     {
@@ -574,8 +567,8 @@ void AUR_Weapon::HitscanTrace(const FVector& TraceStart, const FVector& TraceEnd
     OutHit.TraceStart = TraceStart;
     OutHit.TraceEnd = TraceEnd;
     OutHit.bBlockingHit = false;
-    OutHit.ImpactNormal = TraceStart - TraceEnd;
-    OutHit.ImpactNormal.Normalize();
+    OutHit.Location = TraceEnd;
+    OutHit.ImpactNormal = (TraceEnd - TraceStart).GetSafeNormal();
 
     TArray<FHitResult> Hits;
     GetWorld()->SweepMultiByChannel(Hits, TraceStart, TraceEnd, FQuat(), TraceChannel, SweepShape);
@@ -606,12 +599,12 @@ bool AUR_Weapon::HitscanShouldHitActor_Implementation(AActor* Other)
 
 bool AUR_Weapon::HasEnoughAmmoFor(UUR_FireModeBase* FireMode)
 {
-    return AmmoCount >= 1;
+    return AmmoCount >= FireMode->InitialAmmoCost;
 }
 
-void AUR_Weapon::ConsumeAmmo(UUR_FireModeBase* FireMode)
+void AUR_Weapon::ConsumeAmmo(int32 Amount)
 {
-    AmmoCount -= 1;
+    AmmoCount = FMath::Clamp(AmmoCount - Amount, 0, 999);
 }
 
 
@@ -718,7 +711,7 @@ void AUR_Weapon::SimulateHitscanShot_Implementation(UUR_FireModeBasic* FireMode,
     FHitResult Hit;
     HitscanTrace(FireLoc, TraceEnd, Hit);
 
-    OutHitscanInfo.Vectors.EmplaceAt(0, Hit.bBlockingHit ? Hit.Location : Hit.TraceEnd);
+    OutHitscanInfo.Vectors.EmplaceAt(0, Hit.Location);
     OutHitscanInfo.Vectors.EmplaceAt(1, Hit.ImpactNormal);
 }
 
@@ -734,7 +727,7 @@ void AUR_Weapon::AuthorityShot_Implementation(UUR_FireModeBasic* FireMode, const
 
         SpawnProjectile(FireMode->ProjectileClass, FireLoc, FireDir.Rotation());
 
-        ConsumeAmmo(FireMode);
+        ConsumeAmmo(FireMode->InitialAmmoCost);
     }
 }
 
@@ -758,18 +751,18 @@ void AUR_Weapon::AuthorityHitscanShot_Implementation(UUR_FireModeBasic* FireMode
         UGameplayStatics::ApplyPointDamage(Hit.GetActor(), Damage, FireDir, Hit, GetInstigatorController(), this, DamType);
     }
 
-    OutHitscanInfo.Vectors.EmplaceAt(0, Hit.bBlockingHit ? Hit.Location : Hit.TraceEnd);
+    OutHitscanInfo.Vectors.EmplaceAt(0, Hit.Location);
     OutHitscanInfo.Vectors.EmplaceAt(1, Hit.ImpactNormal);
 
-    ConsumeAmmo(FireMode);
+    ConsumeAmmo(FireMode->InitialAmmoCost);
 }
 
 void AUR_Weapon::PlayFireEffects_Implementation(UUR_FireModeBasic* FireMode)
 {
     if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
     {
-        UGameplayStatics::SpawnSoundAttached(FireMode->FireSound, Mesh1P, FireMode->MuzzleSocketName, FVector(0, 0, 0), EAttachLocation::SnapToTarget);
-        UGameplayStatics::SpawnEmitterAttached(FireMode->MuzzleFlashFX, Mesh1P, FireMode->MuzzleSocketName, FVector(0, 0, 0), FRotator(0, 0, 0), EAttachLocation::SnapToTargetIncludingScale);
+        UGameplayStatics::SpawnSoundAttached(FireMode->FireSound, Mesh1P, FireMode->MuzzleSocketName, FVector(0), EAttachLocation::SnapToTarget);
+        UUR_FunctionLibrary::SpawnEffectAttached(FireMode->MuzzleFlashTemplate, FTransform(), Mesh1P, FireMode->MuzzleSocketName, EAttachLocation::SnapToTargetIncludingScale);
         if (URCharOwner->MeshFirstPerson && URCharOwner->MeshFirstPerson->GetAnimInstance())
         {
             //TODO: fire animation should be in weapon, maybe even in firemode?
@@ -778,8 +771,8 @@ void AUR_Weapon::PlayFireEffects_Implementation(UUR_FireModeBasic* FireMode)
     }
     else
     {
-        UGameplayStatics::SpawnSoundAttached(FireMode->FireSound, Mesh3P, FireMode->MuzzleSocketName, FVector(0, 0, 0), EAttachLocation::SnapToTarget);
-        UGameplayStatics::SpawnEmitterAttached(FireMode->MuzzleFlashFX, Mesh3P, FireMode->MuzzleSocketName, FVector(0, 0, 0), FRotator(0, 0, 0), EAttachLocation::SnapToTargetIncludingScale);
+        UGameplayStatics::SpawnSoundAttached(FireMode->FireSound, Mesh3P, FireMode->MuzzleSocketName, FVector(0), EAttachLocation::SnapToTarget);
+        UUR_FunctionLibrary::SpawnEffectAttached(FireMode->MuzzleFlashTemplate, FTransform(), Mesh3P, FireMode->MuzzleSocketName, EAttachLocation::SnapToTargetIncludingScale);
         //TODO: play 3p anim
     }
 }
@@ -826,7 +819,126 @@ void AUR_Weapon::ChargeLevel_Implementation(UUR_FireModeCharged* FireMode)
 // FireModeContinuous interface
 //============================================================
 
-void AUR_Weapon::FiringTick_Implementation(UUR_FireModeContinuous* FireMode)
+void AUR_Weapon::SimulateContinuousHitCheck_Implementation(UUR_FireModeContinuous* FireMode)
 {
+    if (!HasEnoughAmmoFor(FireMode))
+    {
+        FireMode->StopFire();
+        return;
+    }
 
+    /**
+    * TODO: Client side hitreg, under some specific conditions.
+    *
+    * For a straight beam we can try an implementation as described in FireModeContinuous.h
+    *
+    * For something like minigun, we should just do server hit detection,
+    * because there is no way we can sync up each individual randomly spreaded bullet.
+    */
+}
+
+void AUR_Weapon::AuthorityStartContinuousFire_Implementation(UUR_FireModeContinuous* FireMode)
+{
+    ConsumeAmmo(FireMode->InitialAmmoCost);
+    FireMode->AmmoCostAccumulator = 0.f;
+}
+
+void AUR_Weapon::AuthorityContinuousHitCheck_Implementation(UUR_FireModeContinuous* FireMode)
+{
+    FireMode->AmmoCostAccumulator += FireMode->AmmoCostPerSecond * FireMode->HitCheckInterval;
+    while (FireMode->AmmoCostAccumulator >= 1.f)
+    {
+        //NOTE: Here we consume ammo before the fact, not after.
+        // Eg. if we have 1 ammo, it drops to zero and then we can continue firing until next ammo consumption.
+        // --> This is because we have an initial ammo cost to prevent abuse.
+        // This is easier to handle (and prevent abuse) than the other way around.
+        if (AmmoCount <= 0)
+        {
+            FireMode->StopFire();
+            return;
+        }
+        ConsumeAmmo(1);
+        FireMode->AmmoCostAccumulator -= 1.f;
+    }
+
+    FVector FireLoc;
+    FRotator FireRot;
+    GetFireVector(FireLoc, FireRot);
+
+    FVector TraceEnd = FireLoc + FireMode->TraceDistance * FireRot.Vector();
+
+    FHitResult Hit;
+    HitscanTrace(FireLoc, TraceEnd, Hit);
+
+    if (Hit.bBlockingHit && Hit.GetActor())
+    {
+        float Damage = FireMode->Damage;
+        auto DamType = FireMode->DamageType;
+        UGameplayStatics::ApplyPointDamage(Hit.GetActor(), Damage, FireRot.Vector(), Hit, GetInstigatorController(), this, DamType);
+    }
+}
+
+void AUR_Weapon::AuthorityStopContinuousFire_Implementation(UUR_FireModeContinuous* FireMode)
+{
+    //Nothing to do
+}
+
+void AUR_Weapon::StartContinuousEffects_Implementation(UUR_FireModeContinuous* FireMode)
+{
+    USceneComponent* AttachComponent;
+    if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
+    {
+        AttachComponent = Mesh1P;
+    }
+    else
+    {
+        AttachComponent = Mesh3P;
+    }
+
+    if (!FireMode->BeamComponent || FireMode->BeamComponent->IsBeingDestroyed())
+    {
+        //UKismetSystemLibrary::PrintString(this, TEXT("NEW PARTICLE"));
+        FireMode->BeamComponent = UUR_FunctionLibrary::SpawnEffectAttached(FireMode->BeamTemplate, FTransform(), AttachComponent, FireMode->MuzzleSocketName, EAttachLocation::SnapToTargetIncludingScale);
+    }
+    FireMode->BeamComponent->Activate(true);
+
+    if (!FireMode->FireLoopAudioComponent || FireMode->FireLoopAudioComponent->IsBeingDestroyed())
+    {
+        //UKismetSystemLibrary::PrintString(this, TEXT("NEW SOUND"));
+        FireMode->FireLoopAudioComponent = UGameplayStatics::SpawnSoundAttached(FireMode->FireLoopSound, AttachComponent, FireMode->MuzzleSocketName, FVector(0), EAttachLocation::SnapToTarget, true);
+    }
+    FireMode->FireLoopAudioComponent->Activate(true);
+}
+
+void AUR_Weapon::UpdateContinuousEffects_Implementation(UUR_FireModeContinuous* FireMode, float DeltaTime)
+{
+    if (FireMode->BeamComponent)
+    {
+        FVector FireLoc;
+        FRotator FireRot;
+        GetFireVector(FireLoc, FireRot);
+
+        FVector TraceEnd = FireLoc + FireMode->TraceDistance * FireRot.Vector();
+
+        FHitResult Hit;
+        HitscanTrace(FireLoc, TraceEnd, Hit);
+
+        FireMode->BeamComponent->SetVectorParameter(FireMode->BeamVectorParamName, Hit.Location - FireMode->BeamComponent->GetComponentLocation());
+        FireMode->BeamComponent->SetVectorParameter(FireMode->BeamImpactNormalParamName, Hit.ImpactNormal);
+
+        //TODO: There is an issue here, if player/viewer changes 1P/3P perspective while firing,
+        // the effect (and sound) need to be re-attached to the appropriate weapon mesh.
+    }
+}
+
+void AUR_Weapon::StopContinuousEffects_Implementation(UUR_FireModeContinuous* FireMode)
+{
+    if (FireMode->BeamComponent)
+    {
+        FireMode->BeamComponent->Deactivate();
+    }
+    if (FireMode->FireLoopAudioComponent)
+    {
+        FireMode->FireLoopAudioComponent->Deactivate();
+    }
 }

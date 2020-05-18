@@ -8,7 +8,6 @@
 #include "UR_FireModeBasic.generated.h"
 
 class AUR_Projectile;
-class UFXSystemAsset;
 class IUR_FireModeBasicInterface;
 
 /**
@@ -68,6 +67,8 @@ public:
     UUR_FireModeBasic()
     {
         FireInterval = 1.0f;
+        HitscanTraceDistance = 10000;
+        BeamVectorParamName = FName(TEXT("BeamVector"));
     }
 
     UPROPERTY(EditAnywhere, Category = "FireMode")
@@ -81,12 +82,6 @@ public:
     bool bIsHitscan;
 
 public:
-
-    UPROPERTY(EditAnywhere, Category = "Content")
-    FName MuzzleSocketName;
-
-    UPROPERTY(EditAnywhere, Category = "Content")
-    UParticleSystem* MuzzleFlashFX;
 
     UPROPERTY(EditAnywhere, Category = "Content")
     USoundBase* FireSound;

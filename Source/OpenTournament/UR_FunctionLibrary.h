@@ -19,6 +19,7 @@ class AUR_Character;
 class UFXSystemComponent;
 class UAnimInstance;
 class UAnimMontage;
+class UActorComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -160,12 +161,26 @@ public:
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
     static bool IsLocallyViewed(const AActor* Other);
 
-
     /**
     * Returns true if we are currently viewing this character in first person.
     */
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
     static bool IsViewingFirstPerson(const AUR_Character* Other);
+
+    /**
+    * Returns true if actor is locally controlled, ie. topmost owner is the local playercontroller.
+    * Equivalent to calling Actor->HasLocalNetOwner(), but with BP support and gained uniformity.
+    * This is a condition to being able to call server RPCs.
+    */
+    UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
+    static bool IsLocallyControlled(const AActor* Other);
+
+    /**
+    * Returns true if component is locally controlled, ie. topmost owner is the local playercontroller.
+    * This is a condition to being able to call server RPCs.
+    */
+    UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
+    static bool IsComponentLocallyControlled(const UActorComponent* Other);
 
 
     /**
@@ -189,7 +204,13 @@ public:
     * Spawn effect at location - niagara/particle independent.
     */
     UFUNCTION(BlueprintCallable, Category = "Effects")
-    static UFXSystemComponent* SpawnEffectAtLocation(UWorld* World, UFXSystemAsset* Template, const FTransform& Transform);
+    static UFXSystemComponent* SpawnEffectAtLocation(UWorld* World, UFXSystemAsset* Template, const FTransform& Transform, bool bAutoDestroy = true, bool bAutoActivate = true);
+
+    /**
+    * Spawn effect attached - niagara/particle independent.
+    */
+    UFUNCTION(BlueprintCallable, Category = "Effects")
+    static UFXSystemComponent* SpawnEffectAttached(UFXSystemAsset* Template, const FTransform& Transform, USceneComponent* AttachToComponent, FName AttachPointName = NAME_None, EAttachLocation::Type LocationType = EAttachLocation::KeepRelativeOffset, bool bAutoDestroy = true, bool bAutoActivate = true);
 
 
     /**

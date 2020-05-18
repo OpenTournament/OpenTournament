@@ -151,6 +151,18 @@ bool UUR_FunctionLibrary::IsViewingFirstPerson(const AUR_Character* Other)
     return Other && IsLocallyViewed(Other) && !Other->bViewingThirdPerson;
 }
 
+
+bool UUR_FunctionLibrary::IsLocallyControlled(const AActor* Other)
+{
+    return Other && Other->HasLocalNetOwner();
+}
+
+bool UUR_FunctionLibrary::IsComponentLocallyControlled(const UActorComponent* Other)
+{
+    return Other && IsLocallyControlled(Other->GetOwner());
+}
+
+
 FString UUR_FunctionLibrary::GetTimeString(const float TimeSeconds)
 {
     // only minutes and seconds are relevant
@@ -162,18 +174,32 @@ FString UUR_FunctionLibrary::GetTimeString(const float TimeSeconds)
     return TimeDesc;
 }
 
-UFXSystemComponent* UUR_FunctionLibrary::SpawnEffectAtLocation(UWorld* World, UFXSystemAsset* Template, const FTransform& Transform)
+UFXSystemComponent* UUR_FunctionLibrary::SpawnEffectAtLocation(UWorld* World, UFXSystemAsset* Template, const FTransform& Transform, bool bAutoDestroy, bool bAutoActivate)
 {
     if (auto PS = Cast<UParticleSystem>(Template))
     {
-        return UGameplayStatics::SpawnEmitterAtLocation(World, PS, Transform);
+        return UGameplayStatics::SpawnEmitterAtLocation(World, PS, Transform, bAutoDestroy, EPSCPoolMethod::None, bAutoActivate);
     }
     else if (auto NS = Cast<UNiagaraSystem>(Template))
     {
-        return UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, NS, Transform.GetLocation(), Transform.GetRotation().Rotator(), Transform.GetScale3D());
+        return UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, NS, Transform.GetLocation(), Transform.GetRotation().Rotator(), Transform.GetScale3D(), bAutoDestroy, bAutoActivate);
     }
     return nullptr;
 }
+
+UFXSystemComponent* UUR_FunctionLibrary::SpawnEffectAttached(UFXSystemAsset* Template, const FTransform& Transform, USceneComponent* AttachToComponent, FName AttachPointName, EAttachLocation::Type LocationType, bool bAutoDestroy, bool bAutoActivate)
+{
+    if (auto PS = Cast<UParticleSystem>(Template))
+    {
+        return UGameplayStatics::SpawnEmitterAttached(PS, AttachToComponent, AttachPointName, Transform.GetLocation(), Transform.GetRotation().Rotator(), Transform.GetScale3D(), LocationType, bAutoDestroy, EPSCPoolMethod::None, bAutoActivate);
+    }
+    else if (auto NS = Cast<UNiagaraSystem>(Template))
+    {
+        return UNiagaraFunctionLibrary::SpawnSystemAttached(NS, AttachToComponent, AttachPointName, Transform.GetLocation(), Transform.GetRotation().Rotator(), Transform.GetScale3D(), LocationType, bAutoDestroy, ENCPoolMethod::None, bAutoActivate);
+    }
+    return nullptr;
+}
+
 
 UAnimMontage* UUR_FunctionLibrary::GetCurrentActiveMontageInSlot(UAnimInstance* AnimInstance, FName SlotName, bool& bIsValid, float& Weight)
 {

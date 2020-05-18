@@ -290,6 +290,13 @@ void AUR_Character::PlayFootstepEffects(const float WalkingSpeedPercentage) cons
 
 void AUR_Character::RecalculateBaseEyeHeight()
 {
+    //NOTE: Careful, this is called every Tick on non-owning clients, not just during crouch events
+    if (GetLocalRole() == ROLE_SimulatedProxy)
+    {
+        Super::RecalculateBaseEyeHeight();
+        return;
+    }
+
     const float DefaultHalfHeight{ GetDefaultHalfHeight() };
     const float AbsoluteDifference = DefaultHalfHeight - ((GetCharacterMovement()->CrouchedHalfHeight / DefaultHalfHeight) * DefaultHalfHeight);
 
