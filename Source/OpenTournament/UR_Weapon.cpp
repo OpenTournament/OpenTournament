@@ -537,6 +537,39 @@ void AUR_Weapon::GetFireVector(FVector& FireLoc, FRotator& FireRot)
     }
 }
 
+FVector AUR_Weapon::SeededRandCone(const FVector& Dir, float ConeHalfAngleDeg, int32 Seed)
+{
+    FVector Dir2 = Dir.GetSafeNormal();
+    if (!Dir2.IsZero() && ConeHalfAngleDeg > 0.f && ConeHalfAngleDeg < 90.f)
+    {
+        // Find a normal vector to use as our opposite side of the triangle
+        FVector OppositeVector = FVector(-Dir.Y, Dir.X, 0.f).GetSafeNormal();
+        if (OppositeVector.IsZero())
+        {
+            OppositeVector = FVector(0.f, -Dir.Z, Dir.Y).GetSafeNormal();
+        }
+
+        // Max opposite side size is dictated by supplied max angle
+        float Tan = FMath::Tan(FMath::DegreesToRadians(ConeHalfAngleDeg));
+        float MaxOppositeSize = Tan * 1.f;
+
+        // Set random seed
+        FMath::SRandInit(Seed);
+
+        // Find a random point on that opposite side
+        FVector Point = Dir2 + FMath::SRand() * MaxOppositeSize * OppositeVector;
+
+        // Rotate point around axis by a random angle
+        FQuat RandRotation = FQuat(Dir2, FMath::DegreesToRadians(FMath::SRand()*360.f));
+
+        return RandRotation.RotateVector(Point).GetSafeNormal();
+    }
+    else
+    {
+        return Dir2;
+    }
+}
+
 AUR_Projectile* AUR_Weapon::SpawnProjectile(TSubclassOf<AUR_Projectile> InProjectileClass, const FVector& StartLoc, const FRotator& StartRot)
 {
     FActorSpawnParameters SpawnParams;
@@ -706,6 +739,23 @@ void AUR_Weapon::SimulateHitscanShot_Implementation(UUR_FireModeBasic* FireMode,
     OutSimulatedInfo.Vectors.EmplaceAt(0, FireLoc);
     OutSimulatedInfo.Vectors.EmplaceAt(1, FireRot.Vector());
 
+    if (FireMode->Spread > 0.f)
+    {
+        int32 Seed = FMath::GetRandSeed();
+        FireRot = SeededRandCone(FireRot.Vector(), FireMode->Spread, Seed).Rotation();
+        OutSimulatedInfo.Seed = Seed;
+        /**
+        * NOTE: might want to rethink about this a bit.
+        * I'm not sure there is actually a point in sending Seed, over simply sending the altered FireRot.
+        *
+        * I thought sending a Seed would be less cheatable,
+        * but not really because a cheater can calculate seed result, and retro-adjust his FireRot.
+        * So it doesn't really make any difference.
+        *
+        * The seed parameter can still be useful for a case like hitscan shotgun though.
+        */
+    }
+
     FVector TraceEnd = FireLoc + FireMode->HitscanTraceDistance * FireRot.Vector();
 
     FHitResult Hit;
@@ -723,7 +773,14 @@ void AUR_Weapon::AuthorityShot_Implementation(UUR_FireModeBasic* FireMode, const
         FVector FireLoc = SimulatedInfo.Vectors[0];
 
         // Fire direction doesn't need validation
-        const FVector& FireDir = SimulatedInfo.Vectors[1];
+        FVector FireDir = SimulatedInfo.Vectors[1];
+
+        // Add spread (if we do implement client-side projectiles, we'll need to replicate a Seed)
+        // OR just replicate the altered FireRot? see note above
+        if (FireMode->Spread > 0.f)
+        {
+            FireDir = FMath::VRandCone(FireDir, FMath::DegreesToRadians(FireMode->Spread));
+        }
 
         SpawnProjectile(FireMode->ProjectileClass, FireLoc, FireDir.Rotation());
 
@@ -738,6 +795,11 @@ void AUR_Weapon::AuthorityHitscanShot_Implementation(UUR_FireModeBasic* FireMode
 
     FVector FireDir = SimulatedInfo.Vectors[1];
     FireDir.Normalize();
+
+    if (FireMode->Spread > 0.f)
+    {
+        FireDir = SeededRandCone(FireDir, FireMode->Spread, SimulatedInfo.Seed);
+    }
 
     FVector TraceEnd = TraceStart + FireMode->HitscanTraceDistance * FireDir;
 
@@ -865,6 +927,11 @@ void AUR_Weapon::AuthorityContinuousHitCheck_Implementation(UUR_FireModeContinuo
     FRotator FireRot;
     GetFireVector(FireLoc, FireRot);
 
+    if (FireMode->Spread > 0.f)
+    {
+        FireRot = FMath::VRandCone(FireRot.Vector(), FMath::DegreesToRadians(FireMode->Spread)).Rotation();
+    }
+
     FVector TraceEnd = FireLoc + FireMode->TraceDistance * FireRot.Vector();
 
     FHitResult Hit;
@@ -917,6 +984,11 @@ void AUR_Weapon::UpdateContinuousEffects_Implementation(UUR_FireModeContinuous* 
         FVector FireLoc;
         FRotator FireRot;
         GetFireVector(FireLoc, FireRot);
+
+        if (FireMode->Spread > 0.f)
+        {
+            FireRot = FMath::VRandCone(FireRot.Vector(), FMath::DegreesToRadians(FireMode->Spread)).Rotation();
+        }
 
         FVector TraceEnd = FireLoc + FireMode->TraceDistance * FireRot.Vector();
 

@@ -313,6 +313,9 @@ public:
     UFUNCTION(BlueprintCallable)
     virtual void GetFireVector(FVector& FireLoc, FRotator& FireRot);
 
+    UFUNCTION(BlueprintCallable)
+    static FVector SeededRandCone(const FVector& Dir, float ConeHalfAngleDeg, int32 Seed);
+
     UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
     virtual AUR_Projectile* SpawnProjectile(TSubclassOf<AUR_Projectile> InProjectileClass, const FVector& StartLoc, const FRotator& StartRot);
 
