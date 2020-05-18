@@ -170,14 +170,14 @@ public:
     /**
     * Returns true if actor is locally controlled, ie. topmost owner is the local playercontroller.
     * Equivalent to calling Actor->HasLocalNetOwner(), but with BP support and gained uniformity.
-    * This is a condition to being able to call server RPCs.
+    * If NetMode is NM_Client, this is a condition to being able to call server RPCs.
     */
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
     static bool IsLocallyControlled(const AActor* Other);
 
     /**
     * Returns true if component is locally controlled, ie. topmost owner is the local playercontroller.
-    * This is a condition to being able to call server RPCs.
+    * If NetMode is NM_Client, this is a condition to being able to call server RPCs.
     */
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
     static bool IsComponentLocallyControlled(const UActorComponent* Other);

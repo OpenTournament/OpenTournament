@@ -27,7 +27,7 @@ void UUR_FireModeContinuous::StartFire_Implementation()
     DeltaTimeAccumulator = 0.f;
     SetComponentTickEnabled(true);
 
-    if (UUR_FunctionLibrary::IsComponentLocallyControlled(this))
+    if (GetOwnerRole() == ROLE_Authority || UUR_FunctionLibrary::IsComponentLocallyControlled(this))
     {
         ServerStartFire();
     }
@@ -45,7 +45,7 @@ void UUR_FireModeContinuous::StopFire_Implementation()
     //NOTE: not sure if we should wait next tick
     SetBusy(false);
 
-    if (UUR_FunctionLibrary::IsComponentLocallyControlled(this))
+    if (GetOwnerRole() == ROLE_Authority || UUR_FunctionLibrary::IsComponentLocallyControlled(this))
     {
         ServerStopFire();
     }
