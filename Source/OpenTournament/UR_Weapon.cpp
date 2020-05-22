@@ -297,10 +297,16 @@ void AUR_Weapon::BringUpCallback()
 {
     if (WeaponState == EWeaponState::BringUp)
     {
-        // Weird use-case where weapon swaps are faster than cooldown times, firemode might still be busy
+        // When swapping back and forth while firing, this may happen
         if (CurrentFireMode && CurrentFireMode->IsBusy())
         {
             SetWeaponState(EWeaponState::Firing);
+
+            // PutDown might have initiated spindown. Resume spinup if desired.
+            if (DesiredFireModes.Num() > 0 && DesiredFireModes[0] == CurrentFireMode)
+            {
+                TryStartFire(CurrentFireMode);
+            }
         }
         else
         {
@@ -359,7 +365,7 @@ void AUR_Weapon::StopAllFire()
 
     /*
     // Normally, only CurrentFireMode should be firing.
-    // But iterate anyways just to make sure.
+    //NOTE: we might need this once FireModeZoom is done.
     for (auto FireMode : FireModes)
     {
         if (FireMode && FireMode->IsBusy())
@@ -368,6 +374,46 @@ void AUR_Weapon::StopAllFire()
         }
     }
     */
+}
+
+void AUR_Weapon::OnRep_AmmoCount()
+{
+    if (CurrentFireMode && CurrentFireMode->IsBusy())
+    {
+        if (auto FMCharged = Cast<UUR_FireModeCharged>(CurrentFireMode))
+        {
+            // Do nothing here. FMCharged goes through idle state between each shot.
+            // We don't need to stopfire when out of ammo.
+        }
+        else if (auto FMContinuous = Cast<UUR_FireModeContinuous>(CurrentFireMode))
+        {
+            if (AmmoCount < 1 && FMContinuous->AmmoCostPerSecond > 0.f)
+            {
+                // The continuous mode allows firing with 0 ammo up till the next ammo consumption
+                float Delay = 1.f / FMContinuous->AmmoCostPerSecond;
+                FTimerHandle Handle;
+                FTimerDelegate Callback;
+                Callback.BindLambda([this, FMContinuous]
+                {
+                    if (AmmoCount < 1 && FMContinuous)
+                    {
+                        FMContinuous->StopFire();
+                    }
+                });
+                GetWorld()->GetTimerManager().SetTimer(Handle, Callback, Delay, false);
+                return;
+            }
+        }
+        else if (!HasEnoughAmmoFor(CurrentFireMode))
+        {
+            CurrentFireMode->StopFire();
+        }
+    }
+
+    if (AmmoCount == 0)
+    {
+        //TODO: auto swap here
+    }
 }
 
 
@@ -410,6 +456,20 @@ void AUR_Weapon::RequestBringUp()
 {
     GetWorld()->GetTimerManager().ClearTimer(PutDownDelayTimerHandle);
 
+    // If a FireMode is active, cancel the RequestIdle
+    // (happens if we swap back and forth very fast while firing)
+    if (CurrentFireMode)
+    {
+        CurrentFireMode->SetRequestIdle(false);
+
+        // The RequestPutDown call might have initiated spindown.
+        // If firemode is still desired, try to resume spinup now.
+        if (DesiredFireModes.Num() > 0 && DesiredFireModes[0] == CurrentFireMode)
+        {
+            TryStartFire(CurrentFireMode);
+        }
+    }
+
     switch (WeaponState)
     {
 
@@ -430,7 +490,7 @@ void AUR_Weapon::RequestPutDown()
     {
 
     case EWeaponState::BringUp:
-        PutDown(GetWorld()->GetTimerManager().GetTimerElapsed(SwapAnimTimerHandle) / BringUpTime);
+        PutDown(1.f - GetWorld()->GetTimerManager().GetTimerRemaining(SwapAnimTimerHandle) / BringUpTime);
         return;
 
     case EWeaponState::Idle:
@@ -439,6 +499,9 @@ void AUR_Weapon::RequestPutDown()
 
     case EWeaponState::Firing:
     {
+        // Request firemode to go idle whenever it sees opportunity.
+        CurrentFireMode->SetRequestIdle(true);
+
         float Delay = 0.f;
 
         float CooldownStartTime = CurrentFireMode->GetCooldownStartTime();
@@ -491,11 +554,12 @@ void AUR_Weapon::RequestPutDown()
 
 void AUR_Weapon::TryStartFire(UUR_FireModeBase* FireMode)
 {
-    if (WeaponState == EWeaponState::Idle)
+    // Allow calling RequestStartFire on the currently active firemode so we can spinup while spindown
+    if (WeaponState == EWeaponState::Idle || (WeaponState == EWeaponState::Firing && CurrentFireMode == FireMode))
     {
         if (HasEnoughAmmoFor(FireMode))
         {
-            FireMode->StartFire();
+            FireMode->RequestStartFire();
         }
         else
         {
@@ -516,7 +580,6 @@ void AUR_Weapon::TryStartFire(UUR_FireModeBase* FireMode)
         }
     }
 }
-
 
 void AUR_Weapon::GetFireVector(FVector& FireLoc, FRotator& FireRot)
 {
@@ -638,6 +701,8 @@ bool AUR_Weapon::HasEnoughAmmoFor(UUR_FireModeBase* FireMode)
 void AUR_Weapon::ConsumeAmmo(int32 Amount)
 {
     AmmoCount = FMath::Clamp(AmmoCount - Amount, 0, 999);
+
+    OnRep_AmmoCount();
 }
 
 
@@ -676,7 +741,14 @@ float AUR_Weapon::TimeUntilReadyToFire_Implementation(UUR_FireModeBase* FireMode
         break;
 
     case EWeaponState::Firing:
-        Delay = CurrentFireMode->GetTimeUntilIdle();
+        if (FireMode == CurrentFireMode && FireMode->SpinUpTime > 0.f)
+        {
+            Delay = 0.f;    // we can resume spinning up at any point during spindown
+        }
+        else
+        {
+            Delay = CurrentFireMode->GetTimeUntilIdle();
+        }
         break;
 
     default:
@@ -690,6 +762,38 @@ float AUR_Weapon::TimeUntilReadyToFire_Implementation(UUR_FireModeBase* FireMode
     }
 
     return Delay;
+}
+
+/**
+* Implementation of spinup/spindown mechanisms are very specific to the individual weapons,
+* I am not going to provide a default implementation here in UR_Weapon.
+* The typical workflow however should be something like this :
+* - BeginSpinUp -> enable tick
+* - BeginSpinDown -> enable tick
+* - Tick -> update parameters (sound pitch/volume, FX intensity, barrel rotation rate)
+* - SpinDone -> disable tick
+*/
+
+void AUR_Weapon::BeginSpinUp_Implementation(UUR_FireModeBase* FireMode, float CurrentSpinValue)
+{
+    GEngine->AddOnScreenDebugMessage(117, 3.f, FColor::Blue, *FString::Printf(TEXT("SPINNING UP (from %f)"), CurrentSpinValue));
+}
+
+void AUR_Weapon::BeginSpinDown_Implementation(UUR_FireModeBase* FireMode, float CurrentSpinValue)
+{
+    GEngine->AddOnScreenDebugMessage(117, 3.f, FColor::Blue, *FString::Printf(TEXT("SPINNING DOWN (from %f)"), CurrentSpinValue));
+}
+
+void AUR_Weapon::SpinDone_Implementation(UUR_FireModeBase* FireMode, bool bFullySpinnedUp)
+{
+    if (bFullySpinnedUp)
+    {
+        GEngine->AddOnScreenDebugMessage(117, 3.f, FColor::Blue, *FString::Printf(TEXT("SPINUP DONE")));
+    }
+    else
+    {
+        GEngine->AddOnScreenDebugMessage(117, 3.f, FColor::Blue, *FString::Printf(TEXT("SPINDOWN DONE")));
+    }
 }
 
 
@@ -883,24 +987,24 @@ void AUR_Weapon::ChargeLevel_Implementation(UUR_FireModeCharged* FireMode)
 
 void AUR_Weapon::SimulateContinuousHitCheck_Implementation(UUR_FireModeContinuous* FireMode)
 {
-    if (!HasEnoughAmmoFor(FireMode))
-    {
-        FireMode->StopFire();
-        return;
-    }
-
     /**
     * TODO: Client side hitreg, under some specific conditions.
     *
     * For a straight beam we can try an implementation as described in FireModeContinuous.h
     *
     * For something like minigun, we should just do server hit detection,
-    * because there is no way we can sync up each individual randomly spreaded bullet.
+    * because I don't feel like syncing up each individual randomly spreaded bullet.
     */
 }
 
 void AUR_Weapon::AuthorityStartContinuousFire_Implementation(UUR_FireModeContinuous* FireMode)
 {
+    if (!HasEnoughAmmoFor(FireMode))
+    {
+        FireMode->StopFire();
+        return;
+    }
+
     ConsumeAmmo(FireMode->InitialAmmoCost);
     FireMode->AmmoCostAccumulator = 0.f;
 }
@@ -967,14 +1071,20 @@ void AUR_Weapon::StartContinuousEffects_Implementation(UUR_FireModeContinuous* F
         //UKismetSystemLibrary::PrintString(this, TEXT("NEW PARTICLE"));
         FireMode->BeamComponent = UUR_FunctionLibrary::SpawnEffectAttached(FireMode->BeamTemplate, FTransform(), AttachComponent, FireMode->MuzzleSocketName, EAttachLocation::SnapToTargetIncludingScale);
     }
-    FireMode->BeamComponent->Activate(true);
+    if (FireMode->BeamComponent)
+    {
+        FireMode->BeamComponent->Activate(true);
+    }
 
     if (!FireMode->FireLoopAudioComponent || FireMode->FireLoopAudioComponent->IsBeingDestroyed())
     {
         //UKismetSystemLibrary::PrintString(this, TEXT("NEW SOUND"));
         FireMode->FireLoopAudioComponent = UGameplayStatics::SpawnSoundAttached(FireMode->FireLoopSound, AttachComponent, FireMode->MuzzleSocketName, FVector(0), EAttachLocation::SnapToTarget, true);
     }
-    FireMode->FireLoopAudioComponent->Activate(true);
+    if (FireMode->FireLoopAudioComponent)
+    {
+        FireMode->FireLoopAudioComponent->Activate(true);
+    }
 }
 
 void AUR_Weapon::UpdateContinuousEffects_Implementation(UUR_FireModeContinuous* FireMode, float DeltaTime)
@@ -995,7 +1105,10 @@ void AUR_Weapon::UpdateContinuousEffects_Implementation(UUR_FireModeContinuous* 
         FHitResult Hit;
         HitscanTrace(FireLoc, TraceEnd, Hit);
 
-        FireMode->BeamComponent->SetVectorParameter(FireMode->BeamVectorParamName, Hit.Location - FireMode->BeamComponent->GetComponentLocation());
+        FVector BeamVector = Hit.Location - FireMode->BeamComponent->GetComponentLocation();
+        BeamVector = FireMode->BeamComponent->GetComponentTransform().InverseTransformVector(BeamVector);
+
+        FireMode->BeamComponent->SetVectorParameter(FireMode->BeamVectorParamName, BeamVector);
         FireMode->BeamComponent->SetVectorParameter(FireMode->BeamImpactNormalParamName, Hit.ImpactNormal);
 
         //TODO: There is an issue here, if player/viewer changes 1P/3P perspective while firing,

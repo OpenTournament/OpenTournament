@@ -148,13 +148,13 @@ public:
         UUR_FunctionLibrary::CastScriptInterface<IUR_FireModeBaseInterface, IUR_FireModeContinuousInterface>(CallbackInterface, ContinuousInterface);
     }
 
+    virtual void RequestStartFire_Implementation() override;
     virtual void StartFire_Implementation() override;
     virtual void StopFire_Implementation() override;
+    virtual void SpinDown() override;
     virtual float GetTimeUntilIdle_Implementation() override;
 
 protected:
-
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
     virtual void BeginPlay() override
     {
@@ -167,20 +167,6 @@ protected:
 
     UPROPERTY()
     float DeltaTimeAccumulator;
-
-    UPROPERTY(ReplicatedUsing = OnRep_IsFiring)
-    bool bIsFiringRep;
-
-    UFUNCTION(Server, Reliable)
-    void ServerStartFire();
-
-    FTimerHandle DelayedStartFireTimerHandle;
-
-    UFUNCTION(Server, Reliable)
-    void ServerStopFire();
-
-    UFUNCTION()
-    virtual void OnRep_IsFiring();
 
 };
 

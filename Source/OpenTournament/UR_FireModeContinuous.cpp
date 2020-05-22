@@ -2,120 +2,86 @@
 
 #include "UR_FireModeContinuous.h"
 
-#include "UnrealNetwork.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
 
 #include "UR_FunctionLibrary.h"
 
-void UUR_FireModeContinuous::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+/**
+* NOTE:
+* The spinup routine already has replication mechanisms which are exactly what we want.
+* We are going to rest upon it even when we don't have any spinup.
+* The cases SpinUpTime=0/SpinDownTime=0 are handled and will simply skip all delays.
+*
+* The only downside is that interface's SpinUp callbacks are going to be called even if there is no spinup.
+*/
 
-    DOREPLIFETIME_CONDITION(UUR_FireModeContinuous, bIsFiringRep, COND_SkipOwner);
+void UUR_FireModeContinuous::RequestStartFire_Implementation()
+{
+    bRequestedFire = true;
+    SpinUp();
 }
 
+// Called after the spinup routine, on clients & server
 void UUR_FireModeContinuous::StartFire_Implementation()
 {
-    SetBusy(true);
-
-    if (ContinuousInterface)
-    {
-        IUR_FireModeContinuousInterface::Execute_StartContinuousEffects(ContinuousInterface.GetObject(), this);
-    }
-
     DeltaTimeAccumulator = 0.f;
     SetComponentTickEnabled(true);
 
-    if (GetOwnerRole() == ROLE_Authority || UUR_FunctionLibrary::IsComponentLocallyControlled(this))
+    if (ContinuousInterface)
     {
-        ServerStartFire();
+        if (GetNetMode() != NM_DedicatedServer)
+        {
+            IUR_FireModeContinuousInterface::Execute_StartContinuousEffects(ContinuousInterface.GetObject(), this);
+        }
+        if (GetOwnerRole() == ROLE_Authority)
+        {
+            IUR_FireModeContinuousInterface::Execute_AuthorityStartContinuousFire(ContinuousInterface.GetObject(), this);
+        }
     }
 }
 
 void UUR_FireModeContinuous::StopFire_Implementation()
 {
+    bRequestedFire = false;
+    SpinDown();
+}
+
+void UUR_FireModeContinuous::SpinDown()
+{
     SetComponentTickEnabled(false);
 
     if (ContinuousInterface)
     {
-        IUR_FireModeContinuousInterface::Execute_StopContinuousEffects(ContinuousInterface.GetObject(), this);
+        if (GetNetMode() != NM_DedicatedServer)
+        {
+            IUR_FireModeContinuousInterface::Execute_StopContinuousEffects(ContinuousInterface.GetObject(), this);
+        }
+        if (GetOwnerRole() == ROLE_Authority)
+        {
+            IUR_FireModeContinuousInterface::Execute_AuthorityStopContinuousFire(ContinuousInterface.GetObject(), this);
+        }
     }
 
-    //NOTE: not sure if we should wait next tick
-    SetBusy(false);
-
-    if (GetOwnerRole() == ROLE_Authority || UUR_FunctionLibrary::IsComponentLocallyControlled(this))
-    {
-        ServerStopFire();
-    }
+    Super::SpinDown();
 }
 
 float UUR_FireModeContinuous::GetTimeUntilIdle_Implementation()
 {
     if (bIsBusy)
     {
-        return 0.001f;
+        // if idle is delayed by spindown, return that
+        if (SpinDownTime > 0.f && IdleAtSpinPercent < 1.f)
+        {
+            return Super::GetTimeUntilIdle_Implementation();
+        }
+        // if no spindown, return at least 1 frame when firing so a cheater cannot fire two firemodes simultaneously
+        if (bFullySpinnedUp)
+        {
+            return 0.001f;
+        }
     }
     return 0.f;
-}
-
-void UUR_FireModeContinuous::ServerStartFire_Implementation()
-{
-    if (BaseInterface)
-    {
-        // Continuous modes are essentially cooldown-less (until we implement spinup/spindown)
-        // But a delay might come in from a sibling firemode in the weapon.
-        float Delay = IUR_FireModeBaseInterface::Execute_TimeUntilReadyToFire(BaseInterface.GetObject(), this);
-        if (Delay > 0.f)
-        {
-            GetWorld()->GetTimerManager().SetTimer(DelayedStartFireTimerHandle, this, &UUR_FireModeContinuous::ServerStartFire_Implementation, Delay, false);
-            return;
-        }
-    }
-
-    SetBusy(true);
-    DeltaTimeAccumulator = 0.f;
-    SetComponentTickEnabled(true);
-
-    // Replicate to remotes
-    bIsFiringRep = true;
-
-    if (ContinuousInterface)
-    {
-        IUR_FireModeContinuousInterface::Execute_AuthorityStartContinuousFire(ContinuousInterface.GetObject(), this);
-    }
-}
-
-void UUR_FireModeContinuous::ServerStopFire_Implementation()
-{
-    GetWorld()->GetTimerManager().ClearTimer(DelayedStartFireTimerHandle);
-
-    SetComponentTickEnabled(false);
-    SetBusy(false);
-
-    // Replicate to remotes
-    bIsFiringRep = false;
-
-    if (ContinuousInterface)
-    {
-        IUR_FireModeContinuousInterface::Execute_AuthorityStopContinuousFire(ContinuousInterface.GetObject(), this);
-    }
-}
-
-void UUR_FireModeContinuous::OnRep_IsFiring()
-{
-    if (GetNetMode() == NM_Client)
-    {
-        if (bIsFiringRep)
-        {
-            StartFire();
-        }
-        else
-        {
-            StopFire();
-        }
-    }
 }
 
 void UUR_FireModeContinuous::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

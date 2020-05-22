@@ -134,7 +134,7 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
     USoundBase* PickupSound;
 
-    UPROPERTY(EditAnywhere, Replicated, Category = "Weapon")
+    UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_AmmoCount, Category = "Weapon")
     int32 AmmoCount;
 
     UPROPERTY(EditAnywhere, Category = "Weapon")
@@ -143,14 +143,18 @@ public:
     UPROPERTY(EditAnywhere, Category = "Weapon")
     FString AmmoName;
 
+protected:
+
+    UFUNCTION()
+    virtual void OnRep_AmmoCount();
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Some getters
 
+public:
+
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
     int32 GetCurrentAmmo() const { return AmmoCount; }
-
-    /** DEPRECATED. Use GetMesh1P() or GetMesh3P() instead */
-    USkeletalMeshComponent* GetWeaponMesh() const { return Mesh1P; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
     FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
@@ -375,6 +379,12 @@ public:
     * In other states, return some high value to prevent any shot.
     */
     virtual float TimeUntilReadyToFire_Implementation(UUR_FireModeBase* FireMode) override;
+
+    virtual void BeginSpinUp_Implementation(UUR_FireModeBase* FireMode, float CurrentSpinValue) override;
+
+    virtual void BeginSpinDown_Implementation(UUR_FireModeBase* FireMode, float CurrentSpinValue) override;
+
+    virtual void SpinDone_Implementation(UUR_FireModeBase* FireMode, bool bFullySpinnedUp) override;
 
     //============================================================
     // FireModeBasic interface

@@ -11,7 +11,7 @@ class IUR_FireModeChargedInterface;
 /**
  * 
  */
-UCLASS(ClassGroup = (FireMode), Meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (FireMode), Meta = (BlueprintSpawnableComponent), HideCategories = ("FireMode|SpinUp"))
 class OPENTOURNAMENT_API UUR_FireModeCharged : public UUR_FireModeBasic
 {
 	GENERATED_BODY()
@@ -19,22 +19,23 @@ class OPENTOURNAMENT_API UUR_FireModeCharged : public UUR_FireModeBasic
 public:
     UUR_FireModeCharged()
     {
+        MaxChargeLevel = 5;
         ChargeInterval = 0.25f;
-        MaxChargeLevel = 4;
         MaxChargeHoldTime = -1;
     }
 
     /**
-    * Interval between each ChargeLevel increment.
-    */
-    UPROPERTY(EditAnywhere, Category = "FireMode")
-    float ChargeInterval;
-
-    /**
-    * Maximum charge level.
+    * Maximum charge level. Charging starts at 1.
     */
     UPROPERTY(EditAnywhere, Category = "FireMode")
     int32 MaxChargeLevel;
+
+    /**
+    * Interval between each ChargeLevel increment.
+    * First charge (1) is immediate.
+    */
+    UPROPERTY(EditAnywhere, Category = "FireMode")
+    float ChargeInterval;
 
     /**
     * Maximum hold time AFTER reaching full charge.
@@ -63,6 +64,7 @@ public:
 
     /**
     * Current charge level.
+    * Starts at 1, ends at MaxChargeLevel.
     */
     UPROPERTY(ReplicatedUsing = OnRep_InitialChargeLevel)
     int32 ChargeLevel;
@@ -79,13 +81,18 @@ public:
     * Block at the current charge level.
     * The passed in MaxHoldTime parameter overrides default MaxChargeHoldTime.
     *
-    * If MaxHoldTime is infinite (-1), the firemode will continue trying to charge,
-    * but call OnChargeLevel with same charge level. This can be used to pause charging and resume later.
+    * If MaxHoldTime is infinite (-1), the firemode will continue trying to charge, but it will
+    * call OnChargeLevel with same charge level. This can be used to pause charging and resume later.
     *
     * If MaxHoldTime is real however, charging stops and will autofire after the delay.
     */
     UFUNCTION(BlueprintCallable)
     virtual void BlockNextCharge(float MaxHoldTime);
+
+    virtual void SetRequestIdle(bool bNewRequestIdle) override
+    {
+        bRequestedIdle = bNewRequestIdle;
+    }
 
 protected:
 

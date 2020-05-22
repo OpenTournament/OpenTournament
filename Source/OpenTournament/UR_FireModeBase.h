@@ -25,6 +25,10 @@ public:
 
         Index = 0;
 
+        SpinUpTime = 0.f;
+        SpinDownTime = 0.f;
+        IdleAtSpinPercent = 1.f;
+
         InitialAmmoCost = 1;
         MuzzleSocketName = FName(TEXT("Muzzle"));
     }
@@ -35,6 +39,29 @@ public:
     */
     UPROPERTY(EditAnywhere, Category = "FireMode", Meta = (DisplayPriority = "1"))
     uint8 Index;
+
+    /**
+    * NOTE: I am currently pondering if it is actually worth it to support spinup in FireModeBasic.
+    * It seems to me that any spinup firemode would be a very fast-firing firemode.
+    * In that case, the firemode can be implemented as Continuous, even if it's projectiles.
+    * The whole code would be a lot less complex if spinup was only in Continuous.
+    * Investigate.
+    */
+
+    UPROPERTY(EditAnywhere, Category = "FireMode|SpinUp")
+    float SpinUpTime;
+
+    UPROPERTY(EditAnywhere, Category = "FireMode|SpinUp")
+    float SpinDownTime;
+
+    /**
+    * Configure to let the firemode enter idle state at a specific point during spindown.
+    * At 0.0, the firemode will go idle after it has completely spun down.
+    * At 1.0, the firemode can go idle as soon as StopFire is called, when spindown starts.
+    * This impacts swapping firemodes, and weaponswap if CooldownDelaysPutdown > 0%.
+    */
+    UPROPERTY(EditAnywhere, Category = "FireMode|SpinUp")
+    float IdleAtSpinPercent;
 
 public:
 
@@ -47,7 +74,7 @@ public:
     *
     * NOTE: This may change in the future, as I could see the interfaces providing actual
     * default implementations, by moving chunks of code from Weapon to them.
-    * In that case, those default implementations *would* actually use the "Content" properties.
+    * In that case, those default implementations would actually make use of the "Content" properties.
     *
     * That wouldn't technically hurt the modularity of the system, since each interface
     * method can still be overriden by the implementer.
@@ -82,13 +109,19 @@ public:
         BaseInterface = CallbackInterface;
     }
 
+    /**
+    * Wrapper for the spinup implementation.
+    * Actual firing happens in StartFire.
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+    void RequestStartFire();
+
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     void StartFire();
     virtual void StartFire_Implementation() {}
 
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     void StopFire();
-    virtual void StopFire_Implementation() {}
 
     UFUNCTION(BlueprintCallable, BlueprintPure)
     virtual bool IsBusy()
@@ -100,33 +133,108 @@ public:
     * Calculate (best effort) the time until this firemode becomes idle.
     * If mode is currently firing, calculate as if StopFire is being called.
     * If mode is on cooldown, return the remaining cooldown time.
+    * Takes into account spinup / IdleAtSpinPercent.
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure)
     float GetTimeUntilIdle();
-    virtual float GetTimeUntilIdle_Implementation()
-    {
-        return 0.f;
-    }
 
     /**
     * If firemode is on cooldown, return cooldown start time.
     * This may be used to calculate various things in conjunction with GetTimeUntilIdle(),
     * such as allowing weaponswitch at x% of the cooldown rather than waiting on the full cooldown.
+    * Takes into account spinup / IdleAtSpinPercent.
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure)
     float GetCooldownStartTime();
-    virtual float GetCooldownStartTime_Implementation()
+
+    /**
+    * Request firemode to go to idle state whenever it sees opportunity.
+    * This is used by weapon swap code to properly handle the following cases :
+    * 1. Race conditions if cooldown delays putdown by 100%, firemode could loop before weapon could putdown.
+    * 2. Requesting a swap while charging a shot, should not release the shot (which calling StopFire would do).
+    * 3. Requesting a swap requiring weapon to spindown, and user tries to click again to spinup again.
+    */
+    UFUNCTION(BlueprintCallable)
+    virtual void SetRequestIdle(bool bNewRequestIdle)
     {
-        return 0.f;
+        bRequestedIdle = bNewRequestIdle;   //prevent spinup
+        StopFire(); //spindown
     }
 
+    /**
+    * Current spin percent (0.0 -> 1.0).
+    */
+    UFUNCTION(BlueprintCallable, BlueprintPure)
+    virtual float GetCurrentSpinUpValue();
+
 protected:
+
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+    /**
+    * True only on the machine that requested fire (RequestStartFire).
+    * Not replicated.
+    */
+    UPROPERTY()
+    bool bRequestedFire;
 
     UPROPERTY()
     bool bIsBusy;
 
     UFUNCTION(BlueprintCallable)
     virtual void SetBusy(bool bNewBusy);
+
+    UPROPERTY()
+    bool bRequestedIdle;
+
+    //============================================================
+    // SpinUp
+    //============================================================
+
+    UPROPERTY()
+    bool bFullySpinnedUp;
+
+    UFUNCTION()
+    virtual void SpinUp();
+
+    FTimerHandle SpinUpTimerHandle;
+
+    UFUNCTION()
+    virtual void SpinUpCallback();
+
+    UFUNCTION()
+    virtual void SpinDown();
+
+    FTimerHandle SpinDownIdleTimerHandle;
+    FTimerHandle SpinDownTimerHandle;
+
+    UFUNCTION()
+    virtual void SpinDownIdleCallback();
+
+    UFUNCTION()
+    virtual void SpinDownCallback();
+
+    // Replication
+
+    UFUNCTION(Server, Reliable)
+    void ServerSpinUp();
+
+    /**
+    * If authority receives a SpinUp order while the weapon is not ready to fire,
+    * the spinup time will be slightly increased to ensure game integrity.
+    * The use-cases of this should be minor enough that it doesn't need replication.
+    */
+    UPROPERTY()
+    float AuthorityAddedSpinUpDelay;
+
+    UFUNCTION(Server, Reliable)
+    void ServerSpinDown();
+
+    UPROPERTY(ReplicatedUsing = OnRep_IsSpinningUp)
+    bool bIsSpinningUpRep;
+
+    UFUNCTION()
+    virtual void OnRep_IsSpinningUp();
 
 };
 
@@ -180,5 +288,28 @@ public:
     {
         return FireMode->GetTimeUntilIdle();
     }
+
+    /**
+    * When SpinUpTime > 0, called as the firemode starts spinning up.
+    * Spinup can restart from the middle of a spindown.
+    * The current spinup percentage (0.0 -> 1.0) is passed as parameter.
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic, BlueprintCallable)
+    void BeginSpinUp(UUR_FireModeBase* FireMode, float CurrentSpinValue);
+
+    /**
+    * When SpinDownTime OR SpinUpTime > 0, called as the firemode starts spinning down.
+    * Spindown can begin from the middle of a spinup.
+    * The current spinup percentage (0.0 -> 1.0) is passed as parameter.
+    * If SpinDownTime = 0, SpinDone will be called immediately after.
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic, BlueprintCallable)
+    void BeginSpinDown(UUR_FireModeBase* FireMode, float CurrentSpinValue);
+
+    /**
+    * Called when either fully spinned up or fully spinned down.
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic, BlueprintCallable)
+    void SpinDone(UUR_FireModeBase* FireMode, bool bFullySpinnedUp);
 
 };
