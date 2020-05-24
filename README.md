@@ -7,6 +7,6 @@ The Open Tournament project is a community-led effort to develop a game that wil
 * This is a public repository with access available for contributors to Open Tournament.
 * Code is (c) 2019-2020 Open Tournament Team. Usage of code is subject to our license.
 * Please do not share code or content without discussing with other project members.
-* Official webpage : www.opentournamentgame.com
 * Discussion on Discord: https://discord.gg/Rw8evNT
+* Official webpage : [www.opentournamentgame.com](https://www.opentournamentgame.com)
 * Additional discussion can be found on www.reddit.com/r/OpenTournament
