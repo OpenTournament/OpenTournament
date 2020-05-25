@@ -127,7 +127,7 @@ void AUR_TriggerZone::ZoneExit(AActor* InActor)
 
 bool AUR_TriggerZone::IsTriggerActor_Implementation(const AActor* InActor) const
 {
-    if (auto TagActor = Cast<IGameplayTagAssetInterface>(InActor))
+    if (const auto TagActor = Cast<IGameplayTagAssetInterface>(InActor))
     {
         // Check if the Character has any Required or Excluded GameplayTags
         FGameplayTagContainer TargetTags;

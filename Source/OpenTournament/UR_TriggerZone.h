@@ -157,7 +157,7 @@ public:
     bool IsTriggerByGameplayTags(const FGameplayTagContainer& TargetTags) const;
 
     /**
-    * Actors of this ActorClass can Trigger
+    * Actors of this ActorClass can Trigger our Zone
     */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TriggerZone")
     TSubclassOf<AActor> TriggerActorClass;
