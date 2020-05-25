@@ -633,7 +633,7 @@ FVector AUR_Weapon::SeededRandCone(const FVector& Dir, float ConeHalfAngleDeg, i
     }
 }
 
-AUR_Projectile* AUR_Weapon::SpawnProjectile(TSubclassOf<AUR_Projectile> InProjectileClass, const FVector& StartLoc, const FRotator& StartRot)
+AUR_Projectile* AUR_Weapon::SpawnProjectile_Implementation(TSubclassOf<AUR_Projectile> InProjectileClass, const FVector& StartLoc, const FRotator& StartRot)
 {
     FActorSpawnParameters SpawnParams;
     SpawnParams.Owner = GetOwner();
@@ -736,6 +736,15 @@ float AUR_Weapon::TimeUntilReadyToFire_Implementation(UUR_FireModeBase* FireMode
         Delay = GetWorld()->GetTimerManager().GetTimerRemaining(SwapAnimTimerHandle);
         break;
 
+    case EWeaponState::PutDown:
+    {
+        // delay to check if we're late in a very quick putdown-bringup-idle scenario
+        // delay by the amount of time it would take to reach idle if we called bringup now
+        float BringUpPct = GetWorld()->GetTimerManager().GetTimerRemaining(SwapAnimTimerHandle) / PutDownTime;
+        Delay = FMath::Max(0.001f, (1.f - BringUpPct) * BringUpTime);
+        break;
+    }
+
     case EWeaponState::Idle:
         Delay = 0.f;
         break;
@@ -752,13 +761,12 @@ float AUR_Weapon::TimeUntilReadyToFire_Implementation(UUR_FireModeBase* FireMode
         break;
 
     default:
-        Delay = 1.f;    //prevent
-        break;
+        return TIMEUNTILFIRE_NEVER;
     }
 
     if (Delay <= 0.f && !HasEnoughAmmoFor(FireMode))
     {
-        Delay = 1.f;    //prevent
+        return TIMEUNTILFIRE_NEVER;
     }
 
     return Delay;
@@ -888,7 +896,11 @@ void AUR_Weapon::AuthorityShot_Implementation(UUR_FireModeBasic* FireMode, const
 
         SpawnProjectile(FireMode->ProjectileClass, FireLoc, FireDir.Rotation());
 
-        ConsumeAmmo(FireMode->InitialAmmoCost);
+        // Charged mode consumes ammo while charging, not when releasing shot
+        if (!Cast<UUR_FireModeCharged>(FireMode))
+        {
+            ConsumeAmmo(FireMode->InitialAmmoCost);
+        }
     }
 }
 
@@ -920,7 +932,11 @@ void AUR_Weapon::AuthorityHitscanShot_Implementation(UUR_FireModeBasic* FireMode
     OutHitscanInfo.Vectors.EmplaceAt(0, Hit.Location);
     OutHitscanInfo.Vectors.EmplaceAt(1, Hit.ImpactNormal);
 
-    ConsumeAmmo(FireMode->InitialAmmoCost);
+    // Charged mode consumes ammo while charging, not when releasing shot
+    if (!Cast<UUR_FireModeCharged>(FireMode))
+    {
+        ConsumeAmmo(FireMode->InitialAmmoCost);
+    }
 }
 
 void AUR_Weapon::PlayFireEffects_Implementation(UUR_FireModeBasic* FireMode)
@@ -975,10 +991,45 @@ void AUR_Weapon::PlayHitscanEffects_Implementation(UUR_FireModeBasic* FireMode, 
 // FireModeCharged interface
 //============================================================
 
-void AUR_Weapon::ChargeLevel_Implementation(UUR_FireModeCharged* FireMode)
+void AUR_Weapon::ChargeLevel_Implementation(UUR_FireModeCharged* FireMode, int32 ChargeLevel, bool bWasPaused)
 {
+    // Default ammo consumption = 1 per charge
+    if (HasAuthority())
+    {
+        // If a charge was loaded, consume ammo for it
+        if (!bWasPaused)
+        {
+            ConsumeAmmo(1);
+        }
 
+        // If we don't have enough ammo for next charge, stop charging
+        if (AmmoCount < 1)
+        {
+            FireMode->BlockNextCharge(FireMode->MaxChargeHoldTime);
+        }
+    }
+
+    // Default hitscan damage = linear scale
+    FireMode->HitscanDamage = FMath::Lerp(FireMode->HitscanDamageMin, FireMode->HitscanDamageMax, FireMode->GetTotalChargePercent(false));
+
+    GEngine->AddOnScreenDebugMessage(118, 3.f, FColor::Blue, *FString::Printf(TEXT("CHARGE LEVEL %i (%i)"), ChargeLevel, bWasPaused?1:0));
 }
+
+/**
+* SOME NOTES:
+*
+* FireModeCharged extends FireModeBasic, and uses the same interface callbacks for the firing part.
+* In order to access ChargeLevel, you will need to cast FireMode to a FireModeCharged.
+*
+* Implementations of charged shots are very specific to the individual weapons,
+* so I am not going to provide default implementations here in UR_Weapon.
+*
+* For charged projectiles, implementers can override AuthorityShot or SpawnProjectile,
+* cast to FireModeCharged, and alter the spawned projectile(s) as desired.
+*
+* For charged hitscan, implementers must override PlayFireEffects/PlayHitscanEffects to adjust visuals.
+* For damage, either override AuthorityHitscanShot, or modify FireMode properties on the fly every ChargeLevel.
+*/
 
 
 //============================================================

@@ -280,7 +280,7 @@ public:
     *
     * Used during network synchronisation to ensure game integrity,
     * eg. to prevent server firing during weapon BringUp, or faster than fire interval across multiple firemodes.
-    * Depending on value returned, server might delay the shot a bit, or discard the shot.
+    * Depending on the value returned, server might delay the shot a bit, or discard the shot.
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     float TimeUntilReadyToFire(UUR_FireModeBase* FireMode);
@@ -288,6 +288,9 @@ public:
     {
         return FireMode->GetTimeUntilIdle();
     }
+
+    // Weapon returns this to indicate unacceptable state, and firing should be discarded.
+    #define TIMEUNTILFIRE_NEVER 10.f
 
     /**
     * When SpinUpTime > 0, called as the firemode starts spinning up.

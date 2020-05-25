@@ -31,8 +31,7 @@ AUR_Weap_Shotgun::AUR_Weap_Shotgun(const FObjectInitializer& ObjectInitializer)
         { FVector(5.0f, +15.0f, -15.0f), FVector(5.f, 15.f, 15.f), 2 },
         { FVector(5.0f, +15.0f, +15.0f), FVector(5.f, 15.f, 15.f), 2 },
     };
-    Spread = 0.2f;
-
+    OffsetSpread = 0.2f;
     UseMuzzleDistance = 100.f;
 
     ShotgunFireMode = CreateDefaultSubobject<UUR_FireModeBasic>(TEXT("ShotgunFireMode"));
@@ -68,7 +67,7 @@ void AUR_Weap_Shotgun::AuthorityShot_Implementation(UUR_FireModeBasic* FireMode,
 
                 FRotator MinimumDir = FireRot;
                 FRotator MaximumDir = (SpawnLoc - SpreadReferencePoint).Rotation();
-                FRotator SpawnRot = FMath::Lerp(MinimumDir, MaximumDir, Spread);
+                FRotator SpawnRot = FMath::Lerp(MinimumDir, MaximumDir, OffsetSpread);
 
                 SpawnProjectile(FireMode->ProjectileClass, SpawnLoc, SpawnRot);
             }

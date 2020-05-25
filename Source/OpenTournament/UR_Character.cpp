@@ -691,6 +691,13 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
         AttributeSet->SetHealth(0);
     }
 
+    // Force stop firing
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
+    {
+        InventoryComponent->ActiveWeapon->StopAllFire();
+    }
+    DesiredFireModeNum.Empty();
+
     // Cut the replication link
     TearOff();
 

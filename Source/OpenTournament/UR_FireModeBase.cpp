@@ -199,10 +199,16 @@ void UUR_FireModeBase::ServerSpinUp_Implementation()
     // Validation
     if (BaseInterface)
     {
+        //TODO: Need a proper loop here, not just an added delay.
         AuthorityAddedSpinUpDelay = IUR_FireModeBaseInterface::Execute_TimeUntilReadyToFire(BaseInterface.GetObject(), this);
         if (AuthorityAddedSpinUpDelay > 0.f)
         {
             UE_LOG(LogWeapon, Log, TEXT("AuthorityAddedSpinUpDelay = %f"), AuthorityAddedSpinUpDelay);
+
+            if (AuthorityAddedSpinUpDelay >= TIMEUNTILFIRE_NEVER)
+            {
+                return;
+            }
         }
     }
 

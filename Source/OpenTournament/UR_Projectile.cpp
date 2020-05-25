@@ -86,9 +86,11 @@ void AUR_Projectile::BeginPlay()
     }
 }
 
+//deprecated
 void AUR_Projectile::FireAt(const FVector& ShootDirection)
 {
-    ProjectileMovementComponent->Velocity = ShootDirection * ProjectileMovementComponent->InitialSpeed;
+    //ProjectileMovementComponent->Velocity = ProjectileMovementComponent->Velocity ShootDirection * ProjectileMovementComponent->InitialSpeed;
+    //NOTE: This is useless, projectile already does that, given we spawn it with the right rotation.
 }
 
 void AUR_Projectile::OnOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

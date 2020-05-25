@@ -46,6 +46,20 @@ public:
 
 public:
 
+    /**
+    * Hitscan damage of an uncharged shot.
+    */
+    UPROPERTY(EditAnywhere, Category = "Content|Hitscan")
+    float HitscanDamageMin;
+
+    /**
+    * Hitscan damage of a fully charged shot.
+    */
+    UPROPERTY(EditAnywhere, Category = "Content|Hitscan")
+    float HitscanDamageMax;
+
+public:
+
     UPROPERTY(BlueprintReadOnly)
     TScriptInterface<IUR_FireModeChargedInterface> ChargedInterface;
 
@@ -66,16 +80,16 @@ public:
     * Current charge level.
     * Starts at 1, ends at MaxChargeLevel.
     */
-    UPROPERTY(ReplicatedUsing = OnRep_InitialChargeLevel)
+    UPROPERTY(ReplicatedUsing = OnRep_InitialChargeLevel, BlueprintReadOnly)
     int32 ChargeLevel;
 
     /**
-    * Get current charge as a precise float value (0.0 ==> 1.0),
-    * taking into account the current partial charge.
+    * Get current charge as a precise float value (0.0 ==> 1.0).
+    * Can take into account the current partial charge.
     * Use this when implementing continuous visuals from a tick faster than ChargeInterval.
     */
     UFUNCTION(BlueprintCallable, BlueprintPure)
-    virtual float GetContinuousCharge();
+    virtual float GetTotalChargePercent(bool bIncludePartial = true);
 
     /**
     * Block at the current charge level.
@@ -89,6 +103,7 @@ public:
     UFUNCTION(BlueprintCallable)
     virtual void BlockNextCharge(float MaxHoldTime);
 
+    // Override to avoid calling StopFire() which would release the charge.
     virtual void SetRequestIdle(bool bNewRequestIdle) override
     {
         bRequestedIdle = bNewRequestIdle;
@@ -97,6 +112,42 @@ public:
 protected:
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+    UPROPERTY()
+    float LocalStartChargeTime;
+
+    /**
+    * Keep track of blocked charge level (set by BlockNextCharge) and replicate.
+    */
+    UPROPERTY(Replicated)
+    int32 ChargePausedAt;
+
+    UFUNCTION()
+    virtual void StartCharge();
+
+    UFUNCTION()
+    virtual void NextChargeLevel();
+
+    FTimerHandle ChargeTimerHandle;
+
+    UFUNCTION()
+    virtual void SetHoldTimeout(float MaxHoldTime);
+
+    UFUNCTION()
+    virtual void HoldTimeout();
+
+    UFUNCTION()
+    virtual void ReleaseCharge(bool bOvercharged = false);
+
+    virtual void CooldownTimer() override;
+
+    // Replication
+
+    UFUNCTION(Server, Reliable)
+    void ServerStartCharge();
+
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastStartCharge();
 
     /**
     * ChargeLevel replicates with condition INITIAL_ONLY.
@@ -107,11 +158,9 @@ protected:
     UFUNCTION()
     virtual void OnRep_InitialChargeLevel();
 
-    /**
-    * Keep track of blocked charge level (set by BlockNextCharge) and replicate.
-    */
-    UPROPERTY(Replicated)
-    int32 ChargePausedAt;
+    virtual void ServerFire_Implementation(const FSimulatedShotInfo& SimulatedInfo) override;
+    virtual void MulticastFired_Implementation() override;
+    virtual void MulticastFiredHitscan_Implementation(const FHitscanVisualInfo& HitscanInfo) override;
 
 };
 
@@ -129,10 +178,17 @@ class OPENTOURNAMENT_API IUR_FireModeChargedInterface : public IUR_FireModeBasic
 public:
 
     /**
-    * Called at charge start (0) and every new charge level.
+    * Called at charge start (1) and every new charge level.
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-    void ChargeLevel(UUR_FireModeCharged* FireMode);
+    void ChargeLevel(UUR_FireModeCharged* FireMode, int32 ChargeLevel, bool bWasPaused);
+
+    /**
+    * Called when a shot is about to autofire due to overcharge.
+    * SimulateShot will be called right after in the same frame.
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic, BlueprintCallable)
+    void Overcharged(UUR_FireModeCharged* FireMode);
 
 };
 

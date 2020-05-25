@@ -25,13 +25,13 @@ struct FSimulatedShotInfo
 {
     GENERATED_BODY()
 
-    UPROPERTY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TArray<FVector> Vectors;
 
-    UPROPERTY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TArray<AActor*> Actors;
 
-    UPROPERTY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 Seed;
 };
 
@@ -47,10 +47,10 @@ struct FHitscanVisualInfo
 {
     GENERATED_BODY()
 
-    UPROPERTY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TArray<FVector> Vectors;
 
-    UPROPERTY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 Seed;
 };
 
@@ -135,12 +135,15 @@ protected:
     float LocalFireTime;
 
     UFUNCTION()
-    void CooldownTimer();
+    virtual void CooldownTimer();
 
     FTimerHandle CooldownTimerHandle;
 
     UFUNCTION(Server, Reliable)
     void ServerFire(const FSimulatedShotInfo& SimulatedInfo);
+
+    UFUNCTION(BlueprintAuthorityOnly)
+    virtual void AuthorityShot(const FSimulatedShotInfo& SimulatedInfo);
 
     FTimerHandle DelayedFireTimerHandle;
 

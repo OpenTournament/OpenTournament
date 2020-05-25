@@ -320,8 +320,8 @@ public:
     UFUNCTION(BlueprintCallable)
     static FVector SeededRandCone(const FVector& Dir, float ConeHalfAngleDeg, int32 Seed);
 
-    UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
-    virtual AUR_Projectile* SpawnProjectile(TSubclassOf<AUR_Projectile> InProjectileClass, const FVector& StartLoc, const FRotator& StartRot);
+    UFUNCTION(BlueprintNativeEvent, BlueprintAuthorityOnly, BlueprintCallable)
+    AUR_Projectile* SpawnProjectile(TSubclassOf<AUR_Projectile> InProjectileClass, const FVector& StartLoc, const FRotator& StartRot);
 
     UFUNCTION(BlueprintCallable)
     void HitscanTrace(const FVector& TraceStart, const FVector& TraceEnd, FHitResult& OutHit);
@@ -337,7 +337,7 @@ public:
     bool HasEnoughAmmoFor(UUR_FireModeBase* FireMode);
 
     UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
-    virtual void ConsumeAmmo(int32 Amount);
+    virtual void ConsumeAmmo(int32 Amount = 1);
 
     //============================================================
     // Firemodes
@@ -408,7 +408,7 @@ public:
     // FireModeCharged interface
     //============================================================
 
-    virtual void ChargeLevel_Implementation(UUR_FireModeCharged* FireMode) override;
+    virtual void ChargeLevel_Implementation(UUR_FireModeCharged* FireMode, int32 ChargeLevel, bool bWasPaused) override;
 
     //============================================================
     // FireModeContinuous interface

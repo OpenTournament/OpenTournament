@@ -56,13 +56,11 @@ public:
     UPROPERTY(EditAnywhere, Category = "Weapon|Shotgun")
     TArray<FShotgunSpawnBox> SpawnBoxes;
 
+    /** Used with MuzzleDistance to compute rockets orientation according to their initial offset */
     UPROPERTY(EditAnywhere, Category = "Weapon|Shotgun")
-    float Spread;
+    float OffsetSpread;
 
-    /**
-    * For best results, this value should reflect the average distance from camera to weapon muzzle.
-    * The actual muzzle cannot be used because animations could generate janky results.
-    */
+    /** For best results, this value should reflect the average distance from camera to weapon muzzle */
     UPROPERTY(EditAnywhere, Category = "Weapon|Shotgun")
     float UseMuzzleDistance;
 

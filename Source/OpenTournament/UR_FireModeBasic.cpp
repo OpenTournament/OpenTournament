@@ -41,15 +41,7 @@ void UUR_FireModeBasic::StartFire_Implementation()
     if (GetNetMode() == NM_Client)
     {
         LocalFireTime = GetWorld()->GetTimeSeconds();
-        if (FireInterval > 0.f)
-        {
-            GetWorld()->GetTimerManager().SetTimer(CooldownTimerHandle, this, &UUR_FireModeBasic::CooldownTimer, FireInterval, false);
-        }
-        else
-        {
-            //sanity function, but this should be avoided. use FireModeContinuous instead
-            GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UUR_FireModeBasic::CooldownTimer);
-        }
+        GetWorld()->GetTimerManager().SetTimer(CooldownTimerHandle, this, &UUR_FireModeBasic::CooldownTimer, FMath::Max(FireInterval, 0.001f), false);
     }
 
     ServerFire(SimulatedInfo);
@@ -149,6 +141,11 @@ void UUR_FireModeBasic::ServerFire_Implementation(const FSimulatedShotInfo& Simu
         return;
     }
 
+    AuthorityShot(SimulatedInfo);
+}
+
+void UUR_FireModeBasic::AuthorityShot(const FSimulatedShotInfo& SimulatedInfo)
+{
     SetBusy(true);
 
     if (bIsHitscan)
@@ -169,7 +166,7 @@ void UUR_FireModeBasic::ServerFire_Implementation(const FSimulatedShotInfo& Simu
         MulticastFired();
     }
 
-    GetWorld()->GetTimerManager().SetTimer(CooldownTimerHandle, this, &UUR_FireModeBasic::CooldownTimer, FireInterval, false);
+    GetWorld()->GetTimerManager().SetTimer(CooldownTimerHandle, this, &UUR_FireModeBasic::CooldownTimer, FMath::Max(FireInterval, 0.001f), false);
 }
 
 void UUR_FireModeBasic::MulticastFired_Implementation()
@@ -184,7 +181,7 @@ void UUR_FireModeBasic::MulticastFired_Implementation()
         {
             // Set busy+cooldown on remote clients as well so they can track state accurately
             SetBusy(true);
-            GetWorld()->GetTimerManager().SetTimer(CooldownTimerHandle, this, &UUR_FireModeBasic::CooldownTimer, FireInterval, false);
+            GetWorld()->GetTimerManager().SetTimer(CooldownTimerHandle, this, &UUR_FireModeBasic::CooldownTimer, FMath::Max(FireInterval, 0.001f), false);
             // Remote clients visual callback
             if (BasicInterface)
             {
@@ -206,7 +203,7 @@ void UUR_FireModeBasic::MulticastFiredHitscan_Implementation(const FHitscanVisua
         {
             // Set busy+cooldown on remote clients as well so they can track state accurately
             SetBusy(true);
-            GetWorld()->GetTimerManager().SetTimer(CooldownTimerHandle, this, &UUR_FireModeBasic::CooldownTimer, FireInterval, false);
+            GetWorld()->GetTimerManager().SetTimer(CooldownTimerHandle, this, &UUR_FireModeBasic::CooldownTimer, FMath::Max(FireInterval, 0.001f), false);
             // Remote clients visual callbacks
             if (BasicInterface)
             {
@@ -229,4 +226,7 @@ void UUR_FireModeBasic::LocalConfirmFired()
             GetWorld()->GetTimerManager().SetTimer(CooldownTimerHandle, this, &UUR_FireModeBasic::CooldownTimer, Delay, false);
         }
     }
+
+    // Don't keep this var around
+    LocalFireTime = 0.f;
 }
