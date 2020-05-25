@@ -163,7 +163,7 @@ public:
     FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
-    FORCEINLINE USkeletalMeshComponent* GetVisibleMesh() const;
+    USkeletalMeshComponent* GetVisibleMesh() const;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Weapon Attachment
