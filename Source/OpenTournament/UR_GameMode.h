@@ -33,7 +33,7 @@ struct FStartingWeaponEntry
 /**
  * OpenTournament Game Mode
  */
-UCLASS()
+UCLASS(Config = Game)
 class OPENTOURNAMENT_API AUR_GameMode : public AUR_GameModeBase
 {
     GENERATED_BODY()
@@ -52,16 +52,16 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    UPROPERTY(EditAnywhere, Category = "Parameters")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
     int32 GoalScore;
 
-    UPROPERTY(EditAnywhere, Category = "Parameters")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
     int32 TimeLimit;
 
-    UPROPERTY(EditAnywhere, Category = "Parameters")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
     int32 OvertimeExtraTime;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameters")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
     TArray<FStartingWeaponEntry> StartingWeapons;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
