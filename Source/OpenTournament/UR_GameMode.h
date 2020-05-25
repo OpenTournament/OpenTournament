@@ -33,7 +33,7 @@ struct FStartingWeaponEntry
 /**
  * OpenTournament Game Mode
  */
-UCLASS(Config = Game)
+UCLASS(Config = Game, Abstract, Blueprintable, HideCategories = (Tick, LOD, Cooking))
 class OPENTOURNAMENT_API AUR_GameMode : public AUR_GameModeBase
 {
     GENERATED_BODY()
