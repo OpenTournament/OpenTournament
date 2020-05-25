@@ -85,7 +85,7 @@ void UUR_FireModeBase::SpinUp()
         IUR_FireModeBaseInterface::Execute_BeginSpinUp(BaseInterface.GetObject(), this, CurrentSpinValue);
     }
 
-    float Delay = SpinUpTime * (1.f - CurrentSpinValue) + FMath::Max(0.f, AuthorityAddedSpinUpDelay);
+    float Delay = SpinUpTime * (1.f - CurrentSpinValue);
     if (Delay > 0.f)
     {
         GetWorld()->GetTimerManager().SetTimer(SpinUpTimerHandle, this, &UUR_FireModeBase::SpinUpCallback, Delay, false);
@@ -144,6 +144,7 @@ void UUR_FireModeBase::SpinDown()
     float CurrentSpinValue = GetCurrentSpinUpValue();
 
     GetWorld()->GetTimerManager().ClearTimer(SpinUpTimerHandle);
+    GetWorld()->GetTimerManager().ClearTimer(DelayedSpinUpTimerHandle);
 
     if (BaseInterface)
     {
@@ -199,22 +200,19 @@ void UUR_FireModeBase::ServerSpinUp_Implementation()
     // Validation
     if (BaseInterface)
     {
-        //TODO: Need a proper loop here, not just an added delay.
-        AuthorityAddedSpinUpDelay = IUR_FireModeBaseInterface::Execute_TimeUntilReadyToFire(BaseInterface.GetObject(), this);
-        if (AuthorityAddedSpinUpDelay > 0.f)
+        float Delay = IUR_FireModeBaseInterface::Execute_TimeUntilReadyToFire(BaseInterface.GetObject(), this);
+        if (Delay > 0.f)
         {
-            UE_LOG(LogWeapon, Log, TEXT("AuthorityAddedSpinUpDelay = %f"), AuthorityAddedSpinUpDelay);
-
-            if (AuthorityAddedSpinUpDelay >= TIMEUNTILFIRE_NEVER)
+            UE_LOG(LogWeapon, Log, TEXT("ServerSpinUp Delay = %f"), Delay);
+            if (Delay < TIMEUNTILFIRE_NEVER)
             {
-                return;
+                GetWorld()->GetTimerManager().SetTimer(DelayedSpinUpTimerHandle, this, &UUR_FireModeBase::ServerSpinUp_Implementation, Delay, false);
             }
+            return;
         }
     }
 
     SpinUp();
-
-    AuthorityAddedSpinUpDelay = 0.f;
 }
 
 void UUR_FireModeBase::ServerSpinDown_Implementation()

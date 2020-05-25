@@ -219,13 +219,7 @@ protected:
     UFUNCTION(Server, Reliable)
     void ServerSpinUp();
 
-    /**
-    * If authority receives a SpinUp order while the weapon is not ready to fire,
-    * the spinup time will be slightly increased to ensure game integrity.
-    * The use-cases of this should be minor enough that it doesn't need replication.
-    */
-    UPROPERTY()
-    float AuthorityAddedSpinUpDelay;
+    FTimerHandle DelayedSpinUpTimerHandle;
 
     UFUNCTION(Server, Reliable)
     void ServerSpinDown();

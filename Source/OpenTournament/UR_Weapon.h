@@ -162,6 +162,9 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
     FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
 
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    FORCEINLINE USkeletalMeshComponent* GetVisibleMesh() const;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Weapon Attachment
 
@@ -316,6 +319,20 @@ public:
 
     UFUNCTION(BlueprintCallable)
     virtual void GetFireVector(FVector& FireLoc, FRotator& FireRot);
+
+    /**
+    * Offset projectiles spawn location towards muzzle,
+    * with a line trace check to ensure we don't spawn behind geometry.
+    */
+    UFUNCTION(BlueprintCallable)
+    virtual void OffsetFireLoc(UPARAM(ref) FVector& FireLoc, const FRotator& FireRot, FName OffsetSocketName = NAME_None);
+
+    /**
+    * Safely read SimulatedInfo passed from client into validated FireLoc and FireRot.
+    * Offsetted by socket if specified.
+    */
+    UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
+    virtual void GetValidatedFireVector(const FSimulatedShotInfo& SimulatedInfo, FVector& FireLoc, FRotator& FireRot, FName OffsetSocketName = NAME_None);
 
     UFUNCTION(BlueprintCallable)
     static FVector SeededRandCone(const FVector& Dir, float ConeHalfAngleDeg, int32 Seed);

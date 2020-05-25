@@ -90,26 +90,23 @@ float UUR_FireModeBasic::GetCooldownStartTime_Implementation()
 
 void UUR_FireModeBasic::ServerFire_Implementation(const FSimulatedShotInfo& SimulatedInfo)
 {
-    float Delay;
+    float Delay = 0.f;
 
     if (SpinUpTime > 0.f)
     {
         //NOTE: If we have spinup, the weapon timings validation is already done on ServerSpinUp.
         // We only need to check internal spinup and cooldown timers.
-        if (!bFullySpinnedUp)
-        {
-            if (GetWorld()->GetTimerManager().IsTimerActive(SpinUpTimerHandle))
-            {
-                Delay = GetWorld()->GetTimerManager().GetTimerRemaining(SpinUpTimerHandle);
-            }
-            else
-            {
-                Delay = 1.f;
-            }
-        }
-        else
+        if (bFullySpinnedUp)
         {
             Delay = GetWorld()->GetTimerManager().GetTimerRemaining(CooldownTimerHandle);
+        }
+        else if (GetWorld()->GetTimerManager().IsTimerActive(SpinUpTimerHandle))
+        {
+            Delay = GetWorld()->GetTimerManager().GetTimerRemaining(SpinUpTimerHandle);
+        }
+        else if (GetWorld()->GetTimerManager().GetTimerElapsed(SpinDownTimerHandle) > 0.20f)
+        {
+            Delay = TIMEUNTILFIRE_NEVER;
         }
     }
     else if (BaseInterface)
@@ -121,7 +118,7 @@ void UUR_FireModeBasic::ServerFire_Implementation(const FSimulatedShotInfo& Simu
         Delay = GetTimeUntilIdle();
     }
 
-    if (Delay > 0.f)
+    if (Delay > 0.001f)
     {
         UE_LOG(LogWeapon, Log, TEXT("ServerFire Delay = %f"), Delay);
 

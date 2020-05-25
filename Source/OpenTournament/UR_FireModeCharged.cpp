@@ -182,6 +182,7 @@ void UUR_FireModeCharged::ServerStartCharge_Implementation()
             return;
         }
     }
+    GetWorld()->GetTimerManager().ClearTimer(DelayedFireTimerHandle);
 
     StartCharge();
 }

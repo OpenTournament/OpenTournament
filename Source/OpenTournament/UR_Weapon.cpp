@@ -208,6 +208,11 @@ void AUR_Weapon::DetachMeshFromPawn()
     bIsAttached = false;
 }
 
+USkeletalMeshComponent* AUR_Weapon::GetVisibleMesh() const
+{
+    return UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner) ? Mesh1P : Mesh3P;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 //============================================================
@@ -590,13 +595,92 @@ void AUR_Weapon::GetFireVector(FVector& FireLoc, FRotator& FireRot)
         // Either access camera directly, or override GetActorEyesViewPoint.
         FVector CameraLoc = URCharOwner->CharacterCameraComponent->GetComponentLocation();
         FireLoc = CameraLoc;
-        //FireRot = URCharOwner->GetViewRotation();
         FireRot = URCharOwner->GetBaseAimRotation();
-        //UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("%f , %f , %f"), FireRot.Yaw, FireRot.Pitch, FireRot.Roll));
     }
     else
     {
         GetActorEyesViewPoint(FireLoc, FireRot);
+    }
+}
+
+void AUR_Weapon::OffsetFireLoc(FVector& FireLoc, const FRotator& FireRot, FName OffsetSocketName)
+{
+    // Offset by socket if there is one
+    if (OffsetSocketName != NAME_None)
+    {
+        FVector MuzzleLoc = Mesh1P->GetSocketLocation(OffsetSocketName);
+        FVector MuzzleOffset = MuzzleLoc - FireLoc;
+        if (!MuzzleOffset.IsNearlyZero())
+        {
+            FVector OriginalFireLoc = FireLoc;
+
+            // Offset forward but stay centered
+            FireLoc += MuzzleOffset.Size() * FireRot.Vector();
+
+            // Avoid spawning projectile within/behind geometry because of the offset.
+            FCollisionQueryParams TraceParams(FCollisionQueryParams::DefaultQueryParam);
+            TraceParams.AddIgnoredActor(this);
+            TraceParams.AddIgnoredActor(URCharOwner);
+            FHitResult Hit;
+            if (GetWorld()->LineTraceSingleByChannel(Hit, OriginalFireLoc, FireLoc, ECollisionChannel::ECC_Visibility, TraceParams))
+            {
+                FireLoc = Hit.Location;
+            }
+        }
+    }
+}
+
+void AUR_Weapon::GetValidatedFireVector(const FSimulatedShotInfo& SimulatedInfo, FVector& FireLoc, FRotator& FireRot, FName OffsetSocketName)
+{
+    // Authority location & rotation
+    GetFireVector(FireLoc, FireRot);
+
+    //NOTE: We assume convention that FireLoc and FireDir are always the first two vectors of SimulatedInfo.
+
+    if (SimulatedInfo.Vectors.Num() >= 2)
+    {
+        // Client rotation is always accepted
+        FireRot = SimulatedInfo.Vectors[1].Rotation();
+    }
+
+    // Shortcut for standalone
+    if (GetNetMode() == NM_Standalone)
+    {
+        if (SimulatedInfo.Vectors.Num() >= 1)
+        {
+            FireLoc = SimulatedInfo.Vectors[0];
+        }
+        return;
+    }
+
+    // Offset authority loc
+    if (OffsetSocketName != NAME_None)
+    {
+        OffsetFireLoc(FireLoc, FireRot, OffsetSocketName);
+    }
+
+    // Validate client fire location
+    if (SimulatedInfo.Vectors.Num() >= 1)
+    {
+        FVector ClientLoc = SimulatedInfo.Vectors[0];
+
+        if ((ClientLoc - FireLoc).SizeSquared() < 400.f)
+        {
+            // Acceptable position error
+            // Need one more trace to confirm, or cheater could fire thru thin walls... :(
+            FCollisionQueryParams TraceParams(FCollisionQueryParams::DefaultQueryParam);
+            TraceParams.AddIgnoredActor(this);
+            TraceParams.AddIgnoredActor(URCharOwner);
+            FHitResult Hit;
+            if (GetWorld()->LineTraceSingleByChannel(Hit, FireLoc, ClientLoc, ECollisionChannel::ECC_Visibility, TraceParams))
+            {
+                FireLoc = Hit.Location;
+            }
+            else
+            {
+                FireLoc = ClientLoc;    // Accept
+            }
+        }
     }
 }
 
@@ -606,10 +690,10 @@ FVector AUR_Weapon::SeededRandCone(const FVector& Dir, float ConeHalfAngleDeg, i
     if (!Dir2.IsZero() && ConeHalfAngleDeg > 0.f && ConeHalfAngleDeg < 90.f)
     {
         // Find a normal vector to use as our opposite side of the triangle
-        FVector OppositeVector = FVector(-Dir.Y, Dir.X, 0.f).GetSafeNormal();
+        FVector OppositeVector = FVector(-Dir2.Y, Dir2.X, 0.f).GetSafeNormal();
         if (OppositeVector.IsZero())
         {
-            OppositeVector = FVector(0.f, -Dir.Z, Dir.Y).GetSafeNormal();
+            OppositeVector = FVector(0.f, -Dir2.Z, Dir2.Y).GetSafeNormal();
         }
 
         // Max opposite side size is dictated by supplied max angle
@@ -814,30 +898,7 @@ void AUR_Weapon::SimulateShot_Implementation(UUR_FireModeBasic* FireMode, FSimul
     FVector FireLoc;
     FRotator FireRot;
     GetFireVector(FireLoc, FireRot);
-
-    if (FireMode->ProjectileClass)
-    {
-        FVector MuzzleLoc = Mesh1P->GetSocketLocation(FireMode->MuzzleSocketName);
-        FVector MuzzleOffset = MuzzleLoc - FireLoc;
-        if (!MuzzleOffset.IsNearlyZero())
-        {
-            FVector OriginalFireLoc = FireLoc;
-
-            // Offset projectile forward but stay centered
-            FireLoc += FireRot.Vector() * MuzzleOffset.Size();
-
-            // Avoid spawning projectile within/behind geometry because of the offset.
-            FCollisionQueryParams TraceParams(FCollisionQueryParams::DefaultQueryParam);
-            TraceParams.AddIgnoredActor(this);
-            TraceParams.AddIgnoredActor(URCharOwner);
-            FHitResult Hit;
-            if (GetWorld()->LineTraceSingleByChannel(Hit, OriginalFireLoc, FireLoc, ECollisionChannel::ECC_Visibility, TraceParams))
-            {
-                FireLoc = Hit.Location;
-            }
-        }
-    }
-
+    OffsetFireLoc(FireLoc, FireRot, FireMode->MuzzleSocketName);
     OutSimulatedInfo.Vectors.EmplaceAt(0, FireLoc);
     OutSimulatedInfo.Vectors.EmplaceAt(1, FireRot.Vector());
 }
@@ -881,20 +942,18 @@ void AUR_Weapon::AuthorityShot_Implementation(UUR_FireModeBasic* FireMode, const
 {
     if (FireMode->ProjectileClass)
     {
-        //TODO: validate passed in fire location - use server location if bad - needs a basic rewinding implementation to check
-        FVector FireLoc = SimulatedInfo.Vectors[0];
-
-        // Fire direction doesn't need validation
-        FVector FireDir = SimulatedInfo.Vectors[1];
+        FVector FireLoc;
+        FRotator FireRot;
+        GetValidatedFireVector(SimulatedInfo, FireLoc, FireRot, FireMode->MuzzleSocketName);
 
         // Add spread (if we do implement client-side projectiles, we'll need to replicate a Seed)
         // OR just replicate the altered FireRot? see note above
         if (FireMode->Spread > 0.f)
         {
-            FireDir = FMath::VRandCone(FireDir, FMath::DegreesToRadians(FireMode->Spread));
+            FireRot = FMath::VRandCone(FireRot.Vector(), FMath::DegreesToRadians(FireMode->Spread)).Rotation();
         }
 
-        SpawnProjectile(FireMode->ProjectileClass, FireLoc, FireDir.Rotation());
+        SpawnProjectile(FireMode->ProjectileClass, FireLoc, FireRot);
 
         // Charged mode consumes ammo while charging, not when releasing shot
         if (!Cast<UUR_FireModeCharged>(FireMode))
@@ -906,18 +965,16 @@ void AUR_Weapon::AuthorityShot_Implementation(UUR_FireModeBasic* FireMode, const
 
 void AUR_Weapon::AuthorityHitscanShot_Implementation(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo, FHitscanVisualInfo& OutHitscanInfo)
 {
-    //TODO: validate passed in start location
-    FVector TraceStart = SimulatedInfo.Vectors[0];
-
-    FVector FireDir = SimulatedInfo.Vectors[1];
-    FireDir.Normalize();
+    FVector TraceStart;
+    FRotator FireRot;
+    GetValidatedFireVector(SimulatedInfo, TraceStart, FireRot);
 
     if (FireMode->Spread > 0.f)
     {
-        FireDir = SeededRandCone(FireDir, FireMode->Spread, SimulatedInfo.Seed);
+        FireRot = SeededRandCone(FireRot.Vector(), FireMode->Spread, SimulatedInfo.Seed).Rotation();
     }
 
-    FVector TraceEnd = TraceStart + FireMode->HitscanTraceDistance * FireDir;
+    FVector TraceEnd = TraceStart + FireMode->HitscanTraceDistance * FireRot.Vector();
 
     FHitResult Hit;
     HitscanTrace(TraceStart, TraceEnd, Hit);
@@ -926,7 +983,7 @@ void AUR_Weapon::AuthorityHitscanShot_Implementation(UUR_FireModeBasic* FireMode
     {
         float Damage = FireMode->HitscanDamage;
         auto DamType = FireMode->HitscanDamageType;
-        UGameplayStatics::ApplyPointDamage(Hit.GetActor(), Damage, FireDir, Hit, GetInstigatorController(), this, DamType);
+        UGameplayStatics::ApplyPointDamage(Hit.GetActor(), Damage, FireRot.Vector(), Hit, GetInstigatorController(), this, DamType);
     }
 
     OutHitscanInfo.Vectors.EmplaceAt(0, Hit.Location);
@@ -961,16 +1018,7 @@ void AUR_Weapon::PlayFireEffects_Implementation(UUR_FireModeBasic* FireMode)
 
 void AUR_Weapon::PlayHitscanEffects_Implementation(UUR_FireModeBasic* FireMode, const FHitscanVisualInfo& HitscanInfo)
 {
-    FVector BeamStart;
-    if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
-    {
-        BeamStart = Mesh1P->GetSocketLocation(FireMode->MuzzleSocketName);
-    }
-    else
-    {
-        BeamStart = Mesh3P->GetSocketLocation(FireMode->MuzzleSocketName);
-    }
-
+    const FVector& BeamStart = GetVisibleMesh()->GetSocketLocation(FireMode->MuzzleSocketName);
     const FVector& BeamEnd = HitscanInfo.Vectors[0];
     FVector BeamVector = BeamEnd - BeamStart;
 
@@ -1107,20 +1155,10 @@ void AUR_Weapon::AuthorityStopContinuousFire_Implementation(UUR_FireModeContinuo
 
 void AUR_Weapon::StartContinuousEffects_Implementation(UUR_FireModeContinuous* FireMode)
 {
-    USceneComponent* AttachComponent;
-    if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
-    {
-        AttachComponent = Mesh1P;
-    }
-    else
-    {
-        AttachComponent = Mesh3P;
-    }
-
     if (!FireMode->BeamComponent || FireMode->BeamComponent->IsBeingDestroyed())
     {
         //UKismetSystemLibrary::PrintString(this, TEXT("NEW PARTICLE"));
-        FireMode->BeamComponent = UUR_FunctionLibrary::SpawnEffectAttached(FireMode->BeamTemplate, FTransform(), AttachComponent, FireMode->MuzzleSocketName, EAttachLocation::SnapToTargetIncludingScale);
+        FireMode->BeamComponent = UUR_FunctionLibrary::SpawnEffectAttached(FireMode->BeamTemplate, FTransform(), GetVisibleMesh(), FireMode->MuzzleSocketName, EAttachLocation::SnapToTargetIncludingScale);
     }
     if (FireMode->BeamComponent)
     {
@@ -1130,7 +1168,7 @@ void AUR_Weapon::StartContinuousEffects_Implementation(UUR_FireModeContinuous* F
     if (!FireMode->FireLoopAudioComponent || FireMode->FireLoopAudioComponent->IsBeingDestroyed())
     {
         //UKismetSystemLibrary::PrintString(this, TEXT("NEW SOUND"));
-        FireMode->FireLoopAudioComponent = UGameplayStatics::SpawnSoundAttached(FireMode->FireLoopSound, AttachComponent, FireMode->MuzzleSocketName, FVector(0), EAttachLocation::SnapToTarget, true);
+        FireMode->FireLoopAudioComponent = UGameplayStatics::SpawnSoundAttached(FireMode->FireLoopSound, GetVisibleMesh(), FireMode->MuzzleSocketName, FVector(0), EAttachLocation::SnapToTarget, true);
     }
     if (FireMode->FireLoopAudioComponent)
     {
