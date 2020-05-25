@@ -1,16 +1,33 @@
-# OpenTournament
+# Open Tournament
 
-The Open Tournament project is a community-led effort to develop a game that will recreate and expand upon the formula of Unreal Tournament, Quake, and other classic FPS gameplay.
+## Overview
 
-* We are working towards a public build release with a more representative sample of features and content
-* We are also working on both an internal and external roadmap!
+The **Open Tournament Project** is a community-led effort to develop a new game that will recreate and expand upon the formula of Unreal Tournament, Quake, and other classic FPS games.
+
+## Legal
+
+* Code is (c) 2019-2020 Open Tournament Team. Usage is subject to our license.
+* Other content may fall under different licenses and is used with permission only for Open Tournament.
 * This is a public repository with access available for contributors to Open Tournament.
-* Code is (c) 2019-2020 Open Tournament Team. Usage of code is subject to our license.
-* Please do not share code or content without discussing with other project members.
-* Official webpage : [www.opentournamentgame.com](https://www.opentournamentgame.com)
+* Please do not share or redistribute in any form without approval from project leadership.
+
+## Getting Started
+
+The **Open Tournament Project** is an experiment in open game development. The project is run by volunteer efforts from veteran and amateur developers. Our process is itself a work in progress, so bear with us as we find out how to best onboard and collaborate effectively.
+
+* [Register as a Developer](https://forms.gle/s7qcsKLuVVm1WzgB7). This helps us keep track of developer interest, skillset, and contact information
+* Follow the [Setting Up Open Tournament Guide](# Setting Up Open Tournament)
+* Join [Discord](https://discord.gg/Rw8evNT) for real-time communication and collaboration.
+* Check [Trello](https://trello.com/b/RviM3J39/open-tournament-public-taskboard) and our [Issues](https://github.com/OpenTournament/OpenTournament/issues)
+
+## Additional Links
+
+* Official Website: [www.opentournamentgame.com](https://www.opentournamentgame.com)
 * Additional discussion can be found on www.reddit.com/r/OpenTournament
 
-# Setting Up OpenTournament
+_______________________________________________________________________________________
+
+# Setting Up Open Tournament
 
 ## What You Need to Get Started
 
