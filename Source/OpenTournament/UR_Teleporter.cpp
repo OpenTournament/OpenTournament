@@ -4,19 +4,24 @@
 
 #include "UR_Teleporter.h"
 
+#if WITH_EDITORONLY_DATA
 #include "Components/ArrowComponent.h"
+#endif
+
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Controller.h"
 #include "Kismet/GameplayStatics.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
 
 #include "OpenTournament.h"
 #include "UR_Character.h"
 #include "UR_CharacterMovementComponent.h"
+#include "EnvironmentQuery/EnvQueryTypes.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
@@ -29,27 +34,39 @@ AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
     DestinationActor(nullptr),
     ExitRotationType(EExitRotation::Relative),
     bKeepMomentum(true),
+    TeleportActorClass(ACharacter::StaticClass()),
     TeleportOutSound(nullptr),
     TeleportInSound(nullptr),
+    TeleporterEnabledSound(nullptr),
+    TeleporterDisabledSound(nullptr),
+    TeleportOutParticleSystemClass(nullptr),
+    TeleportInParticleSystemClass(nullptr),
+    TeleporterEnabledParticleSystemClass(nullptr),
+    TeleporterDisabledParticleSystemClass(nullptr),
+    bIsEnabled(true),
     bRequiredTagsExact(false),
-    bExcludedTagsExact(true)
+    bExcludedTagsExact(true),
+    TeleporterMaterialInstance(nullptr),
+    TeleporterMaterialIndex(INDEX_NONE),
+    TeleporterMaterialParameterName("Color"),
+    TeleporterMaterialColorBase(FLinearColor(208.f, 160.f, 0.f, 1.f)),
+    TeleporterMaterialColorEvent(FLinearColor(250.f, 250.f, 25.f, 1.f)),
+    TeleporterMaterialColorInactive(FLinearColor(128.f, 128.f, 160.f, 1.f))
 {
-    // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-    PrimaryActorTick.bCanEverTick = false;
-    PrimaryActorTick.bStartWithTickEnabled = false;
-
     CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
     CapsuleComponent->SetCapsuleSize(45.f, 90.f, false);
     SetRootComponent(CapsuleComponent);
     CapsuleComponent->SetGenerateOverlapEvents(true);
     CapsuleComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
     CapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+    CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Teleporter::OnTriggerEnter);
+    CapsuleComponent->OnComponentEndOverlap.AddDynamic(this, &AUR_Teleporter::OnTriggerExit);
 
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMeshComponent"));
     MeshComponent->SetupAttachment(RootComponent);
 
-#if WITH_EDITORONLY_DATA
+#if WITH_EDITOR
     ArrowComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowComponent"));
     ArrowComponent->SetupAttachment(CapsuleComponent);
 #endif
@@ -67,17 +84,45 @@ void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other,
 {
     // @! TODO(Pedro): we should store the "teleporting" state in the MovementComponent of the actor in order to query it here
     const bool bIsTeleporting = (bFromSweep == false);
-
     if (bIsTeleporting)
     {
         return;
     }
 
+    Teleport(Other);
+}
+
+void AUR_Teleporter::OnTriggerExit(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+    if (Other)
+    {
+        const auto ActorIndex = IgnoredActors.Find(Other);
+        if (ActorIndex != INDEX_NONE)
+        {
+            IgnoredActors.RemoveAt(ActorIndex);
+        }
+    }
+}
+
+void AUR_Teleporter::Teleport(AActor* Other)
+{
+    // If not Enabled, do nothing
+    if (!bIsEnabled)
+    {
+        return;
+    }
+
+    if (IsIgnoredActor(Other))
+    {
+        IgnoredActors.Remove(Other);
+        return;
+    }
+    
     if (IsPermittedToTeleport(Other))
     {
         GAME_LOG(Game, Verbose, "Teleporter (%s) Triggered", *GetName());
 
-        if (PerformTeleport(Other))
+        if (InternalTeleport(Other))
         {
             GAME_LOG(Game, Log, "Teleport of Character (%s) succeeded", *Other->GetName());
         }
@@ -90,20 +135,20 @@ void AUR_Teleporter::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other,
 
 bool AUR_Teleporter::IsPermittedToTeleport_Implementation(const AActor* TargetActor) const
 {
-    // @! TODO : Check to see if the component/actor overlapping here matches a LD-specifiable list of classes
-    // (e.g. if we want to teleport only characters, or if things such as projectiles, vehicles, etc. may also pass through).
-    // This function may also be overridden to determine conditions such as only characters of Red/Blue team may pass through
-    const AUR_Character* Character = Cast<AUR_Character>(TargetActor);
-    if (Character == nullptr)
+    if (!TargetActor->GetClass()->IsChildOf(TeleportActorClass))
     {
-        GAME_LOG(Game, Log, "Teleporter Error. Character was invalid.");
         return false;
     }
 
-    // Check if the actor being teleported has any Required or Excluded GameplayTags
-    FGameplayTagContainer TargetTags;
-    Character->GetOwnedGameplayTags(TargetTags);
-    return IsPermittedByGameplayTags(TargetTags);
+    if (const auto TagActor = Cast<IGameplayTagAssetInterface>(TargetActor))
+    {
+        // Check if the actor using the Teleporter has any Required or Excluded GameplayTags
+        FGameplayTagContainer TargetTags;
+        TagActor->GetOwnedGameplayTags(TargetTags);
+        return IsPermittedByGameplayTags(TargetTags);
+    }
+
+    return true;
 }
 
 bool AUR_Teleporter::IsPermittedByGameplayTags(const FGameplayTagContainer& TargetTags) const
@@ -118,7 +163,7 @@ bool AUR_Teleporter::IsPermittedByGameplayTags(const FGameplayTagContainer& Targ
     }
 }
 
-bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
+bool AUR_Teleporter::InternalTeleport(AActor* TargetActor)
 {
     if (TargetActor == nullptr || (DestinationActor == nullptr && DestinationTransform.GetLocation() == FVector::ZeroVector))
     {
@@ -136,7 +181,7 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
     {
         if (const AController* Controller = TargetCharacter->GetController())
         {
-            TargetActorRotation = TargetCharacter->GetController()->GetControlRotation();
+            TargetActorRotation = Controller->GetControlRotation();
         }
     }
     else
@@ -144,44 +189,52 @@ bool AUR_Teleporter::PerformTeleport(AActor* TargetActor)
         TargetActorRotation = TargetActor->GetActorRotation();
     }
 
-    // Play effects associated with teleportation
-    PlayTeleportEffects();
+    // Find out Desired Rotation
+    GetDesiredRotation(DesiredRotation, TargetActorRotation, DestinationRotation);
 
-    // Move Actor to Destination actor
-    if (TargetActor->SetActorLocation(DestinationLocation))
+    if (AUR_Teleporter* DestinationTeleporter = Cast<AUR_Teleporter>(DestinationActor))
     {
+        DestinationTeleporter->AddIgnoredActor(TargetActor);
+    }
+    
+    // Try to Perform Our Teleport
+    const bool bIsTeleportSuccessful{ TargetActor->TeleportTo(DestinationLocation, DestinationRotation) };
+    
+    if (bIsTeleportSuccessful)
+    {
+        // Play effects associated with teleportation
+        PlayTeleportEffects();
+        
         // If we successfully teleported, notify our actor.
         // We need to do this to update CharacterMovementComponent.bJustTeleported property
         // Which is used to update EyePosition
         // (Otherwise our EyePosition interpolates through the world)
         TargetActor->TeleportSucceeded(false);
+    
+        // Rotate velocity vector relative to the destination teleporter exit heading
+        SetTargetVelocity(TargetActor, TargetCharacter, DesiredRotation, DestinationRotation);
+
+        ApplyGameplayTag(TargetActor);
     }
 
-    // Find out Desired Rotation
-    GetDesiredRotation(DesiredRotation, TargetActorRotation, DestinationRotation);
-
-    // Set the Desired Rotation
-    SetTargetRotation(TargetActor, TargetCharacter, DesiredRotation);
-    
-    // Rotate velocity vector relative to the destination teleporter exit heading
-    SetTargetVelocity(TargetActor, TargetCharacter, DesiredRotation, DestinationRotation);
-
-    ApplyGameplayTag(TargetActor);
-
-    return true;
+    return bIsTeleportSuccessful;
 }
 
-void AUR_Teleporter::SetTargetRotation(AActor* TargetActor, ACharacter* TargetCharacter, const FRotator& DesiredRotation)
+void AUR_Teleporter::GetDesiredRotation(FRotator& DesiredRotation, const FRotator& TargetActorRotation, const FRotator& DestinationRotation) const
 {
-    // Rotate the TargetActor to face the Exit Direction vector
-    if (TargetCharacter)
+    if (ExitRotationType == EExitRotation::Relative)
     {
-        TargetCharacter->GetController()->SetControlRotation(DesiredRotation);
+        DesiredRotation = DestinationRotation + TargetActorRotation - this->GetActorRotation();
+        DesiredRotation.Yaw += 180;
     }
     else
     {
-        TargetActor->SetActorRotation(DesiredRotation);
+        DesiredRotation = DestinationRotation;
     }
+
+    DesiredRotation.Yaw = FMath::UnwindDegrees(DesiredRotation.Yaw);
+    DesiredRotation.Pitch = 0.0f;
+    DesiredRotation.Roll = 0.0f;
 }
 
 void AUR_Teleporter::SetTargetVelocity(AActor* TargetActor, ACharacter* TargetCharacter, const FRotator& DesiredRotation, const FRotator& DestinationRotation)
@@ -237,16 +290,6 @@ void AUR_Teleporter::SetTargetVelocity(AActor* TargetActor, ACharacter* TargetCh
     }
 }
 
-void AUR_Teleporter::ApplyGameplayTag(AActor* TargetActor)
-{
-    FGameplayTagContainer TargetTags;
-    if (const auto TagActor = Cast<IGameplayTagAssetInterface>(TargetActor))
-    {
-        TagActor->GetOwnedGameplayTags(TargetTags);
-        TargetTags.AddTag(TeleportTag);
-    }
-}
-
 void AUR_Teleporter::PlayTeleportEffects_Implementation()
 {
     if (TeleportOutSound)
@@ -271,21 +314,129 @@ void AUR_Teleporter::PlayTeleportEffects_Implementation()
     }
 }
 
-void AUR_Teleporter::GetDesiredRotation(FRotator& DesiredRotation, const FRotator& TargetActorRotation, const FRotator& DestinationRotation)
+void AUR_Teleporter::ApplyGameplayTag(AActor* TargetActor)
 {
-    if (ExitRotationType == EExitRotation::Relative)
+    FGameplayTagContainer TargetTags;
+    if (const auto TagActor = Cast<IGameplayTagAssetInterface>(TargetActor))
     {
-        DesiredRotation = DestinationRotation + TargetActorRotation - this->GetActorRotation();
-        DesiredRotation.Yaw += 180;
+        TagActor->GetOwnedGameplayTags(TargetTags);
+        TargetTags.AddTag(TeleportTag);
+    }
+}
+
+bool AUR_Teleporter::IsIgnoredActor(AActor* InActor) const
+{
+    return IgnoredActors.Find(InActor) != INDEX_NONE;
+}
+
+void AUR_Teleporter::AddIgnoredActor(AActor* InActor)
+{
+    IgnoredActors.AddUnique(InActor);
+}
+
+void AUR_Teleporter::SetTeleporterState(const bool bInEnabled)
+{
+    bInEnabled ? Enable() : Disable();
+}
+
+void AUR_Teleporter::Enable()
+{
+    CapsuleComponent->UpdateOverlaps();    
+    bIsEnabled = true;
+    
+    TArray<AActor*> OverlappingActors;
+    CapsuleComponent->GetOverlappingActors(OverlappingActors, TeleportActorClass);
+    for (auto& OverlappingActor : OverlappingActors)
+    {
+        GAME_LOG(Game, Log, "Overlapping Actor (%s)", *OverlappingActor->GetName());
+        Teleport(OverlappingActor);
+    }
+
+    if (TeleporterEnabledSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleporterEnabledSound, GetActorLocation());
+    }
+
+    if (TeleporterEnabledParticleSystemClass)
+    {
+        UGameplayStatics::SpawnEmitterAttached(TeleporterEnabledParticleSystemClass, RootComponent);
+    }
+    
+    OnEnabled();
+}
+
+void AUR_Teleporter::OnEnabled_Implementation()
+{
+    AudioComponent->Play();
+    ParticleSystemComponent->Activate();
+
+    if (TeleporterMaterialInstance)
+    {
+        TeleporterMaterialInstance->SetVectorParameterValue(TeleporterMaterialParameterName, TeleporterMaterialColorInactive);
+    }
+}
+
+void AUR_Teleporter::Disable()
+{
+    bIsEnabled = false;
+    
+    if (TeleporterDisabledSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleporterDisabledSound, GetActorLocation());
+    }
+
+    if (TeleporterEnabledParticleSystemClass)
+    {
+        UGameplayStatics::SpawnEmitterAttached(TeleporterDisabledParticleSystemClass, RootComponent);
+    }
+    
+    OnDisabled();
+}
+
+void AUR_Teleporter::OnDisabled_Implementation()
+{
+    AudioComponent->Stop();
+    ParticleSystemComponent->Deactivate();
+
+    if (TeleporterMaterialInstance)
+    {
+        TeleporterMaterialInstance->SetVectorParameterValue(TeleporterMaterialParameterName, TeleporterMaterialColorBase);
+    }
+}
+
+void AUR_Teleporter::SetTeleportDestination(const FTransform& InTransform)
+{
+    // If this function is called, we want to ensure that we teleport to the new Transform
+    DestinationActor = nullptr;
+
+    DestinationTransform = InTransform;
+}
+
+void AUR_Teleporter::SetTeleportDestinationActor(AActor* InActor)
+{
+    if (InActor)
+    {
+        DestinationActor = InActor;
     }
     else
     {
-        DesiredRotation = DestinationRotation;
+        GAME_LOG(Game, Warning, "Setting Teleporter (%s) DestinationActor to nullptr Actor!", *this->GetName());
     }
+}
 
-    DesiredRotation.Yaw = FMath::UnwindDegrees(DesiredRotation.Yaw);
-    DesiredRotation.Pitch = 0.0f;
-    DesiredRotation.Roll = 0.0f;
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_Teleporter::InitializeDynamicMaterialInstance()
+{
+    if (MeshComponent && TeleporterMaterialIndex != INDEX_NONE)
+    {
+        if (UMaterialInterface* Material = MeshComponent->GetMaterial(TeleporterMaterialIndex))
+        {
+            TeleporterMaterialInstance =  UMaterialInstanceDynamic::Create(Material, nullptr);
+            TeleporterMaterialInstance->SetVectorParameterValue(TeleporterMaterialParameterName, TeleporterMaterialColorBase);
+            MeshComponent->SetMaterial(TeleporterMaterialIndex, TeleporterMaterialInstance);
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
