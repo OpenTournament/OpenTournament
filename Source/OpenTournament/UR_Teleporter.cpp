@@ -4,7 +4,7 @@
 
 #include "UR_Teleporter.h"
 
-#if WITH_EDITORONLY_DATA
+#if WITH_EDITOR
 #include "Components/ArrowComponent.h"
 #endif
 
@@ -21,7 +21,6 @@
 #include "OpenTournament.h"
 #include "UR_Character.h"
 #include "UR_CharacterMovementComponent.h"
-#include "EnvironmentQuery/EnvQueryTypes.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
