@@ -4,10 +4,7 @@
 
 #include "UR_Teleporter.h"
 
-#if WITH_EDITOR
 #include "Components/ArrowComponent.h"
-#endif
-
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -65,10 +62,8 @@ AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMeshComponent"));
     MeshComponent->SetupAttachment(RootComponent);
 
-#if WITH_EDITOR
     ArrowComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowComponent"));
     ArrowComponent->SetupAttachment(CapsuleComponent);
-#endif
 
     AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
     AudioComponent->SetupAttachment(CapsuleComponent);

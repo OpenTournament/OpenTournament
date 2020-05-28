@@ -74,13 +74,11 @@ private:
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
     UParticleSystemComponent* ParticleSystemComponent;
 
-#if WITH_EDITOR
     /*
     * Arrow Component
     */
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
     UArrowComponent* ArrowComponent;
-#endif
     
     /////////////////////////////////////////////////////////////////////////////////////////////////
 public:
