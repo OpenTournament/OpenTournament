@@ -104,7 +104,7 @@ public:
     virtual void BlockNextCharge(float MaxHoldTime);
 
     // Override to avoid calling StopFire() which would release the charge.
-    virtual void SetRequestIdle(bool bNewRequestIdle) override
+    virtual void SetRequestIdle_Implementation(bool bNewRequestIdle)
     {
         bRequestedIdle = bNewRequestIdle;
     }

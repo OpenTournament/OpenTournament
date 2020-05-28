@@ -21,6 +21,8 @@ class UUR_AbilitySystemComponent;
 class UUR_AttributeSet;
 class UUR_GameplayAbility;
 class UUR_InventoryComponent;
+class APlayerController;
+class IUR_ActivatableInterface;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -121,6 +123,9 @@ public:
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual void CalcCamera(float DeltaTime, struct FMinimalViewInfo& OutResult) override;
 
+    virtual void BecomeViewTarget(APlayerController* PC) override;
+    virtual void EndViewTarget(APlayerController* PC) override;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Camera Management
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -154,6 +159,20 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic)
     void CameraViewChanged();
+
+    /**
+    * Register a new zoom interface, that will be automatically activated / deactivated,
+    * according to this character current view mode (1P, 3P, spectated, etc.)
+    */
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic)
+    virtual void RegisterZoomInterface(TScriptInterface<IUR_ActivatableInterface> NewZoomInterface);
+
+    UPROPERTY()
+    TScriptInterface<IUR_ActivatableInterface> CurrentZoomInterface;
+
+    /** Temporary - probably needs to sit in PlayerController */
+    UFUNCTION(Exec)
+    virtual void BehindView(int32 Switch = -1);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Input (Keypress to Weapon, Movement/Dodge)

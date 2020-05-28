@@ -156,12 +156,14 @@ public:
 
 protected:
 
+    /*
     virtual void BeginPlay() override
     {
         Super::BeginPlay();
         //bStartWithTickEnabled=false doesn't work...
         SetComponentTickEnabled(false);
     }
+    */
 
     virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 

@@ -20,6 +20,7 @@ class UFXSystemComponent;
 class UAnimInstance;
 class UAnimMontage;
 class UActorComponent;
+class AUR_PlayerController;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -152,7 +153,7 @@ public:
     * Should be avoided on dedicated server code as the result would be random.
     */
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game", Meta = (WorldContext = "WorldContextObject", UnsafeDuringActorConstruction = "true"))
-    static class AUR_PlayerController* GetLocalPlayerController(const UObject* WorldContextObject);
+    static AUR_PlayerController* GetLocalPlayerController(const UObject* WorldContextObject);
 
 
     /**

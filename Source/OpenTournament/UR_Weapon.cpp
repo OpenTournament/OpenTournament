@@ -235,14 +235,7 @@ void AUR_Weapon::SetWeaponState(EWeaponState NewState)
     {
 
     case EWeaponState::BringUp:
-        // On BringUp, read current desired fire mode from player
-        if (UUR_FunctionLibrary::IsLocallyControlled(this) && URCharOwner)
-        {
-            if (URCharOwner->DesiredFireModeNum.Num() > 0)
-            {
-                RequestStartFire(URCharOwner->DesiredFireModeNum[0]);
-            }
-        }
+        Activate();
         break;
 
     case EWeaponState::Idle:
@@ -253,15 +246,27 @@ void AUR_Weapon::SetWeaponState(EWeaponState NewState)
             GetWorld()->GetTimerManager().ClearTimer(PutDownDelayTimerHandle);
             RequestPutDown();
         }
-        else if (DesiredFireModes.Num() > 0)
+        else
         {
-            TryStartFire(DesiredFireModes[0]);
+            // Fire all independent modes in queue
+            for (int32 i = DesiredFireModes.Num() - 1; i >= 0; i--)
+            {
+                if (DesiredFireModes[i]->IsIndependentFireMode())
+                {
+                    TryStartFire(DesiredFireModes[i]);
+                }
+            }
+            // Fire topmost non-independent mode
+            if (DesiredFireModes.Num() > 0)
+            {
+                TryStartFire(DesiredFireModes[0]);
+            }
         }
         break;
 
     case EWeaponState::PutDown:
     case EWeaponState::Inactive:
-        StopAllFire();
+        Deactivate();
         break;
 
     }
@@ -358,27 +363,32 @@ void AUR_Weapon::PutDownCallback()
     }
 }
 
-void AUR_Weapon::StopAllFire()
+void AUR_Weapon::Activate()
+{
+    for (UUR_FireModeBase* FireMode : FireModes)
+    {
+        FireMode->Activate();
+    }
+
+    // Read desired fire modes from player
+    if (UUR_FunctionLibrary::IsLocallyControlled(this) && URCharOwner)
+    {
+        // (read in reverse order to rebuild stack in right order)
+        for (int32 i = URCharOwner->DesiredFireModeNum.Num() - 1; i >= 0; i--)
+        {
+            RequestStartFire(URCharOwner->DesiredFireModeNum[i]);
+        }
+    }
+}
+
+void AUR_Weapon::Deactivate()
 {
     DesiredFireModes.Empty();
 
-    // this should be enough
-    if (CurrentFireMode)
+    for (UUR_FireModeBase* FireMode : FireModes)
     {
-        CurrentFireMode->StopFire();
+        FireMode->Deactivate();
     }
-
-    /*
-    // Normally, only CurrentFireMode should be firing.
-    //NOTE: we might need this once FireModeZoom is done.
-    for (auto FireMode : FireModes)
-    {
-        if (FireMode && FireMode->IsBusy())
-        {
-            FireMode->StopFire();
-        }
-    }
-    */
 }
 
 void AUR_Weapon::OnRep_AmmoCount()
@@ -434,7 +444,16 @@ void AUR_Weapon::RequestStartFire(uint8 FireModeIndex)
         if (FireMode)
         {
             DesiredFireModes.Remove(FireMode);
-            DesiredFireModes.Insert(FireMode, 0);
+            if (FireMode->IsIndependentFireMode())
+            {
+                // Add independent modes at the bottom of the stack
+                DesiredFireModes.Add(FireMode);
+            }
+            else
+            {
+                // Insert standard modes at the top
+                DesiredFireModes.Insert(FireMode, 0);
+            }
             TryStartFire(FireMode);
         }
     }
@@ -559,6 +578,26 @@ void AUR_Weapon::RequestPutDown()
 
 void AUR_Weapon::TryStartFire(UUR_FireModeBase* FireMode)
 {
+    // Independent fire modes should not mess with weapon state
+    if (FireMode->IsIndependentFireMode())
+    {
+        if (WeaponState == EWeaponState::Idle || WeaponState == EWeaponState::Firing)
+        {
+            if (HasEnoughAmmoFor(FireMode))
+            {
+                FireMode->RequestStartFire();
+            }
+            else
+            {
+                UGameplayStatics::PlaySound2D(GetWorld(), OutOfAmmoSound);
+            }
+
+            // Don't stay as a desired mode
+            DesiredFireModes.Remove(FireMode);
+        }
+        return;
+    }
+
     // Allow calling RequestStartFire on the currently active firemode so we can spinup while spindown
     if (WeaponState == EWeaponState::Idle || (WeaponState == EWeaponState::Firing && CurrentFireMode == FireMode))
     {
@@ -571,7 +610,7 @@ void AUR_Weapon::TryStartFire(UUR_FireModeBase* FireMode)
             // Out of ammo
             UGameplayStatics::PlaySound2D(GetWorld(), OutOfAmmoSound);
 
-            // loop as long as user is holding fire
+            // Loop as long as user is holding fire
             FTimerDelegate TimerCallback;
             TimerCallback.BindLambda([this, FireMode]
             {

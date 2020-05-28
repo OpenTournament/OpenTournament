@@ -269,11 +269,17 @@ public:
     FTimerHandle PutDownDelayTimerHandle;
 
     /**
-    * Force stop fire on all firemodes.
+    * Activate all fire modes. Use on bring up.
+    */
+    UFUNCTION()
+    virtual void Activate();
+
+    /**
+    * Deactivate all fire modes.
     * Use when changing or dropping weapon, or when dying, to ensure no firing loop remains.
     */
     UFUNCTION()
-    void StopAllFire();
+    virtual void Deactivate();
 
     //============================================================
     // External API

@@ -116,4 +116,7 @@ void UUR_FireModeContinuous::TickComponent(float DeltaTime, enum ELevelTick Tick
     {
         IUR_FireModeContinuousInterface::Execute_UpdateContinuousEffects(ContinuousInterface.GetObject(), this, DeltaTime);
     }
+
+    // BP Tick
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }

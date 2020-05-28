@@ -20,7 +20,12 @@ class OPENTOURNAMENT_API UUR_FireModeBase : public UActorComponent
 public:
     UUR_FireModeBase()
     {
-        SetAutoActivate(true);
+        SetAutoActivate(false);
+        bWasActive = false;
+
+        PrimaryComponentTick.bStartWithTickEnabled = false;
+        bAutoActivateTick = false;
+
         SetIsReplicatedByDefault(true);
 
         Index = 0;
@@ -37,7 +42,7 @@ public:
     * The blueprint components tree does not support re-ordering of components.
     * This can be used to order firemodes in actors implementing multiples (eg. weapon).
     */
-    UPROPERTY(EditAnywhere, Category = "FireMode", Meta = (DisplayPriority = "1"))
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FireMode", Meta = (DisplayPriority = "1"))
     uint8 Index;
 
     /**
@@ -48,10 +53,10 @@ public:
     * Investigate.
     */
 
-    UPROPERTY(EditAnywhere, Category = "FireMode|SpinUp")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FireMode|SpinUp")
     float SpinUpTime;
 
-    UPROPERTY(EditAnywhere, Category = "FireMode|SpinUp")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FireMode|SpinUp")
     float SpinDownTime;
 
     /**
@@ -60,7 +65,7 @@ public:
     * At 1.0, the firemode can go idle as soon as StopFire is called, when spindown starts.
     * This impacts swapping firemodes, and weaponswap if CooldownDelaysPutdown > 0%.
     */
-    UPROPERTY(EditAnywhere, Category = "FireMode|SpinUp")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FireMode|SpinUp")
     float IdleAtSpinPercent;
 
 public:
@@ -86,16 +91,16 @@ public:
     * Minimum necessary ammo for weapon to allow firing this firemode at all.
     * If weapon ammo is below that value, it should click as out-of-ammo.
     */
-    UPROPERTY(EditAnywhere, Category = "Content")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Content")
     int32 InitialAmmoCost;
 
-    UPROPERTY(EditAnywhere, Category = "Content")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Content")
     float Spread;
 
-    UPROPERTY(EditAnywhere, Category = "Content")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Content")
     FName MuzzleSocketName;
 
-    UPROPERTY(EditAnywhere, Category = "Content")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Content")
     UFXSystemAsset* MuzzleFlashTemplate;
 
 public:
@@ -123,11 +128,23 @@ public:
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     void StopFire();
 
-    UFUNCTION(BlueprintCallable, BlueprintPure)
+    UFUNCTION(BlueprintPure)
     virtual bool IsBusy()
     {
         return bIsBusy;
     }
+
+    /**
+    * Return true if this mode should be activatable independently of other fire modes.
+    * Used for Zoom.
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintPure)
+    bool IsIndependentFireMode();
+    virtual bool IsIndependentFireMode_Implementation()
+    {
+        return false;
+    }
+
 
     /**
     * Calculate (best effort) the time until this firemode becomes idle.
@@ -135,7 +152,7 @@ public:
     * If mode is on cooldown, return the remaining cooldown time.
     * Takes into account spinup / IdleAtSpinPercent.
     */
-    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure)
+    UFUNCTION(BlueprintNativeEvent, BlueprintPure)
     float GetTimeUntilIdle();
 
     /**
@@ -144,7 +161,7 @@ public:
     * such as allowing weaponswitch at x% of the cooldown rather than waiting on the full cooldown.
     * Takes into account spinup / IdleAtSpinPercent.
     */
-    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure)
+    UFUNCTION(BlueprintNativeEvent, BlueprintPure)
     float GetCooldownStartTime();
 
     /**
@@ -154,8 +171,9 @@ public:
     * 2. Requesting a swap while charging a shot, should not release the shot (which calling StopFire would do).
     * 3. Requesting a swap requiring weapon to spindown, and user tries to click again to spinup again.
     */
-    UFUNCTION(BlueprintCallable)
-    virtual void SetRequestIdle(bool bNewRequestIdle)
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+    void SetRequestIdle(bool bNewRequestIdle);
+    virtual void SetRequestIdle_Implementation(bool bNewRequestIdle)
     {
         bRequestedIdle = bNewRequestIdle;   //prevent spinup
         StopFire(); //spindown
@@ -164,7 +182,7 @@ public:
     /**
     * Current spin percent (0.0 -> 1.0).
     */
-    UFUNCTION(BlueprintCallable, BlueprintPure)
+    UFUNCTION(BlueprintPure)
     virtual float GetCurrentSpinUpValue();
 
 protected:
@@ -175,7 +193,7 @@ protected:
     * True only on the machine that requested fire (RequestStartFire).
     * Not replicated.
     */
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly)
     bool bRequestedFire;
 
     UPROPERTY()
@@ -184,14 +202,14 @@ protected:
     UFUNCTION(BlueprintCallable)
     virtual void SetBusy(bool bNewBusy);
 
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly)
     bool bRequestedIdle;
 
     //============================================================
     // SpinUp
     //============================================================
 
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly)
     bool bFullySpinnedUp;
 
     UFUNCTION()
@@ -224,11 +242,27 @@ protected:
     UFUNCTION(Server, Reliable)
     void ServerSpinDown();
 
-    UPROPERTY(ReplicatedUsing = OnRep_IsSpinningUp)
+    UPROPERTY(ReplicatedUsing = OnRep_IsSpinningUp, BlueprintReadOnly)
     bool bIsSpinningUpRep;
 
     UFUNCTION()
     virtual void OnRep_IsSpinningUp();
+
+public:
+
+    // UActorComponent tweaks
+
+    /**
+    * Please avoid using StartWithTickEnabled, which enables tick even when the component starts deactivated.
+    * Use this to automatically enable tick only when component is activated.
+    */
+    UPROPERTY(EditAnywhere, Category = "ComponentTick")
+    bool bAutoActivateTick;
+
+    bool bWasActive;
+    virtual void Activate(bool bReset = false) override;
+    virtual void Deactivate() override;
+    virtual void OnRep_IsActive() override;
 
 };
 

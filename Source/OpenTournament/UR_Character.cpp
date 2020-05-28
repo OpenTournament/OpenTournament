@@ -22,6 +22,7 @@
 #include "UR_GameMode.h"
 #include "UR_Weapon.h"
 #include "UR_Projectile.h"
+#include "Interfaces/UR_ActivatableInterface.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -219,7 +220,65 @@ void AUR_Character::CameraViewChanged_Implementation()
     {
         InventoryComponent->ActiveWeapon->UpdateMeshVisibility();
     }
+
+    // If a zoom is active, toggle it according to 1P/3P
+    if (CurrentZoomInterface)
+    {
+        IUR_ActivatableInterface::Execute_AIF_SetActive(CurrentZoomInterface.GetObject(), !bViewingThirdPerson, false);
+    }
 }
+
+void AUR_Character::BecomeViewTarget(APlayerController* PC)
+{
+    Super::BecomeViewTarget(PC);
+
+    if (PC && PC->IsLocalController())
+    {
+        // Update all the things (character 1p/3p mesh, weapon 1p/3p mesh, zooming state)
+        bViewingThirdPerson = IsThirdPersonCamera(PickCamera());
+        CameraViewChanged();
+    }
+}
+
+void AUR_Character::EndViewTarget(APlayerController* PC)
+{
+    // If a zoom is active, deactivate it
+    if (CurrentZoomInterface)
+    {
+        IUR_ActivatableInterface::Execute_AIF_Deactivate(CurrentZoomInterface.GetObject(), false);
+    }
+
+    Super::EndViewTarget(PC);
+}
+
+void AUR_Character::RegisterZoomInterface(TScriptInterface<IUR_ActivatableInterface> NewZoomInterface)
+{
+    if (CurrentZoomInterface == NewZoomInterface)
+    {
+        return;
+    }
+
+    // Deactivate previous
+    if (CurrentZoomInterface)
+    {
+        IUR_ActivatableInterface::Execute_AIF_Deactivate(CurrentZoomInterface.GetObject(), false);
+    }
+
+    // Set new
+    CurrentZoomInterface = NewZoomInterface;
+
+    // Activate if currently viewed in 1P
+    if (CurrentZoomInterface && UUR_FunctionLibrary::IsViewingFirstPerson(this))
+    {
+        IUR_ActivatableInterface::Execute_AIF_Activate(CurrentZoomInterface.GetObject(), false);
+    }
+}
+
+void AUR_Character::BehindView(int32 Switch)
+{
+    CharacterCameraComponent->SetActive((Switch == -1) ? (!CharacterCameraComponent->IsActive()) : !Switch);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -694,7 +753,7 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
     // Force stop firing
     if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
-        InventoryComponent->ActiveWeapon->StopAllFire();
+        InventoryComponent->ActiveWeapon->Deactivate();
     }
     DesiredFireModeNum.Empty();
 

@@ -291,3 +291,42 @@ float UUR_FireModeBase::GetCooldownStartTime_Implementation()
     }
     return 0.f;
 }
+
+
+//============================================================
+// UActorComponent tweaks
+//============================================================
+
+void UUR_FireModeBase::Activate(bool bReset)
+{
+    if (bReset || ShouldActivate())
+    {
+        SetActiveFlag(true);
+        if (bAutoActivateTick || PrimaryComponentTick.bStartWithTickEnabled)
+        {
+            // Now tick only activates when it is configured to
+            SetComponentTickEnabled(true);
+        }
+        OnComponentActivated.Broadcast(this, bReset);
+    }
+    bWasActive = true;
+}
+
+void UUR_FireModeBase::Deactivate()
+{
+    StopFire();
+
+    Super::Deactivate();
+
+    bWasActive = false;
+}
+
+void UUR_FireModeBase::OnRep_IsActive()
+{
+    bool bNewActive = IsActive();
+    if (bNewActive != bWasActive)
+    {
+        SetActiveFlag(bWasActive);
+        SetActive(bNewActive);
+    }
+}
