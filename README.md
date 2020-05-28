@@ -16,7 +16,7 @@ The **Open Tournament Project** is a community-led effort to develop a new game 
 The **Open Tournament Project** is an experiment in open game development. The project is run by volunteer efforts from veteran and amateur developers. Our process is itself a work in progress, so bear with us as we find out how to best onboard and collaborate effectively.
 
 * [Register as a Developer](https://forms.gle/s7qcsKLuVVm1WzgB7). This helps us keep track of developer interest, skillset, and contact information
-* Follow the [Setting Up Open Tournament Guide](# Setting Up Open Tournament)
+* Follow the [Setting Up Open Tournament Guide](#setting-up-open-tournament)
 * Join [Discord](https://discord.gg/Rw8evNT) for real-time communication and collaboration.
 * Check [Trello](https://trello.com/b/RviM3J39/open-tournament-public-taskboard) and our [Issues](https://github.com/OpenTournament/OpenTournament/issues)
 
