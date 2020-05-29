@@ -34,7 +34,7 @@ ________________________________________________________________________________
 * [Epic Games Launcher](https://www.epicgames.com/store/download)
 * [Git Client](#git-client)
 * [Project Prerequisites](#project-prerequisites)
-* [Visual Studio](https://visualstudio.microsoft.com) 2017 or Later
+* [Visual Studio 2017 or Later](#visual-studio)
 
 ### Epic Games Launcher
 
@@ -58,7 +58,7 @@ This part of our pipeline is still being figured out. If you have trouble, pleas
 
 * Refer to the [Unreal Engine 4 Documentation](
 https://docs.unrealengine.com/en-US/Programming/Development/VisualStudioSetup/index.html) prior to setting up Visual Studio
-* Download and Install Visual Studio 2017 or 2019
+* Download and install [Visual Studio](https://visualstudio.microsoft.com) 2017 or 2019
 * Within your cloned Open Tournament repository, right click on the OpenTournament.uproject
 * Select "Generate Visual Studio project Files"
 * Open the OpenTournament.sln file in Visual Studio
