@@ -34,7 +34,7 @@ ________________________________________________________________________________
 * [Epic Games Launcher](https://www.epicgames.com/store/download)
 * [Git Client](#git-client)
 * [Project Prerequisites](#project-prerequisites)
-* [Visual Studio 2017 or Later](#visual-studio)
+* [Visual Studio 2017 or later](#visual-studio)
 
 ### Epic Games Launcher
 
