@@ -38,9 +38,9 @@ ________________________________________________________________________________
 
 ### Epic Games Launcher
 
-The Open Tournament project is built using 4.24 (or later) versions of Unreal Engine 4. Please ensure that you have the correct engine version installed.
+The Open Tournament project is built using 4.24 versions of Unreal Engine 4. Please ensure that you have the correct engine version installed.
 
-* The correct engine version can be determined by looking at the OpenTournament.uproject from within a text editor. Find the line which says "EngineAssociation" and note the numerical value associated with it.
+* The correct engine version can be determined by looking at the [OpenTournament.uproject](https://github.com/OpenTournament/OpenTournament/blob/develop/OpenTournament.uproject#L3) from within a text editor. Find the line which says "EngineAssociation" and note the numerical value associated with it.
 * The correct Unreal Engine version can be installed through the Epic Games Launcher. On the sidebar, select "Unreal Engine" then select the "Library" tab at the top. Select the "+" button next to Engine Versions and set it to the appropriate Engine version.
 
 ### Git Client
