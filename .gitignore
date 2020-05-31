@@ -82,3 +82,4 @@ Content/*
 
 #Exclude-from-Ignore Build Stuff
 !Build/Windows
+*.tga
