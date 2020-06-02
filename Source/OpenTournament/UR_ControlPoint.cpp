@@ -249,7 +249,7 @@ FGameplayTag AUR_ControlPoint::GetActorControlTag(const AActor* InActor) const
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if WITH_EDITOR
-bool AUR_ControlPoint::CanEditChange(const UProperty* InProperty) const
+bool AUR_ControlPoint::CanEditChange(const FProperty* InProperty) const
 {
     const bool ParentVal = Super::CanEditChange(InProperty);
 

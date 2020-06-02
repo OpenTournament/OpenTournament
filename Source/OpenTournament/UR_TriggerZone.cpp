@@ -154,7 +154,7 @@ bool AUR_TriggerZone::IsTriggerByGameplayTags(const FGameplayTagContainer& Targe
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if WITH_EDITOR
-bool AUR_TriggerZone::CanEditChange(const UProperty* InProperty) const
+bool AUR_TriggerZone::CanEditChange(const FProperty* InProperty) const
 {
     const bool ParentVal = Super::CanEditChange(InProperty);
 

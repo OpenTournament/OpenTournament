@@ -436,7 +436,7 @@ void AUR_Teleporter::InitializeDynamicMaterialInstance()
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if WITH_EDITOR
-bool AUR_Teleporter::CanEditChange(const UProperty* InProperty) const
+bool AUR_Teleporter::CanEditChange(const FProperty* InProperty) const
 {
     const bool ParentVal = Super::CanEditChange(InProperty);
 

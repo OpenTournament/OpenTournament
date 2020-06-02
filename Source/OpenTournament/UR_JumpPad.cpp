@@ -159,7 +159,7 @@ void AUR_JumpPad::InitializeDynamicMaterialInstance()
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if WITH_EDITOR
-bool AUR_JumpPad::CanEditChange(const UProperty* InProperty) const
+bool AUR_JumpPad::CanEditChange(const FProperty* InProperty) const
 {
     const bool ParentVal = Super::CanEditChange(InProperty);
 
