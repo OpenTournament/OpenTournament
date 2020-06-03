@@ -7,11 +7,9 @@ public class OpenTournamentTarget : TargetRules
 {
     public OpenTournamentTarget(TargetInfo Target) : base(Target)
     {
-        DefaultBuildSettings = BuildSettingsVersion.V2;
-        bEnforceIWYU = true;
-        ShadowVariableWarningLevel = WarningLevel.Error;
-
+        DefaultBuildSettings = BuildSettingsVersion.Latest;
         Type = TargetType.Game;
+        LinkType = TargetLinkType.Modular;
         ExtraModuleNames.Add("OpenTournament");
     }
 }
