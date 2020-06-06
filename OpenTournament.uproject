@@ -7,15 +7,7 @@
 		{
 			"Name": "OpenTournament",
 			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"Engine",
-				"EngineSettings",
-				"UMG",
-				"CoreUObject",
-				"MoviePlayer",
-				"GameplayAbilities"
-			]
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
@@ -65,6 +57,10 @@
 		},
 		{
 			"Name": "PreLoadScreenMoviePlayer",
+			"Enabled": true
+		},
+		{
+			"Name": "UMods",
 			"Enabled": true
 		}
 	]

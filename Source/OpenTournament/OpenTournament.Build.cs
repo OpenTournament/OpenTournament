@@ -16,6 +16,7 @@ public class OpenTournament : ModuleRules
                 "Core",
                 "CoreUObject",
                 "Engine",
+                "EngineSettings",
                 "InputCore",
                 "UMG",
                 "Slate",
@@ -23,6 +24,7 @@ public class OpenTournament : ModuleRules
                 "GameplayAbilities",
                 "GameplayTags",
                 "GameplayTasks",
+                "MoviePlayer",
                 "Niagara"
             }
         );
