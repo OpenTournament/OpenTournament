@@ -8,7 +8,7 @@ public class OpenTournamentTarget : TargetRules
     {
         DefaultBuildSettings = BuildSettingsVersion.Latest;
         Type = TargetType.Game;
-        LinkType = TargetLinkType.Modular;
+        //LinkType = TargetLinkType.Modular;
         ExtraModuleNames.Add("OpenTournament");
     }
 }
