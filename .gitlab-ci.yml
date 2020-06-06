@@ -3,8 +3,10 @@ variables:
   GIT_CHECKOUT: "false"     # as we only want to checkout and fetch in the preperation stage
 
 stages:
-  - preparation
-  - validation
+  - fetch
+  - generate
+  - source
+  - content
 
 # stages:
 #   - preperations
@@ -14,7 +16,7 @@ stages:
 #   - package
 
 fetch:
-  stage: preparation
+  stage: fetch
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
@@ -22,17 +24,17 @@ fetch:
     - call C:\BuildScripts\StartBuild.bat
 
 generate:
-  stage: preparation
+  stage: generate
   script:
     - call C:\BuildScripts\CompileScripts.bat
 
 source:
-  stage: validation
+  stage: source
   script:
     - call C:\BuildScripts\BuildFiles.bat
 
 content:
-  stage: validation
+  stage: content
   script: 
     - call C:\BuildScripts\CookProject.bat
 
