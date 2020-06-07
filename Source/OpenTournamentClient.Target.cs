@@ -2,12 +2,12 @@
 
 using UnrealBuildTool;
 
-public class OpenTournamentTarget : TargetRules
+public class OpenTournamentClientTarget : TargetRules
 {
-    public OpenTournamentTarget(TargetInfo Target) : base(Target)
+    public OpenTournamentClientTarget(TargetInfo Target) : base(Target)
     {
         DefaultBuildSettings = BuildSettingsVersion.Latest;
-        Type = TargetType.Game;
+        Type = TargetType.Client;
         LinkType = TargetLinkType.Modular;
         ExtraModuleNames.Add("OpenTournament");
     }
