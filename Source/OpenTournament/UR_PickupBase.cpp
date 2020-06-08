@@ -95,7 +95,10 @@ void AUR_PickupBase::BeginPlay()
         //TODO: configurable rotating pickups ?
         SetActorTickEnabled(RotatingComponent && (RotationRate != 0.0f || BobbingHeight != 0.0f));
 
-        InitialRelativeLocation = RotatingComponent->GetRelativeTransform().GetLocation();
+        if (RotatingComponent)
+        {
+            InitialRelativeLocation = RotatingComponent->GetRelativeTransform().GetLocation();
+        }
     }
 
     if (HasAuthority())
