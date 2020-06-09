@@ -46,6 +46,15 @@ Temporary Items
 Intermediate
 Saved
 
+# =========================
+# Rider
+# =========================
+
+.idea
+Plugins/Developer/RiderLink/
+
+# =========================
+
 #Basic Exclusions
 OpenTournament.VC.db
 Saved/
@@ -59,6 +68,8 @@ Source/LastSaved
 Config/DefaultEditorPerProjectUserSettings.ini
 
 # Ignore Source Files Installed from Asset Packs
+SourceFiles/InPlace
+SourceFiles/RootMotion
 SourceFiles/*
 Source/FBX
 Source/Maya

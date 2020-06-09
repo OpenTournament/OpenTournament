@@ -35,6 +35,6 @@ public:
     /**
     * Collision Component
     */
-    UPROPERTY(BlueprintReadOnly, Category = "Control Volume")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Control Volume")
     UBoxComponent* BoxComponent;
 };

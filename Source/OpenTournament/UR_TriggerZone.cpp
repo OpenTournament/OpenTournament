@@ -39,14 +39,19 @@ AUR_TriggerZone::AUR_TriggerZone(const FObjectInitializer& ObjectInitializer) :
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AUR_TriggerZone::BeginPlay()
+void AUR_TriggerZone::PostInitializeComponents()
 {
-    Super::BeginPlay();
+    Super::PostInitializeComponents();
+
+    if (!ShapeComponent)
+    {
+        ShapeComponent = FindComponentByClass<UShapeComponent>();
+    }
 
     if (ShapeComponent)
     {
-        ShapeComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_TriggerZone::OnZoneEnter);
-        ShapeComponent->OnComponentEndOverlap.AddDynamic(this, &AUR_TriggerZone::OnZoneExit);
+        ShapeComponent->OnComponentBeginOverlap.AddUniqueDynamic(this, &AUR_TriggerZone::OnZoneEnter);
+        ShapeComponent->OnComponentEndOverlap.AddUniqueDynamic(this, &AUR_TriggerZone::OnZoneExit);
     }
 }
 
@@ -122,7 +127,7 @@ void AUR_TriggerZone::ZoneExit(AActor* InActor)
 
 bool AUR_TriggerZone::IsTriggerActor_Implementation(const AActor* InActor) const
 {
-    if (auto TagActor = Cast<IGameplayTagAssetInterface>(InActor))
+    if (const auto TagActor = Cast<IGameplayTagAssetInterface>(InActor))
     {
         // Check if the Character has any Required or Excluded GameplayTags
         FGameplayTagContainer TargetTags;
@@ -149,7 +154,7 @@ bool AUR_TriggerZone::IsTriggerByGameplayTags(const FGameplayTagContainer& Targe
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if WITH_EDITOR
-bool AUR_TriggerZone::CanEditChange(const UProperty* InProperty) const
+bool AUR_TriggerZone::CanEditChange(const FProperty* InProperty) const
 {
     const bool ParentVal = Super::CanEditChange(InProperty);
 

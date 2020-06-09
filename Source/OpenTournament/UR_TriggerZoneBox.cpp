@@ -18,7 +18,8 @@ AUR_TriggerZoneBox::AUR_TriggerZoneBox(const FObjectInitializer& ObjectInitializ
     BoxComponent->SetBoxExtent(FVector{ 256.f, 256.f, 256.f });
 
     ShapeComponent = BoxComponent;
-    ShapeComponent->SetCollisionProfileName(TEXT("OverlapOnlyPawn")); //UCollisionProfile::OverlapPawnOnly_Name
+    ShapeComponent->SetCollisionProfileName(TEXT("OverlapOnlyPawn"));
+    SetRootComponent(ShapeComponent);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

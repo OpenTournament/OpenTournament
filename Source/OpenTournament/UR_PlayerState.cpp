@@ -44,8 +44,8 @@ void AUR_PlayerState::AddSuicide()
     Suicides++;
 }
 
-void AUR_PlayerState::AddScore(int32 Value)
+void AUR_PlayerState::AddScore(const int32 Value)
 {
-    Score += Value;
+    SetScore(GetScore() + Value);
     ForceNetUpdate();
 }

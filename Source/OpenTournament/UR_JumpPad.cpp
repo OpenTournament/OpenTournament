@@ -3,7 +3,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_JumpPad.h"
-#include "OpenTournament.h"
 
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -42,7 +41,7 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     PrimaryActorTick.bStartWithTickEnabled = false;
 
     SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
-    RootComponent = SceneRoot;
+    SetRootComponent(SceneRoot);
 
     CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
     CapsuleComponent->SetCapsuleSize(55.f, 55.f, false);
@@ -160,7 +159,7 @@ void AUR_JumpPad::InitializeDynamicMaterialInstance()
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if WITH_EDITOR
-bool AUR_JumpPad::CanEditChange(const UProperty* InProperty) const
+bool AUR_JumpPad::CanEditChange(const FProperty* InProperty) const
 {
     const bool ParentVal = Super::CanEditChange(InProperty);
 
@@ -220,3 +219,18 @@ void AUR_JumpPad::EditorApplyScale(const FVector& DeltaScale, const FVector* Piv
     }
 }
 #endif
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if WITH_DEV_AUTOMATION_TESTS
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOpenTournamentJumpPadTest, "OpenTournament.Feature.Levels.LevelFeatures.Actor", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+
+bool FOpenTournamentJumpPadTest::RunTest(const FString& Parameters)
+{
+    // TODO : Automated Tests
+
+    return true;
+}
+
+#endif WITH_DEV_AUTOMATION_TESTS

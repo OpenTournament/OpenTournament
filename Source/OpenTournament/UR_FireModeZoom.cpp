@@ -2,9 +2,9 @@
 
 #include "UR_FireModeZoom.h"
 
-#include "UnrealNetwork.h"
-#include "UserWidget.h"
-#include "WidgetBlueprintLibrary.h"
+#include "Net/UnrealNetwork.h"
+#include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Camera/CameraComponent.h"

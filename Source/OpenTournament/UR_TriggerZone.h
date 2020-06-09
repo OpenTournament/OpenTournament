@@ -60,9 +60,9 @@ public:
     //virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
     /**
-    * Override BeginPlay to Bind ShapeComponent Events
+    * Override PostInitializeComponents to Bind ShapeComponent Events
     */
-    virtual void BeginPlay() override;
+    virtual void PostInitializeComponents() override;
 
     /**
     * Check for Errors to find instances where this actor is configured incorrectly.
@@ -157,7 +157,7 @@ public:
     bool IsTriggerByGameplayTags(const FGameplayTagContainer& TargetTags) const;
 
     /**
-    * Actors of this ActorClass can Trigger
+    * Actors of this ActorClass can Trigger our Zone
     */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TriggerZone")
     TSubclassOf<AActor> TriggerActorClass;
@@ -171,7 +171,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Gameplay Tags
 
-    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
+    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; }
 
     /**
     * Gameplay Tags for this Actor
@@ -207,6 +207,6 @@ public:
     // Conditional Edit Properties
 
 #if WITH_EDITOR
-    virtual bool CanEditChange(const UProperty* InProperty) const override;
+    virtual bool CanEditChange(const FProperty* InProperty) const override;
 #endif
 };

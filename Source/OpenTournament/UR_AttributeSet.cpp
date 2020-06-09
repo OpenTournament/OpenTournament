@@ -106,57 +106,57 @@ void UUR_AttributeSet::AdjustAttributeForMaxChange(FGameplayAttributeData& Affec
     }
 }
 
-void UUR_AttributeSet::OnRep_Health()
+void UUR_AttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, Health);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, Health, OldHealth);
 }
 
-void UUR_AttributeSet::OnRep_HealthMax()
+void UUR_AttributeSet::OnRep_HealthMax(const FGameplayAttributeData& OldHealthMax)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, HealthMax);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, HealthMax, OldHealthMax);
 }
 
-void UUR_AttributeSet::OnRep_OverHealth()
+void UUR_AttributeSet::OnRep_OverHealth(const FGameplayAttributeData& OldOverHealth)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, OverHealth);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, OverHealth, OldOverHealth);
 }
 
-void UUR_AttributeSet::OnRep_OverHealthMax()
+void UUR_AttributeSet::OnRep_OverHealthMax(const FGameplayAttributeData& OldOverHealthMax)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, OverHealthMax);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, OverHealthMax, OldOverHealthMax);
 }
 
-void UUR_AttributeSet::OnRep_Energy()
+void UUR_AttributeSet::OnRep_Energy(const FGameplayAttributeData& OldEnergy)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, Energy);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, Energy, OldEnergy);
 }
 
-void UUR_AttributeSet::OnRep_EnergyMax()
+void UUR_AttributeSet::OnRep_EnergyMax(const FGameplayAttributeData& OldEnergyMax)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, EnergyMax);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, EnergyMax, OldEnergyMax);
 }
 
-void UUR_AttributeSet::OnRep_Armor()
+void UUR_AttributeSet::OnRep_Armor(const FGameplayAttributeData& OldArmor)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, Armor);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, Armor, OldArmor);
 }
 
-void UUR_AttributeSet::OnRep_ArmorMax()
+void UUR_AttributeSet::OnRep_ArmorMax(const FGameplayAttributeData& OldArmorMax)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, ArmorMax);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, ArmorMax, OldArmorMax);
 }
 
-void UUR_AttributeSet::OnRep_ArmorAbsorptionPercent()
+void UUR_AttributeSet::OnRep_ArmorAbsorptionPercent(const FGameplayAttributeData& OldArmorAbsorptionPercent)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, ArmorAbsorptionPercent);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, ArmorAbsorptionPercent, OldArmorAbsorptionPercent);
 }
 
-void UUR_AttributeSet::OnRep_Shield()
+void UUR_AttributeSet::OnRep_Shield(const FGameplayAttributeData& OldShield)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, Shield);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, Shield, OldShield);
 }
 
-void UUR_AttributeSet::OnRep_ShieldMax()
+void UUR_AttributeSet::OnRep_ShieldMax(const FGameplayAttributeData& OldShieldMax)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, ShieldMax);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, ShieldMax, OldShieldMax);
 }

@@ -52,7 +52,7 @@ void UUR_CheatManager::Cheat_AddScore(int32 InValue)
     {
         if (auto PS = Cast<AUR_PlayerState>(PC->PlayerState))
         {
-            PS->Score += InValue;
+            PS->SetScore(PS->GetScore() + InValue);
         }
     }
 }

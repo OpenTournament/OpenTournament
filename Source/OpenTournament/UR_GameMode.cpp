@@ -216,12 +216,12 @@ AActor* AUR_GameMode::IsThereAWinner_Implementation()
         bool bTie = false;
         for (APlayerState* PS : GS->PlayerArray)
         {
-            if (!BestPlayer || PS->Score > BestPlayer->Score)
+            if (!BestPlayer || PS->GetScore() > BestPlayer->GetScore())
             {
                 BestPlayer = PS;
                 bTie = false;
             }
-            else if (PS->Score == BestPlayer->Score)
+            else if (PS->GetScore() == BestPlayer->GetScore())
             {
                 bTie = true;
             }

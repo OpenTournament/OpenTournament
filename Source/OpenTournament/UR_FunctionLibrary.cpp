@@ -46,7 +46,7 @@ FColor UUR_FunctionLibrary::GetPlayerDisplayTextColor(const APlayerState* PS)
     {
         return FColorList::Green;
     }
-    else if (PS->bOnlySpectator)
+    else if (PS->IsOnlyASpectator())
     {
         return GetSpectatorDisplayTextColor();
     }

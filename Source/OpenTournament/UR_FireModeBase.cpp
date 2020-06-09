@@ -2,7 +2,7 @@
 
 #include "UR_FireModeBase.h"
 
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "UR_FunctionLibrary.h"

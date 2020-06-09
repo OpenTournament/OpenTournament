@@ -135,35 +135,35 @@ protected:
 
     // These OnRep functions exist to make sure that the ability system internal representations are synchronized properly during replication
     UFUNCTION()
-    virtual void OnRep_Health();
+    virtual void OnRep_Health(const FGameplayAttributeData& OldHealth);
 
     UFUNCTION()
-    virtual void OnRep_HealthMax();
+    virtual void OnRep_HealthMax(const FGameplayAttributeData& OldHealthMax);
 
     UFUNCTION()
-    virtual void OnRep_OverHealth();
+    virtual void OnRep_OverHealth(const FGameplayAttributeData& OldOverHealth);
 
     UFUNCTION()
-    virtual void OnRep_OverHealthMax();
+    virtual void OnRep_OverHealthMax(const FGameplayAttributeData& OldOverHealthMax);
 
     UFUNCTION()
-    virtual void OnRep_Energy();
+    virtual void OnRep_Energy(const FGameplayAttributeData& OldEnergy);
 
     UFUNCTION()
-    virtual void OnRep_EnergyMax();
+    virtual void OnRep_EnergyMax(const FGameplayAttributeData& OldEnergyMax);
 
     UFUNCTION()
-    virtual void OnRep_Armor();
+    virtual void OnRep_Armor(const FGameplayAttributeData& OldArmor);
 
     UFUNCTION()
-    virtual void OnRep_ArmorMax();
+    virtual void OnRep_ArmorMax(const FGameplayAttributeData& OldArmorMax);
 
     UFUNCTION()
-    virtual void OnRep_ArmorAbsorptionPercent();
+    virtual void OnRep_ArmorAbsorptionPercent(const FGameplayAttributeData& OldArmorAbsorptionPercent);
 
     UFUNCTION()
-    virtual void OnRep_Shield();
+    virtual void OnRep_Shield(const FGameplayAttributeData& OldShield);
 
     UFUNCTION()
-    virtual void OnRep_ShieldMax();
+    virtual void OnRep_ShieldMax(const FGameplayAttributeData& OldShieldMax);
 };
