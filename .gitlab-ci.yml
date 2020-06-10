@@ -27,7 +27,7 @@ fetch:
 
 generate:
   stage: assembly
-  needs: fetch
+  need: fetch
   script:
     - call C:\BuildScripts\CompileScripts.bat
 
