@@ -30,6 +30,8 @@ generate:
 
 source:
   stage: source
+  only:
+    - master
   script:
     - call "C:\UE\Engine\Binaries\DotNET\UnrealBuildTool.exe" OpenTournamentEditor Development Win64 -project="%CI_PROJECT_DIR%/OpenTournament.uproject" -rocket -progress -noubtmakefiles -NoHotReloadFromIDE
 
