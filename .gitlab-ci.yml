@@ -3,52 +3,58 @@ variables:
   GIT_CHECKOUT: "false"     # as we only want to checkout and fetch in the preperation stage
 
 stages:
-  - fetch
-  - generate
-  - source
-  - content
+  - assembly
+  - editor-development-win64
+  - client-development-win64
+  - client-development-linux
+  - client-shipping-win64
+  - client-shipping-linux
+  - server-development-win64
+  - server-development-linux
+  - server-shipping-win64
+  - server-shipping-linux
 
-# stages:
-#   - preperations
-#   - compile
-#   - build
-#   - cook
-#   - package
+# assembly
 
 fetch:
-  stage: fetch
-  variables:
-    GIT_STRATEGY: fetch
-    GIT_CHECKOUT: "true"
+  stage: assembly
   script:
     - call C:\BuildScripts\StartBuild.bat
 
 generate:
-  stage: generate
+  stage: assembly
   script:
     - call C:\BuildScripts\CompileScripts.bat
 
+# editor-development-win64
+
 source:
-  stage: source
+  stage: editor-development-win64
   only:
-    - develop
+    branch: [develop-vlad]
+    schedule: [cron * * * * *] 
   script:
     - call "C:\UE\Engine\Binaries\DotNET\UnrealBuildTool.exe" OpenTournamentEditor Development Win64 -project="%CI_PROJECT_DIR%/OpenTournament.uproject" -rocket -progress -noubtmakefiles -NoHotReloadFromIDE
 
 #content:
-#  stage: content
-#  script: 
-#    - call C:\BuildScripts\CookProject.bat
+#  stage: editor-development-win64
+#  only:
+#    branch: [develop-vlad]
+#    schedule: [cron * * * * *] 
+#  script:
 
-# package:
-#   stage: package
-#   only:
-#     - web                 # only archive when started through the web interface
-#     - schedules           # only archive when started at a specific schedule
-#   script:
-#     - echo "Adding build to the artifacts"
-#     - call C:\BuildScripts\Archive.bat
-#   artifacts:
-#     paths:
-#       - PROJECT_NAME.zip
-#     expire_in: 5 days
+# client-development-win64
+
+# client-development-linux
+
+# client-shipping-win64
+
+# client-shipping-linux
+
+# server-development-win64
+
+# server-development-linux
+
+# server-shipping-win64
+
+# server-shipping-linux
