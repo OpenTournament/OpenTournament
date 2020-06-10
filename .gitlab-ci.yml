@@ -22,12 +22,12 @@ stages:
 # assembly
 
 assembly_fetch:
-  stage: assembly
+  stage: assembly:fetch
   script:
     - call C:\BuildScripts\StartBuild.bat
 
 assembly_generate:
-  stage: assembly
+  stage: assembly:generate
   script:
     - call %UNREAL_BUILD_TOOL% %PROJECT_PATH% -ProjectFiles -Game -Progress
 
