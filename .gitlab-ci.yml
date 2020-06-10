@@ -41,7 +41,7 @@ debug_a:
   variables:
     ROOT_PROJECT: '%CI_PROJECT_DIR%'
   script:
-    - echo '%ROOT_PROJECT%'
+    - echo "%ROOT_PROJECT%""
 #    - echo PATH_AUTOMATION_TOOL - %PATH_AUTOMATION_TOOL%
 #    - echo PATH_UNREAL_BUILD_TOOL - %PATH_UNREAL_BUILD_TOOL%
 #    - echo PATH_UNREAL_EDITOR - %PATH_UNREAL_EDITOR%
