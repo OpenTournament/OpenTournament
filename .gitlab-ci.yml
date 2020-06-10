@@ -2,13 +2,14 @@ variables:
   # This is the name of your ".uproject" file.
   TITLE: 'OpenTournament'
   # These folders represent the setup of the machine which reads this automation file.
-  ROOT_TOOLS: 'C:\UE\Engine\Binaries'
+  ROOT_TOOLS: 'C:\UE\Engine'
   ROOT_PROJECT: '%CI_PROJECT_DIR%'
   # These paths are extensions of the root paths.
   PATH_AUTOMATION_TOOL: '%ROOT_TOOLS%\Build\BatchFiles\RunUAT.bat'
   PATH_UNREAL_BUILD_TOOL: '%ROOT_TOOLS%\Binaries\DotNET\UnrealBuildTool.exe'
   PATH_UNREAL_EDITOR: '%ROOT_TOOLS%\Binaries\Win64\UE4Editor-Cmd.exe'
-  PATH_PROJECT: '%ROOT_PROJECT%\%TITLE%.uproject'
+  #PATH_PROJECT: '%ROOT_PROJECT%\%TITLE%.uproject'
+  PATH_PROJECT: '%CI_PROJECT_DIR%\%TITLE%.uproject'
   # These parameters are overwritten by individual jobs.
   EXECUTABLE_TYPE: ''
   EXECUTABLE_CONFIGURATION: ''
