@@ -14,13 +14,14 @@ variables:
   EXECUTABLE_CONFIGURATION: ''
   EXECUTABLE_PLATFORM: ''
   # These commands represent the various phases of the packaging process.
-  COMMAND_BUILD: 'call %AUTOMATION_TOOL% BuildTarget -Project=%PATH_PROJECT% -Target=%TITLE% -NoTools'
-  COMMAND_COOK: 'call %AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Cook -SkipEditorContent -Compressed -Unversioned'
-  COMMAND_STAGE: 'call %AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Stage -SkipCook'
+  COMMAND_BUILD: '%AUTOMATION_TOOL% BuildTarget -Project=%PATH_PROJECT% -Target=%TITLE% -NoTools'
+  COMMAND_COOK: '%AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Cook -SkipEditorContent -Compressed -Unversioned'
+  COMMAND_STAGE: '%AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Stage -SkipCook'
 
 stages:
   - assembly
-  - editor-development-win64
+  - editor-development-win64-source
+  - editor-development-win64-content
   - client-development-win64
   - client-development-linux
   - client-shipping-win64
@@ -39,8 +40,8 @@ assembly:
 
 # editor-development-win64
 
-source:
-  stage: editor-development-win64
+editor-development-win64-source:
+  stage: editor-development-win64-source
   only:
     - develop-vlad
   variables:
@@ -48,10 +49,10 @@ source:
     EXECUTABLE_CONFIGURATION: 'Development'
     EXECUTABLE_PLATFORM: 'Win64'
   script:
-    - %COMMAND_BUILD%
+    - call %COMMAND_BUILD%
 
-content:
-  stage: editor-development-win64
+editor-development-win64-content:
+  stage: editor-development-win64-content
   only:
     - develop-vlad
   variables:
@@ -59,7 +60,7 @@ content:
     EXECUTABLE_CONFIGURATION: 'Development'
     EXECUTABLE_PLATFORM: 'Win64'
   script:
-    - %COMMAND_BUILD%
+    - call %COMMAND_BUILD%
 
 #content:
 #  stage: editor-development-win64
