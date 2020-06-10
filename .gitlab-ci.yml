@@ -1,6 +1,9 @@
 variables:
-  GIT_STRATEGY: none        # we disable fetch, clone or checkout for every job
-  GIT_CHECKOUT: "false"     # as we only want to checkout and fetch in the preperation stage
+  automation-tool: '"C:/Program Files/Epic Games/UE_4.25.1/Engine/Binaries/DotNET/AutomationTool.exe"'
+  unreal-build-tool: '"C:/Program Files/Epic Games/UE_4.25.1/Engine/Binaries/DotNET/UnrealBuildTool.exe"'
+  unreal-editor: '"C:/Program Files/Epic Games/UE_4.25.1/Engine/Binaries/Win64/UE4Editor-Cmd.exe"'
+  project-path: '"D:/Professional/Projects/DevOpsTests/DevOpsTests.uproject"'
+  project-name: 'DevOpsTests'
 
 stages:
   - assembly
@@ -31,10 +34,9 @@ generate:
 source:
   stage: editor-development-win64
   only:
-    branch: [develop-vlad]
-    schedule: [cron * * * * *] 
+    - develop-vlad
   script:
-    - call "C:\UE\Engine\Binaries\DotNET\UnrealBuildTool.exe" OpenTournamentEditor Development Win64 -project="%CI_PROJECT_DIR%/OpenTournament.uproject" -rocket -progress -noubtmakefiles -NoHotReloadFromIDE
+    - call {{$unreal-build-tool}} OpenTournamentEditor Development Win64 -project="%CI_PROJECT_DIR%/OpenTournament.uproject" -rocket -progress -noubtmakefiles -NoHotReloadFromIDE
 
 #content:
 #  stage: editor-development-win64
