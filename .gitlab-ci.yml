@@ -14,9 +14,9 @@ variables:
   EXECUTABLE_CONFIGURATION: ''
   EXECUTABLE_PLATFORM: ''
   # These commands represent the various phases of the packaging process.
-  COMMAND_BUILD: '%AUTOMATION_TOOL% BuildTarget -Project=%PATH_PROJECT% -Target=%TITLE% -NoTools'
-  COMMAND_COOK: '%AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Cook -SkipEditorContent -Compressed -Unversioned'
-  COMMAND_STAGE: '%AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Stage -SkipCook'
+  COMMAND_BUILD: '%PATH_AUTOMATION_TOOL% BuildTarget -Project=%PATH_PROJECT% -Target=%TITLE% -NoTools'
+  COMMAND_COOK: '%PATH_AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Cook -SkipEditorContent -Compressed -Unversioned'
+  COMMAND_STAGE: '%PATH_AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Stage -SkipCook'
 
 stages:
   - assembly
