@@ -1,5 +1,4 @@
 variables:
-  CI_DEBUG_TRACE: "true"
   # This is the name of your ".uproject" file.
   TITLE: 'OpenTournament'
   # These folders represent the setup of the machine which reads this automation file.
