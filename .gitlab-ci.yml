@@ -1,4 +1,5 @@
 variables:
+  CI_DEBUG_TRACE: "true"
   # This is the name of your ".uproject" file.
   TITLE: 'OpenTournament'
   # These folders represent the setup of the machine which reads this automation file.
@@ -53,8 +54,9 @@ stages:
 debug_b:
   stage: debug_b
   script:
-    - echo $env:CI_PROJECT_DIR
-    - echo $env:TITLE
+    - export
+    - echo "$env:CI_PROJECT_DIR"
+    - echo "$env:TITLE"
 #    - echo $ROOT_TOOLS
 #    - echo $ROOT_PROJECT
 #    - echo $PATH_AUTOMATION_TOOL
