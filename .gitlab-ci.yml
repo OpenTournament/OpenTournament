@@ -39,8 +39,9 @@ stages:
 debug_a:
   stage: debug_a
   script:
-    - set A='TEST_A'
-    - echo %A%
+    - echo %TITLE%
+    - set TITLE='TEST_A'
+    - echo %TITLE%
     - set B=%A%
     - echo %B%
 #    - echo $ROOT_PROJECT
@@ -55,10 +56,11 @@ debug_a:
 debug_b:
   stage: debug_b
   script:
-    - set C='TEST_C'
-    - echo %C%
-    - set D=%C%
-    - echo %D%
+    - echo %TITLE%
+#    - set C='TEST_C'
+#    - echo %C%
+#    - set D=%C%
+#    - echo %D%
 #    - echo "$env:CI_PROJECT_DIR"
 #    - echo "$env:TITLE"
 #    - echo $ROOT_TOOLS
