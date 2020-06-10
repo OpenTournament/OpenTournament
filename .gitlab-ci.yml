@@ -36,12 +36,12 @@ stages:
 
 # assembly
 
-debug_a:
-  stage: debug_a
-  variables:
-    ROOT_PROJECT: '%CI_PROJECT_DIR%'
-  script:
-    - echo "%ROOT_PROJECT%""
+#debug_a:
+#  stage: debug_a
+#  variables:
+#    ROOT_PROJECT: $CI_PROJECT_DIR
+#  script:
+#    - echo $ROOT_PROJECT
 #    - echo PATH_AUTOMATION_TOOL - %PATH_AUTOMATION_TOOL%
 #    - echo PATH_UNREAL_BUILD_TOOL - %PATH_UNREAL_BUILD_TOOL%
 #    - echo PATH_UNREAL_EDITOR - %PATH_UNREAL_EDITOR%
@@ -53,15 +53,15 @@ debug_a:
 debug_b:
   stage: debug_b
   script:
-    - echo ROOT_TOOLS - %ROOT_TOOLS%
-    - echo ROOT_PROJECT - %ROOT_PROJECT%
-    - echo PATH_AUTOMATION_TOOL - %PATH_AUTOMATION_TOOL%
-    - echo PATH_UNREAL_BUILD_TOOL - %PATH_UNREAL_BUILD_TOOL%
-    - echo PATH_UNREAL_EDITOR - %PATH_UNREAL_EDITOR%
-    - echo PATH_PROJECT - %PATH_PROJECT%
-    - echo COMMAND_BUILD - %COMMAND_BUILD%
-    - echo COMMAND_COOK - %COMMAND_COOK%
-    - echo COMMAND_STAGE - %COMMAND_STAGE%
+    - echo ROOT_TOOLS - $ROOT_TOOLS
+    - echo ROOT_PROJECT - $ROOT_PROJECT
+    - echo PATH_AUTOMATION_TOOL - $PATH_AUTOMATION_TOOL
+    - echo PATH_UNREAL_BUILD_TOOL - $PATH_UNREAL_BUILD_TOOL
+    - echo PATH_UNREAL_EDITOR - $PATH_UNREAL_EDITOR
+    - echo PATH_PROJECT - $PATH_PROJECT
+    - echo COMMAND_BUILD - $COMMAND_BUILD
+    - echo COMMAND_COOK - $COMMAND_COOK
+    - echo COMMAND_STAGE - $COMMAND_STAGE
     
 #assembly:
 #  stage: assembly
