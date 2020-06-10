@@ -55,7 +55,7 @@ debug_a:
 debug_b:
   stage: debug_b
   script:
-    - set C=%B%
+    - set C=%TEST_C%
     - echo %C%
     - set D=%C%
     - echo %D%
