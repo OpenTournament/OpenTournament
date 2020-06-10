@@ -53,8 +53,8 @@ stages:
 debug_b:
   stage: debug_b
   script:
-    - echo $CI_PROJECT_DIR
-#    - echo $TITLE
+    - echo "$CI_PROJECT_DIR"
+    - echo "$TITLE"
 #    - echo $ROOT_TOOLS
 #    - echo $ROOT_PROJECT
 #    - echo $PATH_AUTOMATION_TOOL
