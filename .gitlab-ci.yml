@@ -1,14 +1,25 @@
 variables:
-  ROOT: 'C:/UE/Engine/Binaries'
-  AUTOMATION_TOOL: '%ROOT%/DotNET/AutomationTool.exe'
-  UNREAL_BUILD_TOOL: '%ROOT%/DotNET/UnrealBuildTool.exe'
-  UNREAL_EDITOR: '%ROOT%/Win64/UE4Editor-Cmd.exe'
-  PROJECT_NAME: 'OpenTournament'
-  PROJECT_PATH: '%CI_PROJECT_DIR%/%PROJECT_NAME%.uproject'
+  # This is the name of your ".uproject" file.
+  TITLE: 'OpenTournament'
+  # These folders represent the setup of the machine which reads this automation file.
+  ROOT_TOOLS: 'C:/UE/Engine/Binaries'
+  ROOT_PROJECT: '%CI_PROJECT_DIR%'
+  # These paths are extensions of the root paths.
+  PATH_AUTOMATION_TOOL: '%ROOT_TOOLS%/DotNET/AutomationTool.exe'
+  PATH_UNREAL_BUILD_TOOL: '%ROOT_TOOLS%/DotNET/UnrealBuildTool.exe'
+  PATH_UNREAL_EDITOR: '%ROOT_TOOLS%/Win64/UE4Editor-Cmd.exe'
+  PATH_PROJECT: '%ROOT_PROJECT%/%TITLE%.uproject'
+  # These parameters are overwritten by individual jobs.
+  EXECUTABLE_TYPE: ''
+  EXECUTABLE_CONFIGURATION: ''
+  EXECUTABLE_PLATFORM: ''
+  # These commands represent the various phases of the packaging process.
+  COMMAND_BUILD: 'call %AUTOMATION_TOOL% BuildTarget -Project=%PATH_PROJECT% -Target=%TITLE% -NoTools'
+  COMMAND_COOK: 'call %AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Cook -SkipEditorContent -Compressed -Unversioned'
+  COMMAND_STAGE: 'call %AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Stage -SkipCook'
 
 stages:
-  - assembly:fetch
-  - assembly:generate
+  - assembly
   - editor-development-win64
   - client-development-win64
   - client-development-linux
@@ -21,13 +32,8 @@ stages:
 
 # assembly
 
-assembly_fetch:
-  stage: assembly:fetch
-  script:
-    - call C:\BuildScripts\StartBuild.bat
-
-assembly_generate:
-  stage: assembly:generate
+assembly:
+  stage: assembly
   script:
     - call %UNREAL_BUILD_TOOL% %PROJECT_PATH% -ProjectFiles -Game -Progress
 
@@ -37,8 +43,23 @@ source:
   stage: editor-development-win64
   only:
     - develop-vlad
+  variables:
+    EXECUTABLE_TYPE: 'Editor'
+    EXECUTABLE_CONFIGURATION: 'Development'
+    EXECUTABLE_PLATFORM: 'Win64'
   script:
-    - call %AUTOMATION_TOOL% BuildTarget -Project=%PROJECT_PATH% -Target=%PROJECT_NAME%Editor -Configuration=Development -Platform=Win64 -NoTools
+    - COMMAND_BUILD
+
+content:
+  stage: editor-development-win64
+  only:
+    - develop-vlad
+  variables:
+    EXECUTABLE_TYPE: 'Editor'
+    EXECUTABLE_CONFIGURATION: 'Development'
+    EXECUTABLE_PLATFORM: 'Win64'
+  script:
+    - COMMAND_BUILD
 
 #content:
 #  stage: editor-development-win64
