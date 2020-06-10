@@ -53,9 +53,9 @@ stages:
 debug_b:
   stage: debug_b
   script:
-    - A='TEST'
+    - set A='TEST'
     - echo $A
-    - B=$A
+    - set B=$A
     - echo $B
 #    - echo "$env:CI_PROJECT_DIR"
 #    - echo "$env:TITLE"
