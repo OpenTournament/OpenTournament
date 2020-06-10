@@ -54,9 +54,12 @@ stages:
 debug_b:
   stage: debug_b
   script:
-    - export
-    - echo "$env:CI_PROJECT_DIR"
-    - echo "$env:TITLE"
+    - A='TEST'
+    - echo $A
+    - B=$A
+    - echo $B
+#    - echo "$env:CI_PROJECT_DIR"
+#    - echo "$env:TITLE"
 #    - echo $ROOT_TOOLS
 #    - echo $ROOT_PROJECT
 #    - echo $PATH_AUTOMATION_TOOL
