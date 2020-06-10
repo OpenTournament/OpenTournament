@@ -37,6 +37,7 @@ assembly:
   stage: assembly
   script:
     - call %PATH_UNREAL_BUILD_TOOL% %CI_PROJECT_DIR%\%TITLE%.uproject -ProjectFiles -Game -Progress
+    - call %PATH_UNREAL_BUILD_TOOL% %PATH_AUTOMATION_TOOL% -Progress
 
 # editor-development-win64
 
