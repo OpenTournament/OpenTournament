@@ -53,10 +53,12 @@ stages:
 debug_b:
   stage: debug_b
   script:
-    - set A='TEST'
-    - echo $A
-    - set B=$A
-    - echo $B
+    - set A='TEST_A'
+    - echo %A%
+    - set B='TEST_B'
+    - echo $env:B
+    - set C='TEST_C'
+    - echo %C
 #    - echo "$env:CI_PROJECT_DIR"
 #    - echo "$env:TITLE"
 #    - echo $ROOT_TOOLS
