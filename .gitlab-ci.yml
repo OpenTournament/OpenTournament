@@ -35,7 +35,7 @@ stages:
 assembly:
   stage: assembly
   script:
-    - call %UNREAL_BUILD_TOOL% %PROJECT_PATH% -ProjectFiles -Game -Progress
+    - call %UNREAL_BUILD_TOOL% %PATH_PROJECT% -ProjectFiles -Game -Progress
 
 # editor-development-win64
 
