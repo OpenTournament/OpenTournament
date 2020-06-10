@@ -20,7 +20,7 @@ variables:
   COMMAND_STAGE: '%PATH_AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Stage -SkipCook'
 
 stages:
-  - debug_a
+#  - debug_a
   - debug_b
   - assembly
   - editor-development-win64-source
@@ -53,17 +53,17 @@ stages:
 debug_b:
   stage: debug_b
   script:
-    - echo $CI_PROJECT_DIR%
-    - echo $TITLE
-    - echo $ROOT_TOOLS
-    - echo $ROOT_PROJECT
-    - echo $PATH_AUTOMATION_TOOL
-    - echo $PATH_UNREAL_BUILD_TOOL
-    - echo $PATH_UNREAL_EDITOR
-    - echo $PATH_PROJECT
-    - echo $COMMAND_BUILD
-    - echo $COMMAND_COOK
-    - echo $COMMAND_STAGE
+    - echo $CI_PROJECT_DIR
+#    - echo $TITLE
+#    - echo $ROOT_TOOLS
+#    - echo $ROOT_PROJECT
+#    - echo $PATH_AUTOMATION_TOOL
+#    - echo $PATH_UNREAL_BUILD_TOOL
+#    - echo $PATH_UNREAL_EDITOR
+#    - echo $PATH_PROJECT
+#    - echo $COMMAND_BUILD
+#    - echo $COMMAND_COOK
+#    - echo $COMMAND_STAGE
     
 #assembly:
 #  stage: assembly
