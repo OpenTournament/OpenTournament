@@ -15,7 +15,7 @@ variables:
   EXECUTABLE_CONFIGURATION: ''
   EXECUTABLE_PLATFORM: ''
   # These commands represent the various phases of the packaging process.
-  COMMAND_BUILD: '%PATH_AUTOMATION_TOOL% BuildTarget -Project=%PATH_PROJECT% -Target=%TITLE% -NoTools'
+  COMMAND_BUILD: 'C:\UE\Engine\Build\BatchFiles\RunUAT.bat BuildTarget -Project=%PATH_PROJECT% -Target=%TITLE% -NoTools'
   COMMAND_COOK: '%PATH_AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Cook -SkipEditorContent -Compressed -Unversioned'
   COMMAND_STAGE: '%PATH_AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Stage -SkipCook'
 
@@ -48,34 +48,34 @@ debug:
     - echo COMMAND_COOK - %COMMAND_COOK%
     - echo COMMAND_STAGE - %COMMAND_STAGE%
     
-#assembly:
-#  stage: assembly
-#  script:
-#    - call %PATH_UNREAL_BUILD_TOOL% %CI_PROJECT_DIR%\%TITLE%.uproject -ProjectFiles -Game -Progress
-#
-## editor-development-win64
-#
-#editor-development-win64-source:
-#  stage: editor-development-win64-source
-#  only:
-#    - develop-vlad
-#  variables:
-#    EXECUTABLE_TYPE: 'Editor'
-#    EXECUTABLE_CONFIGURATION: 'Development'
-#    EXECUTABLE_PLATFORM: 'Win64'
-#  script:
-#    - call %COMMAND_BUILD%
-#
-#editor-development-win64-content:
-#  stage: editor-development-win64-content
-#  only:
-#    - develop-vlad
-#  variables:
-#    EXECUTABLE_TYPE: 'Editor'
-#    EXECUTABLE_CONFIGURATION: 'Development'
-#    EXECUTABLE_PLATFORM: 'Win64'
-#  script:
-#    - call %COMMAND_BUILD%
+assembly:
+  stage: assembly
+  script:
+    - call %PATH_UNREAL_BUILD_TOOL% %CI_PROJECT_DIR%\%TITLE%.uproject -ProjectFiles -Game -Progress
+
+# editor-development-win64
+
+editor-development-win64-source:
+  stage: editor-development-win64-source
+  only:
+    - develop-vlad
+  variables:
+    EXECUTABLE_TYPE: 'Editor'
+    EXECUTABLE_CONFIGURATION: 'Development'
+    EXECUTABLE_PLATFORM: 'Win64'
+  script:
+    - call %COMMAND_BUILD%
+
+editor-development-win64-content:
+  stage: editor-development-win64-content
+  only:
+    - develop-vlad
+  variables:
+    EXECUTABLE_TYPE: 'Editor'
+    EXECUTABLE_CONFIGURATION: 'Development'
+    EXECUTABLE_PLATFORM: 'Win64'
+  script:
+    - call %COMMAND_BUILD%
 
 #content:
 #  stage: editor-development-win64
