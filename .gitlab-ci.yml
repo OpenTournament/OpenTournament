@@ -31,12 +31,12 @@ generate:
 source:
   stage: source
   script:
-    - echo "c:\ue\ue_4.25\Engine\Binaries\DotNET\UnrealBuildTool.exe" OpenTournamentEditor Development Win64 -project="%CI_PROJECT_DIR%/OpenTournament.uproject" -rocket -progress -noubtmakefiles -NoHotReloadFromIDE
+    - "c:\ue\ue_4.25\Engine\Binaries\DotNET\UnrealBuildTool.exe" OpenTournamentEditor Development Win64 -project="%CI_PROJECT_DIR%/OpenTournament.uproject" -rocket -progress -noubtmakefiles -NoHotReloadFromIDE
 
-content:
-  stage: content
-  script: 
-    - call C:\BuildScripts\CookProject.bat
+#content:
+#  stage: content
+#  script: 
+#    - call C:\BuildScripts\CookProject.bat
 
 # package:
 #   stage: package
