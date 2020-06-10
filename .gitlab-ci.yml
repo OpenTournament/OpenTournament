@@ -5,9 +5,9 @@ variables:
   ROOT_TOOLS: 'C:\UE\Engine\Binaries'
   ROOT_PROJECT: '%CI_PROJECT_DIR%'
   # These paths are extensions of the root paths.
-  PATH_AUTOMATION_TOOL: '%ROOT_TOOLS%\DotNET\AutomationTool.exe'
-  PATH_UNREAL_BUILD_TOOL: '%ROOT_TOOLS%\DotNET\UnrealBuildTool.exe'
-  PATH_UNREAL_EDITOR: '%ROOT_TOOLS%\Win64\UE4Editor-Cmd.exe'
+  PATH_AUTOMATION_TOOL: '%ROOT_TOOLS%\Build\BatchFiles\RunUAT.bat'
+  PATH_UNREAL_BUILD_TOOL: '%ROOT_TOOLS%\Binaries\DotNET\UnrealBuildTool.exe'
+  PATH_UNREAL_EDITOR: '%ROOT_TOOLS%\Binaries\Win64\UE4Editor-Cmd.exe'
   PATH_PROJECT: '%ROOT_PROJECT%\%TITLE%.uproject'
   # These parameters are overwritten by individual jobs.
   EXECUTABLE_TYPE: ''
@@ -37,7 +37,6 @@ assembly:
   stage: assembly
   script:
     - call %PATH_UNREAL_BUILD_TOOL% %CI_PROJECT_DIR%\%TITLE%.uproject -ProjectFiles -Game -Progress
-    - call %PATH_UNREAL_BUILD_TOOL% %PATH_AUTOMATION_TOOL% -Progress
 
 # editor-development-win64
 
