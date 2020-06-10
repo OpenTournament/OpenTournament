@@ -48,7 +48,7 @@ source:
     EXECUTABLE_CONFIGURATION: 'Development'
     EXECUTABLE_PLATFORM: 'Win64'
   script:
-    - COMMAND_BUILD
+    - ${COMMAND_BUILD}
 
 content:
   stage: editor-development-win64
@@ -59,7 +59,7 @@ content:
     EXECUTABLE_CONFIGURATION: 'Development'
     EXECUTABLE_PLATFORM: 'Win64'
   script:
-    - COMMAND_BUILD
+    - ${COMMAND_BUILD}
 
 #content:
 #  stage: editor-development-win64
