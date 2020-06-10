@@ -7,7 +7,8 @@ variables:
   PROJECT_PATH: '%CI_PROJECT_DIR%/%PROJECT_NAME%.uproject'
 
 stages:
-  - assembly
+  - assembly:fetch
+  - assembly:generate
   - editor-development-win64
   - client-development-win64
   - client-development-linux
@@ -20,13 +21,13 @@ stages:
 
 # assembly
 
-fetch:
-  stage: fetch
+assembly_fetch:
+  stage: assembly
   script:
     - call C:\BuildScripts\StartBuild.bat
 
-generate:
-  stage: generate
+assembly_generate:
+  stage: assembly
   script:
     - call %UNREAL_BUILD_TOOL% %PROJECT_PATH% -ProjectFiles -Game -Progress
 
