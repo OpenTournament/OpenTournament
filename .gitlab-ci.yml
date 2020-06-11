@@ -19,9 +19,10 @@ stages:
 
 # assemble
 
-#assemble:
-#  stage: assemble
-#  script:
+assemble:
+  stage: assemble
+  script:
+    echo test
 #    call %CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\"" "%CI_PROJECT_DIR%\" Assemble
 #
 ## build
