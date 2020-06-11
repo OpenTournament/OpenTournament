@@ -28,11 +28,11 @@ set COMMAND_BUILD="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildTarget %ATTRIBU
 set COMMAND_COOK="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildCookRun %ATTRIBUTES% -Cook -SkipEditorContent -Compressed -Unversioned
 set COMMAND_PACKAGE="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildCookRun %ATTRIBUTES% -Stage -SkipCook
 
-if "%~n3" == "Assemble" call %COMMAND_ASSEMBLE%
-if "%~n3" == "Test" call %COMMAND_TEST[0]% & call %COMMAND_TEST[1]%
-if "%~n3" == "Build" call %COMMAND_BUILD%
-if "%~n3" == "Cook" call %COMMAND_COOK%
-if "%~n3" == "Package" call %COMMAND_PACKAGE%
+if "%~n3" == "Assemble" start %COMMAND_ASSEMBLE%
+if "%~n3" == "Test" start %COMMAND_TEST[0]% & start %COMMAND_TEST[1]%
+if "%~n3" == "Build" start %COMMAND_BUILD%
+if "%~n3" == "Cook" start %COMMAND_COOK%
+if "%~n3" == "Package" start %COMMAND_PACKAGE%
 
 echo --------------------
 echo %COMMAND_ASSEMBLE%
