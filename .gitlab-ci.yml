@@ -14,7 +14,7 @@ assemble:
   stage: assemble
   script: [ call %SCRIPT% Assemble ]
   artifacts:
-    paths: [ '.vs/', 'binaries/', 'intermediate/' ]
+    paths: [ .vs/, binaries/ , intermediate/ ]
 
 # test
 
