@@ -14,6 +14,8 @@ assemble:
   stage: assemble
   script:
     call %SCRIPT% Assemble
+  artifacts:
+    paths: [ '.vs/', 'binaries/', 'intermediate/' ]
 
 # test
 
@@ -71,4 +73,4 @@ package_client_shipping_win64:
   script:
     call %SCRIPT% Package Client Shipping Win64
     needs cook_client_shipping_win64
-    artifacts true
+
