@@ -1,46 +1,64 @@
 variables:
-  GIT_STRATEGY: none        # we disable fetch, clone or checkout for every job
-  GIT_CHECKOUT: "false"     # as we only want to checkout and fetch in the preperation stage
+  GIT_STRATEGY: none
+  GIT_CHECKOUT: "false"
+  SCRIPT: '"%CI_PROJECT_DIR%\.gitlab-ci.bat" "C:\UE\Engine\" "%CI_PROJECT_DIR%\"'
 
 stages:
-  - preperations
-  - compile
+  - assemble
   - build
   - cook
-  - package
+  - stage
+  - archive
 
-preperations:
-  stage: preperations
+# --------------------------------------------------
+#     Assemble
+# --------------------------------------------------
+
+assemble:
+  stage: assemble
+  script: [ call %SCRIPT% Assemble ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
-  script:
-    - call C:\BuildScripts\StartBuild.bat
 
-compile:
-  stage: compile
-  script:
-    - call C:\BuildScripts\CompileScripts.bat
+# --------------------------------------------------
+#     Build
+# --------------------------------------------------
 
-build:
+build_client_development_win64:
   stage: build
-  script:
-    - call C:\BuildScripts\BuildFiles.bat
+  script: [ call %SCRIPT% Build Client Development Win64 ]
 
-cook:
+build_client_shipping_win64:
+  stage: build
+  script: [ call %SCRIPT% Build Client Shipping Win64 ]
+
+# --------------------------------------------------
+#     Cook
+# --------------------------------------------------
+
+cook_client_development_win64:
   stage: cook
-  script: 
-    - call C:\BuildScripts\CookProject.bat
+  script: [ call %SCRIPT% Cook Client Development Win64 ]
 
-package:
-  stage: package
-  only:
-    - web                 # only archive when started through the web interface
-    - schedules           # only archive when started at a specific schedule
-  script:
-    - echo "Adding build to the artifacts"
-    - call C:\BuildScripts\Archive.bat
-  artifacts:
-    paths:
-      - PROJECT_NAME.zip
-    expire_in: 5 days
+cook_client_shipping_win64:
+  stage: cook
+  script: [ call %SCRIPT% Cook Client Shipping Win64 ]
+
+# --------------------------------------------------
+#     Stage
+# --------------------------------------------------
+
+stage_client_development_win64:
+  stage: stage
+  script: [ call %SCRIPT% Package Client Development Win64 ]
+
+stage_client_shipping_win64:
+  stage: stage
+  script: [ call %SCRIPT% Package Client Shipping Win64 ]
+
+# --------------------------------------------------
+#     Archive
+# --------------------------------------------------
+
+# This phase will be handled in the near future.

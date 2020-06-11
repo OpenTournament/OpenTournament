@@ -1,6 +1,5 @@
 // Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
-using System.IO;
 using UnrealBuildTool;
 
 public class OpenTournament : ModuleRules
@@ -11,35 +10,37 @@ public class OpenTournament : ModuleRules
 
         PrivatePCHHeaderFile = "OpenTournament.h";
         PublicDependencyModuleNames.AddRange
-		(
-			new string[]
-			{
-				"Core",
-				"CoreUObject",
-				"Engine",
-				"InputCore",
-				"UMG",
-				"Slate",
-				"SlateCore",
-				"GameplayAbilities",
-				"GameplayTags",
-				"GameplayTasks",
-				"Niagara"
-			}
-		);
+        (
+            new string[]
+            {
+                "Core",
+                "CoreUObject",
+                "Engine",
+                "EngineSettings",
+                "InputCore",
+                "UMG",
+                "Slate",
+                "SlateCore",
+                "GameplayAbilities",
+                "GameplayTags",
+                "GameplayTasks",
+                "MoviePlayer",
+                "Niagara"
+            }
+        );
 
         // Reference:
         // https://docs.unrealengine.com/en-US/Programming/BuildTools/UnrealBuildTool/ModuleFiles/index.html
         PublicIncludePaths.AddRange
-		(
-			new string[]
-			{
-				"OpenTournament",
-				"OpenTournament/Data",
-				"OpenTournament/Enums",
-				"OpenTournament/GAS",
-				"OpenTournament/Widgets"
-			}
-		);
+        (
+            new string[]
+            {
+                "OpenTournament",
+                "OpenTournament/Data",
+                "OpenTournament/Enums",
+                "OpenTournament/GAS",
+                "OpenTournament/Widgets"
+            }
+        );
     }
 }
