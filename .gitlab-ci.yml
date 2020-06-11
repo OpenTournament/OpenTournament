@@ -22,32 +22,32 @@ stages:
 assemble:
   stage: assemble
   script:
-    call %BATCH% Assemble
+    call %CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Assemble
 
 # build
 
 build_client_development_win64:
   stage: build
   script:
-    call %BATCH% Build Client Development Win64
+    call %CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Build Client Development Win64
 
 build_client_shipping_win64:
   stage: build
   script:
-    call %BATCH% Build Client Shipping Win64
+    call %CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Build Client Shipping Win64
 
 # cook
 
 cook_client_development_win64:
   stage: cook
   script:
-    call %BATCH% Cook Client Development Win64
+    call %CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Cook Client Development Win64
     needs build_client_development_win64
 
 cook_client_shipping_win64:
   stage: cook
   script:
-    call %BATCH% Cook Client Shipping Win64
+    call %CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Cook Client Shipping Win64
     needs build_client_shipping_win64
 
 # package
@@ -55,13 +55,13 @@ cook_client_shipping_win64:
 package_client_development_win64:
   stage: package
   script:
-    call %BATCH% Package Client Development Win64
+    call %CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Package Client Development Win64
     needs cook_client_development_win64
 
 package_client_shipping_win64:
   stage: package
   script:
-    call %BATCH% Package Client Shipping Win64
+    call %CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Package Client Shipping Win64
     needs cook_client_shipping_win64
 
 
