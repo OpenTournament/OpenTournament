@@ -23,7 +23,6 @@ assemble:
 
 test:
   stage: test
-  dependencies: [ assemble ]
   only: [ develop-vlad ]
   script: [ call %SCRIPT% Test ]
 
@@ -31,42 +30,28 @@ test:
 
 build_client_development_win64:
   stage: build
-  dependencies: [ assemble ]
   script: [ call %SCRIPT% Build Client Development Win64 ]
-  artifacts:
-    untracked: true
 
 build_client_shipping_win64:
   stage: build
-  dependencies: [ assemble ]
   script: [ call %SCRIPT% Build Client Shipping Win64 ]
-  artifacts:
-    untracked: true
 
 # cook
 
 cook_client_development_win64:
   stage: cook
-  dependencies: [ build_client_development_win64 ]
   script: [ call %SCRIPT% Cook Client Development Win64 ]
-  artifacts:
-    untracked: true
 
 cook_client_shipping_win64:
   stage: cook
-  dependencies: [ build_client_shipping_win64 ]
   script: [ call %SCRIPT% Cook Client Shipping Win64 ]
-  artifacts:
-    untracked: true
 
 # package
 
 package_client_development_win64:
   stage: package
-  dependencies: [ cook_client_development_win64 ]
   script: [ call %SCRIPT% Package Client Development Win64 ]
 
 package_client_shipping_win64:
   stage: package
-  dependencies: [ cook_client_shipping_win64 ]
   script: [ call %SCRIPT% Package Client Shipping Win64 ]
