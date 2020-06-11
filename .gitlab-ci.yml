@@ -22,19 +22,19 @@ stages:
 assemble:
   stage: assemble
   script:
-    call %CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Assemble
+    "%CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Assemble"
 
 # build
 
 build_client_development_win64:
   stage: build
   script:
-    call %CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Build Client Development Win64
+    "%CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Build Client Development Win64"
 
 build_client_shipping_win64:
   stage: build
   script:
-    call %CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Build Client Shipping Win64
+    "%CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Build Client Shipping Win64"
 
 # cook
 
