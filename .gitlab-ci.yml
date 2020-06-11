@@ -19,8 +19,7 @@ assemble:
     GIT_CHECKOUT: "true"
   script: |
     call %SCRIPT% Assemble
-    trigger:
-      include: .gitlab-client-development-win64.yml
+    trigger .gitlab-client-development-win64.yml
 
 # test
 
