@@ -1,10 +1,10 @@
 variables:
   GIT_STRATEGY: none
   GIT_CHECKOUT: "false"
-  BRANCH_DEVELOPMENT: "develop-vlad"
-  BRANCH_TESTING: "develop-vlad"
-  BRANCH_STAGING: "develop-vlad"
-  BRANCH_PRODUCTION: "develop-vlad"
+  BRANCH_DEVELOPMENT: develop-vlad
+  BRANCH_TESTING: develop-vlad
+  BRANCH_STAGING: develop-vlad
+  BRANCH_PRODUCTION: develop-vlad
   SCRIPT: '"%CI_PROJECT_DIR%\.gitlab-ci.bat" "C:\UE\Engine\" "%CI_PROJECT_DIR%\"'
 
 stages:
@@ -28,33 +28,39 @@ assemble:
 build_client_development_win64:
   stage: build
   script: [ call %SCRIPT% Build Client Development Win64 ]
-  only: [ '%BRANCH_TESTING%' ]
+  only:
+    refs: [ '%BRANCH_TESTING%' ]
 
 build_client_shipping_win64:
   stage: build
   script: [ call %SCRIPT% Build Client Shipping Win64 ]
-  only: [ '%BRANCH_STAGING%', '%BRANCH_PRODUCTION%' ]
+  only:
+    refs: [ '%BRANCH_STAGING%', '%BRANCH_PRODUCTION%' ]
 
 # Cook
 
 cook_client_development_win64:
   stage: cook
   script: [ call %SCRIPT% Cook Client Development Win64 ]
-  only: [ '%BRANCH_TESTING%' ]
+  only:
+    refs: [ '%BRANCH_TESTING%' ]
 
 cook_client_shipping_win64:
   stage: cook
   script: [ call %SCRIPT% Cook Client Shipping Win64 ]
-  only: [ '%BRANCH_STAGING%', '%BRANCH_PRODUCTION%' ]
+  only:
+    refs: [ '%BRANCH_STAGING%', '%BRANCH_PRODUCTION%' ]
 
 # Stage
 
 stage_client_development_win64:
   stage: stage
   script: [ call %SCRIPT% Package Client Development Win64 ]
-  only: [ '%BRANCH_STAGING%', '%BRANCH_PRODUCTION%' ]
+  only:
+    refs: [ '%BRANCH_STAGING%', '%BRANCH_PRODUCTION%' ]
 
 stage_client_shipping_win64:
   stage: stage
   script: [ call %SCRIPT% Package Client Shipping Win64 ]
-  only: [ '%BRANCH_STAGING%', '%BRANCH_PRODUCTION%' ]
+  only:
+    refs: [ '%BRANCH_STAGING%', '%BRANCH_PRODUCTION%' ]
