@@ -29,7 +29,7 @@ build_client_development_win64:
   stage: build
   script: [ call %SCRIPT% Build Client Development Win64 ]
   only:
-    refs: [ develop-vlad ]
+    refs: [ %BRANCH_DEVELOPMENT% ]
 
 build_client_shipping_win64:
   stage: build
