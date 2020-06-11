@@ -7,15 +7,6 @@ stages:
   - build
   - cook
   - package
-#  - editor-development-win64
-#  - client-development-win64
-#  - client-development-linux
-#  - client-shipping-win64
-#  - client-shipping-linux
-#  - server-development-win64
-#  - server-development-linux
-#  - server-shipping-win64
-#  - server-shipping-linux
 
 # assemble
 
@@ -52,12 +43,14 @@ cook_client_development_win64:
   script:
     call %SCRIPT% Cook Client Development Win64
     needs build_client_development_win64
+    artifact true
 
 cook_client_shipping_win64:
   stage: cook
   script:
     call %SCRIPT% Cook Client Shipping Win64
     needs build_client_shipping_win64
+    artifact true
 
 # package
 
@@ -66,9 +59,11 @@ package_client_development_win64:
   script:
     call %SCRIPT% Package Client Development Win64
     needs cook_client_development_win64
+    artifact true
 
 package_client_shipping_win64:
   stage: package
   script:
     call %SCRIPT% Package Client Shipping Win64
     needs cook_client_shipping_win64
+    artifact true
