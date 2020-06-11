@@ -26,12 +26,14 @@ set COMMAND_ASSEMBLE[1]="%ROOT_TOOLS%Binaries\DotNET\UnrealBuildTool.exe" "%ROOT
 set COMMAND_ASSEMBLE[2]="%ROOT_TOOLS%Binaries\Win64\UE4Editor-Cmd.exe" "%ROOT_PROJECT%%ROOT_TITLE%.uproject" -Run=CompileAllBlueprints -IgnoreFolder=/Engine,/RuntimeTests
 set COMMAND_BUILD="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildTarget %ATTRIBUTES% -NoTools
 set COMMAND_COOK="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildCookRun %ATTRIBUTES% -Cook -SkipEditorContent -Compressed -Unversioned
-set COMMAND_PACKAGE="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildCookRun %ATTRIBUTES% -Stage -SkipCook
+set COMMAND_STAGE="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildCookRun %ATTRIBUTES% -Stage -SkipCook
+::set COMMAND_ARCHIVE="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildCookRun %ATTRIBUTES% -Stage -SkipCook
 
-if "%~n3" == "Assemble" %COMMAND_VALIDATE[0]% & %COMMAND_VALIDATE[1]% & %COMMAND_VALIDATE[2]%
+if "%~n3" == "Assemble" %COMMAND_ASSEMBLE[0]% & %COMMAND_ASSEMBLE[1]% & %COMMAND_ASSEMBLE[2]%
 if "%~n3" == "Build" %COMMAND_BUILD%
 if "%~n3" == "Cook" %COMMAND_COOK%
-if "%~n3" == "Package" %COMMAND_PACKAGE%
+if "%~n3" == "Stage" %COMMAND_STAGE%
+if "%~n3" == "Archive" %COMMAND_ARCHIVE%
 
 :: echo --------------------
 :: echo %COMMAND_ASSEMBLE[0]%
@@ -39,5 +41,6 @@ if "%~n3" == "Package" %COMMAND_PACKAGE%
 :: echo %COMMAND_ASSEMBLE[2]%
 :: echo %COMMAND_BUILD%
 :: echo %COMMAND_COOK%
-:: echo %COMMAND_PACKAGE%
+:: echo %COMMAND_STAGE%
+:: echo %COMMAND_ARCHIVE%
 :: echo --------------------

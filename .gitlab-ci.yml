@@ -1,13 +1,18 @@
 variables:
   GIT_STRATEGY: none
   GIT_CHECKOUT: "false"
+  BRANCH_DEVELOPMENT: develop-vlad
+  BRANCH_TESTING: develop-vlad
+  BRANCH_STAGING: develop-vlad
+  BRANCH_PRODUCTION: develop-vlad
   SCRIPT: '"%CI_PROJECT_DIR%\.gitlab-ci.bat" "C:\UE\Engine\" "%CI_PROJECT_DIR%\"'
 
 stages:
   - assemble
   - build
   - cook
-  - package
+  - stage
+  - archive
 
 # assemble
 
@@ -18,32 +23,38 @@ assemble:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
 
-# build
+# Build
 
 build_client_development_win64:
   stage: build
   script: [ call %SCRIPT% Build Client Development Win64 ]
+  only: [ '%BRANCH_TESTING%' ]
 
 build_client_shipping_win64:
   stage: build
   script: [ call %SCRIPT% Build Client Shipping Win64 ]
+  only: [ '%BRANCH_STAGING%', '%BRANCH_PRODUCTION%' ]
 
-# cook
+# Cook
 
 cook_client_development_win64:
   stage: cook
   script: [ call %SCRIPT% Cook Client Development Win64 ]
+  only: [ '%BRANCH_TESTING%' ]
 
 cook_client_shipping_win64:
   stage: cook
   script: [ call %SCRIPT% Cook Client Shipping Win64 ]
+  only: [ '%BRANCH_STAGING%', '%BRANCH_PRODUCTION%' ]
 
-# package
+# Stage
 
-package_client_development_win64:
-  stage: package
+stage_client_development_win64:
+  stage: stage
   script: [ call %SCRIPT% Package Client Development Win64 ]
+  only: [ '%BRANCH_STAGING%', '%BRANCH_PRODUCTION%' ]
 
-package_client_shipping_win64:
-  stage: package
+stage_client_shipping_win64:
+  stage: stage
   script: [ call %SCRIPT% Package Client Shipping Win64 ]
+  only: [ '%BRANCH_STAGING%', '%BRANCH_PRODUCTION%' ]
