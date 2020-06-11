@@ -1,4 +1,6 @@
 variables:
+  GIT_STRATEGY: none
+  GIT_CHECKOUT: "false"
   SCRIPT: '"%CI_PROJECT_DIR%\.gitlab-ci.bat" "C:\UE\Engine\" "%CI_PROJECT_DIR%\"'
 
 stages:
@@ -13,8 +15,9 @@ stages:
 assemble:
   stage: assemble
   script: [ call %SCRIPT% Assemble ]
-  artifacts:
-    untracked: true
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_CHECKOUT: "true"
 
 # test
 
@@ -55,7 +58,7 @@ cook_client_shipping_win64:
   script: [ call %SCRIPT% Cook Client Shipping Win64 ]
   artifacts:
     untracked: true
-    
+
 # package
 
 package_client_development_win64:
