@@ -5,7 +5,6 @@ variables:
 
 stages:
   - assemble
-  - test
   - build
   - cook
   - package
@@ -18,13 +17,6 @@ assemble:
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
-
-# test
-
-#test:
-#  stage: test
-#  only: [ develop-vlad ]
-#  script: [ call %SCRIPT% Test ]
 
 # build
 
