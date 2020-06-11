@@ -28,14 +28,10 @@ assemble:
 build_client_development_win64:
   stage: build
   script: [ call %SCRIPT% Build Client Development Win64 ]
-  only:
-    refs: [ vlad-testing ]
 
 build_client_shipping_win64:
   stage: build
   script: [ call %SCRIPT% Build Client Shipping Win64 ]
-  only:
-    refs: [ vlad-staging, vlad-production ]
 
 # --------------------------------------------------
 #     Cook
@@ -44,14 +40,10 @@ build_client_shipping_win64:
 cook_client_development_win64:
   stage: cook
   script: [ call %SCRIPT% Cook Client Development Win64 ]
-  only:
-    refs: [ vlad-testing ]
 
 cook_client_shipping_win64:
   stage: cook
   script: [ call %SCRIPT% Cook Client Shipping Win64 ]
-  only:
-    refs: [ vlad-staging, vlad-production ]
 
 # --------------------------------------------------
 #     Stage
@@ -60,14 +52,10 @@ cook_client_shipping_win64:
 stage_client_development_win64:
   stage: stage
   script: [ call %SCRIPT% Package Client Development Win64 ]
-  only:
-    refs: [ vlad-testing ]
 
 stage_client_shipping_win64:
   stage: stage
   script: [ call %SCRIPT% Package Client Shipping Win64 ]
-  only:
-    refs: [ vlad-staging, vlad-production ]
 
 # --------------------------------------------------
 #     Archive
