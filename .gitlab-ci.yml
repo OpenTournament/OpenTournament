@@ -19,10 +19,11 @@ assemble:
 
 test:
   stage: test
-  only:
-    - develop-vlad
+  only: [ develop-vlad ]
   script:
-    - call %SCRIPT% Test
+    call %SCRIPT% Test
+    needs assemble
+    artifact true
 
 # build
 
@@ -30,11 +31,15 @@ build_client_development_win64:
   stage: build
   script:
     call %SCRIPT% Build Client Development Win64
+    needs assemble
+    artifact true
 
 build_client_shipping_win64:
   stage: build
   script:
     call %SCRIPT% Build Client Shipping Win64
+    needs assemble
+    artifact true
 
 # cook
 
