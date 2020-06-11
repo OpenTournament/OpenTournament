@@ -1,5 +1,5 @@
 variables:
-  BATCH: '%CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\"'
+  BATCH: '%CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" "%CI_PROJECT_DIR%\"'
 
 stages:
   - assemble
@@ -22,19 +22,19 @@ stages:
 assemble:
   stage: assemble
   script:
-    call "%CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Assemble"
+    call "%CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\"" "%CI_PROJECT_DIR%\" Assemble"
 
 # build
 
 build_client_development_win64:
   stage: build
   script:
-    call "%CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Build Client Development Win64"
+    call "%CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" "%CI_PROJECT_DIR%\"" Build Client Development Win64"
 
 build_client_shipping_win64:
   stage: build
   script:
-    call "%CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" Build Client Shipping Win64"
+    call "%CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" "%CI_PROJECT_DIR%\"" Build Client Shipping Win64"
 
 # cook
 
