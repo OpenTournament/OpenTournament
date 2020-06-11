@@ -14,7 +14,7 @@ assemble:
   stage: assemble
   script: [ call %SCRIPT% Assemble ]
   artifacts:
-    paths: [ .vs, Binaries, Intermediate ]
+    paths: [ '%CI_PROJECT_DIR%' ]
 
 # test
 
@@ -28,34 +28,24 @@ test:
 
 build_client_development_win64:
   stage: build
-  script:
-    call %SCRIPT% Build Client Development Win64
-    needs assemble
-    artifacts true
+  script: [ call %SCRIPT% Build Client Development Win64 ]
   dependencies: [ assemble ]
 
 build_client_shipping_win64:
   stage: build
-  script:
-    call %SCRIPT% Build Client Shipping Win64
-    needs assemble
-    artifacts true
+  script: [ call %SCRIPT% Build Client Shipping Win64 ]
 
 # cook
 
 cook_client_development_win64:
   stage: cook
-  script:
-    call %SCRIPT% Cook Client Development Win64
-    needs build_client_development_win64
-    artifacts true
+  script: [ call %SCRIPT% Cook Client Development Win64 ]
+  dependencies: [ build_client_development_win64 ]
 
 cook_client_shipping_win64:
   stage: cook
-  script:
-    call %SCRIPT% Cook Client Shipping Win64
-    needs build_client_shipping_win64
-    artifacts true
+  script: [ call %SCRIPT% Cook Client Shipping Win64 ]
+  dependencies: [ build_client_shipping_win64 ]
 
 # package
 
