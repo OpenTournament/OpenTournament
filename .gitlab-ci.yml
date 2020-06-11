@@ -14,7 +14,7 @@ stages:
 
 assemble:
   stage: assemble
-  script: [ call %SCRIPT% Assemble ]
+  #script: [ call %SCRIPT% Assemble ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
