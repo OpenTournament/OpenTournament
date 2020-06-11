@@ -14,14 +14,14 @@ assemble:
   stage: assemble
   script: [ call %SCRIPT% Assemble ]
   artifacts:
-    paths: [ .vs/, binaries/ , intermediate/ ]
+    paths: [ .vs, Binaries, Intermediate ]
 
 # test
 
 test:
   stage: test
   only: [ develop-vlad ]
-  script: [ call %SCRIPT% Test, needs assemble ]
+  script: [ call %SCRIPT% Test ]
   dependencies: [ assemble ]
   
 # build
