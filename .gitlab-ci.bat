@@ -23,7 +23,7 @@ SET ATTRIBUTES=-Project="%ROOT_PROJECT%%ROOT_TITLE%.uproject" -Target=%ROOT_TITL
 :: These commands represent the various processes required to produce an executable.
 set COMMAND_ASSEMBLE="%ROOT_TOOLS%Binaries\DotNET\UnrealBuildTool.exe" "%ROOT_PROJECT%%ROOT_TITLE%.uproject" -ProjectFiles -Game -Progress
 set COMMAND_TEST[0]="%ROOT_TOOLS%Binaries\DotNET\UnrealBuildTool.exe" "%ROOT_PROJECT%%ROOT_TITLE%.uproject" %ROOT_TITLE%Editor Development Win64 -WaitMutex -FromMsBuild
-set COMMAND_TEST[1]="%ROOT_TOOLS%Binaries\Win64\UE4Editor-Cmd.exe" "%ROOT_PROJECT%%ROOT_TITLE%.uproject" -Run=CompileAllBlueprints
+set COMMAND_TEST[1]="%ROOT_TOOLS%Binaries\Win64\UE4Editor-Cmd.exe" "%ROOT_PROJECT%%ROOT_TITLE%.uproject" -Run=CompileAllBlueprints -IgnoreFolder=/Engine,/RuntimeTests
 set COMMAND_BUILD="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildTarget %ATTRIBUTES% -NoTools
 set COMMAND_COOK="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildCookRun %ATTRIBUTES% -Cook -SkipEditorContent -Compressed -Unversioned
 set COMMAND_PACKAGE="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildCookRun %ATTRIBUTES% -Stage -SkipCook
