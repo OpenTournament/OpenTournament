@@ -5,8 +5,7 @@ variables:
 
 stages:
   - assembly
-  - editor-development-win64-source
-  - editor-development-win64-content
+  - editor-development-win64
   - client-development-win64
   - client-development-linux
   - client-shipping-win64
@@ -22,10 +21,10 @@ assembly:
   stage: assembly
   script:
     - call %CI_PROJECT_DIR%\.gitlab-ci.bat "C:/UE/Engine/" "%CI_PROJECT_DIR%/" Assemble
-    
+
 # editor-development-win64
 
-editor-development-win64-source:
+editor-development-win64:
   stage: editor-development-win64
   only:
     - develop-vlad
