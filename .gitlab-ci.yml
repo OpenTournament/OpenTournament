@@ -1,27 +1,9 @@
 variables:
-  # This is the name of your ".uproject" file.
-  TITLE: 'OpenTournament'
-  # These folders represent the setup of the machine which reads this automation file.
   ROOT_TOOLS: 'C:\UE\Engine'
   ROOT_PROJECT: '%CI_PROJECT_DIR%'
-  # These paths are extensions of the root paths.
-  PATH_AUTOMATION_TOOL: '%ROOT_TOOLS%\Build\BatchFiles\RunUAT.bat'
-  PATH_UNREAL_BUILD_TOOL: '%ROOT_TOOLS%\Binaries\DotNET\UnrealBuildTool.exe'
-  PATH_UNREAL_EDITOR: '%ROOT_TOOLS%\Binaries\Win64\UE4Editor-Cmd.exe'
-  #PATH_PROJECT: '%ROOT_PROJECT%\%TITLE%.uproject'
-  PATH_PROJECT: '%CI_PROJECT_DIR%\%TITLE%.uproject'
-  # These parameters are overwritten by individual jobs.
-  EXECUTABLE_TYPE: ''
-  EXECUTABLE_CONFIGURATION: ''
-  EXECUTABLE_PLATFORM: ''
-  # These commands represent the various phases of the packaging process.
-  COMMAND_BUILD: 'C:\UE\Engine\Build\BatchFiles\RunUAT.bat BuildTarget -Project=%PATH_PROJECT% -Target=%TITLE% -NoTools'
-  COMMAND_COOK: '%PATH_AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Cook -SkipEditorContent -Compressed -Unversioned'
-  COMMAND_STAGE: '%PATH_AUTOMATION_TOOL% BuildCookRun -Project=%PATH_PROJECT% -Target=%TITLE%%EXECUTABLE_TYPE% -Platform=%EXECUTABLE_PLATFORM% -Stage -SkipCook'
+
 
 stages:
-  - debug_a
-  - debug_b
   - assembly
   - editor-development-win64-source
   - editor-development-win64-content
@@ -36,78 +18,19 @@ stages:
 
 # assembly
 
-debug_a:
-  stage: debug_a
+assembly:
+  stage: assembly
   script:
-    - echo %TITLE%
-    - set TITLE='TEST_A'
-    - echo %TITLE%
-    - set B=%A%
-    - echo %B%
-#    - echo $ROOT_PROJECT
-#    - echo PATH_AUTOMATION_TOOL - %PATH_AUTOMATION_TOOL%
-#    - echo PATH_UNREAL_BUILD_TOOL - %PATH_UNREAL_BUILD_TOOL%
-#    - echo PATH_UNREAL_EDITOR - %PATH_UNREAL_EDITOR%
-#    - echo PATH_PROJECT - %PATH_PROJECT%
-#    - echo COMMAND_BUILD - %COMMAND_BUILD%
-#    - echo COMMAND_COOK - %COMMAND_COOK%
-#    - echo COMMAND_STAGE - %COMMAND_STAGE%
-
-debug_b:
-  stage: debug_b
-  script:
-    - echo %TITLE%
-#    - set C='TEST_C'
-#    - echo %C%
-#    - set D=%C%
-#    - echo %D%
-#    - echo "$env:CI_PROJECT_DIR"
-#    - echo "$env:TITLE"
-#    - echo $ROOT_TOOLS
-#    - echo $ROOT_PROJECT
-#    - echo $PATH_AUTOMATION_TOOL
-#    - echo $PATH_UNREAL_BUILD_TOOL
-#    - echo $PATH_UNREAL_EDITOR
-#    - echo $PATH_PROJECT
-#    - echo $COMMAND_BUILD
-#    - echo $COMMAND_COOK
-#    - echo $COMMAND_STAGE
+    - call %CI_PROJECT_DIR%\.gitlab-ci.bat "C:/UE/Engine/" "%CI_PROJECT_DIR%/" Assemble
     
-#assembly:
-#  stage: assembly
-#  script:
-#    - call %PATH_UNREAL_BUILD_TOOL% %CI_PROJECT_DIR%\%TITLE%.uproject -ProjectFiles -Game -Progress
-#
-## editor-development-win64
-#
-#editor-development-win64-source:
-#  stage: editor-development-win64-source
-#  only:
-#    - develop-vlad
-#  variables:
-#    EXECUTABLE_TYPE: 'Editor'
-#    EXECUTABLE_CONFIGURATION: 'Development'
-#    EXECUTABLE_PLATFORM: 'Win64'
-#  script:
-#    - call %COMMAND_BUILD%
-#
-#editor-development-win64-content:
-#  stage: editor-development-win64-content
-#  only:
-#    - develop-vlad
-#  variables:
-#    EXECUTABLE_TYPE: 'Editor'
-#    EXECUTABLE_CONFIGURATION: 'Development'
-#    EXECUTABLE_PLATFORM: 'Win64'
-#  script:
-#    - call %COMMAND_BUILD%
+# editor-development-win64
 
-#content:
-#  stage: editor-development-win64
-#  only:
-#    branch: [develop-vlad]
-#    schedule: [cron * * * * *] 
-#  script:
+editor-development-win64-source:
+  stage: editor-development-win64
+  only:
+    - develop-vlad
+  script:
+    - call %CI_PROJECT_DIR%\.gitlab-ci.bat "C:/UE/Engine/" "%CI_PROJECT_DIR%/" Test
 
 # client-development-win64
 
