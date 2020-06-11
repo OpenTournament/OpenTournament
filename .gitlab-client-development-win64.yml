@@ -1,0 +1,11 @@
+build_client_development_win64:
+  stage: build
+  script: [ call %SCRIPT% Build Client Development Win64 ]
+
+cook_client_development_win64:
+  stage: cook
+  script: [ call %SCRIPT% Cook Client Development Win64 ]
+
+package_client_development_win64:
+  stage: package
+  script: [ call %SCRIPT% Package Client Development Win64 ]
