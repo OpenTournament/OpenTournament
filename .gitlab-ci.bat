@@ -1,5 +1,3 @@
-@echo 
-
 :: %~dp1 = "C:\Program Files\Epic Games\UE_4.25.1\Engine\"
 :: %~dp2 = "D:/Professional/Projects/DevOpsTests/"
 :: %~dp3 = Assemble/Test/Build/Cook/Package
