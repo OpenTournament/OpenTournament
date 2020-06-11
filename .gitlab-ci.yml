@@ -21,10 +21,10 @@ assemble:
 
 # test
 
-test:
-  stage: test
-  only: [ develop-vlad ]
-  script: [ call %SCRIPT% Test ]
+#test:
+#  stage: test
+#  only: [ develop-vlad ]
+#  script: [ call %SCRIPT% Test ]
 
 # build
 
