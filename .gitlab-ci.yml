@@ -4,26 +4,41 @@ variables:
   SCRIPT: '"%CI_PROJECT_DIR%\.gitlab-ci.bat" "C:\UE\Engine\" "%CI_PROJECT_DIR%\"'
 
 stages:
-  - assemble
-  - test
-  - build
-  - cook
-  - package
+  - time
+  - run-child-1
+  - run-child-2
+  
+time:
+  script:
+    - time
+run-child-1:
+  trigger:
+    include: child-1.yml
+run-child-2:
+  trigger:
+    include: child-2.yml
 
-# assemble
-
-assemble:
-  stage: assemble
-  variables:
-    GIT_STRATEGY: fetch
-    GIT_CHECKOUT: "true"
-  script: [ call %SCRIPT% Assemble, trigger .gitlab-client-development-win64.yml ]
-# test
-
-test:
-  stage: test
-  only: [ develop-vlad ]
-  script: [ call %SCRIPT% Test ]
+#stages:
+#  - assemble
+#  - test
+#  - build
+#  - cook
+#  - package
+#
+## assemble
+#
+#assemble:
+#  stage: assemble
+#  variables:
+#    GIT_STRATEGY: fetch
+#    GIT_CHECKOUT: "true"
+#  script: [ call %SCRIPT% Assemble, trigger .gitlab-client-development-win64.yml ]
+## test
+#
+#test:
+#  stage: test
+#  only: [ develop-vlad ]
+#  script: [ call %SCRIPT% Test ]
 
 # build
 
