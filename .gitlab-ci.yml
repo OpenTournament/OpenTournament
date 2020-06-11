@@ -12,8 +12,7 @@ stages:
 
 assemble:
   stage: assemble
-  script:
-    call %SCRIPT% Assemble
+  script: [ call %SCRIPT% Assemble ]
   artifacts:
     paths: [ '.vs/', 'binaries/', 'intermediate/' ]
 
@@ -22,11 +21,9 @@ assemble:
 test:
   stage: test
   only: [ develop-vlad ]
-  script:
-    call %SCRIPT% Test
-    needs assemble
-    artifacts true
-
+  script: [ call %SCRIPT% Test, needs assemble ]
+  dependencies: [ assemble ]
+  
 # build
 
 build_client_development_win64:
@@ -35,6 +32,7 @@ build_client_development_win64:
     call %SCRIPT% Build Client Development Win64
     needs assemble
     artifacts true
+  dependencies: [ assemble ]
 
 build_client_shipping_win64:
   stage: build
@@ -73,4 +71,3 @@ package_client_shipping_win64:
   script:
     call %SCRIPT% Package Client Shipping Win64
     needs cook_client_shipping_win64
-
