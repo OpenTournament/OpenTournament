@@ -41,28 +41,28 @@ build_client_shipping_win64:
 cook_client_development_win64:
   stage: cook
   script:
-    needs build_client_development_win64
     call %BATCH% Cook Client Development Win64
+    needs build_client_development_win64
 
 cook_client_shipping_win64:
   stage: cook
   script:
-    needs build_client_shipping_win64
     call %BATCH% Cook Client Shipping Win64
+    needs build_client_shipping_win64
 
 # package
 
 package_client_development_win64:
   stage: package
   script:
-    needs cook_client_development_win64
     call %BATCH% Package Client Development Win64
+    needs cook_client_development_win64
 
 package_client_shipping_win64:
   stage: package
   script:
-    needs cook_client_shipping_win64
     call %BATCH% Package Client Shipping Win64
+    needs cook_client_shipping_win64
 
 
     
