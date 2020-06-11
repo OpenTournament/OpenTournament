@@ -9,14 +9,21 @@ stages:
   - run-child-2
   
 time:
+  stage: time
   script:
     - time
+    
 run-child-1:
-  trigger:
-    include: child-1.yml
+  stage: time
+  script: |
+      trigger:
+        include: child-1.yml
+
 run-child-2:
-  trigger:
-    include: child-2.yml
+  stage: time
+  script: |
+      trigger:
+        include: child-2.yml
 
 #stages:
 #  - assemble
