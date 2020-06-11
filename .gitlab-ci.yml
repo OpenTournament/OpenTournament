@@ -1,10 +1,10 @@
 variables:
   GIT_STRATEGY: none
   GIT_CHECKOUT: "false"
-  BRANCH_DEVELOPMENT: develop-vlad
-  BRANCH_TESTING: develop-vlad
-  BRANCH_STAGING: develop-vlad
-  BRANCH_PRODUCTION: develop-vlad
+  BRANCH_DEVELOPMENT: "develop-vlad"
+  BRANCH_TESTING: "develop-vlad"
+  BRANCH_STAGING: "develop-vlad"
+  BRANCH_PRODUCTION: "develop-vlad"
   SCRIPT: '"%CI_PROJECT_DIR%\.gitlab-ci.bat" "C:\UE\Engine\" "%CI_PROJECT_DIR%\"'
 
 stages:

@@ -1,4 +1,4 @@
-@echo on
+@echo
 
 :: %~dp1 = "C:\Program Files\Epic Games\UE_4.25.1\Engine\"
 :: %~dp2 = "D:/Professional/Projects/DevOpsTests/"
@@ -33,7 +33,7 @@ if "%~n3" == "Assemble" %COMMAND_ASSEMBLE[0]% & %COMMAND_ASSEMBLE[1]% & %COMMAND
 if "%~n3" == "Build" %COMMAND_BUILD%
 if "%~n3" == "Cook" %COMMAND_COOK%
 if "%~n3" == "Stage" %COMMAND_STAGE%
-if "%~n3" == "Archive" %COMMAND_ARCHIVE%
+::if "%~n3" == "Archive" %COMMAND_ARCHIVE%
 
 :: echo --------------------
 :: echo %COMMAND_ASSEMBLE[0]%
