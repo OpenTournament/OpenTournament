@@ -17,10 +17,7 @@ assemble:
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
-  script: |
-    call %SCRIPT% Assemble
-    trigger .gitlab-client-development-win64.yml
-
+  script: [ call %SCRIPT% Assemble, trigger .gitlab-client-development-win64.yml ]
 # test
 
 test:
