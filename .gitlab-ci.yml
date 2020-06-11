@@ -1,5 +1,5 @@
 variables:
-  BATCH: '%CI_PROJECT_DIR%\.gitlab-ci.bat "C:\UE\Engine\" "%CI_PROJECT_DIR%\"'
+  SCRIPT: '"%CI_PROJECT_DIR%\.gitlab-ci.bat" "C:\UE\Engine\" "%CI_PROJECT_DIR%\"'
 
 stages:
   - assemble
@@ -22,55 +22,53 @@ stages:
 assemble:
   stage: assemble
   script:
-    call %CI_PROJECT_DIR%\.gitlab-ci.bat C:\UE\Engine\ %CI_PROJECT_DIR%\ Assemble
+    call %SCRIPT% Assemble
+
+# test
+
+test:
+  stage: test
+  only:
+    - develop-vlad
+  script:
+    - call %SCRIPT% Test
 
 # build
 
 build_client_development_win64:
   stage: build
   script:
-    call %CI_PROJECT_DIR%\.gitlab-ci.bat C:\UE\Engine\ %CI_PROJECT_DIR%\ Build Client Development Win64
+    call %SCRIPT% Build Client Development Win64
 
 build_client_shipping_win64:
   stage: build
   script:
-    call %CI_PROJECT_DIR%\.gitlab-ci.bat C:\UE\Engine\ %CI_PROJECT_DIR%\ Build Client Shipping Win64
+    call %SCRIPT% Build Client Shipping Win64
 
 # cook
-#
-#cook_client_development_win64:
-#  stage: cook
-#  script:
-#    call %CI_PROJECT_DIR%\.gitlab-ci.bat C:\UE\Engine\ Cook Client Development Win64
-#    needs build_client_development_win64
-#
-#cook_client_shipping_win64:
-#  stage: cook
-#  script:
-#    call %CI_PROJECT_DIR%\.gitlab-ci.bat C:\UE\Engine\ Cook Client Shipping Win64
-#    needs build_client_shipping_win64
-#
-## package
-#
-#package_client_development_win64:
-#  stage: package
-#  script:
-#    call %CI_PROJECT_DIR%\.gitlab-ci.bat C:\UE\Engine\ Package Client Development Win64
-#    needs cook_client_development_win64
-#
-#package_client_shipping_win64:
-#  stage: package
-#  script:
-#    call %CI_PROJECT_DIR%\.gitlab-ci.bat C:\UE\Engine\ Package Client Shipping Win64
-#    needs cook_client_shipping_win64
 
+cook_client_development_win64:
+  stage: cook
+  script:
+    call %SCRIPT% Cook Client Development Win64
+    needs build_client_development_win64
 
-    
-# editor-development-win64
+cook_client_shipping_win64:
+  stage: cook
+  script:
+    call %SCRIPT% Cook Client Shipping Win64
+    needs build_client_shipping_win64
 
-#editor-development-win64:
-#  stage: editor-development-win64
-#  only:
-#    - develop-vlad
-#  script:
-#    - call %ROOT_PROJECT%\.gitlab-ci.bat %ROOT_TOOLS% "%ROOT_PROJECT%/" Test
+# package
+
+package_client_development_win64:
+  stage: package
+  script:
+    call %SCRIPT% Package Client Development Win64
+    needs cook_client_development_win64
+
+package_client_shipping_win64:
+  stage: package
+  script:
+    call %SCRIPT% Package Client Shipping Win64
+    needs cook_client_shipping_win64

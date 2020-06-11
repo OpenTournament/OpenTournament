@@ -34,11 +34,11 @@ if "%~n3" == "Build" %COMMAND_BUILD%
 if "%~n3" == "Cook" %COMMAND_COOK%
 if "%~n3" == "Package" %COMMAND_PACKAGE%
 
-echo --------------------
-echo %COMMAND_ASSEMBLE%
-echo %COMMAND_TEST[0]%
-echo %COMMAND_TEST[1]%
-echo %COMMAND_BUILD%
-echo %COMMAND_COOK%
-echo %COMMAND_PACKAGE%
-echo --------------------
+:: echo --------------------
+:: echo %COMMAND_ASSEMBLE%
+:: echo %COMMAND_TEST[0]%
+:: echo %COMMAND_TEST[1]%
+:: echo %COMMAND_BUILD%
+:: echo %COMMAND_COOK%
+:: echo %COMMAND_PACKAGE%
+:: echo --------------------
