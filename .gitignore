@@ -87,9 +87,12 @@ FootstepsSoundV2.png
 MissionNotificationSys.png
 Content/*
 
-#Exclude-from-Ignore All Base Level Content Except OpenTournament Directory (and specified others)
+# Exclude-from-Ignore All Base Level Content Except OpenTournament Directory (and specified others)
 !Content/Splash
 !Content/OpenTournament
+
+# Ignore Reference Maps
+Content/OpenTournament/Levels/Test/Reference/*
 
 #Exclude-from-Ignore Build Stuff
 !Build/Windows
