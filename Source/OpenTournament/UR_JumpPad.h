@@ -45,6 +45,9 @@ class OPENTOURNAMENT_API AUR_JumpPad : public AActor,
     /////////////////////////////////////////////////////////////////////////////////////////////////
 public:
 
+    /**
+    * Root Component
+    */
     UPROPERTY(BlueprintReadOnly, Category = JumpPad)
     USceneComponent* SceneRoot;
 
@@ -76,7 +79,6 @@ public:
     /*
     * Spline Component
     */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
     USplineComponent* SplineComponent;
 #endif
 
@@ -169,7 +171,6 @@ public:
     /**
     * Update Spline that visualizes the jump path
     */
-    UFUNCTION()
     void UpdateSpline() const;
 #endif
 
