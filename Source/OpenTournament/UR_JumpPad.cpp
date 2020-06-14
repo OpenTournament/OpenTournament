@@ -17,6 +17,10 @@
 #include "OpenTournament.h"
 #include "UR_Character.h"
 
+#if WITH_EDITOR
+#include "Components/SplineComponent.h"
+#endif
+
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #endif
@@ -27,7 +31,8 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer),
     Destination(FTransform()),
     bLockDestination(true),
-    JumpTime(2.f),
+    JumpActorClass(AUR_Character::StaticClass()),
+    JumpDuration(2.f),
     JumpPadLaunchSound(nullptr),
     bRequiredTagsExact(false),
     bExcludedTagsExact(true),
@@ -47,8 +52,8 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     CapsuleComponent->SetCapsuleSize(55.f, 55.f, false);
     CapsuleComponent->SetupAttachment(RootComponent);
     CapsuleComponent->SetGenerateOverlapEvents(true);
-    CapsuleComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-    CapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Overlap);
+    CapsuleComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+    CapsuleComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
     CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_JumpPad::OnTriggerEnter);
 
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMeshComponent"));
@@ -62,6 +67,11 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
 
     Destination = GetActorTransform();
     Destination.SetLocation(Destination.GetLocation() + FVector(0, 0, 1000));
+
+#if WITH_EDITOR
+    SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("SplineComponent"));
+    SplineComponent->SetupAttachment(RootComponent);
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,6 +81,10 @@ void AUR_JumpPad::BeginPlay()
     Super::BeginPlay();
 
     InitializeDynamicMaterialInstance();
+
+#if WITH_EDITOR
+    UpdateSpline();
+#endif
 }
 
 void AUR_JumpPad::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -104,20 +118,20 @@ void AUR_JumpPad::PlayJumpPadEffects_Implementation()
 
 bool AUR_JumpPad::IsPermittedToJump_Implementation(const AActor* TargetActor) const
 {
-    // @! TODO : Check to see if the component/actor overlapping here matches a LD-specifiable list of classes
-    // (e.g. if we want to jump only characters, or if things such as projectiles, vehicles, etc. may also interact).
-    const AUR_Character* Character = Cast<AUR_Character>(TargetActor);
-    if (Character == nullptr)
+    if (!TargetActor->GetClass()->IsChildOf(JumpActorClass))
     {
-        GAME_LOG(Game, Log, "Teleporter Error. Character was invalid.");
         return false;
     }
 
-    // Check if the actor being teleported has any Required or Excluded GameplayTags
-    // e.g. Check for Red/Blue team tag, or exclude Flag-carrier tag, etc.
-    FGameplayTagContainer TargetTags;
-    Character->GetOwnedGameplayTags(TargetTags);
-    return IsPermittedByGameplayTags(TargetTags);
+    if (const auto TagActor = Cast<IGameplayTagAssetInterface>(TargetActor))
+    {
+        // Check if the actor using the Teleporter has any Required or Excluded GameplayTags
+        FGameplayTagContainer TargetTags;
+        TagActor->GetOwnedGameplayTags(TargetTags);
+        return IsPermittedByGameplayTags(TargetTags);
+    }
+
+    return true;
 }
 
 bool AUR_JumpPad::IsPermittedByGameplayTags(const FGameplayTagContainer& TargetTags) const
@@ -126,22 +140,62 @@ bool AUR_JumpPad::IsPermittedByGameplayTags(const FGameplayTagContainer& TargetT
     {
         return (ExcludedTags.Num() == 0 || (bExcludedTagsExact && !TargetTags.HasAnyExact(ExcludedTags)) || (!bExcludedTagsExact && TargetTags.HasAny(RequiredTags)));
     }
-    else
-    {
-        return false;
-    }
+    return false;
 }
 
 FVector AUR_JumpPad::CalculateJumpVelocity(const AActor* InCharacter) const
 {
-    const float Gravity = GetWorld()->GetGravityZ();
-    const FVector TargetVector = (GetActorLocation() + Destination.GetLocation()) - InCharacter->GetActorTransform().GetLocation();
+    const float Gravity{ GetWorld()->GetGravityZ() };
 
-    const float SizeXY = TargetVector.Size2D() / JumpTime;
-    const float SizeZ = TargetVector.Z / JumpTime - Gravity * JumpTime / 2.0f;
+    FVector CharacterLocation{ 0.f, 0.f, 0.f };
+    if (InCharacter)
+    {
+        CharacterLocation = InCharacter->GetActorLocation();
+    }
 
-    return TargetVector.GetSafeNormal2D() * SizeXY + FVector::UpVector * SizeZ;
+    const FVector WorldDestinationLocation{ (GetActorLocation() + Destination.GetLocation()) };
+    FVector TargetVector{ WorldDestinationLocation }; // - CharacterLocation
+
+    const float SizeXY = TargetVector.Size2D() / JumpDuration;
+    const float SizeZ = TargetVector.Z / JumpDuration - Gravity * JumpDuration / 2.0f;
+    TargetVector = TargetVector.GetSafeNormal2D() * SizeXY + FVector::UpVector * SizeZ;
+
+    FVector OutVector{ 0.f, 0.f, 0.f };
+    UGameplayStatics::SuggestProjectileVelocity(this, OutVector, CapsuleComponent->GetComponentLocation(), WorldDestinationLocation, TargetVector.Size());
+
+    return OutVector;
 }
+
+void AUR_JumpPad::SetDestination(const FVector InPosition, const bool IsRelativePosition)
+{
+    if (IsRelativePosition)
+    {
+        Destination.SetLocation(InPosition);
+    }
+    else
+    {
+        Destination.SetLocation(InPosition + CapsuleComponent->GetComponentLocation());
+    }
+}
+
+#if WITH_EDITOR
+void AUR_JumpPad::UpdateSpline() const
+{
+    SplineComponent->ClearSplinePoints();
+
+    FPredictProjectilePathParams PredictProjectilePathParams{ 50.f, CapsuleComponent->GetComponentLocation(), CalculateJumpVelocity(nullptr), JumpDuration };
+    FPredictProjectilePathResult PredictProjectilePathResult{ };
+
+    UGameplayStatics::PredictProjectilePath(this, PredictProjectilePathParams, PredictProjectilePathResult);
+
+    for (const auto& Point : PredictProjectilePathResult.PathData)
+    {
+        SplineComponent->AddSplineWorldPoint(Point.Location);
+    }
+
+    SplineComponent->UpdateSpline();
+}
+#endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -150,7 +204,7 @@ void AUR_JumpPad::InitializeDynamicMaterialInstance()
     if (MeshComponent && bUseJumpPadMaterialInstance)
     {
         UMaterialInterface* Material = MeshComponent->GetMaterial(JumpPadMaterialIndex);
-        JumpPadMaterialInstance =  UMaterialInstanceDynamic::Create(Material, nullptr);
+        JumpPadMaterialInstance = UMaterialInstanceDynamic::Create(Material, nullptr);
         JumpPadMaterialInstance->SetVectorParameterValue(JumpPadMaterialParameterName, JumpPadMaterialColorBase);
         MeshComponent->SetMaterial(JumpPadMaterialIndex, JumpPadMaterialInstance);
     }
@@ -177,6 +231,16 @@ bool AUR_JumpPad::CanEditChange(const FProperty* InProperty) const
 
     return ParentVal;
 }
+
+void AUR_JumpPad::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+    Super::PostEditChangeProperty(PropertyChangedEvent);
+
+    if (PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_JumpPad, Destination))
+    {
+        UpdateSpline();
+    }
+}
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -193,6 +257,8 @@ void AUR_JumpPad::EditorApplyTranslation(const FVector& DeltaTranslation, bool b
         Destination = CachedDestination;
         Destination.SetToRelativeTransform(ActorToWorld());
     }
+
+    UpdateSpline();
 }
 
 void AUR_JumpPad::EditorApplyRotation(const FRotator& DeltaRotation, bool bAltDown, bool bShiftDown, bool bCtrlDown)

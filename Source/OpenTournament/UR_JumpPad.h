@@ -17,6 +17,7 @@ class UCapsuleComponent;
 class UMaterialInstanceDynamic;
 class UParticleSystem;
 class UParticleSystemComponent;
+class USplineComponent;
 class USoundBase;
 class UStaticMeshComponent;
 
@@ -30,8 +31,6 @@ class UStaticMeshComponent;
 * Destination is a transform in the world that may be moved by editor widget.
 *
 * @! TODO: Issues to address:
-* - JumpPad behavior for non-character actors, and specifiable affected actor classes
-* - JumpPad arc in-editor visualization
 * - API for changing JumpPad destination
 * - Visualization for displaying (in-game) to nearby local clients the path of the JumpPad (use arc visualization?)
 * - Expose API to permit adjustments to Character air control from JumpPad
@@ -73,6 +72,14 @@ public:
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
     UParticleSystemComponent* ParticleSystemComponent;
 
+#if WITH_EDITOR
+    /*
+    * Spline Component
+    */
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
+    USplineComponent* SplineComponent;
+#endif
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /*
@@ -87,11 +94,17 @@ public:
     UPROPERTY(EditAnywhere, Category = "JumpPad|Editor")
     bool bLockDestination;
 
+    /**
+    * Class of Actors capable of interacting with JumpPad
+    */
+    UPROPERTY(EditAnywhere, Category = "JumpPad")
+    TSubclassOf<AActor> JumpActorClass;
+
     /*
     * Desired duration of the Jump (in seconds). Used to calculate velocity needed to impart
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "JumpPad")
-    float JumpTime;
+    float JumpDuration;
 
     /**
     * Sound played on Launch
@@ -118,11 +131,11 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-    * Play Effects on Successful Jump
+    * Bound to Capsule Overlap Event.
     */
-    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "JumpPad")
-    void PlayJumpPadEffects();
-
+    UFUNCTION()
+    void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+    
     /**
     * Is this actor permitted to jump? 
     */
@@ -140,8 +153,25 @@ public:
     */
     FVector CalculateJumpVelocity(const AActor* InCharacter) const;
 
+    /**
+    * Play Effects on Successful Jump
+    */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "JumpPad")
+    void PlayJumpPadEffects();
+
+    /**
+    * Set the Destination of the JumpPad
+    */
+    UFUNCTION(BlueprintCallable, Category = "JumpPad")
+    void SetDestination(const FVector InPosition, const bool IsRelativePosition = false);
+
+#if WITH_EDITOR
+    /**
+    * Update Spline that visualizes the jump path
+    */
     UFUNCTION()
-    void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+    void UpdateSpline() const;
+#endif
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Gameplay Tags
@@ -210,6 +240,7 @@ public:
 
 #if WITH_EDITOR
     virtual bool CanEditChange(const FProperty* InProperty) const override;
+    virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
