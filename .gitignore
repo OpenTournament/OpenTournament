@@ -46,6 +46,15 @@ Temporary Items
 Intermediate
 Saved
 
+# =========================
+# Rider
+# =========================
+
+.idea
+Plugins/Developer/RiderLink/
+
+# =========================
+
 #Basic Exclusions
 OpenTournament.VC.db
 Saved/
@@ -59,6 +68,8 @@ Source/LastSaved
 Config/DefaultEditorPerProjectUserSettings.ini
 
 # Ignore Source Files Installed from Asset Packs
+SourceFiles/InPlace
+SourceFiles/RootMotion
 SourceFiles/*
 Source/FBX
 Source/Maya
@@ -76,9 +87,12 @@ FootstepsSoundV2.png
 MissionNotificationSys.png
 Content/*
 
-#Exclude-from-Ignore All Base Level Content Except OpenTournament Directory (and specified others)
+# Exclude-from-Ignore All Base Level Content Except OpenTournament Directory (and specified others)
 !Content/Splash
 !Content/OpenTournament
+
+# Ignore Reference Maps
+Content/OpenTournament/Levels/Test/Reference/*
 
 #Exclude-from-Ignore Build Stuff
 !Build/Windows

@@ -250,6 +250,12 @@ public:
     // Jump
 
     /**
+    * Points of Damage inflicted by Speed/Velocity exceeding FallDamageSpeedThreshold (note: absolute value)
+    */
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Jump")
+    float FallDamageScalar;
+
+    /**
     * Speed beyond which player begins taking fall damage (note: absolute value)
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Jump")
@@ -376,7 +382,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Gameplay Tags
 
-    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
+    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; }
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
     FGameplayTagContainer GameplayTags;

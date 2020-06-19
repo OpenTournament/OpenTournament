@@ -23,13 +23,13 @@
 #include "UR_Weapon.h"
 #include "UR_Projectile.h"
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer.SetDefaultSubobjectClass<UUR_CharacterMovementComponent>(ACharacter::CharacterMovementComponentName)),
     FootstepTimestamp(0.f),
     FootstepTimeIntervalBase(0.300f),
+    FallDamageScalar(0.15f),
     FallDamageSpeedThreshold(2675.f),
     CrouchTransitionSpeed(12.f)
 {
@@ -39,7 +39,7 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     bReplicates = true;
 
     // Unreal & UT99 Values (Scaling Factor 2.5)
-    GetCapsuleComponent()->InitCapsuleSize(42.5, 97.5);
+    GetCapsuleComponent()->InitCapsuleSize(42.5f, 97.5f);
 
     URMovementComponent = Cast<UUR_CharacterMovementComponent>(GetCharacterMovement());
     URMovementComponent->bUseFlatBaseForFloorChecks = true;
@@ -214,7 +214,11 @@ void AUR_Character::CameraViewChanged_Implementation()
 {
     GetMesh()->SetOwnerNoSee(!bViewingThirdPerson);
     MeshFirstPerson->SetVisibility(!bViewingThirdPerson, true);
-    //TODO: weapon
+
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
+    {
+        InventoryComponent->ActiveWeapon->UpdateMeshVisibility();
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -297,6 +301,7 @@ void AUR_Character::RecalculateBaseEyeHeight()
 
 void AUR_Character::TickEyePosition(const float DeltaTime)
 {
+    // Check if Player JustTeleported. If so, ensure the EyeOffset updates immediately
     if (GetCharacterMovement()->bJustTeleported && (FMath::Abs(OldLocationZ - GetActorLocation().Z) > GetCharacterMovement()->MaxStepHeight))
     {
         EyeOffset.Z = 0.f;
@@ -316,6 +321,16 @@ void AUR_Character::TickEyePosition(const float DeltaTime)
     TargetEyeOffset.X = FMath::FInterpTo(TargetEyeOffset.X, 0.f, DeltaTime, TargetEyeOffsetToNeutralInterpolationRate.X);
     TargetEyeOffset.Y = FMath::FInterpTo(TargetEyeOffset.Y, 0.f, DeltaTime, TargetEyeOffsetToNeutralInterpolationRate.Y);
     TargetEyeOffset.Z = FMath::FInterpTo(TargetEyeOffset.Z, 0.f, DeltaTime, TargetEyeOffsetToNeutralInterpolationRate.Z);
+
+    // Force Eye Position when stepping on Movers
+    if (auto MovementBase = GetMovementBase())
+    {
+        if (MovementBase->Mobility == EComponentMobility::Movable)
+        {
+            EyeOffset.Z = 0.f;
+            TargetEyeOffset.Z = 0.f;
+        }
+    }
 
     //GAME_LOG(Game, Log, "Ticking EyeOffset: %f, %f, %f)", EyeOffset.X, EyeOffset.Y, EyeOffset.Z);
     CharacterCameraComponent->SetRelativeLocation(FVector(-0.f, 0.f, CrouchEyeOffsetZ) + EyeOffset, false);
@@ -376,6 +391,8 @@ void AUR_Character::Landed(const FHitResult& Hit)
     GAME_LOG(Game, Log, "Updating OldLocationZ: %f (Old), %f (New)", OldLocationZ, GetActorLocation().Z);
     OldLocationZ = GetActorLocation().Z;
 
+    FootstepTimestamp = GetWorld()->TimeSeconds;
+
     // Landing View Bob
     LandedViewOffset();
 
@@ -402,8 +419,7 @@ void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
 
     if (FallingSpeed * -1.f > FallDamageSpeedThreshold)
     {
-        // @! TODO Variable for -0.15 value?
-        const float FallingDamage = -0.15f * (FallDamageSpeedThreshold + FallingSpeed);
+        const float FallingDamage =  (-1.f * FallDamageScalar) * (FallDamageSpeedThreshold + FallingSpeed);
         GAME_LOG(Game, Log, "Character received Fall Damage (%f)!", FallingDamage);
 
         if (FallingDamage >= 1.0f)
@@ -549,6 +565,8 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     //GAME_PRINT(10.f, FColor::Purple, "Damage Floor (%f)", DamageToArmor);
     GAME_LOG(Game, Log, "Damage Incoming Floor (%f)", Damage);
 
+    float TotalDamage = Damage;
+
     if (AttributeSet)
     {
         if (AttributeSet->Health.GetCurrentValue() > 0.f)
@@ -605,7 +623,7 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     // And finally, apply knockback manually with a custom impulse.
 
     // For now, let's try basic values
-    float KnockbackPower = 1500.f * Damage;
+    float KnockbackPower = 1500.f * TotalDamage;
 
     // Avoid very small knockbacks
     if (KnockbackPower / GetCharacterMovement()->Mass >= 100.f)
@@ -617,6 +635,9 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
 
             // Always use shot direction for knockback
             KnockbackDir = PointDamageEvent->ShotDirection;
+            // Bias towards +Z
+            KnockbackDir = 0.75*KnockbackDir + FVector(0, 0, 0.25);
+
             GetCharacterMovement()->AddImpulse(KnockbackPower*KnockbackDir);
         }
         else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))

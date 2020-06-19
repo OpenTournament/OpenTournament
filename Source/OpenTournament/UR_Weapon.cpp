@@ -17,11 +17,16 @@
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
 
+//tmp. for hitscan
+#include "GameFramework/DamageType.h"
+#include "Particles/ParticleSystemComponent.h"
+
 #include "OpenTournament.h"
 #include "UR_Character.h"
 #include "UR_InventoryComponent.h"
 #include "UR_Projectile.h"
 #include "UR_PlayerController.h"
+#include "UR_FunctionLibrary.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,18 +46,18 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
 
     Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh3P"));
     Mesh3P->SetupAttachment(RootComponent);
-    Mesh3P->bOwnerNoSee = true;
+    //Mesh3P->bOwnerNoSee = true;
 
     Sound = CreateDefaultSubobject<UAudioComponent>(TEXT("Sound"));
     Sound->SetupAttachment(RootComponent);
-
-    ProjectileClass = AUR_Projectile::StaticClass();
 
     PrimaryActorTick.bCanEverTick = true;
 
     bReplicates = true;
 
     FireInterval = 1.0f;
+
+    MuzzleSocketName = FName(TEXT("Muzzle"));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,16 +94,16 @@ void AUR_Weapon::Pickup()
 {
     GAME_LOG(Game, Log, "Pickup Occurred");
 
-    UGameplayStatics::PlaySoundAtLocation(this, PickupSound, PlayerController->GetActorLocation());
+    UGameplayStatics::PlaySoundAtLocation(this, PickupSound, URCharOwner->GetActorLocation());
 
-    PlayerController->InventoryComponent->Add(this);
+    URCharOwner->InventoryComponent->Add(this);
     AttachWeaponToPawn();
 }
 
 void AUR_Weapon::GiveTo(AUR_Character* NewOwner)
 {
     SetOwner(NewOwner);
-    PlayerController = NewOwner;
+    URCharOwner = NewOwner;
     AttachWeaponToPawn();
     if (NewOwner && NewOwner->InventoryComponent)
     {
@@ -111,7 +116,7 @@ void AUR_Weapon::GiveTo(AUR_Character* NewOwner)
 
 void AUR_Weapon::OnRep_Owner()
 {
-    PlayerController = Cast<AUR_Character>(GetOwner());
+    URCharOwner = Cast<AUR_Character>(GetOwner());
     AttachWeaponToPawn();
 
     // In case Equipped was replicated before Owner
@@ -120,10 +125,10 @@ void AUR_Weapon::OnRep_Owner()
 
 void AUR_Weapon::OnRep_Equipped()
 {
-    if (!PlayerController)
+    if (!URCharOwner)
         return;	// owner not replicated yet
 
-    if (PlayerController->IsLocallyControlled())
+    if (URCharOwner->IsLocallyControlled())
         return;	// should already be attached locally
 
     SetEquipped(bIsEquipped);
@@ -144,7 +149,7 @@ void AUR_Weapon::Fire()
 
             AUR_Projectile* Projectile = World->SpawnActor<AUR_Projectile>(ProjectileClass, MuzzleLocation, MuzzleRotation, ProjectileSpawnParameters);
 
-            UGameplayStatics::PlaySoundAtLocation(this, FireSound, PlayerController->GetActorLocation());
+            UGameplayStatics::PlaySoundAtLocation(this, FireSound, URCharOwner->GetActorLocation());
 
             GAME_LOG(Game, Log, "Fire Occurred");
 
@@ -164,7 +169,7 @@ void AUR_Weapon::Fire()
 
 void AUR_Weapon::GetPlayer(AActor* Player)
 {
-    PlayerController = Cast<AUR_Character>(Player);
+    URCharOwner = Cast<AUR_Character>(Player);
 }
 
 void AUR_Weapon::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor * Other, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
@@ -214,18 +219,18 @@ void AUR_Weapon::AttachMeshToPawn()
 {
     this->SetActorHiddenInGame(false);
 
-    if (PlayerController)
+    if (URCharOwner)
     {
         // Remove and hide both first and third person meshes
-        DetachMeshFromPawn();
+        //DetachMeshFromPawn();
 
         /*
         // For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
-        FName AttachPoint = PlayerController->GetWeaponAttachPoint();
-        if (PlayerController->IsLocallyControlled())
+        FName AttachPoint = URCharOwner->GetWeaponAttachPoint();
+        if (URCharOwner->IsLocallyControlled())
         {
-            USkeletalMeshComponent* PawnMesh1p = PlayerController->GetSpecifcPawnMesh(true);
-            USkeletalMeshComponent* PawnMesh3p = PlayerController->GetSpecifcPawnMesh(false);
+            USkeletalMeshComponent* PawnMesh1p = URCharOwner->GetSpecifcPawnMesh(true);
+            USkeletalMeshComponent* PawnMesh3p = URCharOwner->GetSpecifcPawnMesh(false);
             Mesh1P->SetHiddenInGame(false);
             Mesh3P->SetHiddenInGame(false);
             Mesh1P->AttachToComponent(PawnMesh1p, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
@@ -234,7 +239,7 @@ void AUR_Weapon::AttachMeshToPawn()
         else
         {
             USkeletalMeshComponent* UseWeaponMesh = GetWeaponMesh();
-            USkeletalMeshComponent* UsePawnMesh = PlayerController->GetPawnMesh();
+            USkeletalMeshComponent* UsePawnMesh = URCharOwner->GetPawnMesh();
             UseWeaponMesh->AttachToComponent(UsePawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
             UseWeaponMesh->SetHiddenInGame(false);
         }
@@ -247,17 +252,27 @@ void AUR_Weapon::AttachMeshToPawn()
         // Be aware that "owner" means not only the local player, but also anybody looking through character via ViewTarget.
         // And both spectators/localplayer might be in either 1P or 3P, so I believe we cannot rely on bOwnerSee/bOwnerNoSee for this.
 
-        //TODO: See camera management in UR_Character.
-        // Here we can use UR_Character::bViewingThirdPerson.
+        Mesh1P->AttachToComponent(URCharOwner->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, URCharOwner->GetWeaponAttachPoint());
+        Mesh3P->AttachToComponent(URCharOwner->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(TEXT("ik_hand_gun")));
+        //Mesh3P->AttachToComponent(URCharOwner->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, URCharOwner->GetWeaponAttachPoint());
 
-        Mesh1P->AttachToComponent(PlayerController->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, PlayerController->GetWeaponAttachPoint());
+        //UPDATE: Now using this, we shouldn't use bOwnerNoSee anymore on 3p. 1p can keep bOnlyOwnerSee.
+        UpdateMeshVisibility();
+    }
+}
+
+void AUR_Weapon::UpdateMeshVisibility()
+{
+    if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
+    {
         Mesh1P->SetHiddenInGame(false);
-
-        //NOTE: We don't have proper anim and grip point for 3P weapon.
-        //Mesh3P->AttachToComponent(PlayerController->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(TEXT("ik_hand_gun")));
-        //NOTE2: We'll attach to the (invisible) 1P arms for now otherwise it goes all over the place.
-        Mesh3P->AttachToComponent(PlayerController->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, PlayerController->GetWeaponAttachPoint());
+        Mesh3P->SetHiddenInGame(true);
+    }
+    else
+    {
+        Mesh1P->SetHiddenInGame(true);
         Mesh3P->SetHiddenInGame(false);
+        Mesh3P->bOwnerNoSee = false;
     }
 }
 
@@ -266,19 +281,19 @@ void AUR_Weapon::AttachWeaponToPawn()
     this->SetActorHiddenInGame(true);
     Tbox->SetGenerateOverlapEvents(false);
 
-    if (PlayerController)
+    if (URCharOwner)
     {
         /*
         // For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
-        FName AttachPoint = PlayerController->GetWeaponAttachPoint();
-        if (PlayerController->IsLocallyControlled() == true)
+        FName AttachPoint = URCharOwner->GetWeaponAttachPoint();
+        if (URCharOwner->IsLocallyControlled() == true)
         {
-            //USkeletalMeshComponent* PawnMesh = PlayerController->GetSpecifcPawnMesh(true);
+            //USkeletalMeshComponent* PawnMesh = URCharOwner->GetSpecifcPawnMesh(true);
             //this->AttachToComponent(PawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
         }
         else
         {
-            //USkeletalMeshComponent* UsePawnMesh = PlayerController->GetPawnMesh();
+            //USkeletalMeshComponent* UsePawnMesh = URCharOwner->GetPawnMesh();
             //this->AttachToComponent(UsePawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
         }
         */
@@ -372,7 +387,7 @@ void AUR_Weapon::LocalFireLoop()
         return;
 
     // Additional checks to stop firing automatically
-    if (!PlayerController || !PlayerController->bIsFiring || !PlayerController->IsAlive() || !PlayerController->GetController() || !bIsEquipped)
+    if (!URCharOwner || !URCharOwner->bIsFiring || !URCharOwner->IsAlive() || !URCharOwner->GetController() || !bIsEquipped)
     {
         bFiring = false;
         return;
@@ -398,7 +413,19 @@ void AUR_Weapon::LocalFireLoop()
 void AUR_Weapon::LocalFire()
 {
     ServerFire();
-    PlayFireEffects();
+
+    if (ProjectileClass)
+    {
+        PlayFireEffects();
+    }
+    else
+    {
+        FHitResult Hit;
+        HitscanTrace(Hit);
+        PlayFireEffects();
+        PlayHitscanEffects(FReplicatedHitscanInfo(Hit.TraceStart, Hit.bBlockingHit ? Hit.Location : Hit.TraceEnd, Hit.ImpactNormal));
+    }
+
     LocalFireTime = GetWorld()->GetTimeSeconds();
 }
 
@@ -439,22 +466,20 @@ void AUR_Weapon::ServerFire_Implementation()
         return;
     }
 
-    SpawnShot();
-    LastFireTime = GetWorld()->GetTimeSeconds();
-    ConsumeAmmo();
-    MulticastFired();
-}
-
-void AUR_Weapon::SpawnShot()
-{
     if (ProjectileClass)
     {
         SpawnShot_Projectile();
+        MulticastFired_Projectile();
     }
     else
     {
-        UKismetSystemLibrary::PrintString(this, TEXT("SpawnShot() not implemented"));
+        FReplicatedHitscanInfo HitscanInfo;
+        SpawnShot_Hitscan(HitscanInfo);
+        MulticastFired_Hitscan(HitscanInfo);
     }
+
+    LastFireTime = GetWorld()->GetTimeSeconds();
+    ConsumeAmmo();
 }
 
 void AUR_Weapon::ConsumeAmmo()
@@ -462,37 +487,90 @@ void AUR_Weapon::ConsumeAmmo()
     AmmoCount -= 1;
 }
 
-void AUR_Weapon::MulticastFired_Implementation()
+void AUR_Weapon::MulticastFired_Projectile_Implementation()
 {
-    if (!IsNetMode(NM_Client))
-        return;
-
-    if (PlayerController && PlayerController->IsLocallyControlled())
+    if (IsNetMode(NM_Client))
     {
-        // Server just fired, adjust our fire loop accordingly
-        float FirePing = GetWorld()->TimeSince(LocalFireTime);
-        float Delay = FireInterval - FirePing / 2.f;
-        if (Delay > 0.0f)
-            GetWorld()->GetTimerManager().SetTimer(FireLoopTimerHandle, this, &AUR_Weapon::LocalFireLoop, Delay, false);
+        if (URCharOwner && URCharOwner->IsLocallyControlled())
+        {
+            LocalConfirmFired();
+        }
         else
-            LocalFireLoop();
+        {
+            PlayFireEffects();
+        }
     }
-    else
+}
+
+void AUR_Weapon::MulticastFired_Hitscan_Implementation(const FReplicatedHitscanInfo& HitscanInfo)
+{
+    if (IsNetMode(NM_Client))
     {
-        PlayFireEffects();
+        if (URCharOwner && URCharOwner->IsLocallyControlled())
+        {
+            LocalConfirmFired();
+        }
+        else
+        {
+            PlayFireEffects();
+            PlayHitscanEffects(HitscanInfo);
+        }
     }
+}
+
+void AUR_Weapon::LocalConfirmFired()
+{
+    // Server just fired, adjust our fire loop accordingly
+    float FirePing = GetWorld()->TimeSince(LocalFireTime);
+    float Delay = FireInterval - FirePing / 2.f;
+    if (Delay > 0.0f)
+        GetWorld()->GetTimerManager().SetTimer(FireLoopTimerHandle, this, &AUR_Weapon::LocalFireLoop, Delay, false);
+    else
+        LocalFireLoop();
 }
 
 void AUR_Weapon::PlayFireEffects()
 {
-    //TODO: Play muzzle flash
-    //TODO: Play fire sound
-
-    if (PlayerController && PlayerController->MeshFirstPerson)
+    if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
     {
-        PlayerController->MeshFirstPerson->PlayAnimation(PlayerController->FireAnimation, false);
-        //TODO: play 3p anim when we have one
+        UGameplayStatics::SpawnSoundAttached(FireSound, Mesh1P, MuzzleSocketName, FVector(0, 0, 0), EAttachLocation::SnapToTarget);
+        UGameplayStatics::SpawnEmitterAttached(MuzzleFlashFX, Mesh1P, MuzzleSocketName, FVector(0, 0, 0), FRotator(0, 0, 0), EAttachLocation::SnapToTargetIncludingScale);
+        URCharOwner->MeshFirstPerson->PlayAnimation(URCharOwner->FireAnimation, false);
     }
+    else
+    {
+        UGameplayStatics::SpawnSoundAttached(FireSound, Mesh3P, MuzzleSocketName, FVector(0, 0, 0), EAttachLocation::SnapToTarget);
+        UGameplayStatics::SpawnEmitterAttached(MuzzleFlashFX, Mesh3P, MuzzleSocketName, FVector(0, 0, 0), FRotator(0, 0, 0), EAttachLocation::SnapToTargetIncludingScale);
+        //TODO: play 3p anim
+    }
+}
+
+void AUR_Weapon::PlayHitscanEffects(const FReplicatedHitscanInfo& HitscanInfo)
+{
+    FVector BeamStart;
+    if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
+    {
+        BeamStart = Mesh1P->GetSocketLocation(MuzzleSocketName);
+    }
+    else
+    {
+        BeamStart = Mesh3P->GetSocketLocation(MuzzleSocketName);
+    }
+
+    FVector BeamEnd = HitscanInfo.End;
+    FVector BeamVector = BeamEnd - BeamStart;
+
+    UFXSystemComponent* BeamComp = UUR_FunctionLibrary::SpawnEffectAtLocation(GetWorld(), BeamTemplate, FTransform(BeamStart));
+    if (BeamComp)
+    {
+        //TODO: configurable
+        FName BeamVectorParamName = FName(TEXT("User.BeamVector"));
+        BeamComp->SetVectorParameter(BeamVectorParamName, BeamVector);
+    }
+
+    // Impact fx & sound
+    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamImpactTemplate, FTransform(HitscanInfo.ImpactNormal.Rotation(), BeamEnd));
+    UGameplayStatics::PlaySoundAtLocation(GetWorld(), BeamImpactSound, BeamEnd);
 }
 
 //============================================================
@@ -501,24 +579,24 @@ void AUR_Weapon::PlayFireEffects()
 
 void AUR_Weapon::GetFireVector(FVector& FireLoc, FRotator& FireRot)
 {
-    if (PlayerController)
+    if (URCharOwner)
     {
         // Careful, in URCharacter we are using a custom 1p camera.
         // This means GetActorEyesViewPoint is wrong because it uses a hardcoded offest.
         // Either access camera directly, or override GetActorEyesViewPoint.
-        FVector CameraLoc = PlayerController->CharacterCameraComponent->GetComponentLocation();
+        FVector CameraLoc = URCharOwner->CharacterCameraComponent->GetComponentLocation();
         FireLoc = CameraLoc;
-        FireRot = PlayerController->GetViewRotation();
+        FireRot = URCharOwner->GetViewRotation();
 
         if (ProjectileClass)
         {
             // Use centered projectiles as it is a lot simpler with less edge cases.
-            FireLoc += FireRot.Vector() * PlayerController->MuzzleOffset.Size();	//TODO: muzzle offset should be part of weapon, not character
+            FireLoc += FireRot.Vector() * URCharOwner->MuzzleOffset.Size();	//TODO: muzzle offset should be part of weapon, not character
 
             // Avoid spawning projectile within/behind geometry because of the offset.
             FCollisionQueryParams TraceParams(FCollisionQueryParams::DefaultQueryParam);
             TraceParams.AddIgnoredActor(this);
-            TraceParams.AddIgnoredActor(PlayerController);
+            TraceParams.AddIgnoredActor(URCharOwner);
             FHitResult Hit;
             if (GetWorld()->LineTraceSingleByChannel(Hit, CameraLoc, FireLoc, ECollisionChannel::ECC_Visibility, TraceParams))
             {
@@ -559,4 +637,64 @@ void AUR_Weapon::SpawnShot_Projectile()
     {
         UE_LOG(LogTemp, Warning, TEXT("Failed to spawn projectile ??"));
     }
+}
+
+void AUR_Weapon::SpawnShot_Hitscan(FReplicatedHitscanInfo& OutHitscanInfo)
+{
+    FHitResult Hit;
+    HitscanTrace(Hit);
+
+    if (HasAuthority() && Hit.bBlockingHit && Hit.GetActor())
+    {
+        //TODO: config
+        float Damage = 70;
+        TSubclassOf<UDamageType> DamageType = UDamageType::StaticClass();
+
+        FVector Dir = Hit.TraceEnd - Hit.TraceStart;
+        Dir.Normalize();
+
+        UGameplayStatics::ApplyPointDamage(Hit.GetActor(), Damage, Dir, Hit, GetInstigatorController(), this, DamageType);
+    }
+
+    OutHitscanInfo.Start = Hit.TraceStart;
+    OutHitscanInfo.End = Hit.bBlockingHit ? Hit.Location : Hit.TraceEnd;
+    OutHitscanInfo.ImpactNormal = Hit.ImpactNormal;
+}
+
+void AUR_Weapon::HitscanTrace(FHitResult& OutHit)
+{
+    FVector TraceStart;
+    FRotator FireRot;
+    GetFireVector(TraceStart, FireRot);
+
+    //TODO: these might need to be configurable to some extent
+    float MaxDist = 10000;
+    FVector TraceEnd = TraceStart + MaxDist * FireRot.Vector();
+    ECollisionChannel TraceChannel = ECollisionChannel::ECC_GameTraceChannel2;  //WeaponTrace
+    FCollisionShape SweepShape = FCollisionShape::MakeSphere(5.f);
+
+    // fill in info in case we get 0 results from sweep
+    OutHit.TraceStart = TraceStart;
+    OutHit.TraceEnd = TraceEnd;
+    OutHit.bBlockingHit = false;
+    OutHit.ImpactNormal = TraceStart - TraceEnd;
+    OutHit.ImpactNormal.Normalize();
+
+    TArray<FHitResult> Hits;
+    GetWorld()->SweepMultiByChannel(Hits, TraceStart, TraceEnd, FQuat(), TraceChannel, SweepShape);
+    for (const FHitResult& Hit : Hits)
+    {
+        if (Hit.bBlockingHit || HitscanShouldHitActor(Hit.GetActor()))
+        {
+            OutHit = Hit;
+            OutHit.bBlockingHit = true;
+            break;
+        }
+    }
+}
+
+bool AUR_Weapon::HitscanShouldHitActor_Implementation(AActor* Other)
+{
+    //NOTE: here we can implement firing through teammates
+    return Other != GetInstigator();
 }

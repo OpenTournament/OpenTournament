@@ -61,7 +61,7 @@ AActor* AUR_GameMode_DM::IsThereAWinner_Implementation()
     // Else, check with goal score
     for (APlayerState* PS : GS->PlayerArray)
     {
-        if (PS->Score >= GoalScore)
+        if (PS->GetScore() >= GoalScore)
         {
             return PS;
         }

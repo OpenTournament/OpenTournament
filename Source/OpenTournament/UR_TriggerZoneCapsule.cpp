@@ -18,7 +18,8 @@ AUR_TriggerZoneCapsule::AUR_TriggerZoneCapsule(const FObjectInitializer& ObjectI
     CapsuleComponent->SetCapsuleSize(256.f, 128.f);
 
     ShapeComponent = CapsuleComponent;
-    ShapeComponent->SetCollisionProfileName(TEXT("OverlapOnlyPawn")); //UCollisionProfile::OverlapPawnOnly_Name
+    ShapeComponent->SetCollisionProfileName(TEXT("OverlapOnlyPawn"));
+    SetRootComponent(ShapeComponent);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

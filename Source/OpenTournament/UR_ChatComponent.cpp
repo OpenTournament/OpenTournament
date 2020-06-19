@@ -133,7 +133,7 @@ bool UUR_ChatComponent::ShouldReceive_Implementation(UUR_ChatComponent* Sender, 
 
     if (TeamIndex == CHAT_INDEX_SPEC)
     {
-        return OwnerController && OwnerController->PlayerState && OwnerController->PlayerState->bOnlySpectator;
+        return OwnerController && OwnerController->PlayerState && OwnerController->PlayerState->IsOnlyASpectator();
     }
 
     return false;
@@ -157,7 +157,7 @@ int32 UUR_ChatComponent::GetTeamIndex_Implementation()
 {
     APlayerState* PS = GetPlayerState();
     //TODO: return actual team index
-    return PS ? (PS->bOnlySpectator ? CHAT_INDEX_SPEC : 0) : CHAT_INDEX_GLOBAL;
+    return PS ? (PS->IsOnlyASpectator() ? CHAT_INDEX_SPEC : 0) : CHAT_INDEX_GLOBAL;
 }
 
 FString UUR_ChatComponent::GetOwnerName_Implementation()
