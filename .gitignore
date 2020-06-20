@@ -80,6 +80,9 @@ Source/SK_Mannequin_A_Pose_README.txt
 Source/SK_Mannequin_T_Pose_README.txt
 Source/UE4_MocapOnline_Tech_Notes.txt
 
+# Ignore Source File Formats
+*.tga
+
 # Ignore UE4 Asset Packs
 AutomotiveMaterials.png
 ParticleToolkitVol1.png
