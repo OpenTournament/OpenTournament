@@ -83,6 +83,9 @@ Source/UE4_MocapOnline_Tech_Notes.txt
 # Ignore Source File Formats
 *.tga
 
+# Ignore Map BuiltData Files
+*BuiltData.uasset
+
 # Ignore UE4 Asset Packs
 AutomotiveMaterials.png
 ParticleToolkitVol1.png
