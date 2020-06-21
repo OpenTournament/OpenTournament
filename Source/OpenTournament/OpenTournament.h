@@ -12,7 +12,7 @@
 DECLARE_LOG_CATEGORY_EXTERN(Game, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(GameUI, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(Net, Log, All);
-DECLARE_LOG_CATEGORY_EXTERN(Weapon, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogWeapon, Log, All);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

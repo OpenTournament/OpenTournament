@@ -21,6 +21,8 @@ class UUR_AbilitySystemComponent;
 class UUR_AttributeSet;
 class UUR_GameplayAbility;
 class UUR_InventoryComponent;
+class APlayerController;
+class IUR_ActivatableInterface;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -68,7 +70,14 @@ public:
 
     bool bIsPickingUp = false;
 
+    /** DEPRECATED. Use GetMesh1P() or GetMesh3P() instead */
     USkeletalMeshComponent* GetPawnMesh() const;
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return MeshFirstPerson; }
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
 
     /**
     * First person Camera
@@ -79,7 +88,7 @@ public:
     /**
     * Character's first-person mesh (arms; seen only by self)
     */
-    UPROPERTY(VisibleDefaultsOnly, Category = "Mesh")
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Mesh")
     class USkeletalMeshComponent* MeshFirstPerson;
 
     /**
@@ -114,6 +123,9 @@ public:
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual void CalcCamera(float DeltaTime, struct FMinimalViewInfo& OutResult) override;
 
+    virtual void BecomeViewTarget(APlayerController* PC) override;
+    virtual void EndViewTarget(APlayerController* PC) override;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Camera Management
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,6 +159,20 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic)
     void CameraViewChanged();
+
+    /**
+    * Register a new zoom interface, that will be automatically activated / deactivated,
+    * according to this character current view mode (1P, 3P, spectated, etc.)
+    */
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic)
+    virtual void RegisterZoomInterface(TScriptInterface<IUR_ActivatableInterface> NewZoomInterface);
+
+    UPROPERTY()
+    TScriptInterface<IUR_ActivatableInterface> CurrentZoomInterface;
+
+    /** Temporary - probably needs to sit in PlayerController */
+    UFUNCTION(Exec)
+    virtual void BehindView(int32 Switch = -1);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Input (Keypress to Weapon, Movement/Dodge)
@@ -482,7 +508,14 @@ public:
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
     UUR_InventoryComponent* InventoryComponent;
 
+    //deprecated
     bool bIsFiring = false;
+
+    /**
+    * Track firing inputs in a stack to know if/which one should be active now.
+    */
+    UPROPERTY()
+    TArray<uint8> DesiredFireModeNum;
 
     virtual void PawnStartFire(uint8 FireModeNum = 0) override;
     virtual void PawnStopFire(uint8 FireModeNum = 0);
@@ -496,9 +529,6 @@ public:
 
     UFUNCTION(Exec, BlueprintCallable)
     void PrevWeapon();
-
-    UFUNCTION()
-    void Fire();
 
     /** get weapon attach point */
     UFUNCTION()

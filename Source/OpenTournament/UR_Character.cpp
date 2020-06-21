@@ -22,6 +22,7 @@
 #include "UR_GameMode.h"
 #include "UR_Weapon.h"
 #include "UR_Projectile.h"
+#include "Interfaces/UR_ActivatableInterface.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -219,7 +220,65 @@ void AUR_Character::CameraViewChanged_Implementation()
     {
         InventoryComponent->ActiveWeapon->UpdateMeshVisibility();
     }
+
+    // If a zoom is active, toggle it according to 1P/3P
+    if (CurrentZoomInterface)
+    {
+        IUR_ActivatableInterface::Execute_AIF_SetActive(CurrentZoomInterface.GetObject(), !bViewingThirdPerson, false);
+    }
 }
+
+void AUR_Character::BecomeViewTarget(APlayerController* PC)
+{
+    Super::BecomeViewTarget(PC);
+
+    if (PC && PC->IsLocalController())
+    {
+        // Update all the things (character 1p/3p mesh, weapon 1p/3p mesh, zooming state)
+        bViewingThirdPerson = IsThirdPersonCamera(PickCamera());
+        CameraViewChanged();
+    }
+}
+
+void AUR_Character::EndViewTarget(APlayerController* PC)
+{
+    // If a zoom is active, deactivate it
+    if (CurrentZoomInterface)
+    {
+        IUR_ActivatableInterface::Execute_AIF_Deactivate(CurrentZoomInterface.GetObject(), false);
+    }
+
+    Super::EndViewTarget(PC);
+}
+
+void AUR_Character::RegisterZoomInterface(TScriptInterface<IUR_ActivatableInterface> NewZoomInterface)
+{
+    if (CurrentZoomInterface == NewZoomInterface)
+    {
+        return;
+    }
+
+    // Deactivate previous
+    if (CurrentZoomInterface)
+    {
+        IUR_ActivatableInterface::Execute_AIF_Deactivate(CurrentZoomInterface.GetObject(), false);
+    }
+
+    // Set new
+    CurrentZoomInterface = NewZoomInterface;
+
+    // Activate if currently viewed in 1P
+    if (CurrentZoomInterface && UUR_FunctionLibrary::IsViewingFirstPerson(this))
+    {
+        IUR_ActivatableInterface::Execute_AIF_Activate(CurrentZoomInterface.GetObject(), false);
+    }
+}
+
+void AUR_Character::BehindView(int32 Switch)
+{
+    CharacterCameraComponent->SetActive((Switch == -1) ? (!CharacterCameraComponent->IsActive()) : !Switch);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -290,6 +349,13 @@ void AUR_Character::PlayFootstepEffects(const float WalkingSpeedPercentage) cons
 
 void AUR_Character::RecalculateBaseEyeHeight()
 {
+    //NOTE: Careful, this is called every Tick on non-owning clients, not just during crouch events
+    if (GetLocalRole() == ROLE_SimulatedProxy)
+    {
+        Super::RecalculateBaseEyeHeight();
+        return;
+    }
+
     const float DefaultHalfHeight{ GetDefaultHalfHeight() };
     const float AbsoluteDifference = DefaultHalfHeight - ((GetCharacterMovement()->CrouchedHalfHeight / DefaultHalfHeight) * DefaultHalfHeight);
 
@@ -696,6 +762,13 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
         AttributeSet->SetHealth(0);
     }
 
+    // Force stop firing
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
+    {
+        InventoryComponent->ActiveWeapon->Deactivate();
+    }
+    DesiredFireModeNum.Empty();
+
     // Cut the replication link
     TearOff();
 
@@ -856,51 +929,47 @@ void AUR_Character::PrevWeapon()
 
 void AUR_Character::PawnStartFire(uint8 FireModeNum)
 {
+    /*
     bIsFiring = true;
 
     if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
         InventoryComponent->ActiveWeapon->LocalStartFire();
     }
-    else
+    */
+
+    DesiredFireModeNum.Insert(FireModeNum, 0);
+
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
-        GAME_LOG(Game, Log, "No Weapon Selected");
+        InventoryComponent->ActiveWeapon->RequestStartFire(FireModeNum);
     }
 }
 
 void AUR_Character::PawnStopFire(uint8 FireModeNum)
 {
+    /*
     bIsFiring = false;
 
     if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
         InventoryComponent->ActiveWeapon->LocalStopFire();
     }
-}
+    */
 
-//deprecated
-void AUR_Character::Fire()
-{
-    if (bIsFiring)
+    DesiredFireModeNum.RemoveSingle(FireModeNum);
+
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
-        if (InventoryComponent->ActiveWeapon)
-        {
-            if (InventoryComponent->ActiveWeapon->ProjectileClass != nullptr)
-            {
-                //GetActorEyesViewPoint(InventoryComponent->ActiveWeapon->GetActorLocation(), FRotator()); //InventoryComponent->ActiveWeapon->GetActorRotation()
-                //FVector MuzzleLocation{ InventoryComponent->ActiveWeapon->GetActorLocation() + FTransform(FRotator()).TransformVector(MuzzleOffset) }; // InventoryComponent->ActiveWeapon->GetActorRotation()
-                //FRotator MuzzleRotation{ InventoryComponent->ActiveWeapon->GetActorRotation() };
+        InventoryComponent->ActiveWeapon->RequestStopFire(FireModeNum);
 
-                InventoryComponent->ActiveWeapon->Fire();
-                MeshFirstPerson->PlayAnimation(FireAnimation, false);
-            }
-        }
-        else
+        if (DesiredFireModeNum.Num() > 0)
         {
-            GAME_LOG(Game, Log, "No Weapon Selected");
+            InventoryComponent->ActiveWeapon->RequestStartFire(DesiredFireModeNum[0]);
         }
     }
 }
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

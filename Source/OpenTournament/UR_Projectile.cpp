@@ -51,7 +51,7 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
     SetCanBeDamaged(false);
 
     bReplicates = true;
-    bNetTemporary = true;
+    bCutReplicationAfterSpawn = false;
 
     BaseDamage = 100.f;
     SplashRadius = 0.0f;
@@ -61,6 +61,8 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
     DamageTypeClass = UDamageType::StaticClass();
 
     BounceSoundVelocityThreshold = 80.f;
+
+    InitialLifeSpan = 15.f;
 }
 
 void AUR_Projectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -74,6 +76,8 @@ void AUR_Projectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 void AUR_Projectile::BeginPlay()
 {
+    bNetTemporary = bCutReplicationAfterSpawn;
+
     Super::BeginPlay();
 
     if (ProjectileMovementComponent->bShouldBounce)
@@ -82,9 +86,11 @@ void AUR_Projectile::BeginPlay()
     }
 }
 
+//deprecated
 void AUR_Projectile::FireAt(const FVector& ShootDirection)
 {
-    ProjectileMovementComponent->Velocity = ShootDirection * ProjectileMovementComponent->InitialSpeed;
+    //ProjectileMovementComponent->Velocity = ProjectileMovementComponent->Velocity ShootDirection * ProjectileMovementComponent->InitialSpeed;
+    //NOTE: This is useless, projectile already does that, given we spawn it with the right rotation.
 }
 
 void AUR_Projectile::OnOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -215,7 +221,7 @@ void AUR_Projectile::Explode(const FVector& HitLocation, const FVector& HitNorma
 
         SetActorEnableCollision(false);
         ProjectileMovementComponent->StopSimulating(FHitResult());
-        SetActorHiddenInGame(true);
+        //SetActorHiddenInGame(true);
         SetLifeSpan(0.2f);
     }
     else
