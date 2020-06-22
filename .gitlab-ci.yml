@@ -159,6 +159,7 @@ stage_client_shipping_win64:
 
 upload_client_development_win64:
   stage: upload
+  script: [ echo "GL has a stupid requirement to add an empty script"]
   artifacts:
     paths: [ '%CI_PROJECT_DIR%\Output\Staged' ]
     expire_in: 1 week
@@ -169,6 +170,7 @@ upload_client_development_win64:
 
 upload_client_shipping_win64:
   stage: upload
+  script: [ echo "GL has a stupid requirement to add an empty script"]
   artifacts:
     paths: [ '%CI_PROJECT_DIR%\Output\Staged' ]
     expire_in: 1 week
