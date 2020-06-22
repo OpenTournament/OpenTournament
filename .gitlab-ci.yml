@@ -57,6 +57,9 @@ stage_client_development_win64:
   stage: stage
   script: [ call %SCRIPT% Stage Client Development Win64 ]
   #only: [ testing ]
+  artifacts:
+    paths: [ '%CI_PROJECT_DIR%\Output\Staged' ]
+    expire_in: 1 week
 
 #stage_client_shipping_win64:
 #  stage: stage
@@ -67,13 +70,13 @@ stage_client_development_win64:
 #     Archive
 # --------------------------------------------------
 
-archive_client_development_win64:
-  stage: archive
-  script: [ call %SCRIPT% Archive Client Development Win64 ]
-  #only: [ testing ]
-  artifacts:
-    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Development\Win64' ]
-    expire_in: 1 week
+#archive_client_development_win64:
+#  stage: archive
+#  script: [ call %SCRIPT% Archive Client Development Win64 ]
+#  #only: [ testing ]
+#  artifacts:
+#    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Development\Win64' ]
+#    expire_in: 1 week
 
 #archive_client_shipping_win64:
 #  stage: archive
