@@ -28,12 +28,12 @@ assemble:
 build_client_development_win64:
   stage: build
   script: [ call %SCRIPT% Build Client Development Win64 ]
-  only: [ testing ]
+  #only: [ testing ]
 
-build_client_shipping_win64:
-  stage: build
-  script: [ call %SCRIPT% Build Client Shipping Win64 ]
-  only: [ testing ]
+#build_client_shipping_win64:
+#  stage: build
+#  script: [ call %SCRIPT% Build Client Shipping Win64 ]
+#  #only: [ testing ]
 
 # --------------------------------------------------
 #     Cook
@@ -42,12 +42,12 @@ build_client_shipping_win64:
 cook_client_development_win64:
   stage: cook
   script: [ call %SCRIPT% Cook Client Development Win64 ]
-  only: [ testing ]
+  #only: [ testing ]
 
-cook_client_shipping_win64:
-  stage: cook
-  script: [ call %SCRIPT% Cook Client Shipping Win64 ]
-  only: [ testing ]
+#cook_client_shipping_win64:
+#  stage: cook
+#  script: [ call %SCRIPT% Cook Client Shipping Win64 ]
+#  #only: [ testing ]
 
 # --------------------------------------------------
 #     Stage
@@ -56,12 +56,12 @@ cook_client_shipping_win64:
 stage_client_development_win64:
   stage: stage
   script: [ call %SCRIPT% Stage Client Development Win64 ]
-  only: [ testing ]
+  #only: [ testing ]
 
-stage_client_shipping_win64:
-  stage: stage
-  script: [ call %SCRIPT% Stage Client Shipping Win64 ]
-  only: [ testing ]
+#stage_client_shipping_win64:
+#  stage: stage
+#  script: [ call %SCRIPT% Stage Client Shipping Win64 ]
+#  #only: [ testing ]
 
 # --------------------------------------------------
 #     Archive
@@ -70,15 +70,15 @@ stage_client_shipping_win64:
 archive_client_development_win64:
   stage: archive
   script: [ call %SCRIPT% Archive Client Development Win64 ]
-  only: [ testing ]
+  #only: [ testing ]
   artifacts:
     paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Development\Win64' ]
     expire_in: 1 week
 
-archive_client_shipping_win64:
-  stage: archive
-  script: [ call %SCRIPT% Archive Client Shipping Win64 ]
-  only: [ testing ]
-  artifacts:
-    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Shipping\Win64' ]
-    expire_in: 1 week
+#archive_client_shipping_win64:
+#  stage: archive
+#  script: [ call %SCRIPT% Archive Client Shipping Win64 ]
+#  #only: [ testing ]
+#  artifacts:
+#    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Shipping\Win64' ]
+#    expire_in: 1 week
