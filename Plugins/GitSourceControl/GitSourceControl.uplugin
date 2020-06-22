@@ -1,0 +1,25 @@
+{
+	"FileVersion" : 3,
+	"Version" : 36,
+	"VersionName" : "2.16",
+	"FriendlyName" : "Git LFS 2",
+	"Description" : "Git source control management (dev)",
+	"Category" : "Source Control",
+	"CreatedBy" : "SRombauts",
+	"CreatedByURL" : "http://srombauts.github.com",
+	"DocsURL" : "",
+	"MarketplaceURL" : "",
+	"SupportURL" : "",
+	"EnabledByDefault" : true,
+	"CanContainContent" : false,
+	"IsBetaVersion" : true,
+	"Installed" : false,
+	"Modules" :
+	[
+		{
+			"Name" : "GitSourceControl",
+			"Type" : "Editor",
+			"LoadingPhase" : "Default"
+		}
+	]
+}

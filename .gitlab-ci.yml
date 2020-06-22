@@ -1,14 +1,73 @@
 variables:
   GIT_STRATEGY: none
   GIT_CHECKOUT: "false"
+  BRANCH_DEVELOPMENT: 'development-placeholder'
+  BRANCH_TESTING: 'testing'
+  BRANCH_STAGING: 'staging'
+  BRANCH_PRODUCTION: 'production'
   SCRIPT: '"%CI_PROJECT_DIR%\.gitlab-ci.bat" "C:\UE\Engine\" "%CI_PROJECT_DIR%\"'
 
 stages:
+  - merge
   - assemble
+  - validate
   - build
   - cook
   - stage
-  - archive
+  - inject
+  - upload
+
+# TO-DO
+#
+# validate
+#   tools
+#     boostrappackagedgame
+#     editor
+#   project
+#     structure
+#     source
+#     content
+# build
+#   compile
+#     config #1
+#     config #2
+#     etc.
+#   cook
+#     config #1
+#     config #2
+#     etc.
+# stage
+#   move
+#     config #1
+#     config #2
+#     etc.
+#   inject
+#     config #1
+#     config #2
+#     etc.
+# upload
+#   config #1
+#   config #2
+#   etc.
+
+# --------------------------------------------------
+#     Merge
+# --------------------------------------------------
+
+merge:
+  stage: merge
+  script:
+    - git checkout %BRANCH_TESTING%
+    - git pull
+    - git pull origin %BRANCH_DEVELOPMENT%
+    - git push
+  only:
+    variables:
+      - '%CI_COMMIT_REF_NAME%' == '%BRANCH_TESTING%'
+      - '%CI_PIPELINE_SOURCE%' == 'schedule'
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_CHECKOUT: "true"
 
 # --------------------------------------------------
 #     Assemble
@@ -22,18 +81,30 @@ assemble:
     GIT_CHECKOUT: "true"
 
 # --------------------------------------------------
+#     Validate
+# --------------------------------------------------
+
+# This stage will make sure the project's structure, source and content are without obvious warnings and errors.
+
+# --------------------------------------------------
 #     Build
 # --------------------------------------------------
 
 build_client_development_win64:
   stage: build
   script: [ call %SCRIPT% Build Client Development Win64 ]
-  #only: [ testing ]
+  only:
+    variables:
+      - '%CI_COMMIT_REF_NAME%' == '%BRANCH_TESTING%'
+      - '%CI_PIPELINE_SOURCE%' == 'schedule'
 
-#build_client_shipping_win64:
-#  stage: build
-#  script: [ call %SCRIPT% Build Client Shipping Win64 ]
-#  #only: [ testing ]
+build_client_shipping_win64:
+  stage: build
+  script: [ call %SCRIPT% Build Client Shipping Win64 ]
+  only:
+    variables:
+      - '%CI_COMMIT_REF_NAME%' == '%BRANCH_STAGING%'
+      - '%CI_PIPELINE_SOURCE%' == 'schedule'
 
 # --------------------------------------------------
 #     Cook
@@ -42,12 +113,18 @@ build_client_development_win64:
 cook_client_development_win64:
   stage: cook
   script: [ call %SCRIPT% Cook Client Development Win64 ]
-  #only: [ testing ]
+  only:
+    variables:
+      - '%CI_COMMIT_REF_NAME%' == '%BRANCH_TESTING%'
+      - '%CI_PIPELINE_SOURCE%' == 'schedule'
 
-#cook_client_shipping_win64:
-#  stage: cook
-#  script: [ call %SCRIPT% Cook Client Shipping Win64 ]
-#  #only: [ testing ]
+cook_client_shipping_win64:
+  stage: cook
+  script: [ call %SCRIPT% Cook Client Shipping Win64 ]
+  only:
+    variables:
+      - '%CI_COMMIT_REF_NAME%' == '%BRANCH_STAGING%'
+      - '%CI_PIPELINE_SOURCE%' == 'schedule'
 
 # --------------------------------------------------
 #     Stage
@@ -56,32 +133,47 @@ cook_client_development_win64:
 stage_client_development_win64:
   stage: stage
   script: [ call %SCRIPT% Stage Client Development Win64 ]
-  #only: [ testing ]
+  only:
+    variables:
+      - '%CI_COMMIT_REF_NAME%' == '%BRANCH_TESTING%'
+      - '%CI_PIPELINE_SOURCE%' == 'schedule'
+
+stage_client_shipping_win64:
+  stage: stage
+  script: [ call %SCRIPT% Stage Client Shipping Win64 ]
+  only:
+    variables:
+      - '%CI_COMMIT_REF_NAME%' == '%BRANCH_STAGING%'
+      - '%CI_PIPELINE_SOURCE%' == 'schedule'
+
+# --------------------------------------------------
+#     Inject
+# --------------------------------------------------
+
+# This stage will inject all the required dependencies and utilites inside the staged build.
+# Examples: MSVC runtime distributables, curl etc.
+
+# --------------------------------------------------
+#     Upload
+# --------------------------------------------------
+
+upload_client_development_win64:
+  stage: upload
   artifacts:
     paths: [ '%CI_PROJECT_DIR%\Output\Staged' ]
     expire_in: 1 week
+  only:
+    variables:
+      - '%CI_COMMIT_REF_NAME%' == '%BRANCH_TESTING%'
+      - '%CI_PIPELINE_SOURCE%' == 'schedule'
 
-#stage_client_shipping_win64:
-#  stage: stage
-#  script: [ call %SCRIPT% Stage Client Shipping Win64 ]
-#  #only: [ testing ]
-
-# --------------------------------------------------
-#     Archive
-# --------------------------------------------------
-
-#archive_client_development_win64:
-#  stage: archive
-#  script: [ call %SCRIPT% Archive Client Development Win64 ]
-#  #only: [ testing ]
-#  artifacts:
-#    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Development\Win64' ]
-#    expire_in: 1 week
-
-#archive_client_shipping_win64:
-#  stage: archive
-#  script: [ call %SCRIPT% Archive Client Shipping Win64 ]
-#  #only: [ testing ]
-#  artifacts:
-#    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Shipping\Win64' ]
-#    expire_in: 1 week
+upload_client_shipping_win64:
+  stage: upload
+  artifacts:
+    paths: [ '%CI_PROJECT_DIR%\Output\Staged' ]
+    expire_in: 1 week
+  only:
+    variables:
+      - '%CI_COMMIT_REF_NAME%' == '%BRANCH_STAGING%'
+      - '%CI_PIPELINE_SOURCE%' == 'schedule'
+      
