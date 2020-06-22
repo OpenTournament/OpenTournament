@@ -53,9 +53,9 @@ stages:
 merge:
   stage: merge
   script:
-    - git checkout $BRANCH_TESTING
+    - git checkout %BRANCH_TESTING%
     - git pull
-    - git pull origin $BRANCH_DEVELOPMENT
+    - git pull origin %BRANCH_DEVELOPMENT%
     - git push
   only:
     variables:
