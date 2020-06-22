@@ -54,8 +54,9 @@ merge:
   stage: merge
   script:
     - git checkout %BRANCH_TESTING%
-    - git pull
-    - git pull origin %BRANCH_DEVELOPMENT%
+    - git config user.name "blank"
+    - git config user.email "blank"
+    - git merge origin/%BRANCH_DEVELOPMENT%
     - git push
   only:
     variables:
