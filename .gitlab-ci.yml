@@ -5,7 +5,7 @@ variables:
   BRANCH_TESTING: 'testing'
   BRANCH_STAGING: 'staging'
   BRANCH_PRODUCTION: 'production'
-  SCRIPT: '"%CI_PROJECT_DIR%\.gitlab-ci.bat" "C:\UE\Engine\" "%CI_PROJECT_DIR%\"'
+  SCRIPT: '"$CI_PROJECT_DIR\.gitlab-ci.bat" "C:\UE\Engine\" "$CI_PROJECT_DIR\"'
 
 stages:
   - merge
@@ -20,13 +20,9 @@ stages:
 # TO-DO
 #
 # validate
-#   tools
-#     boostrappackagedgame
-#     editor
-#   project
-#     structure
-#     source
-#     content
+#   structure
+#   source
+#   content
 # build
 #   compile
 #     config #1
@@ -57,9 +53,9 @@ stages:
 merge:
   stage: merge
   script:
-    - git checkout %BRANCH_TESTING%
+    - git checkout $BRANCH_TESTING
     - git pull
-    - git pull origin %BRANCH_DEVELOPMENT%
+    - git pull origin $BRANCH_DEVELOPMENT
     - git push
   only:
     variables:
@@ -75,7 +71,7 @@ merge:
 
 assemble:
   stage: assemble
-  script: [ call %SCRIPT% Assemble ]
+  script: [ call $SCRIPT Assemble ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
@@ -92,7 +88,7 @@ assemble:
 
 build_client_development_win64:
   stage: build
-  script: [ call %SCRIPT% Build Client Development Win64 ]
+  script: [ call $SCRIPT Build Client Development Win64 ]
   only:
     variables:
       - $CI_COMMIT_REF_NAME == $BRANCH_DEVELOPMENT
@@ -100,7 +96,7 @@ build_client_development_win64:
 
 build_client_shipping_win64:
   stage: build
-  script: [ call %SCRIPT% Build Client Shipping Win64 ]
+  script: [ call $SCRIPT Build Client Shipping Win64 ]
   only:
     variables:
       - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
@@ -112,7 +108,7 @@ build_client_shipping_win64:
 
 cook_client_development_win64:
   stage: cook
-  script: [ call %SCRIPT% Cook Client Development Win64 ]
+  script: [ call $SCRIPT Cook Client Development Win64 ]
   only:
     variables:
       - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
@@ -120,7 +116,7 @@ cook_client_development_win64:
 
 cook_client_shipping_win64:
   stage: cook
-  script: [ call %SCRIPT% Cook Client Shipping Win64 ]
+  script: [ call $SCRIPT Cook Client Shipping Win64 ]
   only:
     variables:
       - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
@@ -132,7 +128,7 @@ cook_client_shipping_win64:
 
 stage_client_development_win64:
   stage: stage
-  script: [ call %SCRIPT% Stage Client Development Win64 ]
+  script: [ call $SCRIPT Stage Client Development Win64 ]
   only:
     variables:
       - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
@@ -140,7 +136,7 @@ stage_client_development_win64:
 
 stage_client_shipping_win64:
   stage: stage
-  script: [ call %SCRIPT% Stage Client Shipping Win64 ]
+  script: [ call $SCRIPT Stage Client Shipping Win64 ]
   only:
     variables:
       - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
@@ -161,7 +157,7 @@ upload_client_development_win64:
   stage: upload
   script: [ echo "GL has a stupid requirement to add an empty script"]
   artifacts:
-    paths: [ '%CI_PROJECT_DIR%\Output\Staged' ]
+    paths: [ '$CI_PROJECT_DIR\Output\Staged' ]
     expire_in: 1 week
   only:
     variables:
@@ -172,7 +168,7 @@ upload_client_shipping_win64:
   stage: upload
   script: [ echo "GL has a stupid requirement to add an empty script"]
   artifacts:
-    paths: [ '%CI_PROJECT_DIR%\Output\Staged' ]
+    paths: [ '$CI_PROJECT_DIR\Output\Staged' ]
     expire_in: 1 week
   only:
     variables:
