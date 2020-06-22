@@ -51,11 +51,22 @@ class OPENTOURNAMENT_API AUR_Weap_Shotgun : public AUR_Weapon
 
     AUR_Weap_Shotgun(const FObjectInitializer& ObjectInitializer);
 
+public:
+
     UPROPERTY(EditAnywhere, Category = "Weapon|Shotgun")
     TArray<FShotgunSpawnBox> SpawnBoxes;
 
+    /** Used with MuzzleDistance to compute rockets orientation according to their initial offset */
     UPROPERTY(EditAnywhere, Category = "Weapon|Shotgun")
-    float Spread;
+    float OffsetSpread;
 
-    virtual void SpawnShot_Projectile() override;
+    /** For best results, this value should reflect the average distance from camera to weapon muzzle */
+    UPROPERTY(EditAnywhere, Category = "Weapon|Shotgun")
+    float UseMuzzleDistance;
+
+    UPROPERTY(VisibleAnywhere)
+    UUR_FireModeBasic* ShotgunFireMode;
+
+    virtual void AuthorityShot_Implementation(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo) override;
+
 };

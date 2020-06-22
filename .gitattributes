@@ -2,6 +2,7 @@
 *.h text eol=crlf
 *.cpp text eol=crlf
 *.cs text eol=crlf
+*.ini text eol=crlf
 *.uasset filter=lfs diff=lfs merge=lfs -text
 *.umap filter=lfs diff=lfs merge=lfs -text
 *.zip filter=lfs diff=lfs merge=lfs -text

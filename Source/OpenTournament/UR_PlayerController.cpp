@@ -136,6 +136,9 @@ void AUR_PlayerController::SetupInputComponent()
     InputComponent->BindAction("Fire", IE_Pressed, this, &AUR_PlayerController::PressedFire);
     //NOTE: we cannot bind 'Pressed' in PC and 'Released' in Character that just doesn't work...
     InputComponent->BindAction("Fire", IE_Released, this, &AUR_PlayerController::ReleasedFire);
+
+    InputComponent->BindAction("AltFire", IE_Pressed, this, &AUR_PlayerController::PressedAltFire);
+    InputComponent->BindAction("AltFire", IE_Released, this, &AUR_PlayerController::ReleasedAltFire);
 }
 
 void AUR_PlayerController::ProcessPlayerInput(const float DeltaTime, const bool bGamePaused)
@@ -276,6 +279,16 @@ void AUR_PlayerController::UnCrouch()
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+void AUR_PlayerController::StartFire(uint8 FireModeNum)
+{
+    //NOTE: here we might want to implement different functions according to FireModeNum, when player is spectating etc.
+    Super::StartFire(FireModeNum);
+}
+
+//TODO: We might want a better approach here, where we bind keys to exec commands like "StartFire 0 | onrelease StopFire 0"
+// So we could get away with just two exec methods, instead of having to forward each input like this.
+// Dunno what it takes to achieve this in UE4.
+
 void AUR_PlayerController::PressedFire()
 {
     StartFire(0);
@@ -286,6 +299,19 @@ void AUR_PlayerController::ReleasedFire()
     if (URCharacter)
     {
         URCharacter->PawnStopFire(0);
+    }
+}
+
+void AUR_PlayerController::PressedAltFire()
+{
+    StartFire(1);
+}
+
+void AUR_PlayerController::ReleasedAltFire()
+{
+    if (URCharacter)
+    {
+        URCharacter->PawnStopFire(1);
     }
 }
 
