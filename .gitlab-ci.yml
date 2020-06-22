@@ -63,8 +63,8 @@ merge:
     - git push
   only:
     variables:
-      - '%CI_COMMIT_REF_NAME%' == '%BRANCH_TESTING%'
-      - '%CI_PIPELINE_SOURCE%' == 'schedule'
+      - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
+      - $CI_PIPELINE_SOURCE == "schedule"
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
