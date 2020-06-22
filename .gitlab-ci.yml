@@ -8,7 +8,7 @@ variables:
   SCRIPT: '"$CI_PROJECT_DIR\.gitlab-ci.bat" "C:\UE\Engine\" "$CI_PROJECT_DIR\"'
 
 stages:
-  - merge
+#  - merge
   - assemble
   - validate
   - build
@@ -50,20 +50,20 @@ stages:
 #     Merge
 # --------------------------------------------------
 
-merge:
-  stage: merge
-  script:
-    - git checkout %BRANCH_TESTING%
-    - git pull
-    - git pull origin %BRANCH_DEVELOPMENT%
-    - git push
-  only:
-    variables:
-      - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
-      - $CI_PIPELINE_SOURCE == "schedule"
-  variables:
-    GIT_STRATEGY: fetch
-    GIT_CHECKOUT: "true"
+#merge:
+#  stage: merge
+#  script:
+#    - git checkout %BRANCH_TESTING%
+#    - git pull
+#    - git pull origin %BRANCH_DEVELOPMENT%
+#    - git push
+#  only:
+#    variables:
+#      - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
+#      - $CI_PIPELINE_SOURCE == "schedule"
+#  variables:
+#    GIT_STRATEGY: fetch
+#    GIT_CHECKOUT: "true"
 
 # --------------------------------------------------
 #     Assemble
@@ -91,7 +91,6 @@ build_client_development_win64:
   script: [ call %SCRIPT% Build Client Development Win64 ]
   only:
     variables:
-      - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
       - $CI_PIPELINE_SOURCE == "schedule"
 
 build_client_shipping_win64:
@@ -99,7 +98,6 @@ build_client_shipping_win64:
   script: [ call %SCRIPT% Build Client Shipping Win64 ]
   only:
     variables:
-      - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
       - $CI_PIPELINE_SOURCE == "schedule"
 
 # --------------------------------------------------
@@ -111,7 +109,6 @@ cook_client_development_win64:
   script: [ call %SCRIPT% Cook Client Development Win64 ]
   only:
     variables:
-      - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
       - $CI_PIPELINE_SOURCE == "schedule"
 
 cook_client_shipping_win64:
@@ -119,7 +116,6 @@ cook_client_shipping_win64:
   script: [ call %SCRIPT% Cook Client Shipping Win64 ]
   only:
     variables:
-      - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
       - $CI_PIPELINE_SOURCE == "schedule"
 
 # --------------------------------------------------
@@ -131,7 +127,6 @@ stage_client_development_win64:
   script: [ call %SCRIPT% Stage Client Development Win64 ]
   only:
     variables:
-      - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
       - $CI_PIPELINE_SOURCE == "schedule"
 
 stage_client_shipping_win64:
@@ -139,7 +134,6 @@ stage_client_shipping_win64:
   script: [ call %SCRIPT% Stage Client Shipping Win64 ]
   only:
     variables:
-      - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
       - $CI_PIPELINE_SOURCE == "schedule"
 
 # --------------------------------------------------
@@ -161,7 +155,6 @@ upload_client_development_win64:
     expire_in: 1 week
   only:
     variables:
-      - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
       - $CI_PIPELINE_SOURCE == "schedule"
 
 upload_client_shipping_win64:
@@ -172,6 +165,5 @@ upload_client_shipping_win64:
     expire_in: 1 week
   only:
     variables:
-      - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
       - $CI_PIPELINE_SOURCE == "schedule"
       
