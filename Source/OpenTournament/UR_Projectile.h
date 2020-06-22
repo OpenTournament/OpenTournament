@@ -70,6 +70,14 @@ public:
     UPROPERTY(VisibleDefaultsOnly, Category = "Projectile|Particles")
     UParticleSystemComponent* Particles;
 
+    /**
+    * This should be enabled for lesser projectiles like spammable ones, to reduce network cost.
+    * More prominent projectiles (grenades, rockets) should be false imo for more accurate simulations.
+    * Interactive projectiles (combo balls) MUST be false to function properly.
+    */
+    UPROPERTY(EditAnywhere, Category = "Replication")
+    bool bCutReplicationAfterSpawn;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**

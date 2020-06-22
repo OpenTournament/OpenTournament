@@ -83,19 +83,8 @@ Source/UE4_MocapOnline_Tech_Notes.txt
 # Ignore Source File Formats
 *.tga
 
-# Ignore UE4 Asset Packs
-AutomotiveMaterials.png
-ParticleToolkitVol1.png
-FootstepsSoundV2.png
-MissionNotificationSys.png
-Content/*
-
-# Exclude-from-Ignore All Base Level Content Except OpenTournament Directory (and specified others)
-!Content/Splash
-!Content/OpenTournament
-
-# Ignore Reference Maps
-Content/OpenTournament/Levels/Test/Reference/*
+# Ignore Map BuiltData Files
+*BuiltData.uasset
 
 #Exclude-from-Ignore Build Stuff
 !Build/Windows

@@ -4,10 +4,6 @@
 
 #include "UR_Weap_Shotgun.h"
 
-#include "Camera/CameraComponent.h"
-#include "Components/SphereComponent.h"
-
-#include "UR_Character.h"
 #include "UR_Projectile.h"
 #include "UR_FunctionLibrary.h"
 
@@ -16,16 +12,7 @@
 AUR_Weap_Shotgun::AUR_Weap_Shotgun(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
-    /*ConstructorHelpers::FObjectFinder<USkeletalMesh> newAsset(TEXT("SkeletalMesh'/Game/SciFiWeapDark/Weapons/Darkness_Shotgun.Darkness_Shotgun'"));
-    USkeletalMesh* helper = newAsset.Object;
-    Mesh1P->SetSkeletalMesh(helper);*/
     WeaponName = "Shotgun";
-
-    /*ConstructorHelpers::FObjectFinder<USoundCue> newAssetSound(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/Shotgun/Shotgun_Lower_Cue.Shotgun_Lower_Cue'"));
-    USoundCue* helperSound;
-    helperSound = newAssetSound.Object;
-    Sound->SetSound(helperSound);*/
-
     AmmoName = "Shotgun";
 
     SpawnBoxes = {
@@ -35,44 +22,36 @@ AUR_Weap_Shotgun::AUR_Weap_Shotgun(const FObjectInitializer& ObjectInitializer)
         { FVector(5.0f, +15.0f, -15.0f), FVector(5.f, 15.f, 15.f), 2 },
         { FVector(5.0f, +15.0f, +15.0f), FVector(5.f, 15.f, 15.f), 2 },
     };
-    Spread = 0.2f;
+    OffsetSpread = 0.2f;
+    UseMuzzleDistance = 100.f;
+
+    ShotgunFireMode = CreateDefaultSubobject<UUR_FireModeBasic>(TEXT("ShotgunFireMode"));
 }
 
-void AUR_Weap_Shotgun::SpawnShot_Projectile()
+void AUR_Weap_Shotgun::AuthorityShot_Implementation(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo)
 {
-    FVector FireLoc;
-    FRotator FireRot;
-    GetFireVector(FireLoc, FireRot);
-
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.Owner = GetOwner();
-    SpawnParams.Instigator = GetInstigator() ? GetInstigator() : Cast<APawn>(GetOwner());
-    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-    const FVector CameraLoc = URCharOwner->CharacterCameraComponent->GetComponentLocation();
-
-    for (const FShotgunSpawnBox& SpawnBox : SpawnBoxes)
+    if (FireMode == ShotgunFireMode && FireMode->ProjectileClass)
     {
-        for (int32 j = 0; j < SpawnBox.Count; j++)
+        FVector FireLoc;
+        FRotator FireRot;
+        GetValidatedFireVector(SimulatedInfo, FireLoc, FireRot, FireMode->MuzzleSocketName);
+
+        FVector SpreadReferencePoint = FireLoc - UseMuzzleDistance * FireRot.Vector();
+
+        for (const FShotgunSpawnBox& SpawnBox : SpawnBoxes)
         {
-            FVector RelOffset(SpawnBox.RelativeLoc);
-            RelOffset += UUR_FunctionLibrary::RandomVectorInRange(-SpawnBox.Extent, SpawnBox.Extent);
-
-            FVector SpawnLoc = FireLoc + FireRot.RotateVector(RelOffset);
-
-            FRotator MinimumDir = FireRot;
-            FRotator MaximumDir = (SpawnLoc - CameraLoc).Rotation();
-            FRotator SpawnRot = FMath::Lerp(MinimumDir, MaximumDir, Spread);
-
-            AUR_Projectile* Projectile = GetWorld()->SpawnActor<AUR_Projectile>(ProjectileClass, SpawnLoc, SpawnRot, SpawnParams);
-            if (Projectile)
+            for (int32 j = 0; j < SpawnBox.Count; j++)
             {
-                Projectile->FireAt(SpawnRot.Vector());
-            }
-            else
-            {
-                UE_LOG(LogTemp, Warning, TEXT("Failed to spawn projectile ??"));
+                FVector RelOffset(SpawnBox.RelativeLoc);
+                RelOffset += UUR_FunctionLibrary::RandomVectorInRange(-SpawnBox.Extent, SpawnBox.Extent);
+                FVector SpawnLoc = FireLoc + FireRot.RotateVector(RelOffset);
+                FRotator SpawnRot = FMath::Lerp(FireRot, (SpawnLoc - SpreadReferencePoint).Rotation(), OffsetSpread);
+                SpawnProjectile(FireMode->ProjectileClass, SpawnLoc, SpawnRot);
             }
         }
+    }
+    else
+    {
+        Super::AuthorityShot_Implementation(FireMode, SimulatedInfo);
     }
 }

@@ -17,6 +17,10 @@ class APlayerState;
 class AUR_GameModeBase;
 class AUR_Character;
 class UFXSystemComponent;
+class UAnimInstance;
+class UAnimMontage;
+class UActorComponent;
+class AUR_PlayerController;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -149,7 +153,7 @@ public:
     * Should be avoided on dedicated server code as the result would be random.
     */
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game", Meta = (WorldContext = "WorldContextObject", UnsafeDuringActorConstruction = "true"))
-    static class AUR_PlayerController* GetLocalPlayerController(const UObject* WorldContextObject);
+    static AUR_PlayerController* GetLocalPlayerController(const UObject* WorldContextObject);
 
 
     /**
@@ -158,12 +162,26 @@ public:
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
     static bool IsLocallyViewed(const AActor* Other);
 
-
     /**
     * Returns true if we are currently viewing this character in first person.
     */
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
     static bool IsViewingFirstPerson(const AUR_Character* Other);
+
+    /**
+    * Returns true if actor is locally controlled, ie. topmost owner is the local playercontroller.
+    * Equivalent to calling Actor->HasLocalNetOwner(), but with BP support and gained uniformity.
+    * If NetMode is NM_Client, this is a condition to being able to call server RPCs.
+    */
+    UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
+    static bool IsLocallyControlled(const AActor* Other);
+
+    /**
+    * Returns true if component is locally controlled, ie. topmost owner is the local playercontroller.
+    * If NetMode is NM_Client, this is a condition to being able to call server RPCs.
+    */
+    UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game")
+    static bool IsComponentLocallyControlled(const UActorComponent* Other);
 
 
     /**
@@ -187,5 +205,39 @@ public:
     * Spawn effect at location - niagara/particle independent.
     */
     UFUNCTION(BlueprintCallable, Category = "Effects")
-    static UFXSystemComponent* SpawnEffectAtLocation(UWorld* World, UFXSystemAsset* Template, const FTransform& Transform);
+    static UFXSystemComponent* SpawnEffectAtLocation(UWorld* World, UFXSystemAsset* Template, const FTransform& Transform, bool bAutoDestroy = true, bool bAutoActivate = true);
+
+    /**
+    * Spawn effect attached - niagara/particle independent.
+    */
+    UFUNCTION(BlueprintCallable, Category = "Effects")
+    static UFXSystemComponent* SpawnEffectAttached(UFXSystemAsset* Template, const FTransform& Transform, USceneComponent* AttachToComponent, FName AttachPointName = NAME_None, EAttachLocation::Type LocationType = EAttachLocation::KeepRelativeOffset, bool bAutoDestroy = true, bool bAutoActivate = true);
+
+
+    /**
+    * C++ utility to cast (checked) a TScriptInterface<IBase> to a TScriptInterface<IDerived>
+    */
+    template<class IBase, class IDerived> static void CastScriptInterface(const TScriptInterface<IBase>& Base, TScriptInterface<IDerived>& OutDerived)
+    {
+        UObject* Object = Base.GetObject();
+        IDerived* Casted = Cast<IDerived>(Object);
+        if (Casted)
+        {
+            OutDerived.SetObject(Object);
+            OutDerived.SetInterface(Casted);
+        }
+        else
+        {
+            OutDerived.SetObject(NULL);
+            //OutDerived.SetInterface(NULL); //unnecessary
+        }
+    }
+
+
+    /**
+    * Get the current active montage in specified slot.
+    */
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Animation", Meta = (NotBlueprintThreadSafe))
+    static UAnimMontage* GetCurrentActiveMontageInSlot(UAnimInstance* AnimInstance, FName SlotName, bool& bIsValid, float& Weight);
+
 };

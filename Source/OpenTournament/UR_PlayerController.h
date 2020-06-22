@@ -162,6 +162,11 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
+    * Override engine's default StartFire.
+    */
+    virtual void StartFire(uint8 FireModeNum = 0) override;
+
+    /**
     * Function bound to "Fire" ActionMapping Input. Forward to builtin StartFire.
     */
     virtual void PressedFire();
@@ -170,6 +175,16 @@ public:
     * Forward to character like StartFire does.
     */
     virtual void ReleasedFire();
+
+    /**
+    * Function bound to "AltFire" ActionMapping Input.
+    */
+    virtual void PressedAltFire();
+
+    /**
+    * Function bound to "AltFire" ActionMapping Input.
+    */
+    virtual void ReleasedAltFire();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
