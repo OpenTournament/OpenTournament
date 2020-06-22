@@ -91,7 +91,7 @@ build_client_development_win64:
   script: [ call %SCRIPT% Build Client Development Win64 ]
   only:
     variables:
-      - $CI_COMMIT_REF_NAME == $BRANCH_DEVELOPMENT
+      - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
       - $CI_PIPELINE_SOURCE == "schedule"
 
 build_client_shipping_win64:
