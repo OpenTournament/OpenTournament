@@ -5,16 +5,12 @@ variables:
   BRANCH_TESTING: 'testing'
   BRANCH_STAGING: 'staging'
   BRANCH_PRODUCTION: 'production'
-  SCRIPT: '"$CI_PROJECT_DIR\.gitlab-ci.bat" "C:\UE\Engine\" "$CI_PROJECT_DIR\"'
+  SCRIPT: '"$CI_PROJECT_DIR\Automation\Windows\Scripts\Automation.bat" "C:\UE\Engine\" "$CI_PROJECT_DIR\"'
 
 stages:
-#  - merge
-  - assemble
   - validate
   - build
-  - cook
   - stage
-  - inject
   - archive
 
 # TO-DO
@@ -41,36 +37,36 @@ stages:
 #     config #1
 #     config #2
 #     etc.
-# upload
-#   config #1
-#   config #2
-#   etc.
+# package
+#   archive
+#     config #1
+#     config #2
+#     etc.
+#   upload
+#     config #1
+#     config #2
+#     etc.
 
 # --------------------------------------------------
-#     Merge
+#     Validate
 # --------------------------------------------------
 
-#merge:
-#  stage: merge
-#  script:
-#    - git checkout %BRANCH_TESTING%
-#    - git pull
-#    - git pull origin %BRANCH_DEVELOPMENT%
-#    - git push
-#  only:
-#    variables:
-#      - $CI_COMMIT_REF_NAME == $BRANCH_TESTING
-#      - $CI_PIPELINE_SOURCE == "schedule"
-#  variables:
-#    GIT_STRATEGY: fetch
-#    GIT_CHECKOUT: "true"
+validate 1/3:
+  stage: validate
+  script: [ call %SCRIPT% Assemble ]
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_CHECKOUT: "true"
 
-# --------------------------------------------------
-#     Assemble
-# --------------------------------------------------
+validate 2/3:
+  stage: validate
+  script: [ call %SCRIPT% Assemble ]
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_CHECKOUT: "true"
 
-assemble:
-  stage: assemble
+validate 3/3:
+  stage: validate
   script: [ call %SCRIPT% Assemble ]
   variables:
     GIT_STRATEGY: fetch
@@ -137,14 +133,7 @@ stage_client_development_win64:
 #      - $CI_PIPELINE_SOURCE == "schedule"
 
 # --------------------------------------------------
-#     Inject
-# --------------------------------------------------
-
-# This stage will inject all the required dependencies and utilites inside the staged build.
-# Examples: MSVC runtime distributables, curl etc.
-
-# --------------------------------------------------
-#     Archive
+#     Package
 # --------------------------------------------------
 
 archive_client_development_win64:
@@ -157,11 +146,11 @@ archive_client_development_win64:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
-#archive_client_shipping_win64:
+#archive_server_development_win64:
 #  stage: archive
-#  script: [ call %SCRIPT% Archive Client Shipping Win64 ]
+#  script: [ call %SCRIPT% Archive Client Development Win64 ]
 #  artifacts:
-#    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Shipping\Win64' ]
+#    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Development\Win64' ]
 #    expire_in: 1 week
 #  only:
 #    variables:
