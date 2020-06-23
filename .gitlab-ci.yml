@@ -8,7 +8,6 @@ variables:
   SCRIPT: '"$CI_PROJECT_DIR\Automation\Windows\Scripts\Automation.bat" "C:\UE\Engine\" "$CI_PROJECT_DIR\"'
 
 stages:
-  - setup_linux
   - validate
   - build
   - cook
@@ -60,18 +59,6 @@ stages:
 # TO-DO - This pipeline runs on $BRANCH_STAGING, on every merge from $BRANCH_TESTING.
 
 # TO-DO - This pipeline runs on $BRANCH_PRODUCTION, on every manual trigger.
-
-test_job:
-  stage: setup_linux
-  script: [ status ]
-
-setup_linux_env_var_get:
-  stage: setup_linux
-  script: [ echo %LINUX_MULTIARCH_ROOT% ]
-  
-#setup_linux_env_var_set:
-#  stage: setup_linux
-#  script: [ setx LINUX_MULTIARCH_ROOT "$CI_PROJECT_DIR\v16_clang-9.0.1-centos7\" ]
 
 # --------------------------------------------------
 #     Validate
