@@ -150,13 +150,13 @@ stage_server_development_win64:
 
 
 lighting_client_development_win64:
-  stage: archive
+  stage: lighting
   script: [ call %SCRIPT% Lighting Client Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 lighting_server_development_win64:
-  stage: archive
+  stage: lighting
   script: [ call %SCRIPT% Lighting Server Development Win64 ]
   only:
     variables:
