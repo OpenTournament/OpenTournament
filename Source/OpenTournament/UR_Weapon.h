@@ -126,12 +126,12 @@ protected:
     UPROPERTY(VisibleAnywhere, Category = "Weapon")
     USkeletalMeshComponent* Mesh3P;
 
-    UPROPERTY(VisibleAnywhere, Category = "Weapon")
+    UPROPERTY(EditAnywhere, Category = "Weapon")
     USoundBase* OutOfAmmoSound;
 
 public:
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
     USoundBase* PickupSound;
 
     UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_AmmoCount, Category = "Weapon")
