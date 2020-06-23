@@ -15,7 +15,7 @@ stages:
   - cook
   - stage
   - inject
-  - upload
+  - archive
 
 # TO-DO
 #
@@ -93,11 +93,11 @@ build_client_development_win64:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
-build_client_shipping_win64:
-  stage: build
-  script: [ call %SCRIPT% Build Client Shipping Win64 ]
-  only:
-    variables:
+#build_client_shipping_win64:
+#  stage: build
+#  script: [ call %SCRIPT% Build Client Shipping Win64 ]
+#  only:
+#    variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 # --------------------------------------------------
@@ -111,12 +111,12 @@ cook_client_development_win64:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
-cook_client_shipping_win64:
-  stage: cook
-  script: [ call %SCRIPT% Cook Client Shipping Win64 ]
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
+#cook_client_shipping_win64:
+#  stage: cook
+#  script: [ call %SCRIPT% Cook Client Shipping Win64 ]
+#  only:
+#    variables:
+#      - $CI_PIPELINE_SOURCE == "schedule"
 
 # --------------------------------------------------
 #     Stage
@@ -129,12 +129,12 @@ stage_client_development_win64:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
-stage_client_shipping_win64:
-  stage: stage
-  script: [ call %SCRIPT% Stage Client Shipping Win64 ]
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
+#stage_client_shipping_win64:
+#  stage: stage
+#  script: [ call %SCRIPT% Stage Client Shipping Win64 ]
+#  only:
+#    variables:
+#      - $CI_PIPELINE_SOURCE == "schedule"
 
 # --------------------------------------------------
 #     Inject
@@ -144,26 +144,25 @@ stage_client_shipping_win64:
 # Examples: MSVC runtime distributables, curl etc.
 
 # --------------------------------------------------
-#     Upload
+#     Archive
 # --------------------------------------------------
 
-upload_client_development_win64:
-  stage: upload
-  script: [ echo "GL has a stupid requirement to add an empty script"]
+archive_client_development_win64:
+  stage: archive
+  script: [ call %SCRIPT% Archive Client Development Win64 ]
   artifacts:
-    paths: [ '$CI_PROJECT_DIR\Output\Staged' ]
+    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Development\Win64' ]
     expire_in: 1 week
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
-upload_client_shipping_win64:
-  stage: upload
-  script: [ echo "GL has a stupid requirement to add an empty script"]
-  artifacts:
-    paths: [ '$CI_PROJECT_DIR\Output\Staged' ]
-    expire_in: 1 week
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
-      
+#archive_client_shipping_win64:
+#  stage: archive
+#  script: [ call %SCRIPT% Archive Client Shipping Win64 ]
+#  artifacts:
+#    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Shipping\Win64' ]
+#    expire_in: 1 week
+#  only:
+#    variables:
+#      - $CI_PIPELINE_SOURCE == "schedule"
