@@ -32,13 +32,16 @@ set COMMAND_ASSEMBLE[3]="%ROOT_TOOLS%Binaries\Win64\UE4Editor-Cmd.exe" "%ROOT_PR
 set COMMAND_BUILD="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildTarget %ATTRIBUTES%
 set COMMAND_COOK="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildCookRun %ATTRIBUTES% -Cook -SkipEditorContent -Compressed -Unversioned
 set COMMAND_STAGE="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildCookRun %ATTRIBUTES% -Stage -StagingDirectory="%ROOT_PROJECT%Output\Staged\%~n4\%~n5\%~n6" -SkipCook
-set COMMAND_ARCHIVE="%ROOT_PROJECT%Tools\7z1900-extra\x64\7za.exe" a "%ROOT_PROJECT%Output\Archived\%~n4\%~n5\%~n6\%ROOT_TITLE%_%~n4_%~n5_%~n6_%PACKAGE_DATE%_%PACKAGE_TIME%.zip" "%ROOT_PROJECT%Output\Staged\%~n4\%~n5\%~n6\*"
+set COMMAND_ARCHIVE="%ROOT_PROJECT%Automation\Windows\Tools\7z1900-extra\x64\7za.exe" a "%ROOT_PROJECT%Output\Archived\%~n4\%~n5\%~n6\%ROOT_TITLE%_%~n4_%~n5_%~n6_%PACKAGE_DATE%_%PACKAGE_TIME%.zip" "%ROOT_PROJECT%Output\Staged\%~n4\%~n5\%~n6\*"
+
+set COMMAND_LIGHTING="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" RebuildLightmaps %ATTRIBUTES%
 
 if "%~n3" == "Assemble" %COMMAND_ASSEMBLE[0]% & %COMMAND_ASSEMBLE[1]% & %COMMAND_ASSEMBLE[2]% & %COMMAND_ASSEMBLE[3]%
 if "%~n3" == "Build" %COMMAND_BUILD%
 if "%~n3" == "Cook" %COMMAND_COOK%
 if "%~n3" == "Stage" %COMMAND_STAGE% & if "%~n6" == "Win64" for /r "%ROOT_TOOLS%Binaries\ThirdParty\AppLocalDependencies\%~n6\" %%f in (*.dll) do ( xcopy "%%f" "%ROOT_PROJECT%Output\Staged\%~n4\%~n5\%~n6\Windows%~n4\Engine\Binaries\%~n6\" )
 if "%~n3" == "Archive" %COMMAND_ARCHIVE%
+if "%~n3" == "Lighting" %COMMAND_LIGHTING%
 
 echo --------------------
 echo COMMAND_ASSEMBLE[0]: %COMMAND_ASSEMBLE[0]%
