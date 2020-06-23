@@ -63,7 +63,7 @@ stages:
 
 test_job:
   stage: setup_linux
-  script: [ gitlab-runner status ]
+  script: [ status ]
 
 setup_linux_env_var_get:
   stage: setup_linux
