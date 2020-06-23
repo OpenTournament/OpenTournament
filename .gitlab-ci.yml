@@ -100,12 +100,12 @@ build_client_development_win64:
 #     Cook
 # --------------------------------------------------
 
-cook_client_development_win64:
-  stage: cook
-  script: [ call %SCRIPT% Cook Client Development Win64 ]
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
+#cook_client_development_win64:
+#  stage: cook
+#  script: [ call %SCRIPT% Cook Client Development Win64 ]
+#  only:
+#    variables:
+#      - $CI_PIPELINE_SOURCE == "schedule"
 
 #cook_client_shipping_win64:
 #  stage: cook
