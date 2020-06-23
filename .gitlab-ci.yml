@@ -8,7 +8,6 @@ variables:
   SCRIPT: '"$CI_PROJECT_DIR\Automation\Windows\Scripts\Automation.bat" "C:\UE\Engine\" "$CI_PROJECT_DIR\"'
 
 stages:
-  - assemble
   - validate
   - build
   - cook
@@ -19,14 +18,17 @@ stages:
 
 # This pipeline runs on $BRANCH_DEVELOPMENT, on every commit.
 #
-# assemble
 # validate
+#   structure
 #   source
 #   content
 
 # This pipeline runs on $BRANCH_DEVELOPMENT, on a daily schedule.
 #
-# assemble
+# validate
+#   structure
+#   source
+#   content
 # build
 #   config #1
 #   config #2
@@ -59,36 +61,16 @@ stages:
 # TO-DO - This pipeline runs on $BRANCH_PRODUCTION, on every manual trigger.
 
 # --------------------------------------------------
-#     Assemble
+#     Validate
 # --------------------------------------------------
 
-assemble:
-  stage: assemble
+validate:
+  stage: validate
   script: [ call %SCRIPT% Assemble ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
 
-# --------------------------------------------------
-#     Validate
-# --------------------------------------------------
-
-validate_source:
-  stage: validate
-  script: [ echo Temporarily implemented in <Assemble> ]
-#  script: [ call %SCRIPT% Validate Source ]
-  except:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
-
-validate_content:
-  stage: validate
-  script: [ echo Temporarily implemented in <Assemble> ]
-#  script: [ call %SCRIPT% Validate Content ]
-  except:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
-    
 # --------------------------------------------------
 #     Build
 # --------------------------------------------------
@@ -103,6 +85,13 @@ build_client_development_win64:
 build_server_development_win64:
   stage: build
   script: [ call %SCRIPT% Build Server Development Win64 ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+build_server_development_linux:
+  stage: build
+  script: [ call %SCRIPT% Build Server Development Linux ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
@@ -125,6 +114,13 @@ cook_server_development_win64:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
+cook_server_development_linux:
+  stage: cook
+  script: [ call %SCRIPT% Cook Server Development Linux ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
 # --------------------------------------------------
 #     Stage
 # --------------------------------------------------
@@ -139,6 +135,13 @@ stage_client_development_win64:
 stage_server_development_win64:
   stage: stage
   script: [ call %SCRIPT% Stage Server Development Win64 ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+stage_server_development_linux:
+  stage: stage
+  script: [ call %SCRIPT% Stage Server Development Linux ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
@@ -166,6 +169,13 @@ archive_server_development_win64:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
+archive_server_development_linux:
+  stage: archive
+  script: [ call %SCRIPT% Archive Server Development Linux ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
 # --------------------------------------------------
 #     Upload
 # --------------------------------------------------
@@ -189,4 +199,14 @@ upload_server_development_win64:
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
-      
+   
+upload_server_development_linux:
+  stage: upload
+  script: [ echo Uploading... ]
+  artifacts:
+    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Server\Development\Linux' ]
+    expire_in: 1 week
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+         
