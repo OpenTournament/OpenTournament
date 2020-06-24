@@ -31,7 +31,7 @@ set COMMAND_ASSEMBLE[2]="%ROOT_TOOLS%Binaries\DotNET\UnrealBuildTool.exe" "%ROOT
 set COMMAND_ASSEMBLE[3]="%ROOT_TOOLS%Binaries\Win64\UE4Editor-Cmd.exe" "%ROOT_PROJECT%%ROOT_TITLE%.uproject" -Run=CompileAllBlueprints -IgnoreFolder=/Engine,/RuntimeTests
 set COMMAND_BUILD="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildTarget %ATTRIBUTES%
 set COMMAND_COOK="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildCookRun %ATTRIBUTES% -Cook -SkipEditorContent -Compressed -Unversioned
-set COMMAND_STAGE="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildCookRun %ATTRIBUTES% -Stage -StagingDirectory="%ROOT_PROJECT%Output\Staged\%~n4\%~n5\%~n6" -SkipCook
+set COMMAND_STAGE="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" BuildCookRun %ATTRIBUTES% -Stage -StagingDirectory="%ROOT_PROJECT%Output\Staged\\%~n4\%~n5\%~n6" -SkipCook
 set COMMAND_ARCHIVE="%ROOT_PROJECT%Automation\Windows\Tools\7z1900-extra\x64\7za.exe" a "%ROOT_PROJECT%Output\Archived\%~n4\%~n5\%~n6\%ROOT_TITLE%_%~n4_%~n5_%~n6_%PACKAGE_DATE%_%PACKAGE_TIME%.zip" "%ROOT_PROJECT%Output\Staged\%~n4\%~n5\%~n6\*"
 
 set COMMAND_LIGHTING="%ROOT_TOOLS%Build\BatchFiles\RunUAT.bat" RebuildLightmaps %ATTRIBUTES%
