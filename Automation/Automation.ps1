@@ -1,4 +1,6 @@
-@echo
+
+# TO-DO Place the output in a dedicated log file.
+#@echo
 
 # $args[1] = "C:\Program Files\Epic Games\UE_4.25.1\Engine"
 # $args[2] = "D:\Professional\Projects\DevOpsTests"
