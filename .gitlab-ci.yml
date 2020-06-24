@@ -67,7 +67,7 @@ stages:
 
 validate:
   stage: validate
-  script: [ Write-Output $env:LINUX_MULTIARCH_ROOT ]
+  script: [ 'Write-Output $env:LINUX_MULTIARCH_ROOT' ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
