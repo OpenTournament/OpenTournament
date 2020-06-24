@@ -67,7 +67,7 @@ stages:
 
 validate:
   stage: validate
-  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" Assemble' ]
+  script: [ Write-Output $env:LINUX_MULTIARCH_ROOT ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
