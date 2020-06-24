@@ -39,7 +39,7 @@ $COMMAND_LIGHTING="`"$TOOLS_PATH\Build\BatchFiles\RunUAT.bat`" RebuildLightmaps 
 
 if ($($args[2]) -eq "Assemble")
 {
-    & Write-Host | Start-Process -File `"$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe`" BootstrapPackagedGame Shipping Win64
+    & Write-Host | Start-Process -FilePath "$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe" -ArgumentList "BootstrapPackagedGame, Shipping, Win64"
     #& '`"$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe`" `"$PROJECT_PATH\$PROJECT_TITLE.uproject`" -ProjectFiles -Game -Progress'
     #& '`"$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe`" `"$PROJECT_PATH\$PROJECT_TITLE.uproject`" $($PROJECT_TITLE)Editor Development Win64 -WaitMutex -FromMsBuild'
     #& '`"$TOOLS_PATH\Binaries\Win64\UE4Editor-Cmd.exe`" `"$PROJECT_PATH\$PROJECT_TITLE.uproject`" -Run=CompileAllBlueprints -IgnoreFolder=/Engine,/RuntimeTests'
