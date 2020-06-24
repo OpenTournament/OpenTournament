@@ -39,7 +39,7 @@ $PACKAGE_CONFIGURATION = "$($args[4])"
 Write-Output "PACKAGE_CONFIGURATION: $PACKAGE_CONFIGURATION"
 $PACKAGE_PLATFORM = "$($args[5])"
 Write-Output "PACKAGE_PLATFORM: $PACKAGE_PLATFORM"
-$PACKAGE_ARGUMENTS = "-Project=$PROJECT_DESCRIPTOR -Target=$PROJECT_TITLE$($args[3]) -Configuration=$($args[4]) -Platform=$($args[5])"
+$PACKAGE_ARGUMENTS = "-Project=`"$PROJECT_DESCRIPTOR`" -Target=$PROJECT_TITLE$($args[3]) -Configuration=$($args[4]) -Platform=$($args[5])"
 Write-Output "PACKAGE_ARGUMENTS: $PACKAGE_ARGUMENTS"
 
 $COMMAND = "$($args[6])"
