@@ -5,7 +5,11 @@ variables:
   BRANCH_TESTING: 'testing'
   BRANCH_STAGING: 'staging'
   BRANCH_PRODUCTION: 'production'
-  SCRIPT: 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament'
+  PACKAGE_TARGET: 'Null'
+  PACKAGE_CONFIGURATION: 'Null'
+  PACKAGE_PLATFORM: 'Null'
+  COMMAND: 'Null'
+  SCRIPT: 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament $PACKAGE_TARGET $PACKAGE_CONFIGURATION $PACKAGE_PLATFORM $COMMAND'
 
 stages:
   - validate
@@ -66,10 +70,11 @@ stages:
 
 validate:
   stage: validate
-  script: [ $SCRIPT Null Null Null Validate ]
+  script: [ $SCRIPT ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
+    COMMAND: 'Validate'
 
 # --------------------------------------------------
 #     Build
