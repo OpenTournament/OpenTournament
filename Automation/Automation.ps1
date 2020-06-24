@@ -19,7 +19,7 @@ Write-Output "ARG-5: $($args[5])"
 $TIME = Get-Date -Format "dd-mm-yyyy"
 $TOOLS_PATH = $($args[0])
 $PROJECT_PATH = $($args[1])
-$PROJECT_TITLE = $($args[1]).split("\",2)[-1]
+$PROJECT_TITLE = $($args[1]).split("\")[-1]
 
 # These arguments are used in all commands.
 $ARGUMENTS = "-Project=`"$PROJECT_PATH\$PROJECT_TITLE.uproject`" -Target=$PROJECT_TITLE$($args[3]) -Configuration=$($args[4]) -Platform=$($args[5])'"
