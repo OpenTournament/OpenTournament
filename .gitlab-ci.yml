@@ -1,22 +1,72 @@
 variables:
   GIT_STRATEGY: none
   GIT_CHECKOUT: "false"
-  SCRIPT: '"%CI_PROJECT_DIR%\.gitlab-ci.bat" "C:\UE\Engine\" "%CI_PROJECT_DIR%\"'
+  BRANCH_DEVELOPMENT: 'development-placeholder'
+  BRANCH_TESTING: 'testing'
+  BRANCH_STAGING: 'staging'
+  BRANCH_PRODUCTION: 'production'
+  SCRIPT: '"$CI_PROJECT_DIR\Automation\Windows\Scripts\Automation.bat" "C:\UE\Engine\\" "$CI_PROJECT_DIR\\"'
 
 stages:
-  - assemble
+  - validate
   - build
   - cook
   - stage
+  - safeguard
   - archive
+  - upload
+
+# This pipeline runs on $BRANCH_DEVELOPMENT, on every commit.
+#
+# validate
+#   structure
+#   source
+#   content
+
+# This pipeline runs on $BRANCH_DEVELOPMENT, on a daily schedule.
+#
+# validate
+#   structure
+#   source
+#   content
+# build
+#   config #1
+#   config #2
+#   etc.
+# cook
+#   config #1
+#   config #2
+#   etc.
+# stage
+#   config #1
+#   config #2
+#   etc.
+# safeguard
+#   config #1
+#   config #2
+#   etc.
+# archive
+#   config #1
+#   config #2
+#   etc.
+# upload
+#   config #1
+#   config #2
+#   etc.
+
+# TO-DO - This pipeline runs on $BRANCH_TESTING, on every merge from $BRANCH_DEVELOPMENT.
+
+# TO-DO - This pipeline runs on $BRANCH_STAGING, on every merge from $BRANCH_TESTING.
+
+# TO-DO - This pipeline runs on $BRANCH_PRODUCTION, on every manual trigger.
 
 # --------------------------------------------------
-#     Assemble
+#     Validate
 # --------------------------------------------------
 
-assemble:
-  stage: assemble
-  script: [ call %SCRIPT% Assemble ]
+validate:
+  stage: validate
+  script: [ echo on, call %SCRIPT% Assemble ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
@@ -28,12 +78,23 @@ assemble:
 build_client_development_win64:
   stage: build
   script: [ call %SCRIPT% Build Client Development Win64 ]
-  #only: [ testing ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
 
-#build_client_shipping_win64:
-#  stage: build
-#  script: [ call %SCRIPT% Build Client Shipping Win64 ]
-#  #only: [ testing ]
+build_server_development_win64:
+  stage: build
+  script: [ call %SCRIPT% Build Server Development Win64 ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+build_server_development_linux:
+  stage: build
+  script: [ call %SCRIPT% Build Server Development Linux ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
 
 # --------------------------------------------------
 #     Cook
@@ -42,12 +103,23 @@ build_client_development_win64:
 cook_client_development_win64:
   stage: cook
   script: [ call %SCRIPT% Cook Client Development Win64 ]
-  #only: [ testing ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
 
-#cook_client_shipping_win64:
-#  stage: cook
-#  script: [ call %SCRIPT% Cook Client Shipping Win64 ]
-#  #only: [ testing ]
+cook_server_development_win64:
+  stage: cook
+  script: [ call %SCRIPT% Cook Server Development Win64 ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+cook_server_development_linux:
+  stage: cook
+  script: [ call %SCRIPT% Cook Server Development Linux ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
 
 # --------------------------------------------------
 #     Stage
@@ -56,32 +128,85 @@ cook_client_development_win64:
 stage_client_development_win64:
   stage: stage
   script: [ call %SCRIPT% Stage Client Development Win64 ]
-  #only: [ testing ]
-  artifacts:
-    paths: [ '%CI_PROJECT_DIR%\Output\Staged' ]
-    expire_in: 1 week
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
 
-#stage_client_shipping_win64:
-#  stage: stage
-#  script: [ call %SCRIPT% Stage Client Shipping Win64 ]
-#  #only: [ testing ]
+stage_server_development_win64:
+  stage: stage
+  script: [ call %SCRIPT% Stage Server Development Win64 ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+stage_server_development_linux:
+  stage: stage
+  script: [ call %SCRIPT% Stage Server Development Linux ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+# --------------------------------------------------
+#     Safeguard
+# --------------------------------------------------
+
 
 # --------------------------------------------------
 #     Archive
 # --------------------------------------------------
 
-#archive_client_development_win64:
-#  stage: archive
-#  script: [ call %SCRIPT% Archive Client Development Win64 ]
-#  #only: [ testing ]
-#  artifacts:
-#    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Development\Win64' ]
-#    expire_in: 1 week
+archive_client_development_win64:
+  stage: archive
+  script: [ call %SCRIPT% Archive Client Development Win64 ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
 
-#archive_client_shipping_win64:
-#  stage: archive
-#  script: [ call %SCRIPT% Archive Client Shipping Win64 ]
-#  #only: [ testing ]
-#  artifacts:
-#    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Shipping\Win64' ]
-#    expire_in: 1 week
+archive_server_development_win64:
+  stage: archive
+  script: [ call %SCRIPT% Archive Server Development Win64 ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+archive_server_development_linux:
+  stage: archive
+  script: [ call %SCRIPT% Archive Server Development Linux ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+# --------------------------------------------------
+#     Upload
+# --------------------------------------------------
+
+upload_client_development_win64:
+  stage: upload
+  script: [ echo Uploading... ]
+  artifacts:
+    paths: [ '%CI_PROJECT_DIR%\\Output\\Archived\\Client\\Development\\Win64' ]
+    expire_in: 1 week
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+upload_server_development_win64:
+  stage: upload
+  script: [ echo Uploading... ]
+  artifacts:
+    paths: [ '%CI_PROJECT_DIR%\\Output\\Archived\\Server\\Development\\Win64' ]
+    expire_in: 1 week
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+   
+upload_server_development_linux:
+  stage: upload
+  script: [ echo Uploading... ]
+  artifacts:
+    paths: [ '%CI_PROJECT_DIR%\\Output\\Archived\\Server\\Development\\Linux' ]
+    expire_in: 1 week
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+         
