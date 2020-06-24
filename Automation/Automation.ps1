@@ -20,7 +20,6 @@ Write-Output "ARG-6: $($args[6])"
 # $($args[7]) = (Structure|Source|Content)|(Other_A1|Other_A2|etc.)|etc.
 Write-Output "ARG-7: $($args[7])"
 
-
 $TOOLS_ROOT = "$($args[0])"
 Write-Output "TOOLS_ROOT: $TOOLS_ROOT"
 $TOOLS_UBT = "$($args[0])\Binaries\DotNET\UnrealBuildTool.exe"
@@ -32,7 +31,7 @@ $PROJECT_ROOT = "$($args[1])"
 Write-Output "PROJECT_ROOT: $PROJECT_ROOT"
 $PROJECT_TITLE = "$($args[2])"
 Write-Output "PROJECT_TITLE: $PROJECT_TITLE"
-$PROJECT_DESCRIPTOR = "$PROJECT_PATH\$PROJECT_TITLE.uproject"
+$PROJECT_DESCRIPTOR = "$PROJECT_ROOT\$PROJECT_TITLE.uproject"
 Write-Output "PROJECT_DESCRIPTOR: $PROJECT_DESCRIPTOR"
 
 $PACKAGE_TARGET = "$($args[3])"
