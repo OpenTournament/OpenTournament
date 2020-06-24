@@ -5,7 +5,8 @@ variables:
   BRANCH_TESTING: 'testing'
   BRANCH_STAGING: 'staging'
   BRANCH_PRODUCTION: 'production'
-  SCRIPT: 'powershell "`"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`"'
+  TOOLS: \"C:\UE\Engine"
+  SCRIPT: \"$CI_PROJECT_DIR\Automation\Automation.ps1"
 
 stages:
   - validate
@@ -66,7 +67,7 @@ stages:
 
 validate:
   stage: validate
-  script: [ echo on, powershell -File '.\Automation\Automation.ps1 "C:\UE\Engine" "$CI_PROJECT_DIR" Assemble' ]
+  script: [ powershell -File `$SCRIPT $TOOLS $CI_PROJECT_DIR Assemble` ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
