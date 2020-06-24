@@ -52,3 +52,4 @@ echo COMMAND_COOK: %COMMAND_COOK%
 echo COMMAND_STAGE[0]: %COMMAND_STAGE%
 echo COMMAND_ARCHIVE: %COMMAND_ARCHIVE%
 echo --------------------
+
