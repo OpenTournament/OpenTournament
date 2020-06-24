@@ -5,7 +5,7 @@ variables:
   BRANCH_TESTING: 'testing'
   BRANCH_STAGING: 'staging'
   BRANCH_PRODUCTION: 'production'
-  SCRIPT: '"$CI_PROJECT_DIR\Automation\Windows\Scripts\Automation.bat\" \"C:\UE\Engine\" \"$CI_PROJECT_DIR\\"'
+  SCRIPT: '"$CI_PROJECT_DIR\Automation\Windows\Scripts\Automation.bat" \"C:\UE\Engine\" \"$CI_PROJECT_DIR\\"'
 
 stages:
   - validate
