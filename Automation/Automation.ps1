@@ -40,7 +40,7 @@ $PROJECT_TITLE = $($args[1]).split("\",2)[-1]
 if ($($args[2]) -eq "Assemble")
 {
     Write-Output "Assembling... $TOOLS_PATH"
-    Write-Output "LINUX_MULTIARCHI_ROOT... $LINUX_MULTIARCH_ROOT"
+    Write-Output "LINUX_MULTIARCH_ROOT... $end:LINUX_MULTIARCH_ROOT"
     cmd %LINUX_MULTIARCH_ROOT%x86_64-unknown-linux-gnu\bin\clang++ -v
     #& Write-Host | & C:\UE\Engine\Binaries\DotNET\UnrealBuildTool.exe BootstrapPackagedGame, Shipping, Win64
     #& '`"$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe`" `"$PROJECT_PATH\$PROJECT_TITLE.uproject`" -ProjectFiles -Game -Progress'
