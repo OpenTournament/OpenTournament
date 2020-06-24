@@ -73,10 +73,12 @@ validate_structure:
   
 validate_source:
   stage: validate
+  needs: [ validate_structure ]
   script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament "Null" "Null" "Null" Validate Source' ]
 
 validate_content:
   stage: validate
+  needs: [ validate_content ]
   script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament "Null" "Null" "Null" Validate Content' ]
 
 # --------------------------------------------------
