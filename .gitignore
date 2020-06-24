@@ -86,8 +86,5 @@ Source/UE4_MocapOnline_Tech_Notes.txt
 # Ignore Map BuiltData Files
 *BuiltData.uasset
 
-# Exclude-from-Ignore Build Stuff
+#Exclude-from-Ignore Build Stuff
 !Build/Windows
-
-# Horrible hack
-v16_clang-9.0.1-centos7/

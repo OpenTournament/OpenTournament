@@ -126,12 +126,12 @@ protected:
     UPROPERTY(VisibleAnywhere, Category = "Weapon")
     USkeletalMeshComponent* Mesh3P;
 
-    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UPROPERTY(VisibleAnywhere, Category = "Weapon")
     USoundBase* OutOfAmmoSound;
 
 public:
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
     USoundBase* PickupSound;
 
     UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_AmmoCount, Category = "Weapon")
@@ -154,7 +154,7 @@ protected:
 public:
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
-    FORCEINLINE int32 GetCurrentAmmo() const { return AmmoCount; }
+    int32 GetCurrentAmmo() const { return AmmoCount; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
     FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
