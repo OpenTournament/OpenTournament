@@ -70,7 +70,7 @@ stages:
 
 validate:
   stage: validate
-  script: [ $SCRIPT ]
+  script: [ '$SCRIPT' ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
