@@ -66,7 +66,7 @@ stages:
 
 validate:
   stage: validate
-  script: [ '$SCRIPT Null Null Null Validate' ]
+  script: [ $SCRIPT Null Null Null Validate ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
