@@ -39,7 +39,7 @@ $PROJECT_TITLE = $args[1].split("\",2)[-1]
 
 if ($($args[2]) -eq "Assemble")
 {
-    Write-Output "Assembling..."
+    Write-Output "Assembling... $TOOLS_PATH"
     & Write-Host | & $TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe BootstrapPackagedGame, Shipping, Win64
     #& '`"$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe`" `"$PROJECT_PATH\$PROJECT_TITLE.uproject`" -ProjectFiles -Game -Progress'
     #& '`"$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe`" `"$PROJECT_PATH\$PROJECT_TITLE.uproject`" $($PROJECT_TITLE)Editor Development Win64 -WaitMutex -FromMsBuild'
