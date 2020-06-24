@@ -48,28 +48,56 @@ switch ($COMMAND)
     "Validate"
     {
         Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -ProjectFiles, -Game, -Progress;
+        if ($LASTEXITCODE -ne 0)
+        {
+            exit $LASTEXITCODE;
+        }
         Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, "$($PROJECT_TITLE)Editor", Development, Win64, -WaitMutex, -FromMsBuild;
+        if ($LASTEXITCODE -ne 0)
+        {
+            exit $LASTEXITCODE;
+        }
         Write-Host | & $TOOLS_UE $PROJECT_DESCRIPTOR, -Run=CompileAllBlueprints, -IgnoreFolder=/Engine,/RuntimeTests;
+        if ($LASTEXITCODE -ne 0)
+        {
+            exit $LASTEXITCODE;
+        }
         break
     }
     "Build"
     {
         Write-Host | & $TOOLS_UAT BuildTarget, -Project="`"$PROJECT_DESCRIPTOR`"", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM";
+        if ($LASTEXITCODE -ne 0)
+        {
+            exit $LASTEXITCODE;
+        }
         break
     }
     "Lighting"
     {
         Write-Host | & $TOOLS_UAT RebuildLightmaps, -Project="`"$PROJECT_DESCRIPTOR`"", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM";
+        if ($LASTEXITCODE -ne 0)
+        {
+            exit $LASTEXITCODE;
+        }
         break
     }
     "Cook"
     {
         Write-Host | & $TOOLS_UAT BuildCookRun, -Project="`"$PROJECT_DESCRIPTOR`"", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM", -Cook, -SkipEditorContent, -Compressed, -Unversioned;
+        if ($LASTEXITCODE -ne 0)
+        {
+            exit $LASTEXITCODE;
+        }
         break
     }
     "Stage"
     {
         Write-Host | & $TOOLS_UAT BuildCookRun, -Project="`"$PROJECT_DESCRIPTOR`"", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM", -Stage, -StagingDirectory="$ROOT_PROJECT\Packages", -SkipCook;
+        if ($LASTEXITCODE -ne 0)
+        {
+            exit $LASTEXITCODE;
+        }
         $PATH_OLD = "";
         $PATH_NEW = "$ROOT_PROJECT\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM";
         switch ($PACKAGE_PLATFORM)
@@ -95,6 +123,10 @@ switch ($COMMAND)
             }
         }
         Rename-Item -Path $PATH_OLD -NewName $PATH_NEW;
+        if ($LASTEXITCODE -ne 0)
+        {
+            exit $LASTEXITCODE;
+        }
         break
     }
     "Safeguard"
@@ -106,6 +138,10 @@ switch ($COMMAND)
             {
                 $REDISTRIBUTABLES_DESTINATION = "$PROJECT_PATH\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM\Engine\Binaries\$PACKAGE_PLATFORM\"
                 Copy-Item -Force -Recurse -Verbose $REDISTRIBUTABLES_SOURCE -Destination $REDISTRIBUTABLES_DESTINATION;
+                if ($LASTEXITCODE -ne 0)
+                {
+                    exit $LASTEXITCODE;
+                }
                 break
             }
             "Linux"
@@ -131,6 +167,10 @@ switch ($COMMAND)
     "Archive"
     {
         Write-Host | Compress-Archive -Path "$PROJECT_PATH\Packages\Staged\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM\*" -DestinationPath "$PROJECT_PATH\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM-"$(Get-Date -Format "dd-mm-yyyy")".zip"
+        if ($LASTEXITCODE -ne 0)
+        {
+            exit $LASTEXITCODE;
+        }
         break
     }
     default
