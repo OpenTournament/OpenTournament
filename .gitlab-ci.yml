@@ -245,7 +245,7 @@ archive_server_development_linux:
 upload_client_development_win64:
   extends: .template
   stage: upload
-  script: [ Uploading... ]
+  script: [ 'Write-Output "Uploading..."' ]
   artifacts:
     paths: [ '%CI_PROJECT_DIR%\Packages\OpenTournament-Client-Development-Win64.zip' ]
     expire_in: 1 week
@@ -256,7 +256,7 @@ upload_client_development_win64:
 upload_server_development_win64:
   extends: .template
   stage: upload
-  script: [ Uploading... ]
+  script: [ 'Write-Output "Uploading..."' ]
   artifacts:
     paths: [ '%CI_PROJECT_DIR%\Packages\OpenTournament-Server-Development-Win64.zip' ]
     expire_in: 1 week
@@ -267,7 +267,7 @@ upload_server_development_win64:
 upload_server_development_linux:
   extends: .template
   stage: upload
-  script: [ Uploading... ]
+  script: [ 'Write-Output "Uploading..."' ]
   artifacts:
     paths: [ '%CI_PROJECT_DIR%\Packages\OpenTournament-Server-Development-Linux.zip' ]
     expire_in: 1 week
