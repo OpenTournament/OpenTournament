@@ -122,7 +122,7 @@ switch ($COMMAND)
                 # Should probably throw an exception here.
             }
         }
-        Rename-Item -Path "$PATH_OLD" -NewName "$PATH_NEW";
+        Rename-Item "$PATH_OLD" "$PATH_NEW";
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
