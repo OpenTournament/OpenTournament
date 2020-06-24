@@ -24,6 +24,7 @@ $TOOLS_UBT = "$($args[0])\Binaries\DotNET\UnrealBuildTool.exe"
 Write-Output "TOOLS_UBT: $TOOLS_UBT"
 $TOOLS_UAT = "$($args[0])\Build\BatchFiles\RunUAT.bat"
 Write-Output "TOOLS_UAT: $TOOLS_UAT"
+$TOOLS_UE = "$($args[0])\Binaries\Win64\UE4Editor-Cmd.exe"
 
 $PROJECT_ROOT = "$($args[1])"
 Write-Output "PROJECT_ROOT: $PROJECT_ROOT"
@@ -48,9 +49,9 @@ switch ($COMMAND)
 {
     "Validate"
     {
-        #Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -ProjectFiles, -Game, -Progress;
-        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, OpenTournamentEditor, Development, Win64, -WaitMutex, -FromMsBuild;
-        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -Run=CompileAllBlueprints, -IgnoreFolder=/Engine,/RuntimeTests;
+        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -ProjectFiles, -Game, -Progress;
+        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, $($PROJECT_TITLE)Editor, Development, Win64, -WaitMutex, -FromMsBuild;
+        Write-Host | & $TOOLS_UE $PROJECT_DESCRIPTOR, -Run=CompileAllBlueprints, -IgnoreFolder=/Engine,/RuntimeTests;
         break
     }
     "Build"
@@ -76,7 +77,7 @@ switch ($COMMAND)
     }
     "Safeguard"
     {
-        $REDISTRIBUTABLES_SOURCE  = "$TOOLS_ROOT\Binaries\ThirdParty\AppLocalDependencies"
+        $REDISTRIBUTABLES_SOURCE = "$TOOLS_ROOT\Binaries\ThirdParty\AppLocalDependencies"
         switch ($PACKAGE_PLATFORM)
         {
             "Win64"
