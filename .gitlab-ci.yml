@@ -6,7 +6,7 @@ variables:
   BRANCH_STAGING: 'staging'
   BRANCH_PRODUCTION: 'production'
   TOOLS: \"C:\UE\Engine"
-  SCRIPT: \"$CI_PROJECT_DIR\Automation\Automation.ps1"
+  SCRIPT: \".\Automation\Automation.ps1"
 
 stages:
   - validate
@@ -67,7 +67,7 @@ stages:
 
 validate:
   stage: validate
-  script: [ powershell -File `$SCRIPT $TOOLS $CI_PROJECT_DIR Assemble` ]
+  script: [ powershell -File $SCRIPT $TOOLS $CI_PROJECT_DIR Assemble ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
