@@ -71,6 +71,14 @@ validate_structure:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
   
+validate_source:
+  stage: validate
+  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament "Null" "Null" "Null" Validate Source' ]
+
+validate_content:
+  stage: validate
+  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament "Null" "Null" "Null" Validate Content' ]
+
 # --------------------------------------------------
 #     Build
 # --------------------------------------------------
