@@ -67,7 +67,7 @@ stages:
 
 validate:
   stage: validate
-  script: [ '$CI_PROJECT_DIR\Automation\Automation.ps1 --% C:\UE\Engine $CI_PROJECT_DIR Assemble' ]
+  script: [ Start-Process -FilePath "$CI_PROJECT_DIR\Automation\Automation.ps1" -ArgumentList "`"C:\UE\Engine`" `"$CI_PROJECT_DIR`" Assemble" ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
