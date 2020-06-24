@@ -1,64 +1,144 @@
-
 # TO-DO Place the output in a dedicated log file.
 
-# $($args[0]) = "C:\Program Files\Epic Games\UE_4.25.1\Engine"
-# $($args[1]) = "D:\Professional\Projects\DevOpsTests"
-# $($args[2]) = Assemble\Build\Cook\Archive
-# $($args[3]) = Editor\Client\Server\[Blank]
-# $($args[4]) = Development\Shipping\Debug
-# $($args[5]) = Win64\Linux
-
+# $($args[0]) = C:\UE_4.25.1\Engine
 Write-Output "ARG-0: $($args[0])"
+
+# $($args[1]) = C:\UE_PROJECTS\ProjectRoot
 Write-Output "ARG-1: $($args[1])"
+# $($args[2]) = ProjectName
 Write-Output "ARG-2: $($args[2])"
+
+# $($args[3]) = Editor\Client\Server\[Blank]
 Write-Output "ARG-3: $($args[3])"
+# $($args[4]) = Development\Shipping\Debug
 Write-Output "ARG-4: $($args[4])"
+# $($args[5]) = Win64\Linux
 Write-Output "ARG-5: $($args[5])"
 
-# These folders represent the setup of the machine which reads this automation file.
-$TIME = Get-Date -Format "dd-mm-yyyy"
-$TOOLS_PATH = $($args[0])
-$PROJECT_PATH = $($args[1])
-$PROJECT_TITLE = $($args[1]).split("\")[-1]
+# $($args[6]) = Validate|Build|Cook|Stage|Safeguard|Archive|Other_A|Other_B|etc.
+Write-Output "ARG-6: $($args[6])"
+# $($args[7]) = (Structure|Source|Content)|(Other_A1|Other_A2|etc.)|etc.
+Write-Output "ARG-7: $($args[7])"
 
-# These arguments are used in all commands.
-$ARGUMENTS = "-Project=`"$PROJECT_PATH\$PROJECT_TITLE.uproject`" -Target=$PROJECT_TITLE$($args[3]) -Configuration=$($args[4]) -Platform=$($args[5])'"
 
-if ($($args[2]) -eq "Assemble")
+$TOOLS_ROOT = "$($args[0])"
+Write-Output "TOOLS_ROOT: $TOOLS_ROOT"
+$TOOLS_UBT = "$($args[0])\Binaries\DotNET\UnrealBuildTool.exe"
+Write-Output "TOOLS_UBT: $TOOLS_UBT"
+$TOOLS_UAT = "$($args[0])\Build\BatchFiles\RunUAT.bat"
+Write-Output "TOOLS_UAT: $TOOLS_UAT"
+
+$PROJECT_ROOT = "$($args[1])"
+Write-Output "PROJECT_ROOT: $PROJECT_ROOT"
+$PROJECT_TITLE = "$($args[2])"
+Write-Output "PROJECT_TITLE: $PROJECT_TITLE"
+$PROJECT_DESCRIPTOR = "$PROJECT_PATH\$PROJECT_TITLE.uproject"
+Write-Output "PROJECT_DESCRIPTOR: $PROJECT_DESCRIPTOR"
+
+$PACKAGE_TARGET = "$($args[3])"
+Write-Output "PACKAGE_TARGET: $PACKAGE_TARGET"
+$PACKAGE_CONFIGURATION = "$($args[4])"
+Write-Output "PACKAGE_CONFIGURATION: $PACKAGE_CONFIGURATION"
+$PACKAGE_PLATFORM = "$($args[5])"
+Write-Output "PACKAGE_PLATFORM: $PACKAGE_PLATFORM"
+$PACKAGE_ARGUMENTS = "-Project=$PROJECT_DESCRIPTOR -Target=$PROJECT_TITLE$($args[3]) -Configuration=$($args[4]) -Platform=$($args[5])"
+Write-Output "PACKAGE_ARGUMENTS: $PACKAGE_ARGUMENTS"
+
+$COMMAND_PRIMARY = "$($args[6])"
+Write-Output "COMMAND_PRIMARY: $COMMAND_PRIMARY"
+$COMMAND_SECONDARY = "$($args[7])"
+Write-Output "COMMAND_SECONDARY: $COMMAND_SECONDARY"
+
+switch ($COMMAND_PRIMARY)
 {
-    Write-Host | & "$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe" BootstrapPackagedGame, Shipping, Win64
-    Write-Host | & "$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe" "$PROJECT_PATH\$PROJECT_TITLE.uproject", -ProjectFiles, -Game, -Progress
-    Write-Host | & "$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe" "$PROJECT_PATH\$PROJECT_TITLE.uproject", $($PROJECT_TITLE)Editor, Development, Win64, -WaitMutex, -FromMsBuild
-    Write-Host | & "$TOOLS_PATH\Binaries\Win64\UE4Editor-Cmd.exe" "$PROJECT_PATH\$PROJECT_TITLE.uproject", -Run=CompileAllBlueprints, -IgnoreFolder=/Engine,/RuntimeTests
-}
-
-if ($($args[2]) -eq "Build") 
-{
-    Write-Host | & "$TOOLS_PATH\Build\BatchFiles\RunUAT.bat" BuildTarget, $ARGUMENTS
-}
-
-if ($($args[2]) -eq "Cook")
-{
-    Write-Host | & "$TOOLS_PATH\Build\BatchFiles\RunUAT.bat" BuildCookRun, $ARGUMENTS, -Cook, -SkipEditorContent, -Compressed, -Unversioned
-}
-
-if ($($args[2]) -eq "Stage")
-{
-    Write-Host | & "$TOOLS_PATH\Build\BatchFiles\RunUAT.bat" BuildCookRun, $ARGUMENTS, -Stage, -StagingDirectory="%ROOT_PROJECT%Output\Staged\\$($args[3])\$($args[4])\$($args[5])", -SkipCook
-    if ($($args[5]) -eq "Win64")
+    "Validate"
     {
-        $PATH_SOURCE  = "$TOOLS_PATH\Binaries\ThirdParty\AppLocalDependencies\$($args[5])\*"
-        $PATH_DESTIONATION = "$PROJECT_PATH\Output\Staged\$($args[3])\$($args[4])\$($args[5])\Windows$($args[3])\Engine\Binaries\$($args[5])\"
-        Copy-Item -Force -Recurse -Verbose $PATH_SOURCE -Destination $PATH_DESTIONATION
+        switch ($COMMAND_SECONDARY)
+        {
+            "Structure"
+            {
+                Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -ProjectFiles, -Game, -Progress
+                break
+            }
+            "Source"
+            {
+                Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, $($PROJECT_TITLE)Editor, Development, Win64, -WaitMutex, -FromMsBuild
+                break
+            }
+            "Content"
+            {
+                Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -Run=CompileAllBlueprints, -IgnoreFolder=/Engine,/RuntimeTests
+                break
+            }
+            default
+            {
+                # Should probably throw an exception here.
+            }
+        }
+    }
+    "Build"
+    {
+        Write-Host | & $TOOLS_UAT BuildTarget, $ARGUMENTS
+        break
+    }
+    "Lighting"
+    {
+        Write-Host | & $TOOLS_UAT RebuildLightmaps, $ARGUMENTS
+        break
+    }
+    "Cook"
+    {
+        Write-Host | & $TOOLS_UAT BuildCookRun, $ARGUMENTS, -Cook, -SkipEditorContent, -Compressed, -Unversioned
+        break
+    }
+    "Stage"
+    {
+        Write-Host | & $TOOLS_UAT BuildCookRun, $ARGUMENTS, -Stage, -StagingDirectory="$ROOT_PROJECT\Packages", -SkipCook
+        Rename-Item -Path "Autozzz" -NewName "Auto"
+        break
+    }
+    "Safeguard"
+    {
+        $REDISTRIBUTABLES_SOURCE  = $TOOLS_ROOT\Binaries\ThirdParty\AppLocalDependencies
+        switch ($PACKAGE_PLATFORM)
+        {
+            "Win64"
+            {
+                $PATH_DESTIONATION = "$PROJECT_PATH\Output\Staged\$($args[3])\$($args[4])\$($args[5])\Windows$($args[3])\Engine\Binaries\$($args[5])\"
+                Copy-Item -Force -Recurse -Verbose "$REDISTRIBUTABLES_SOURCE\$($args[5])\*" -Destination $PATH_DESTIONATION
+                break
+            }
+            "Linux"
+            {
+                # Nothing to do at the moment.
+                break
+            }
+            "Mac"
+            {
+                # Nothing to do at the moment.
+                break
+            }
+            default
+            {
+                # Should probably throw an exception here.
+            }
+        }
+        default
+        {
+            # Should probably throw an exception here.
+        }
+    }
+    "Archive"
+    {
+        Write-Host | Compress-Archive -Path "$PROJECT_PATH\Output\Staged\$($args[3])\$($args[4])\$($args[5])\*" -DestinationPath "$PROJECT_PATH\Output\Archived\$($args[3])\$($args[4])\$($args[5])\$($ROOT_TITLE)_$($args[3])_$($args[4])_$($args[5])_"$(Get-Date -Format "dd-mm-yyyy")".zip"
+        break
+    }
+    default
+    {
+        # Should probably throw an exception here.
     }
 }
 
-if ($($args[2]) -eq "Archive")
-{
-    Write-Host | Compress-Archive -Path "$PROJECT_PATH\Output\Staged\$($args[3])\$($args[4])\$($args[5])\*" -DestinationPath "$PROJECT_PATH\Output\Archived\$($args[3])\$($args[4])\$($args[5])\$($ROOT_TITLE)_$($args[3])_$($args[4])_$($args[5])_$($PACKAGE_DATE)_$($PACKAGE_TIME).zip"
-}
-
-if ($($args[2]) -eq "Lighting")
-{
-    Write-Host | & "$TOOLS_PATH\Build\BatchFiles\RunUAT.bat" RebuildLightmaps, $ARGUMENTS
-}
+# These commands will be part of a different script, dedicated to provide maintenance to the required tools.
+#
+# Write-Host | & "$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe" BootstrapPackagedGame, Shipping, Win64
