@@ -18,9 +18,9 @@ Write-Output "ARG-5: $($args[5])"
 
 # These folders represent the setup of the machine which reads this automation file.
 $TIME = Get-Date -Format "dd-mm-yyyy"
-$TOOLS_PATH = $args[0]
-$PROJECT_PATH = $args[1]
-$PROJECT_TITLE = $args[1].split("\",2)[-1]
+$TOOLS_PATH = $($args[0])
+$PROJECT_PATH = $($args[1])
+$PROJECT_TITLE = $($args[1]).split("\",2)[-1]
 
 # These arguments are used in all commands.
 #$ARGUMENTS = "-Project=`"$PROJECT_PATH\$PROJECT_TITLE.uproject`" -Target=$PROJECT_TITLE$($args[3]) -Configuration=$($args[4]) -Platform=$($args[5])'"
@@ -40,7 +40,9 @@ $PROJECT_TITLE = $args[1].split("\",2)[-1]
 if ($($args[2]) -eq "Assemble")
 {
     Write-Output "Assembling... $TOOLS_PATH"
-    & Write-Host | & C:\UE\Engine\Binaries\DotNET\UnrealBuildTool.exe BootstrapPackagedGame, Shipping, Win64
+    Write-Output "LINUX_MULTIARCHI_ROOT... $LINUX_MULTIARCH_ROOT"
+    cmd %LINUX_MULTIARCH_ROOT%x86_64-unknown-linux-gnu\bin\clang++ -v
+    #& Write-Host | & C:\UE\Engine\Binaries\DotNET\UnrealBuildTool.exe BootstrapPackagedGame, Shipping, Win64
     #& '`"$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe`" `"$PROJECT_PATH\$PROJECT_TITLE.uproject`" -ProjectFiles -Game -Progress'
     #& '`"$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe`" `"$PROJECT_PATH\$PROJECT_TITLE.uproject`" $($PROJECT_TITLE)Editor Development Win64 -WaitMutex -FromMsBuild'
     #& '`"$TOOLS_PATH\Binaries\Win64\UE4Editor-Cmd.exe`" `"$PROJECT_PATH\$PROJECT_TITLE.uproject`" -Run=CompileAllBlueprints -IgnoreFolder=/Engine,/RuntimeTests'
