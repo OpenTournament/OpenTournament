@@ -17,8 +17,6 @@ Write-Output "ARG-5: $($args[5])"
 
 # $($args[6]) = Validate|Build|Cook|Stage|Safeguard|Archive|Other_A|Other_B|etc.
 Write-Output "ARG-6: $($args[6])"
-# $($args[7]) = (Structure|Source|Content)|(Other_A1|Other_A2|etc.)|etc.
-Write-Output "ARG-7: $($args[7])"
 
 $TOOLS_ROOT = "$($args[0])"
 Write-Output "TOOLS_ROOT: $TOOLS_ROOT"
@@ -43,37 +41,17 @@ Write-Output "PACKAGE_PLATFORM: $PACKAGE_PLATFORM"
 $PACKAGE_ARGUMENTS = "-Project=$PROJECT_DESCRIPTOR -Target=$PROJECT_TITLE$($args[3]) -Configuration=$($args[4]) -Platform=$($args[5])"
 Write-Output "PACKAGE_ARGUMENTS: $PACKAGE_ARGUMENTS"
 
-$COMMAND_PRIMARY = "$($args[6])"
-Write-Output "COMMAND_PRIMARY: $COMMAND_PRIMARY"
-$COMMAND_SECONDARY = "$($args[7])"
-Write-Output "COMMAND_SECONDARY: $COMMAND_SECONDARY"
+$COMMAND = "$($args[6])"
+Write-Output "COMMAND: $COMMAND"
 
-switch ($COMMAND_PRIMARY)
+switch ($COMMAND)
 {
     "Validate"
     {
-        switch ($COMMAND_SECONDARY)
-        {
-            "Structure"
-            {
-                Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -ProjectFiles, -Game, -Progress
-                break
-            }
-            "Source"
-            {
-                Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, $($PROJECT_TITLE)Editor, Development, Win64, -WaitMutex, -FromMsBuild
-                break
-            }
-            "Content"
-            {
-                Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -Run=CompileAllBlueprints, -IgnoreFolder=/Engine,/RuntimeTests
-                break
-            }
-            default
-            {
-                # Should probably throw an exception here.
-            }
-        }
+        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -ProjectFiles, -Game, -Progress
+        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, "$($PROJECT_TITLE)Editor", Development, Win64, -WaitMutex, -FromMsBuild
+        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -Run=CompileAllBlueprints, -IgnoreFolder=/Engine,/RuntimeTests
+        break
     }
     "Build"
     {
