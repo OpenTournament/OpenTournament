@@ -62,20 +62,13 @@ stages:
 
 # TO-DO - This pipeline runs on $BRANCH_PRODUCTION, on every manual trigger.
 
-#reset_linux_variable:
-#  stage: reset_linux_variable
-#  script: [ setx LINUX_MULTIARCH_ROOT $VAR ]
-#  variables:
-#    GIT_STRATEGY: fetch
-#    GIT_CHECKOUT: "true"
-
 # --------------------------------------------------
 #     Validate
 # --------------------------------------------------
 
 validate:
   stage: validate
-  script: [ 'Write-Output $env:LINUX_MULTIARCH_ROOT' ]
+  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" Assemble' ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
