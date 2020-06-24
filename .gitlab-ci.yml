@@ -64,13 +64,16 @@ stages:
 
 # TO-DO - This pipeline runs on $BRANCH_PRODUCTION, on every manual trigger.
 
+.template:
+  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament $PACKAGE_TARGET $PACKAGE_CONFIGURATION $PACKAGE_PLATFORM $COMMAND' ]
+
 # --------------------------------------------------
 #     Validate
 # --------------------------------------------------
 
 validate:
+  extends: .template
   stage: validate
-  script: [ '$SCRIPT' ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
