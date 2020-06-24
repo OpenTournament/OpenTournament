@@ -54,22 +54,22 @@ switch ($COMMAND)
     }
     "Build"
     {
-        Write-Host | & $TOOLS_UAT BuildTarget, -Project="$PROJECT_DESCRIPTOR", -Target=$PROJECT_TITLE$PACKAGE_TARGET, -Configuration=$PACKAGE_CONFIGURATION, -Platform=$PACKAGE_PLATFORM;
+        Write-Host | & $TOOLS_UAT BuildTarget, -Project="`"$PROJECT_DESCRIPTOR`"", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM";
         break
     }
     "Lighting"
     {
-        Write-Host | & $TOOLS_UAT RebuildLightmaps, -Project="$PROJECT_DESCRIPTOR", -Target=$PROJECT_TITLE$PACKAGE_TARGET, -Configuration=$PACKAGE_CONFIGURATION, -Platform=$PACKAGE_PLATFORM;
+        Write-Host | & $TOOLS_UAT RebuildLightmaps, -Project="`"$PROJECT_DESCRIPTOR`"", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM";
         break
     }
     "Cook"
     {
-        Write-Host | & $TOOLS_UAT BuildCookRun, -Project="$PROJECT_DESCRIPTOR", -Target=$PROJECT_TITLE$PACKAGE_TARGET, -Configuration=$PACKAGE_CONFIGURATION, -Platform=$PACKAGE_PLATFORM, -Cook, -SkipEditorContent, -Compressed, -Unversioned;
+        Write-Host | & $TOOLS_UAT BuildCookRun, -Project="`"$PROJECT_DESCRIPTOR`"", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM", -Cook, -SkipEditorContent, -Compressed, -Unversioned;
         break
     }
     "Stage"
     {
-        Write-Host | & $TOOLS_UAT BuildCookRun, -Project="$PROJECT_DESCRIPTOR", -Target=$PROJECT_TITLE$PACKAGE_TARGET, -Configuration=$PACKAGE_CONFIGURATION, -Platform=$PACKAGE_PLATFORM, -Stage, -StagingDirectory="$ROOT_PROJECT\Packages", -SkipCook;
+        Write-Host | & $TOOLS_UAT BuildCookRun, -Project="`"$PROJECT_DESCRIPTOR`"", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM", -Stage, -StagingDirectory="$ROOT_PROJECT\Packages", -SkipCook;
         $PATH_OLD = "";
         $PATH_NEW = "$ROOT_PROJECT\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM";
         switch ($PACKAGE_PLATFORM)
