@@ -99,13 +99,13 @@ switch ($COMMAND_PRIMARY)
     }
     "Safeguard"
     {
-        $REDISTRIBUTABLES_SOURCE  = $TOOLS_ROOT\Binaries\ThirdParty\AppLocalDependencies
+        $REDISTRIBUTABLES_SOURCE  = "$TOOLS_ROOT\Binaries\ThirdParty\AppLocalDependencies"
         switch ($PACKAGE_PLATFORM)
         {
             "Win64"
             {
-                $PATH_DESTIONATION = "$PROJECT_PATH\Output\Staged\$($args[3])\$($args[4])\$($args[5])\Windows$($args[3])\Engine\Binaries\$($args[5])\"
-                Copy-Item -Force -Recurse -Verbose "$REDISTRIBUTABLES_SOURCE\$($args[5])\*" -Destination $PATH_DESTIONATION
+                $REDISTRIBUTABLES_DESTIONATION = "$PROJECT_PATH\Output\Staged\$($args[3])\$($args[4])\$($args[5])\Windows$($args[3])\Engine\Binaries\$($args[5])\"
+                Copy-Item -Force -Recurse -Verbose "$REDISTRIBUTABLES_SOURCE\$($args[5])\*" -Destination $REDISTRIBUTABLES_DESTIONATION
                 break
             }
             "Linux"
