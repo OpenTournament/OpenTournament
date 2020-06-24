@@ -66,7 +66,7 @@ stages:
 
 validate:
   stage: validate
-  script: [ echo on, $env:SCRIPT Assemble ]
+  script: [ echo on, $SCRIPT Assemble ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
@@ -77,21 +77,21 @@ validate:
 
 build_client_development_win64:
   stage: build
-  script: [ call $env:SCRIPT Build Client Development Win64 ]
+  script: [ call $SCRIPT Build Client Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 build_server_development_win64:
   stage: build
-  script: [ call $env:SCRIPT Build Server Development Win64 ]
+  script: [ call $SCRIPT Build Server Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 build_server_development_linux:
   stage: build
-  script: [ call $env:SCRIPT Build Server Development Linux ]
+  script: [ call $SCRIPT Build Server Development Linux ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
@@ -102,21 +102,21 @@ build_server_development_linux:
 
 cook_client_development_win64:
   stage: cook
-  script: [ call $env:SCRIPT Cook Client Development Win64 ]
+  script: [ call $SCRIPT Cook Client Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 cook_server_development_win64:
   stage: cook
-  script: [ call $env:SCRIPT Cook Server Development Win64 ]
+  script: [ call $SCRIPT Cook Server Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 cook_server_development_linux:
   stage: cook
-  script: [ call $env:SCRIPT Cook Server Development Linux ]
+  script: [ call $SCRIPT Cook Server Development Linux ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
@@ -127,21 +127,21 @@ cook_server_development_linux:
 
 stage_client_development_win64:
   stage: stage
-  script: [ call $env:SCRIPT Stage Client Development Win64 ]
+  script: [ call $SCRIPT Stage Client Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 stage_server_development_win64:
   stage: stage
-  script: [ call $env:SCRIPT Stage Server Development Win64 ]
+  script: [ call $SCRIPT Stage Server Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 stage_server_development_linux:
   stage: stage
-  script: [ call $env:SCRIPT Stage Server Development Linux ]
+  script: [ call $SCRIPT Stage Server Development Linux ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
@@ -157,21 +157,21 @@ stage_server_development_linux:
 
 archive_client_development_win64:
   stage: archive
-  script: [ call $env:SCRIPT Archive Client Development Win64 ]
+  script: [ call $SCRIPT Archive Client Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 archive_server_development_win64:
   stage: archive
-  script: [ call $env:SCRIPT Archive Server Development Win64 ]
+  script: [ call $SCRIPT Archive Server Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 archive_server_development_linux:
   stage: archive
-  script: [ call $env:SCRIPT Archive Server Development Linux ]
+  script: [ call $SCRIPT Archive Server Development Linux ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
