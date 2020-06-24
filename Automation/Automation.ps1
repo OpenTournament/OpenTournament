@@ -56,34 +56,58 @@ switch ($COMMAND)
     }
     "Build"
     {
-        Write-Host | & $TOOLS_UAT BuildTarget, $ARGUMENTS
+        Write-Host | & $TOOLS_UAT BuildTarget, $PACKAGE_ARGUMENTS;
         break
     }
     "Lighting"
     {
-        Write-Host | & $TOOLS_UAT RebuildLightmaps, $ARGUMENTS
+        Write-Host | & $TOOLS_UAT RebuildLightmaps, $PACKAGE_ARGUMENTS;
         break
     }
     "Cook"
     {
-        Write-Host | & $TOOLS_UAT BuildCookRun, $ARGUMENTS, -Cook, -SkipEditorContent, -Compressed, -Unversioned
+        Write-Host | & $TOOLS_UAT BuildCookRun, $PACKAGE_ARGUMENTS, -Cook, -SkipEditorContent, -Compressed, -Unversioned;
         break
     }
     "Stage"
     {
-        Write-Host | & $TOOLS_UAT BuildCookRun, $ARGUMENTS, -Stage, -StagingDirectory="$ROOT_PROJECT\Packages", -SkipCook
-        Rename-Item -Path "Autozzz" -NewName "Auto"
+        Write-Host | & $TOOLS_UAT BuildCookRun, $PACKAGE_ARGUMENTS, -Stage, -StagingDirectory="$ROOT_PROJECT\Packages", -SkipCook;
+        switch ($PACKAGE_PLATFORM)
+        {
+            $PATH_OLD = ""
+            $PATH_NEW = "$ROOT_PROJECT\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM"
+            "Win64"
+            {
+                $PATH_OLD = "$ROOT_PROJECT\Packages\Windows$PACKAGE_TARGET"
+                break
+            }
+            "Linux"
+            {
+                # Nothing to do at the moment.
+                break
+            }
+            "Mac"
+            {
+                # Nothing to do at the moment.
+                break
+            }
+            Rename-Item -Path $PATH_OLD -NewName $PATH_NEW;
+            default
+            {
+                # Should probably throw an exception here.
+            }
+        }
         break
     }
     "Safeguard"
     {
-        $REDISTRIBUTABLES_SOURCE = "$TOOLS_ROOT\Binaries\ThirdParty\AppLocalDependencies"
+        $REDISTRIBUTABLES_SOURCE = "$TOOLS_ROOT\Binaries\ThirdParty\AppLocalDependencies\$PACKAGE_PLATFORM\*"
         switch ($PACKAGE_PLATFORM)
         {
             "Win64"
             {
-                $REDISTRIBUTABLES_DESTIONATION = "$PROJECT_PATH\Output\Staged\$($args[3])\$($args[4])\$($args[5])\Windows$($args[3])\Engine\Binaries\$($args[5])\"
-                Copy-Item -Force -Recurse -Verbose "$REDISTRIBUTABLES_SOURCE\$($args[5])\*" -Destination $REDISTRIBUTABLES_DESTIONATION
+                $REDISTRIBUTABLES_DESTINATION = "$PROJECT_PATH\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM\Engine\Binaries\$PACKAGE_PLATFORM\"
+                Copy-Item -Force -Recurse -Verbose $REDISTRIBUTABLES_SOURCE -Destination $REDISTRIBUTABLES_DESTINATION;
                 break
             }
             "Linux"
@@ -108,7 +132,7 @@ switch ($COMMAND)
     }
     "Archive"
     {
-        Write-Host | Compress-Archive -Path "$PROJECT_PATH\Output\Staged\$($args[3])\$($args[4])\$($args[5])\*" -DestinationPath "$PROJECT_PATH\Output\Archived\$($args[3])\$($args[4])\$($args[5])\$($ROOT_TITLE)_$($args[3])_$($args[4])_$($args[5])_"$(Get-Date -Format "dd-mm-yyyy")".zip"
+        Write-Host | Compress-Archive -Path "$PROJECT_PATH\Packages\Staged\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM\*" -DestinationPath "$PROJECT_PATH\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM-"$(Get-Date -Format "dd-mm-yyyy")".zip"
         break
     }
     default
