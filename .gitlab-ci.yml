@@ -5,9 +5,7 @@ variables:
   BRANCH_TESTING: 'testing'
   BRANCH_STAGING: 'staging'
   BRANCH_PRODUCTION: 'production'
-  VAR: 'C:\UnrealToolchains\v16_clang-9.0.1-centos7\'
-  TOOLS: 'C:\UE\Engine'
-  SCRIPT: '$CI_PROJECT_DIR\Automation\Automation.ps1'
+  SCRIPT: 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`"'
 
 stages:
   - validate
@@ -68,7 +66,7 @@ stages:
 
 validate:
   stage: validate
-  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" Assemble' ]
+  script: [ $SCRIPT Assemble ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
@@ -79,21 +77,21 @@ validate:
 
 build_client_development_win64:
   stage: build
-  script: [ call $SCRIPT Build Client Development Win64 ]
+  script: [ $SCRIPT Build Client Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 build_server_development_win64:
   stage: build
-  script: [ call $SCRIPT Build Server Development Win64 ]
+  script: [ $SCRIPT Build Server Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 build_server_development_linux:
   stage: build
-  script: [ call $SCRIPT Build Server Development Linux ]
+  script: [ $SCRIPT Build Server Development Linux ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
@@ -104,21 +102,21 @@ build_server_development_linux:
 
 cook_client_development_win64:
   stage: cook
-  script: [ call $SCRIPT Cook Client Development Win64 ]
+  script: [ $SCRIPT Cook Client Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 cook_server_development_win64:
   stage: cook
-  script: [ call $SCRIPT Cook Server Development Win64 ]
+  script: [ $SCRIPT Cook Server Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 cook_server_development_linux:
   stage: cook
-  script: [ call $SCRIPT Cook Server Development Linux ]
+  script: [ $SCRIPT Cook Server Development Linux ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
@@ -129,21 +127,21 @@ cook_server_development_linux:
 
 stage_client_development_win64:
   stage: stage
-  script: [ call $SCRIPT Stage Client Development Win64 ]
+  script: [ $SCRIPT Stage Client Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 stage_server_development_win64:
   stage: stage
-  script: [ call $SCRIPT Stage Server Development Win64 ]
+  script: [ $SCRIPT Stage Server Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 stage_server_development_linux:
   stage: stage
-  script: [ call $SCRIPT Stage Server Development Linux ]
+  script: [ $SCRIPT Stage Server Development Linux ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
@@ -159,21 +157,21 @@ stage_server_development_linux:
 
 archive_client_development_win64:
   stage: archive
-  script: [ call $SCRIPT Archive Client Development Win64 ]
+  script: [ $SCRIPT Archive Client Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 archive_server_development_win64:
   stage: archive
-  script: [ call $SCRIPT Archive Server Development Win64 ]
+  script: [ $SCRIPT Archive Server Development Win64 ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 archive_server_development_linux:
   stage: archive
-  script: [ call $SCRIPT Archive Server Development Linux ]
+  script: [ $SCRIPT Archive Server Development Linux ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
@@ -184,7 +182,7 @@ archive_server_development_linux:
 
 upload_client_development_win64:
   stage: upload
-  script: [ echo Uploading... ]
+  script: [ Write-Output Uploading... ]
   artifacts:
     paths: [ '%CI_PROJECT_DIR%\\Output\\Archived\\Client\\Development\\Win64' ]
     expire_in: 1 week
@@ -194,7 +192,7 @@ upload_client_development_win64:
 
 upload_server_development_win64:
   stage: upload
-  script: [ echo Uploading... ]
+  script: [ Write-Output Uploading... ]
   artifacts:
     paths: [ '%CI_PROJECT_DIR%\\Output\\Archived\\Server\\Development\\Win64' ]
     expire_in: 1 week
@@ -204,7 +202,7 @@ upload_server_development_win64:
    
 upload_server_development_linux:
   stage: upload
-  script: [ echo Uploading... ]
+  script: [ Write-Output Uploading... ]
   artifacts:
     paths: [ '%CI_PROJECT_DIR%\\Output\\Archived\\Server\\Development\\Linux' ]
     expire_in: 1 week
