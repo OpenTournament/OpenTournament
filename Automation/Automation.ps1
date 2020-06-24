@@ -9,6 +9,10 @@
 # $args[5] = Development\Shipping\Debug
 # $args[6] = Win64\Linux
 
+echo ARG-1: $args[1]
+echo ARG-2: $args[1]
+echo ARG-3: $args[3]
+
 # These folders represent the setup of the machine which reads this automation file.
 $TIME = Get-Date -Format "dd-mm-yyyy"
 $TOOLS_PATH = $args[1]
