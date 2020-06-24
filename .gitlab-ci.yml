@@ -5,7 +5,7 @@ variables:
   BRANCH_TESTING: 'testing'
   BRANCH_STAGING: 'staging'
   BRANCH_PRODUCTION: 'production'
-  SCRIPT: '"$CI_PROJECT_DIR\Automation\Windows\Scripts\Automation.bat" "C:\UE\Engine\\" "$CI_PROJECT_DIR\\"'
+  SCRIPT: "$CI_PROJECT_DIR\Automation\Windows\Scripts\Automation.bat\" \"C:\UE\Engine\" \"$CI_PROJECT_DIR\\"
 
 stages:
   - validate
@@ -184,7 +184,7 @@ upload_client_development_win64:
   stage: upload
   script: [ echo Uploading... ]
   artifacts:
-    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Development\Win64' ]
+    paths: [ '%CI_PROJECT_DIR%\\Output\\Archived\\Client\\Development\\Win64' ]
     expire_in: 1 week
   only:
     variables:
@@ -194,7 +194,7 @@ upload_server_development_win64:
   stage: upload
   script: [ echo Uploading... ]
   artifacts:
-    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Server\Development\Win64' ]
+    paths: [ '%CI_PROJECT_DIR%\\Output\\Archived\\Server\\Development\\Win64' ]
     expire_in: 1 week
   only:
     variables:
@@ -204,7 +204,7 @@ upload_server_development_linux:
   stage: upload
   script: [ echo Uploading... ]
   artifacts:
-    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Server\Development\Linux' ]
+    paths: [ '%CI_PROJECT_DIR%\\Output\\Archived\\Server\\Development\\Linux' ]
     expire_in: 1 week
   only:
     variables:
