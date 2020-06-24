@@ -93,18 +93,18 @@ switch ($COMMAND)
     }
     "Stage"
     {
-        Write-Host | & $TOOLS_UAT BuildCookRun, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM", -Stage, -StagingDirectory="$ROOT_PROJECT\Packages", -SkipCook;
+        Write-Host | & $TOOLS_UAT BuildCookRun, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM", -Stage, -StagingDirectory="$PROJECT_ROOT\Packages", -SkipCook;
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
         }
         $PATH_OLD = "";
-        $PATH_NEW = "$ROOT_PROJECT\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM";
+        $PATH_NEW = "$PROJECT_ROOT\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM";
         switch ($PACKAGE_PLATFORM)
         {
             "Win64"
             {
-                $PATH_OLD = "$ROOT_PROJECT\Packages\Windows$PACKAGE_TARGET"
+                $PATH_OLD = "$PROJECT_ROOT\Packages\Windows$PACKAGE_TARGET"
                 break
             }
             "Linux"
@@ -122,7 +122,7 @@ switch ($COMMAND)
                 # Should probably throw an exception here.
             }
         }
-        Rename-Item "$PATH_OLD" "$PATH_NEW";
+        Rename-Item -Path "$PATH_OLD" -NewName "$PATH_NEW" -ErrorAction Stop;
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
