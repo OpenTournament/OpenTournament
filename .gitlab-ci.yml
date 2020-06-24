@@ -71,8 +71,7 @@ validate:
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
-#TEST
-
+  
 # --------------------------------------------------
 #     Build
 # --------------------------------------------------
