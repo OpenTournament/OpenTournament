@@ -72,10 +72,10 @@ switch ($COMMAND)
     "Stage"
     {
         Write-Host | & $TOOLS_UAT BuildCookRun, $PACKAGE_ARGUMENTS, -Stage, -StagingDirectory="$ROOT_PROJECT\Packages", -SkipCook;
+        $PATH_OLD = "";
+        $PATH_NEW = "$ROOT_PROJECT\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM";
         switch ($PACKAGE_PLATFORM)
         {
-            $PATH_OLD = ""
-            $PATH_NEW = "$ROOT_PROJECT\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM"
             "Win64"
             {
                 $PATH_OLD = "$ROOT_PROJECT\Packages\Windows$PACKAGE_TARGET"
@@ -91,12 +91,12 @@ switch ($COMMAND)
                 # Nothing to do at the moment.
                 break
             }
-            Rename-Item -Path $PATH_OLD -NewName $PATH_NEW;
             default
             {
                 # Should probably throw an exception here.
             }
         }
+        Rename-Item -Path $PATH_OLD -NewName $PATH_NEW;
         break
     }
     "Safeguard"
