@@ -105,8 +105,8 @@ void AUR_Projectile::OnOverlap_Implementation(UPrimitiveComponent* OverlappedCom
         {
             DealPointDamage(OtherActor, SweepResult);
         }
-
-        Explode(bFromSweep ? SweepResult.Location : GetActorLocation(), SweepResult.ImpactNormal);
+        
+        Explode(bFromSweep ? FVector(SweepResult.Location.X, SweepResult.Location.Y, SweepResult.Location.Z) : GetActorLocation(), SweepResult.ImpactNormal);
     }
 }
 
