@@ -122,7 +122,7 @@ switch ($COMMAND)
                 # Should probably throw an exception here.
             }
         }
-        Rename-Item -Path $PATH_OLD -NewName $PATH_NEW;
+        Rename-Item -Path "$PATH_OLD" -NewName "$PATH_NEW";
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
@@ -137,7 +137,7 @@ switch ($COMMAND)
             "Win64"
             {
                 $REDISTRIBUTABLES_DESTINATION = "$PROJECT_PATH\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM\Engine\Binaries\$PACKAGE_PLATFORM\"
-                Copy-Item -Force -Recurse -Verbose $REDISTRIBUTABLES_SOURCE -Destination $REDISTRIBUTABLES_DESTINATION;
+                Copy-Item -Force -Recurse -Verbose "$REDISTRIBUTABLES_SOURCE" -Destination "$REDISTRIBUTABLES_DESTINATION";
                 if ($LASTEXITCODE -ne 0)
                 {
                     exit $LASTEXITCODE;
