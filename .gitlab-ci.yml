@@ -5,6 +5,7 @@ variables:
   BRANCH_TESTING: 'testing'
   BRANCH_STAGING: 'staging'
   BRANCH_PRODUCTION: 'production'
+  VAR: 'C:\UnrealToolchains\v16_clang-9.0.1-centos7\'
   TOOLS: 'C:\UE\Engine'
   SCRIPT: '$CI_PROJECT_DIR\Automation\Automation.ps1'
 
@@ -64,7 +65,7 @@ stages:
 
 reset_linux_variable:
   stage: reset_linux_variable
-  script: [ setx LINUX_MULTIARCH_ROOT "C:\UnrealToolchains\v16_clang-9.0.1-centos7\" ]
+  script: [ setx LINUX_MULTIARCH_ROOT $VAR ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
