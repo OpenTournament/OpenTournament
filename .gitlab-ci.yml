@@ -9,7 +9,6 @@ variables:
   PACKAGE_CONFIGURATION: 'Null'
   PACKAGE_PLATFORM: 'Null'
   COMMAND: 'Null'
-  SCRIPT: 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament $PACKAGE_TARGET $PACKAGE_CONFIGURATION $PACKAGE_PLATFORM $COMMAND'
 
 stages:
   - validate
@@ -20,19 +19,16 @@ stages:
   - archive
   - upload
 
+.template:
+  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament $PACKAGE_TARGET $PACKAGE_CONFIGURATION $PACKAGE_PLATFORM $COMMAND' ]
+
 # This pipeline runs on $BRANCH_DEVELOPMENT, on every commit.
 #
 # validate
-#   structure
-#   source
-#   content
 
 # This pipeline runs on $BRANCH_DEVELOPMENT, on a daily schedule.
 #
 # validate
-#   structure
-#   source
-#   content
 # build
 #   config #1
 #   config #2
@@ -64,8 +60,6 @@ stages:
 
 # TO-DO - This pipeline runs on $BRANCH_PRODUCTION, on every manual trigger.
 
-.template:
-  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament $PACKAGE_TARGET $PACKAGE_CONFIGURATION $PACKAGE_PLATFORM $COMMAND' ]
 
 # --------------------------------------------------
 #     Validate
@@ -84,22 +78,37 @@ validate:
 # --------------------------------------------------
 
 build_client_development_win64:
+  extends: .template
   stage: build
-  script: [ $SCRIPT Build Client Development Win64 ]
+  variables:
+    PACKAGE_TARGET: 'Client'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Win64'
+    COMMAND: 'Build'
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 build_server_development_win64:
+  extends: .template
   stage: build
-  script: [ $SCRIPT Build Server Development Win64 ]
+  variables:
+    PACKAGE_TARGET: 'Server'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Win64'
+    COMMAND: 'Build'
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 build_server_development_linux:
+  extends: .template
   stage: build
-  script: [ $SCRIPT Build Server Development Linux ]
+  variables:
+    PACKAGE_TARGET: 'Server'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Linux'
+    COMMAND: 'Build'
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
@@ -109,22 +118,37 @@ build_server_development_linux:
 # --------------------------------------------------
 
 cook_client_development_win64:
+  extends: .template
   stage: cook
-  script: [ $SCRIPT Cook Client Development Win64 ]
+  variables:
+    PACKAGE_TARGET: 'Client'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Win64'
+    COMMAND: 'Cook'
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 cook_server_development_win64:
+  extends: .template
   stage: cook
-  script: [ $SCRIPT Cook Server Development Win64 ]
+  variables:
+    PACKAGE_TARGET: 'Server'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Win64'
+    COMMAND: 'Cook'
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 cook_server_development_linux:
+  extends: .template
   stage: cook
-  script: [ $SCRIPT Cook Server Development Linux ]
+  variables:
+    PACKAGE_TARGET: 'Server'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Linux'
+    COMMAND: 'Cook'
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
@@ -134,22 +158,37 @@ cook_server_development_linux:
 # --------------------------------------------------
 
 stage_client_development_win64:
+  extends: .template
   stage: stage
-  script: [ $SCRIPT Stage Client Development Win64 ]
+  variables:
+    PACKAGE_TARGET: 'Client'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Win64'
+    COMMAND: 'Stage'
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 stage_server_development_win64:
+  extends: .template
   stage: stage
-  script: [ $SCRIPT Stage Server Development Win64 ]
+  variables:
+    PACKAGE_TARGET: 'Server'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Win64'
+    COMMAND: 'Stage'
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 stage_server_development_linux:
+  extends: .template
   stage: stage
-  script: [ $SCRIPT Stage Server Development Linux ]
+  variables:
+    PACKAGE_TARGET: 'Server'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Linux'
+    COMMAND: 'Stage'
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
@@ -164,22 +203,37 @@ stage_server_development_linux:
 # --------------------------------------------------
 
 archive_client_development_win64:
+  extends: .template
   stage: archive
-  script: [ $SCRIPT Archive Client Development Win64 ]
+  variables:
+    PACKAGE_TARGET: 'Client'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Win64'
+    COMMAND: 'Archive'
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 archive_server_development_win64:
+  extends: .template
   stage: archive
-  script: [ $SCRIPT Archive Server Development Win64 ]
+  variables:
+    PACKAGE_TARGET: 'Server'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Win64'
+    COMMAND: 'Archive'
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 archive_server_development_linux:
+  extends: .template
   stage: archive
-  script: [ $SCRIPT Archive Server Development Linux ]
+  variables:
+    PACKAGE_TARGET: 'Server'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Linux'
+    COMMAND: 'Archive'
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
@@ -189,8 +243,9 @@ archive_server_development_linux:
 # --------------------------------------------------
 
 upload_client_development_win64:
+  extends: .template
   stage: upload
-  script: [ Write-Output Uploading... ]
+  script: [ Uploading... ]
   artifacts:
     paths: [ '%CI_PROJECT_DIR%\\Output\\Archived\\Client\\Development\\Win64' ]
     expire_in: 1 week
@@ -199,8 +254,9 @@ upload_client_development_win64:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 upload_server_development_win64:
+  extends: .template
   stage: upload
-  script: [ Write-Output Uploading... ]
+  script: [ Uploading... ]
   artifacts:
     paths: [ '%CI_PROJECT_DIR%\\Output\\Archived\\Server\\Development\\Win64' ]
     expire_in: 1 week
@@ -209,8 +265,9 @@ upload_server_development_win64:
       - $CI_PIPELINE_SOURCE == "schedule"
    
 upload_server_development_linux:
+  extends: .template
   stage: upload
-  script: [ Write-Output Uploading... ]
+  script: [ Uploading... ]
   artifacts:
     paths: [ '%CI_PROJECT_DIR%\\Output\\Archived\\Server\\Development\\Linux' ]
     expire_in: 1 week
