@@ -6,7 +6,7 @@ variables:
   BRANCH_STAGING: 'staging'
   BRANCH_PRODUCTION: 'production'
   TOOLS: \"C:\UE\Engine"
-  SCRIPT: \".\Automation\Automation.ps1"
+  SCRIPT: \"$CI_PROJECT_DIR\Automation\Automation.ps1"
 
 stages:
   - validate
