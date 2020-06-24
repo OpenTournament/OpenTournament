@@ -9,6 +9,7 @@ variables:
   SCRIPT: '$CI_PROJECT_DIR\Automation\Automation.ps1'
 
 stages:
+  - reset_linux_variable
   - validate
   - build
   - cook
@@ -60,6 +61,13 @@ stages:
 # TO-DO - This pipeline runs on $BRANCH_STAGING, on every merge from $BRANCH_TESTING.
 
 # TO-DO - This pipeline runs on $BRANCH_PRODUCTION, on every manual trigger.
+
+reset_linux_variable:
+  stage: reset_linux_variable
+  script: [ setx LINUX_MULTIARCH_ROOT "C:\UnrealToolchains\v16_clang-9.0.1-centos7\" ]
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_CHECKOUT: "true"
 
 # --------------------------------------------------
 #     Validate
