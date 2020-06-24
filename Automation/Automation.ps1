@@ -22,7 +22,7 @@ $ARGUMENTS = "-Project=`"$PROJECT_PATH\$PROJECT_TITLE.uproject`" -Target=$PROJEC
 $COMMAND_ASSEMBLE_A="`"$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe`" BootstrapPackagedGame Shipping Win64"
 $COMMAND_ASSEMBLE_B="`"$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe`" `"$PROJECT_PATH\$PROJECT_TITLE.uproject`" -ProjectFiles -Game -Progress"
 $COMMAND_ASSEMBLE_C="`"$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe`" `"$PROJECT_PATH\$PROJECT_TITLE.uproject`" $($PROJECT_TITLE)Editor Development Win64 -WaitMutex -FromMsBuild"
-$COMMAND_ASSEMBLE_D"`"$TOOLS_PATH\Binaries\Win64\UE4Editor-Cmd.exe`" `"$PROJECT_PATH\$PROJECT_TITLE.uproject`" -Run=CompileAllBlueprints -IgnoreFolder=/Engine,/RuntimeTests"
+$COMMAND_ASSEMBLE_D="`"$TOOLS_PATH\Binaries\Win64\UE4Editor-Cmd.exe`" `"$PROJECT_PATH\$PROJECT_TITLE.uproject`" -Run=CompileAllBlueprints -IgnoreFolder=/Engine,/RuntimeTests"
 $COMMAND_BUILD="`"$TOOLS_PATH\Build\BatchFiles\RunUAT.bat`" BuildTarget $ARGUMENTS"
 $COMMAND_COOK="`"$TOOLS_PATH\Build\BatchFiles\RunUAT.bat`" BuildCookRun $ARGUMENTS -Cook -SkipEditorContent -Compressed -Unversioned"
 $COMMAND_STAGE="`"$TOOLS_PATH\Build\BatchFiles\RunUAT.bat`" BuildCookRun $ARGUMENTS -Stage -StagingDirectory=`"%ROOT_PROJECT%Output\Staged\\%~n4\%~n5\%~n6`" -SkipCook"
