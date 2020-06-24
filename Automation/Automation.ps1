@@ -46,10 +46,11 @@ Write-Output "COMMAND: $COMMAND"
 
 switch ($COMMAND)
 {
-    "Validate" {
-        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -ProjectFiles, -Game, -Progress;
-        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, OpenTournamentEditor, Development, Win64, -WaitMutex, -FromMsBuild;
-        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -Run=CompileAllBlueprints, -IgnoreFolder=/Engine,/RuntimeTests;
+    "Validate"
+    {
+        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR -ProjectFiles -Game -Progress;
+        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR $($PROJECT_TITLE)Editor Development Win64 -WaitMutex -FromMsBuild;
+        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR -Run=CompileAllBlueprints -IgnoreFolder=/Engine,/RuntimeTests;
         break
     }
     "Build"
