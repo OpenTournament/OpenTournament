@@ -47,7 +47,7 @@ switch ($COMMAND)
 {
     "Validate"
     {
-        Write-Host | & "$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe" UnrealLightmass, Development, Win64;
+        Write-Host | & $TOOLS_UBT UnrealLightmass, Development, Win64;
         Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -ProjectFiles, -Game, -Progress;
         if ($LASTEXITCODE -ne 0)
         {
