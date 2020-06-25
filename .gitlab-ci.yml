@@ -128,7 +128,7 @@ assemble:
   stage: assemble
   variables:
     GIT_STRATEGY: fetch
-    GIT_STRATEGY: "true"
+    GIT_CHECKOUT: "true"
     COMMAND: 'Assemble'
   only:
     variables:
