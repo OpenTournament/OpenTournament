@@ -13,6 +13,7 @@ variables:
 stages:
   - validate
   - build
+  - shade
   - cook
   - stage
   - safeguard
@@ -114,6 +115,46 @@ build_server_development_linux:
       - $CI_PIPELINE_SOURCE == "schedule"
 
 # --------------------------------------------------
+#     Shade
+# --------------------------------------------------
+
+shade_client_development_win64:
+  extends: .template
+  stage: shade
+  variables:
+    PACKAGE_TARGET: 'Client'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Win64'
+    COMMAND: 'Shade'
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+shade_server_development_win64:
+  extends: .template
+  stage: shade
+  variables:
+    PACKAGE_TARGET: 'Server'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Win64'
+    COMMAND: 'Shade'
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+shade_server_development_linux:
+  extends: .template
+  stage: shade
+  variables:
+    PACKAGE_TARGET: 'Server'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Linux'
+    COMMAND: 'Shade'
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+# --------------------------------------------------
 #     Cook
 # --------------------------------------------------
 
@@ -197,6 +238,41 @@ stage_server_development_linux:
 #     Safeguard
 # --------------------------------------------------
 
+safeguard_client_development_win64:
+  extends: .template
+  stage: safeguard
+  variables:
+    PACKAGE_TARGET: 'Client'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Win64'
+    COMMAND: 'Safeguard'
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+safeguard_server_development_win64:
+  extends: .template
+  stage: safeguard
+  variables:
+    PACKAGE_TARGET: 'Server'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Win64'
+    COMMAND: 'Safeguard'
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+safeguard_server_development_linux:
+  extends: .template
+  stage: safeguard
+  variables:
+    PACKAGE_TARGET: 'Server'
+    PACKAGE_CONFIGURATION: 'Development'
+    PACKAGE_PLATFORM: 'Linux'
+    COMMAND: 'Safeguard'
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
 
 # --------------------------------------------------
 #     Archive

@@ -116,10 +116,6 @@
 			"Enabled": false
 		},
 		{
-			"Name": "CableComponent",
-			"Enabled": false
-		},
-		{
 			"Name": "ChaosClothEditor",
 			"Enabled": false
 		},
@@ -377,10 +373,6 @@
 		},
 		{
 			"Name": "UMods",
-			"Enabled": true
-		},
-		{
-			"Name": "PythonScriptPlugin",
 			"Enabled": true
 		}
 	]

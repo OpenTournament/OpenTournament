@@ -73,7 +73,7 @@ switch ($COMMAND)
         }
         break
     }
-    "Lighting"
+    "Shade"
     {
         Write-Host | & $TOOLS_UAT RebuildLightmaps, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM";
         if ($LASTEXITCODE -ne 0)
