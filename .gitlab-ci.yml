@@ -129,7 +129,6 @@ assemble:
   stage: assemble
   variables:
     GIT_STRATEGY: clone
-    GIT_CHECKOUT: "true"
     COMMAND: 'Assemble'
   only:
     variables:
