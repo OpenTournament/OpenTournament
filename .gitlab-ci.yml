@@ -128,7 +128,8 @@ assemble:
   extends: .template
   stage: assemble
   variables:
-    GIT_STRATEGY: clone
+    GIT_STRATEGY: fetch
+    GIT_STRATEGY: "true"
     COMMAND: 'Assemble'
   only:
     variables:
