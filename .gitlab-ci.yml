@@ -133,7 +133,6 @@ validate:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
       - $CI_PIPELINE_SOURCE != "schedule"
-#  before_script: [ 'git lfs install' ]
 
 # Build
 
