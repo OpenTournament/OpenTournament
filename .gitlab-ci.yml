@@ -1,7 +1,6 @@
 variables:
   GIT_STRATEGY: none
   GIT_CHECKOUT: "false"
-  GIT_DEPTH: "1"
   BRANCH_DEVELOPMENT: 'development-placeholder'
   BRANCH_TESTING: 'testing'
   BRANCH_STAGING: 'staging'
