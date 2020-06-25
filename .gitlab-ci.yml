@@ -247,7 +247,7 @@ upload_client_development_win64:
   stage: upload
   script: [ 'Write-Output "Uploading..."' ]
   artifacts:
-    paths: [ '%CI_PROJECT_DIR%\Packages\OpenTournament-Client-Development-Win64.zip' ]
+    paths: [ '$CI_PROJECT_DIR\Packages\OpenTournament-Client-Development-Win64.zip' ]
     expire_in: 1 week
   only:
     variables:
@@ -258,7 +258,7 @@ upload_server_development_win64:
   stage: upload
   script: [ 'Write-Output "Uploading..."' ]
   artifacts:
-    paths: [ '%CI_PROJECT_DIR%\Packages\OpenTournament-Server-Development-Win64.zip' ]
+    paths: [ '$CI_PROJECT_DIR\Packages\OpenTournament-Server-Development-Win64.zip' ]
     expire_in: 1 week
   only:
     variables:
@@ -269,7 +269,7 @@ upload_server_development_linux:
   stage: upload
   script: [ 'Write-Output "Uploading..."' ]
   artifacts:
-    paths: [ '%CI_PROJECT_DIR%\Packages\OpenTournament-Server-Development-Linux.zip' ]
+    paths: [ '$CI_PROJECT_DIR\Packages\OpenTournament-Server-Development-Linux.zip' ]
     expire_in: 1 week
   only:
     variables:
