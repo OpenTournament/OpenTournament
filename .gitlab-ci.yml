@@ -11,9 +11,10 @@ variables:
   COMMAND: 'Null'
 
 stages:
+  - assemble
+  - resave
   - validate
   - build
-  - resave
   - cook
   - stage
   - safeguard
@@ -173,26 +174,6 @@ build_server_development_linux:
   stage: build
   variables:
     COMMAND: 'Build'
-
-# Resave
-
-resave_client_development_win64:
-  extends: .template_client_development_win64
-  stage: resave
-  variables:
-    COMMAND: 'Resave'
-
-resave_server_development_win64:
-  extends: .template_server_development_win64
-  stage: resave
-  variables:
-    COMMAND: 'Resave'
-
-resave_server_development_linux:
-  extends: .template_server_development_linux
-  stage: resave
-  variables:
-    COMMAND: 'Resave'
 
 # Cook
 
