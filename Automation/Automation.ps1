@@ -47,7 +47,6 @@ switch ($COMMAND)
 {
     "Validate"
     {
-        Write-Host | & $TOOLS_UBT UnrealLightmass, Development, Win64;
         Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -ProjectFiles, -Game, -Progress;
         if ($LASTEXITCODE -ne 0)
         {
@@ -76,7 +75,7 @@ switch ($COMMAND)
     }
     "Resave"
     {
-        Write-Host | & $TOOLS_UE $PROJECT_DESCRIPTOR, -Run=ResavePackages -BuildLighting -AllowCommandletRendering;
+        Write-Host | & $TOOLS_UE $PROJECT_DESCRIPTOR, -Run=ResavePackages -BuildLighting -AllowCommandletRendering, -IgnoreChangelist, -BuildReflectionCaptures, -BuildTextureStreaming, -BuildNavigationData;
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
@@ -153,5 +152,5 @@ switch ($COMMAND)
 
 # These commands will be part of a different script, dedicated to provide maintenance to the required tools.
 #
-# Write-Host | & "$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe" BootstrapPackagedGame, Development, Win64
-# Write-Host | & "$TOOLS_PATH\Binaries\DotNET\UnrealBuildTool.exe" UnrealLightmass, Development, Win64
+# Write-Host | & $TOOLS_UBT BootstrapPackagedGame, Development, Win64;
+# Write-Host | & $TOOLS_UBT UnrealLightmass, Development, Win64;
