@@ -73,7 +73,7 @@ validate:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
     COMMAND: 'Validate'
-  before_script: [ 'git lfs pull' ]
+  before_script: [ 'git lfs install' ]
 
 # --------------------------------------------------
 #     Build
