@@ -45,7 +45,7 @@ Write-Output "COMMAND: $COMMAND"
 
 switch ($COMMAND)
 {
-    "Validate"
+    "Assemble"
     {
         Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -ProjectFiles, -Game, -Progress;
         if ($LASTEXITCODE -ne 0)
@@ -57,7 +57,20 @@ switch ($COMMAND)
         {
             exit $LASTEXITCODE;
         }
+        break
+    }
+    "Validate"
+    {
         Write-Host | & $TOOLS_UE $PROJECT_DESCRIPTOR, -Run=CompileAllBlueprints, "-IgnoreFolder=/Engine,/RuntimeTests";
+        if ($LASTEXITCODE -ne 0)
+        {
+            exit $LASTEXITCODE;
+        }
+        break
+    }
+    "Resave"
+    {
+        Write-Host | & $TOOLS_UE $PROJECT_DESCRIPTOR, -Run=ResavePackages, -AllowCommandletRendering, -IgnoreChangelist, -BuildReflectionCaptures, -BuildTextureStreaming, -BuildNavigationData, -BuildLighting, -Quality=Preview;
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
@@ -75,7 +88,6 @@ switch ($COMMAND)
     }
     "Resave"
     {
-        Write-Host | & $TOOLS_UE $PROJECT_DESCRIPTOR, -Run=ResavePackages, -AllowCommandletRendering, -IgnoreChangelist, -BuildLighting, -BuildReflectionCaptures, -BuildTextureStreaming, -BuildNavigationData;
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;

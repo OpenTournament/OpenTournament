@@ -120,20 +120,39 @@ stages:
 #     Jobs
 # --------------------------------------------------
 
+# Assemble
+
+assemble:
+  extends: .template
+  stage: assemble
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_CHECKOUT: "true"
+    COMMAND: 'Assemble'
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+      - $CI_PIPELINE_SOURCE != "schedule"
+  before_script: [ 'git lfs install', 'git lfs pull' ]
+
 # Validate
 
 validate:
   extends: .template
   stage: validate
   variables:
-    GIT_STRATEGY: fetch
-    GIT_CHECKOUT: "true"
     COMMAND: 'Validate'
   only:
     variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
       - $CI_PIPELINE_SOURCE != "schedule"
-  before_script: [ 'git lfs install', 'git lfs pull' ]
+
+# Resave
+
+resave:
+  extends: .template
+  stage: resave
+  variables:
+    COMMAND: 'Resave'
 
 # Build
 
