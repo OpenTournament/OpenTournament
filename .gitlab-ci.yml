@@ -1,6 +1,7 @@
 variables:
   GIT_STRATEGY: none
   GIT_CHECKOUT: "false"
+  GIT_DEPTH: "1"
   BRANCH_DEVELOPMENT: 'development-placeholder'
   BRANCH_TESTING: 'testing'
   BRANCH_STAGING: 'staging'
@@ -12,8 +13,8 @@ variables:
 
 stages:
   - assemble
-  - resave
   - validate
+  - resave
   - build
   - cook
   - stage
@@ -127,7 +128,7 @@ assemble:
   extends: .template
   stage: assemble
   variables:
-    GIT_STRATEGY: fetch
+    GIT_STRATEGY: clone
     GIT_CHECKOUT: "true"
     COMMAND: 'Assemble'
   only:
