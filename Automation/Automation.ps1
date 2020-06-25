@@ -75,7 +75,7 @@ switch ($COMMAND)
     }
     "Resave"
     {
-        Write-Host | & $TOOLS_UE $PROJECT_DESCRIPTOR, -Run=ResavePackages -BuildLighting -AllowCommandletRendering, -IgnoreChangelist, -BuildReflectionCaptures, -BuildTextureStreaming, -BuildNavigationData;
+        Write-Host | & $TOOLS_UE $PROJECT_DESCRIPTOR, -Run=ResavePackages, -AllowCommandletRendering, -IgnoreChangelist, -BuildLighting, -BuildReflectionCaptures, -BuildTextureStreaming, -BuildNavigationData;
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
