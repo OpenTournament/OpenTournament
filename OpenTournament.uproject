@@ -60,10 +60,6 @@
 			"Enabled": false
 		},
 		{
-			"Name": "ExampleDeviceProfileSelector",
-			"Enabled": false
-		},
-		{
 			"Name": "AlembicImporter",
 			"Enabled": false
 		},
