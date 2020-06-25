@@ -47,6 +47,7 @@ switch ($COMMAND)
 {
     "Validate"
     {
+        git lfs pull;
         Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -ProjectFiles, -Game, -Progress;
         if ($LASTEXITCODE -ne 0)
         {
