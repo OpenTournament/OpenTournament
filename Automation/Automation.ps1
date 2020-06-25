@@ -109,7 +109,7 @@ switch ($COMMAND)
             }
             "Linux"
             {
-                # Nothing to do at the moment.
+                $PATH_OLD = "$PROJECT_ROOT\Packages\Linux$PACKAGE_TARGET"
                 break
             }
             "Mac"
@@ -122,7 +122,7 @@ switch ($COMMAND)
                 # Should probably throw an exception here.
             }
         }
-        Rename-Item -Path "$PATH_OLD" -NewName "$PATH_NEW" -ErrorAction Stop;
+        Rename-Item -Path "$PATH_OLD" -NewName "$PATH_NEW";
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
@@ -166,7 +166,7 @@ switch ($COMMAND)
     }
     "Archive"
     {
-        Write-Host | Compress-Archive -Path "$PROJECT_PATH\Packages\Staged\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM\*" -DestinationPath "$PROJECT_PATH\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM.zip"
+        Write-Host | Compress-Archive -Path "$PROJECT_PATH\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM\*" -DestinationPath "$PROJECT_PATH\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM.zip"
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
