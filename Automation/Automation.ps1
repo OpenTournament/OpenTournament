@@ -66,7 +66,7 @@ switch ($COMMAND)
     }
     "Build"
     {
-        Write-Host | & $TOOLS_UAT BuildTarget, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM";
+        Write-Host | & $TOOLS_UAT BuildTarget, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM", -NoP4;
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
@@ -75,7 +75,7 @@ switch ($COMMAND)
     }
     "Shade"
     {
-        Write-Host | & $TOOLS_UAT RebuildLightmaps, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM";
+        Write-Host | & $TOOLS_UAT RebuildLightmaps, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM", -NoP4;
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
@@ -84,7 +84,7 @@ switch ($COMMAND)
     }
     "Cook"
     {
-        Write-Host | & $TOOLS_UAT BuildCookRun, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM", -Cook, -SkipEditorContent, -Compressed, -Unversioned;
+        Write-Host | & $TOOLS_UAT BuildCookRun, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM", -Cook, -SkipEditorContent, -Compressed, -Unversioned, -NoP4;
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
@@ -93,7 +93,7 @@ switch ($COMMAND)
     }
     "Stage"
     {
-        Write-Host | & $TOOLS_UAT BuildCookRun, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM", -Stage, -StagingDirectory="$PROJECT_ROOT\Packages", -SkipCook;
+        Write-Host | & $TOOLS_UAT BuildCookRun, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM", -Stage, -StagingDirectory="$PROJECT_ROOT\Packages", -SkipCook, -NoP4;
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
