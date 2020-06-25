@@ -132,37 +132,8 @@ switch ($COMMAND)
     "Safeguard"
     {
         $REDISTRIBUTABLES_SOURCE = "$TOOLS_ROOT\Binaries\ThirdParty\AppLocalDependencies\$PACKAGE_PLATFORM\*"
-        switch ($PACKAGE_PLATFORM)
-        {
-            "Win64"
-            {
-                $REDISTRIBUTABLES_DESTINATION = "$PROJECT_ROOT\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM\Engine\Binaries\$PACKAGE_PLATFORM\"
-                Copy-Item -Force -Recurse -Verbose "$REDISTRIBUTABLES_SOURCE" -Destination "$REDISTRIBUTABLES_DESTINATION";
-                if ($LASTEXITCODE -ne 0)
-                {
-                    exit $LASTEXITCODE;
-                }
-                break
-            }
-            "Linux"
-            {
-                # Nothing to do at the moment.
-                break
-            }
-            "Mac"
-            {
-                # Nothing to do at the moment.
-                break
-            }
-            default
-            {
-                # Should probably throw an exception here.
-            }
-        }
-        default
-        {
-            # Should probably throw an exception here.
-        }
+        $REDISTRIBUTABLES_DESTINATION = "$PROJECT_ROOT\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM\"
+        Copy-Item -Force -Recurse -Verbose "$REDISTRIBUTABLES_SOURCE" -Destination "$REDISTRIBUTABLES_DESTINATION";
     }
     "Archive"
     {
