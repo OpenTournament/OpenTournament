@@ -20,8 +20,9 @@ stages:
   - archive
   - upload
 
-.template:
-  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament $PACKAGE_TARGET $PACKAGE_CONFIGURATION $PACKAGE_PLATFORM $COMMAND' ]
+# ----------------------------------------------------------------------------------------------------
+#     Pipelines
+# ----------------------------------------------------------------------------------------------------
 
 # This pipeline runs on $BRANCH_DEVELOPMENT, on every commit.
 #
@@ -61,10 +62,65 @@ stages:
 
 # TO-DO - This pipeline runs on $BRANCH_PRODUCTION, on every manual trigger.
 
+# --------------------------------------------------
+#     Jobs (Templates)
+# --------------------------------------------------
+
+.template:
+  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament $PACKAGE_TARGET $PACKAGE_CONFIGURATION $PACKAGE_PLATFORM $COMMAND' ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+# Clients
+
+.template_client:
+  extends: .template
+  variables:
+    PACKAGE_TARGET: 'Client'
+
+.template_client_development:
+  extends: .template_client
+  variables:
+    PACKAGE_CONFIGURATION: 'Development'
+
+.template_client_development_win64:
+  extends: .template_client_development
+  variables:
+    PACKAGE_PLATFORM: 'Win64'
+
+.template_client_development_linux:
+  extends: .template_client_development
+  variables:
+    PACKAGE_PLATFORM: 'Linux'
+
+# Servers
+
+.template_server:
+  extends: .template
+  variables:
+    PACKAGE_TARGET: 'Server'
+
+.template_server_development:
+  extends: .template_server
+  variables:
+    PACKAGE_CONFIGURATION: 'Development'
+
+.template_server_development_win64:
+  extends: .template_server_development
+  variables:
+    PACKAGE_PLATFORM: 'Win64'
+
+.template_server_development_linux:
+  extends: .template_server_development
+  variables:
+    PACKAGE_PLATFORM: 'Linux'
 
 # --------------------------------------------------
-#     Validate
+#     Jobs
 # --------------------------------------------------
+
+# Validate
 
 validate:
   extends: .template
@@ -73,282 +129,155 @@ validate:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
     COMMAND: 'Validate'
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+      - $CI_PIPELINE_SOURCE != "schedule"
   before_script: [ 'git lfs install' ]
 
-# --------------------------------------------------
-#     Build
-# --------------------------------------------------
+# Build
 
 build_client_development_win64:
-  extends: .template
+  extends: .template_client_development_win64
   stage: build
   variables:
-    PACKAGE_TARGET: 'Client'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Win64'
     COMMAND: 'Build'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
 build_server_development_win64:
-  extends: .template
+  extends: .template_server_development_win64
   stage: build
   variables:
-    PACKAGE_TARGET: 'Server'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Win64'
     COMMAND: 'Build'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
 build_server_development_linux:
-  extends: .template
+  extends: .template_server_development_linux
   stage: build
   variables:
-    PACKAGE_TARGET: 'Server'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Linux'
     COMMAND: 'Build'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
-# --------------------------------------------------
-#     Resave
-# --------------------------------------------------
+# Resave
 
 resave_client_development_win64:
-  extends: .template
+  extends: .template_client_development_win64
   stage: resave
   variables:
-    PACKAGE_TARGET: 'Client'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Win64'
     COMMAND: 'Resave'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
 resave_server_development_win64:
-  extends: .template
+  extends: .template_server_development_win64
   stage: resave
   variables:
-    PACKAGE_TARGET: 'Server'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Win64'
     COMMAND: 'Resave'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
 resave_server_development_linux:
-  extends: .template
+  extends: .template_server_development_linux
   stage: resave
   variables:
-    PACKAGE_TARGET: 'Server'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Linux'
     COMMAND: 'Resave'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
-# --------------------------------------------------
-#     Cook
-# --------------------------------------------------
+# Cook
 
 cook_client_development_win64:
-  extends: .template
+  extends: .template_client_development_win64
   stage: cook
   variables:
-    PACKAGE_TARGET: 'Client'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Win64'
     COMMAND: 'Cook'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
 cook_server_development_win64:
-  extends: .template
+  extends: .template_server_development_win64
   stage: cook
   variables:
-    PACKAGE_TARGET: 'Server'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Win64'
     COMMAND: 'Cook'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
 cook_server_development_linux:
-  extends: .template
+  extends: .template_server_development_linux
   stage: cook
   variables:
-    PACKAGE_TARGET: 'Server'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Linux'
     COMMAND: 'Cook'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
-# --------------------------------------------------
-#     Stage
-# --------------------------------------------------
+# Stage
 
 stage_client_development_win64:
-  extends: .template
+  extends: .template_client_development_win64
   stage: stage
   variables:
-    PACKAGE_TARGET: 'Client'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Win64'
     COMMAND: 'Stage'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
 stage_server_development_win64:
-  extends: .template
+  extends: .template_server_development_win64
   stage: stage
   variables:
-    PACKAGE_TARGET: 'Server'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Win64'
     COMMAND: 'Stage'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
 stage_server_development_linux:
-  extends: .template
+  extends: .template_server_development_linux
   stage: stage
   variables:
-    PACKAGE_TARGET: 'Server'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Linux'
     COMMAND: 'Stage'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
-# --------------------------------------------------
-#     Safeguard
-# --------------------------------------------------
+# Safeguard
 
 safeguard_client_development_win64:
-  extends: .template
+  extends: .template_client_development_win64
   stage: safeguard
   variables:
-    PACKAGE_TARGET: 'Client'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Win64'
     COMMAND: 'Safeguard'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
 safeguard_server_development_win64:
-  extends: .template
+  extends: .template_server_development_win64
   stage: safeguard
   variables:
-    PACKAGE_TARGET: 'Server'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Win64'
     COMMAND: 'Safeguard'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
 safeguard_server_development_linux:
-  extends: .template
+  extends: .template_server_development_linux
   stage: safeguard
   variables:
-    PACKAGE_TARGET: 'Server'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Linux'
     COMMAND: 'Safeguard'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
-# --------------------------------------------------
-#     Archive
-# --------------------------------------------------
+# Archive
 
 archive_client_development_win64:
-  extends: .template
+  extends: .template_client_development_win64
   stage: archive
   variables:
-    PACKAGE_TARGET: 'Client'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Win64'
     COMMAND: 'Archive'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
 archive_server_development_win64:
-  extends: .template
+  extends: .template_server_development_win64
   stage: archive
   variables:
-    PACKAGE_TARGET: 'Server'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Win64'
     COMMAND: 'Archive'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
 archive_server_development_linux:
-  extends: .template
+  extends: .template_server_development_linux
   stage: archive
   variables:
-    PACKAGE_TARGET: 'Server'
-    PACKAGE_CONFIGURATION: 'Development'
-    PACKAGE_PLATFORM: 'Linux'
     COMMAND: 'Archive'
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
 
-# --------------------------------------------------
-#     Upload
-# --------------------------------------------------
+# Upload
 
 upload_client_development_win64:
-  extends: .template
+  extends: .template_client_development_win64
   stage: upload
   script: [ 'Write-Output "Uploading..."' ]
   artifacts:
     paths: [ '$CI_PROJECT_DIR\Packages\OpenTournament-Client-Development-Win64.zip' ]
-    expire_in: 1 week
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
+    expire_in: 1 day
 
 upload_server_development_win64:
-  extends: .template
+  extends: .template_server_development_win64
   stage: upload
   script: [ 'Write-Output "Uploading..."' ]
   artifacts:
     paths: [ '$CI_PROJECT_DIR\Packages\OpenTournament-Server-Development-Win64.zip' ]
-    expire_in: 1 week
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
+    expire_in: 1 day
    
 upload_server_development_linux:
-  extends: .template
+  extends: .template_server_development_linux
   stage: upload
   script: [ 'Write-Output "Uploading..."' ]
   artifacts:
     paths: [ '$CI_PROJECT_DIR\Packages\OpenTournament-Server-Development-Linux.zip' ]
-    expire_in: 1 week
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
+    expire_in: 1 day
          
