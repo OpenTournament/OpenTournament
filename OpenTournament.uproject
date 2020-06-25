@@ -340,15 +340,7 @@
 			"Enabled": false
 		},
 		{
-			"Name": "SoundFields",
-			"Enabled": false
-		},
-		{
 			"Name": "Synthesis",
-			"Enabled": false
-		},
-		{
-			"Name": "AudioCapture",
 			"Enabled": false
 		},
 		{
@@ -373,6 +365,18 @@
 		},
 		{
 			"Name": "UMods",
+			"Enabled": true
+		},
+		{
+			"Name": "SoundUtilities",
+			"Enabled": true
+		},
+		{
+			"Name": "SoundMod",
+			"Enabled": true
+		},
+		{
+			"Name": "Spatialization",
 			"Enabled": true
 		}
 	]
