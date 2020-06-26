@@ -70,7 +70,7 @@ switch ($COMMAND)
     }
     "Resave"
     {
-        Write-Host | & $TOOLS_UE $PROJECT_DESCRIPTOR, -Run=ResavePackages, -AllowCommandletRendering, -IgnoreChangelist, -BuildReflectionCaptures, -BuildTextureStreaming, -BuildNavigationData, -BuildLighting, -Quality=Preview;
+        Write-Host | & $TOOLS_UE $PROJECT_DESCRIPTOR, -Run=ResavePackages, -ProjectOnly, -AllowCommandletRendering, -IgnoreChangelist, -BuildReflectionCaptures, -BuildTextureStreaming, -BuildNavigationData, -BuildLighting, -Quality=Preview;
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
@@ -80,14 +80,6 @@ switch ($COMMAND)
     "Build"
     {
         Write-Host | & $TOOLS_UAT BuildTarget, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM";
-        if ($LASTEXITCODE -ne 0)
-        {
-            exit $LASTEXITCODE;
-        }
-        break
-    }
-    "Resave"
-    {
         if ($LASTEXITCODE -ne 0)
         {
             exit $LASTEXITCODE;
