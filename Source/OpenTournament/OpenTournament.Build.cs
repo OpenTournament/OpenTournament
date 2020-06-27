@@ -25,7 +25,8 @@ public class OpenTournament : ModuleRules
                 "GameplayTags",
                 "GameplayTasks",
                 "MoviePlayer",
-                "Niagara"
+                "Niagara",
+                "SoundFieldRendering" // Linux needs a symbold that it cannot find so we try to link this library by force.
             }
         );
 

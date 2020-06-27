@@ -82,9 +82,3 @@ Source/UE4_MocapOnline_Tech_Notes.txt
 
 # Ignore Source File Formats
 *.tga
-
-# Ignore Map BuiltData Files
-*BuiltData.uasset
-
-#Exclude-from-Ignore Build Stuff
-!Build/Windows
