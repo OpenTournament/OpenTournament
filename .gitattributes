@@ -4,6 +4,7 @@
 *.cpp text eol=crlf
 *.cs text eol=crlf
 *.ini text eol=crlf
+*.uproject text eol=crlf
 # Declare files that will be tracked by LFS.
 *.uasset filter=lfs diff=lfs merge=lfs -text lockable
 *.uasset filter=lfs diff=lfs merge=lfs -text
