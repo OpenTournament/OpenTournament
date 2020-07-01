@@ -134,13 +134,13 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
     USoundBase* PickupSound;
 
-    UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_AmmoCount, Category = "Weapon")
+    UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_AmmoCount, Category = "Weapon")
     int32 AmmoCount;
 
-    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UPROPERTY(BlueprintReadWrite, Category = "Weapon")
     FString WeaponName;
 
-    UPROPERTY(EditAnywhere, Category = "Weapon")
+    UPROPERTY(BlueprintReadWrite, Category = "Weapon")
     FString AmmoName;
 
 protected:
