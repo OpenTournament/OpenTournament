@@ -73,7 +73,7 @@ stages:
 # --------------------------------------------------
 
 .template:
-  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament $PACKAGE_TARGET $PACKAGE_CONFIGURATION $PACKAGE_PLATFORM $COMMAND' ]
+  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament $PACKAGE_TARGET $PACKAGE_CONFIGURATION $PACKAGE_PLATFORM $COMMAND' ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
