@@ -1,87 +1,331 @@
 variables:
   GIT_STRATEGY: none
   GIT_CHECKOUT: "false"
-  SCRIPT: '"%CI_PROJECT_DIR%\.gitlab-ci.bat" "C:\UE\Engine\" "%CI_PROJECT_DIR%\"'
+  BRANCH_DEVELOPMENT: 'development-placeholder'
+  BRANCH_TESTING: 'testing'
+  BRANCH_STAGING: 'staging'
+  BRANCH_PRODUCTION: 'production'
+  PACKAGE_TARGET: 'Null'
+  PACKAGE_CONFIGURATION: 'Null'
+  PACKAGE_PLATFORM: 'Null'
+  COMMAND: 'Null'
 
 stages:
   - assemble
+  - validate
+  - resave
   - build
   - cook
   - stage
+  - safeguard
   - archive
+  - upload
+  - deploy
+
+# ----------------------------------------------------------------------------------------------------
+#     Pipelines
+# ----------------------------------------------------------------------------------------------------
+
+# This pipeline runs on $BRANCH_DEVELOPMENT, on every commit.
+#
+# validate
+
+# This pipeline runs on $BRANCH_DEVELOPMENT, on a daily schedule.
+#
+# validate
+# build
+#   config #1
+#   config #2
+#   etc.
+# cook
+#   config #1
+#   config #2
+#   etc.
+# stage
+#   config #1
+#   config #2
+#   etc.
+# safeguard
+#   config #1
+#   config #2
+#   etc.
+# archive
+#   config #1
+#   config #2
+#   etc.
+# upload
+#   config #1
+#   config #2
+#   etc.
+# deploy
+#   config #1
+#   config #2
+#   etc.
+
+# TO-DO - This pipeline runs on $BRANCH_TESTING, on every merge from $BRANCH_DEVELOPMENT.
+
+# TO-DO - This pipeline runs on $BRANCH_STAGING, on every merge from $BRANCH_TESTING.
+
+# TO-DO - This pipeline runs on $BRANCH_PRODUCTION, on every manual trigger.
 
 # --------------------------------------------------
-#     Assemble
+#     Jobs (Templates)
 # --------------------------------------------------
+
+.template:
+  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament $PACKAGE_TARGET $PACKAGE_CONFIGURATION $PACKAGE_PLATFORM $COMMAND' ]
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+# Clients
+
+.template_client:
+  extends: .template
+  variables:
+    PACKAGE_TARGET: 'Client'
+
+.template_client_development:
+  extends: .template_client
+  variables:
+    PACKAGE_CONFIGURATION: 'Development'
+
+.template_client_development_win64:
+  extends: .template_client_development
+  variables:
+    PACKAGE_PLATFORM: 'Win64'
+
+.template_client_development_linux:
+  extends: .template_client_development
+  variables:
+    PACKAGE_PLATFORM: 'Linux'
+
+# Servers
+
+.template_server:
+  extends: .template
+  variables:
+    PACKAGE_TARGET: 'Server'
+
+.template_server_development:
+  extends: .template_server
+  variables:
+    PACKAGE_CONFIGURATION: 'Development'
+
+.template_server_development_win64:
+  extends: .template_server_development
+  variables:
+    PACKAGE_PLATFORM: 'Win64'
+
+.template_server_development_linux:
+  extends: .template_server_development
+  variables:
+    PACKAGE_PLATFORM: 'Linux'
+
+# --------------------------------------------------
+#     Jobs
+# --------------------------------------------------
+
+# Assemble
 
 assemble:
+  extends: .template
   stage: assemble
-  script: [ call %SCRIPT% Assemble ]
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
+    COMMAND: 'Assemble'
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+      - $CI_PIPELINE_SOURCE != "schedule"
 
-# --------------------------------------------------
-#     Build
-# --------------------------------------------------
+# Validate
+
+validate:
+  extends: .template
+  stage: validate
+  variables:
+    COMMAND: 'Validate'
+  only:
+    variables:
+      - $CI_PIPELINE_SOURCE != "schedule"
+
+# Resave
+
+resave:
+  extends: .template
+  stage: resave
+  variables:
+    COMMAND: 'Resave'
+
+# Build
 
 build_client_development_win64:
+  extends: .template_client_development_win64
   stage: build
-  script: [ call %SCRIPT% Build Client Development Win64 ]
-  #only: [ testing ]
+  variables:
+    COMMAND: 'Build'
 
-#build_client_shipping_win64:
+build_server_development_win64:
+  extends: .template_server_development_win64
+  stage: build
+  variables:
+    COMMAND: 'Build'
+
+#build_client_development_linux:
+#  extends: .template_client_development_linux
 #  stage: build
-#  script: [ call %SCRIPT% Build Client Shipping Win64 ]
-#  #only: [ testing ]
+#  variables:
+#    COMMAND: 'Build'
+#
+#build_server_development_linux:
+#  extends: .template_server_development_linux
+#  stage: build
+#  variables:
+#    COMMAND: 'Build'
 
-# --------------------------------------------------
-#     Cook
-# --------------------------------------------------
+# Cook
 
 cook_client_development_win64:
+  extends: .template_client_development_win64
   stage: cook
-  script: [ call %SCRIPT% Cook Client Development Win64 ]
-  #only: [ testing ]
+  variables:
+    COMMAND: 'Cook'
 
-#cook_client_shipping_win64:
+cook_server_development_win64:
+  extends: .template_server_development_win64
+  stage: cook
+  variables:
+    COMMAND: 'Cook'
+
+#cook_client_development_linux:
+#  extends: .template_client_development_linux
 #  stage: cook
-#  script: [ call %SCRIPT% Cook Client Shipping Win64 ]
-#  #only: [ testing ]
+#  variables:
+#    COMMAND: 'Cook'
+#
+#cook_server_development_linux:
+#  extends: .template_server_development_linux
+#  stage: cook
+#  variables:
+#    COMMAND: 'Cook'
 
-# --------------------------------------------------
-#     Stage
-# --------------------------------------------------
+# Stage
 
 stage_client_development_win64:
+  extends: .template_client_development_win64
   stage: stage
-  script: [ call %SCRIPT% Stage Client Development Win64 ]
-  #only: [ testing ]
-  artifacts:
-    paths: [ '%CI_PROJECT_DIR%\Output\Staged' ]
-    expire_in: 1 week
+  variables:
+    COMMAND: 'Stage'
 
-#stage_client_shipping_win64:
+stage_server_development_win64:
+  extends: .template_server_development_win64
+  stage: stage
+  variables:
+    COMMAND: 'Stage'
+
+#stage_client_development_linux:
+#  extends: .template_client_development_linux
 #  stage: stage
-#  script: [ call %SCRIPT% Stage Client Shipping Win64 ]
-#  #only: [ testing ]
+#  variables:
+#    COMMAND: 'Stage'
+#
+#stage_server_development_linux:
+#  extends: .template_server_development_linux
+#  stage: stage
+#  variables:
+#    COMMAND: 'Stage'
 
-# --------------------------------------------------
-#     Archive
-# --------------------------------------------------
+# Safeguard
 
-#archive_client_development_win64:
+safeguard_client_development_win64:
+  extends: .template_client_development_win64
+  stage: safeguard
+  variables:
+    COMMAND: 'Safeguard'
+
+safeguard_server_development_win64:
+  extends: .template_server_development_win64
+  stage: safeguard
+  variables:
+    COMMAND: 'Safeguard'
+
+#safeguard_client_development_linux:
+#  extends: .template_client_development_linux
+#  stage: safeguard
+#  variables:
+#    COMMAND: 'Safeguard'
+#
+#safeguard_server_development_linux:
+#  extends: .template_server_development_linux
+#  stage: safeguard
+#  variables:
+#    COMMAND: 'Safeguard'
+
+# Archive
+
+archive_client_development_win64:
+  extends: .template_client_development_win64
+  stage: archive
+  variables:
+    COMMAND: 'Archive'
+
+archive_server_development_win64:
+  extends: .template_server_development_win64
+  stage: archive
+  variables:
+    COMMAND: 'Archive'
+
+#archive_client_development_linux:
+#  extends: .template_client_development_linux
 #  stage: archive
-#  script: [ call %SCRIPT% Archive Client Development Win64 ]
-#  #only: [ testing ]
-#  artifacts:
-#    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Development\Win64' ]
-#    expire_in: 1 week
-
-#archive_client_shipping_win64:
+#  variables:
+#    COMMAND: 'Archive'
+#
+#archive_server_development_linux:
+#  extends: .template_server_development_linux
 #  stage: archive
-#  script: [ call %SCRIPT% Archive Client Shipping Win64 ]
-#  #only: [ testing ]
+#  variables:
+#    COMMAND: 'Archive'
+
+# Upload
+
+upload_client_development_win64:
+  extends: .template_client_development_win64
+  stage: upload
+  script: [ 'Write-Output "Uploading..."' ]
+  artifacts:
+    paths: [ '$CI_PROJECT_DIR\Packages\OpenTournament-Client-Development-Win64.zip' ]
+    expire_in: 1 day
+
+upload_server_development_win64:
+  extends: .template_server_development_win64
+  stage: upload
+  script: [ 'Write-Output "Uploading..."' ]
+  artifacts:
+    paths: [ '$CI_PROJECT_DIR\Packages\OpenTournament-Server-Development-Win64.zip' ]
+    expire_in: 1 day
+      
+#upload_client_development_linux:
+#  extends: .template_client_development_linux
+#  stage: upload
+#  script: [ 'Write-Output "Uploading..."' ]
 #  artifacts:
-#    paths: [ '%CI_PROJECT_DIR%\Output\Archived\Client\Shipping\Win64' ]
-#    expire_in: 1 week
+#    paths: [ '$CI_PROJECT_DIR\Packages\OpenTournament-Client-Development-Linux.zip' ]
+#    expire_in: 1 day
+#         
+#upload_server_development_linux:
+#  extends: .template_server_development_linux
+#  stage: upload
+#  script: [ 'Write-Output "Uploading..."' ]
+#  artifacts:
+#    paths: [ '$CI_PROJECT_DIR\Packages\OpenTournament-Server-Development-Linux.zip' ]
+#    expire_in: 1 day
+
+# Deploy
+
+deploy_server_development_win64:
+  extends: .template_server_development_win64
+  stage: deploy
+  script: [ 'Write-Output "Uploading..."' ]
