@@ -59,7 +59,6 @@ Plugins/Developer/RiderLink/
 OpenTournament.VC.db
 Saved/
 DerivedDataCache/
-Binaries/
 Intermediate/
 Build/
 .vs/
@@ -82,3 +81,13 @@ Source/UE4_MocapOnline_Tech_Notes.txt
 
 # Ignore Source File Formats
 *.tga
+
+# =========================
+# Allow Editor Binaries
+# =========================
+Binaries/*
+!Binaries/Win64
+Binaries/Win64/*
+!Binaries/Win64/OpenTournamentEditor.target
+!Binaries/Win64/UE4Editor.modules
+!Binaries/Win64/UE4Editor-OpenTournament.dll
