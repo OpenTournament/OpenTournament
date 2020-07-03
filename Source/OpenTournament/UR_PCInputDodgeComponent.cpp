@@ -77,19 +77,19 @@ void UUR_PCInputDodgeComponent::SetKeyDodgeInputDirection() const
             // Read cached MovementAxes to determine KeyDodge direction. Default to Forward
             if (MovementStrafeAxis > 0.5f)
             {
-                Character->ServerSetDodgeDirection(EDodgeDirection::Right);
+                Character->SetDodgeDirection(EDodgeDirection::Right);
             }
             else if (MovementStrafeAxis < -0.5f)
             {
-                Character->ServerSetDodgeDirection(EDodgeDirection::Left);
+                Character->SetDodgeDirection(EDodgeDirection::Left);
             }
             else if (MovementForwardAxis < 0.f)
             {
-                Character->ServerSetDodgeDirection(EDodgeDirection::Backward);
+                Character->SetDodgeDirection(EDodgeDirection::Backward);
             }
             else
             {
-                Character->ServerSetDodgeDirection(EDodgeDirection::Forward);
+                Character->SetDodgeDirection(EDodgeDirection::Forward);
             }
         }
     }
@@ -198,7 +198,7 @@ void UUR_PCInputDodgeComponent::SetTapDodgeInputDirection(const float LastTapTim
         {
             if (GetWorld()->GetTimeSeconds() - LastTapTime < MaxClickTime)
             {
-                Character->ServerSetDodgeDirection(DodgeDirection);
+                Character->SetDodgeDirection(DodgeDirection);
             }
         }
     }

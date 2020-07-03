@@ -396,10 +396,22 @@ public:
     bool DodgeOverride(const FVector& DodgeDir, const FVector& DodgeCross);
 
     /**
-    * Temporary - Server update the DodgeDirection
+    * Temporary - Set & replicate DodgeDirection.
+    * TODO: implement properly in movement core.
+    * See https://docs.unrealengine.com/en-US/Gameplay/Networking/CharacterMovementComponent/index.html
     */
-    UFUNCTION(Server, Reliable, WithValidation)
+    UFUNCTION()
+    virtual void SetDodgeDirection(const EDodgeDirection InDodgeDirection)
+    {
+        DodgeDirection = InDodgeDirection;
+        ServerSetDodgeDirection(DodgeDirection);
+    }
+    UFUNCTION(Server, Reliable)
     void ServerSetDodgeDirection(const EDodgeDirection InDodgeDirection);
+    virtual void ServerSetDodgeDirection_Implementation(const EDodgeDirection InDodgeDirection)
+    {
+        DodgeDirection = InDodgeDirection;
+    }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Gameplay Ability System
