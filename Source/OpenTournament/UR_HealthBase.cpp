@@ -36,20 +36,13 @@ void AUR_HealthBase::GiveTo_Implementation(class AActor* Other)
     AUR_Character* Char = Cast<AUR_Character>(Other);
     if (Char && Char->AttributeSet)
     {
-        const float CurrentHealth = Char->AttributeSet->GetHealth();
-        GAME_LOG(Game, Log, "Health Pickup: Current Health (%f)", CurrentHealth);
-
         // @! TODO : This is Temporary. Healing should be done via GameplayEffect.
-        if (!bSuperHeal)
+        const int32 CurrentHealth = static_cast<int32>(Char->AttributeSet->GetHealth());
+        const int32 FinalHealth = FMath::Min<int32>(CurrentHealth + HealAmount, Char->AttributeSet->GetHealthMax() + (bSuperHeal ? Char->AttributeSet->GetOverHealthMax() : 0));
+        if (FinalHealth > CurrentHealth)
         {
-            const float FinalHealth = FMath::Clamp<int32>(static_cast<int32>(CurrentHealth) + HealAmount, 0.f, static_cast<int32>(Char->AttributeSet->GetHealthMax()));
-            GAME_LOG(Game, Log, "Health Pickup: Restoring Health (%f)", (FinalHealth - CurrentHealth));
+            GAME_LOG(Game, Log, "Health Pickup: %d + %d -> %d", CurrentHealth, FinalHealth - CurrentHealth, FinalHealth);
             Char->AttributeSet->SetHealth(FinalHealth);
-        }
-        else
-        {
-            GAME_LOG(Game, Log, "Health Pickup: Restoring Health (%d)", HealAmount);
-            Char->AttributeSet->SetHealth(CurrentHealth + HealAmount);
         }
     }
 

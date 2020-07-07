@@ -126,21 +126,21 @@ protected:
     UPROPERTY(VisibleAnywhere, Category = "Weapon")
     USkeletalMeshComponent* Mesh3P;
 
-    UPROPERTY(VisibleAnywhere, Category = "Weapon")
+    UPROPERTY(EditAnywhere, Category = "Weapon")
     USoundBase* OutOfAmmoSound;
 
 public:
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
     USoundBase* PickupSound;
 
-    UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_AmmoCount, Category = "Weapon")
+    UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_AmmoCount, Category = "Weapon")
     int32 AmmoCount;
 
-    UPROPERTY(BlueprintReadWrite, Category = "Weapon")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
     FString WeaponName;
 
-    UPROPERTY(BlueprintReadWrite, Category = "Weapon")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
     FString AmmoName;
 
 protected:

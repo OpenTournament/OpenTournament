@@ -14,7 +14,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/KismetSystemLibrary.h" //debug
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
 #include "Particles/ParticleSystemComponent.h"
@@ -56,6 +56,8 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
     PutDownTime = 0.25f;
     CooldownDelaysPutDownByPercent = 0.5f;
     bReducePutDownDelayByPutDownTime = false;
+
+    SetCanBeDamaged(false);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -224,7 +226,7 @@ void AUR_Weapon::SetWeaponState(EWeaponState NewState)
     if (NewState != WeaponState)
     {
         WeaponState = NewState;
-        UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponState: %s"), *UUR_FunctionLibrary::GetEnumValueAsString(TEXT("EWeaponState"), WeaponState)), true, false, FColor::Purple, 2.f);
+        //UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponState: %s"), *UUR_FunctionLibrary::GetEnumValueAsString(TEXT("EWeaponState"), WeaponState)), true, false, FColor::Purple, 2.f);
         OnWeaponStateChanged.Broadcast(this, NewState);
     }
 
