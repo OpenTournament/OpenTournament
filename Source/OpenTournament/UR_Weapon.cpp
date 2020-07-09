@@ -1063,7 +1063,7 @@ void AUR_Weapon::PlayHitscanEffects_Implementation(UUR_FireModeBasic* FireMode, 
     const FVector& BeamEnd = HitscanInfo.Vectors[0];
     FVector BeamVector = BeamEnd - BeamStart;
 
-    UFXSystemComponent* BeamComp = UUR_FunctionLibrary::SpawnEffectAtLocation(GetWorld(), FireMode->BeamTemplate, FTransform(BeamStart));
+    UFXSystemComponent* BeamComp = UUR_FunctionLibrary::SpawnEffectAtLocation(this, FireMode->BeamTemplate, FTransform(BeamStart));
     if (BeamComp)
     {
         BeamComp->SetVectorParameter(FireMode->BeamVectorParamName, BeamVector);

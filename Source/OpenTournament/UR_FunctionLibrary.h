@@ -204,8 +204,8 @@ public:
     /**
     * Spawn effect at location - niagara/particle independent.
     */
-    UFUNCTION(BlueprintCallable, Category = "Effects")
-    static UFXSystemComponent* SpawnEffectAtLocation(UWorld* World, UFXSystemAsset* Template, const FTransform& Transform, bool bAutoDestroy = true, bool bAutoActivate = true);
+    UFUNCTION(BlueprintCallable, Category = "Effects", Meta = (WorldContext = "WorldContextObject"))
+    static UFXSystemComponent* SpawnEffectAtLocation(const UObject* WorldContextObject, UFXSystemAsset* Template, const FTransform& Transform, bool bAutoDestroy = true, bool bAutoActivate = true);
 
     /**
     * Spawn effect attached - niagara/particle independent.

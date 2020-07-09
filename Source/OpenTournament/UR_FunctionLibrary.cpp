@@ -174,15 +174,18 @@ FString UUR_FunctionLibrary::GetTimeString(const float TimeSeconds)
     return TimeDesc;
 }
 
-UFXSystemComponent* UUR_FunctionLibrary::SpawnEffectAtLocation(UWorld* World, UFXSystemAsset* Template, const FTransform& Transform, bool bAutoDestroy, bool bAutoActivate)
+UFXSystemComponent* UUR_FunctionLibrary::SpawnEffectAtLocation(const UObject* WorldContextObject, UFXSystemAsset* Template, const FTransform& Transform, bool bAutoDestroy, bool bAutoActivate)
 {
-    if (auto PS = Cast<UParticleSystem>(Template))
+    if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
     {
-        return UGameplayStatics::SpawnEmitterAtLocation(World, PS, Transform, bAutoDestroy, EPSCPoolMethod::None, bAutoActivate);
-    }
-    else if (auto NS = Cast<UNiagaraSystem>(Template))
-    {
-        return UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, NS, Transform.GetLocation(), Transform.GetRotation().Rotator(), Transform.GetScale3D(), bAutoDestroy, bAutoActivate);
+        if (auto PS = Cast<UParticleSystem>(Template))
+        {
+            return UGameplayStatics::SpawnEmitterAtLocation(World, PS, Transform, bAutoDestroy, EPSCPoolMethod::None, bAutoActivate);
+        }
+        else if (auto NS = Cast<UNiagaraSystem>(Template))
+        {
+            return UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, NS, Transform.GetLocation(), Transform.GetRotation().Rotator(), Transform.GetScale3D(), bAutoDestroy, bAutoActivate);
+        }
     }
     return nullptr;
 }
