@@ -12,7 +12,6 @@ variables:
 
 stages:
   - assemble
-  - validate
   - resave
   - build
   - cook
@@ -58,10 +57,6 @@ stages:
 #   config #1
 #   config #2
 #   etc.
-# deploy
-#   config #1
-#   config #2
-#   etc.
 
 # TO-DO - This pipeline runs on $BRANCH_TESTING, on every merge from $BRANCH_DEVELOPMENT.
 
@@ -74,7 +69,7 @@ stages:
 # --------------------------------------------------
 
 .template:
-  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation.ps1`" -PathToEngine `"C:\UE`" -PathToProject `"$CI_PROJECT_DIR`" -PathToArtifacts `"$CI_PROJECT_DIR\Artifacts`" -Command $COMMAND -TargetType $PACKAGE_TARGET -TargetConfiguration $PACKAGE_CONFIGURATION -TargetPlatform $PACKAGE_PLATFORM' ]
+  script: [ 'PowerShell -File `"$CI_PROJECT_DIR\Automation.ps1`" -PathToEngine `"C:\UE`" -PathToProject `"$CI_PROJECT_DIR`" -PathToArtifacts `"$CI_PROJECT_DIR\Packages`" -Command $COMMAND -TargetType $PACKAGE_TARGET -TargetConfiguration $PACKAGE_CONFIGURATION -TargetPlatform $PACKAGE_PLATFORM' ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
@@ -139,17 +134,6 @@ assemble:
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
-      - $CI_PIPELINE_SOURCE != "schedule"
-
-# Validate
-
-validate:
-  extends: .template
-  stage: validate
-  variables:
-    COMMAND: 'Validate'
-  only:
-    variables:
       - $CI_PIPELINE_SOURCE != "schedule"
 
 # Resave
@@ -323,10 +307,3 @@ upload_server_development_win64:
 #  artifacts:
 #    paths: [ '$CI_PROJECT_DIR\Packages\OpenTournament-Server-Development-Linux.zip' ]
 #    expire_in: 1 day
-
-# Deploy
-
-deploy_server_development_win64:
-  extends: .template_server_development_win64
-  stage: deploy
-  script: [ 'Write-Output "Uploading..."' ]

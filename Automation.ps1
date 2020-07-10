@@ -10,7 +10,7 @@ Insert description here.
 
 .EXAMPLE
 
-Insert example here. 
+Insert example here.
 
 #>
 
@@ -36,7 +36,7 @@ param
     [string]$TargetConfiguration,
     
     # Win64|Linux|Mac
-    [string]$TargetPlatform    
+    [string]$TargetPlatform
 )
 
 function Main
@@ -53,6 +53,7 @@ function Main
 
     # Extract the derived parameters.
 
+    # To-Do: Make these relative to the hosting machine's OS rather than hard-coding them for Win64.
     $PathToUnrealBuildTool = "$PathToEngine\Engine\Binaries\DotNET\UnrealBuildTool.exe"
     $PathToUnrealAutomationTool = "$PathToEngine\Engine\Build\BatchFiles\RunUAT.bat"
     $PathToUnrealEditor = "$PathToEngine\Engine\Binaries\Win64\UE4Editor-Cmd.exe"
@@ -148,8 +149,8 @@ function Main
         }
         "Deploy"
         {
+            # To-Do: Add logs and maybe move this to an entirely separated script, since this has nothing to do with Unreal.
             Stop-Process -Name "OpenTournamentServer"
-            Compress-Archive -Path "$PathToArtifacts\$Project-$TargetType-$TargetConfiguration-$TargetPlatform" -DestinationPath "$PathToArtifacts\$Project-$TargetType-$TargetConfiguration-$TargetPlatform.zip"
             Start-Process -FilePath "$PathToArtifacts\$Project-$TargetType-$TargetConfiguration-$TargetPlatform\OpenTournamentServer.exe" -ArgumentList ['-log']
         }
         default
@@ -173,7 +174,7 @@ function Invoke-Process
 
     .EXAMPLE
     
-    Insert example here. 
+    Invoke-Process -FilePath 'C:\UE_4.25.1\Engine\Binaries\DotNET\UnrealBuildTool.exe' -ArgumentList @("$PathToProject\$Project.uproject", '-ProjectFiles', '-Game', '-Progress')
 
     #>
 
@@ -196,11 +197,11 @@ function Invoke-Process
     $Process.StartInfo.RedirectStandardError = $true
     
     # Register the output and error events.
-    $OutEvent = Register-ObjectEvent -Action { Write-Host "PING_OUT $($Event.SourceEventArgs.Data)" } -InputObject $Process -EventName 'OutputDataReceived'
-    $ErrEvent = Register-ObjectEvent -Action { Write-Host "PING_ERR $($Event.SourceEventArgs.Data)" -ForegroundColor DarkRed } -InputObject $Process -EventName 'ErrorDataReceived'
+    $OutEvent = Register-ObjectEvent -Action { Write-Host "[Stream-Out] $($Event.SourceEventArgs.Data)" } -InputObject $Process -EventName 'OutputDataReceived'
+    $ErrEvent = Register-ObjectEvent -Action { Write-Host "[Stream-Err] $($Event.SourceEventArgs.Data)" -ForegroundColor DarkRed } -InputObject $Process -EventName 'ErrorDataReceived'
 
     # Start the process.
-    [void]$Process.Start()
+    $Process.Start()
     
     # Begin to read the output and error streams.
     $Process.BeginOutputReadLine()
