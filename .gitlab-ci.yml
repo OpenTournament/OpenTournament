@@ -28,11 +28,12 @@ stages:
 
 # This pipeline runs on $BRANCH_DEVELOPMENT, on every commit.
 #
-# validate
+# assemble
 
 # This pipeline runs on $BRANCH_DEVELOPMENT, on a daily schedule.
 #
-# validate
+# assemble
+# resave
 # build
 #   config #1
 #   config #2
@@ -73,7 +74,7 @@ stages:
 # --------------------------------------------------
 
 .template:
-  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation.ps1`" `"C:\UE\Engine`" `"$CI_PROJECT_DIR`" OpenTournament $PACKAGE_TARGET $PACKAGE_CONFIGURATION $PACKAGE_PLATFORM $COMMAND' ]
+  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation.ps1`" -PathToEngine `"C:\UE\Engine`" -PathToProject `"$CI_PROJECT_DIR`" -PathToArtifacts `"$CI_PROJECT_DIR\Artifacts`" -Command $COMMAND -TargetType $PACKAGE_TARGET -TargetConfiguration $PACKAGE_CONFIGURATION -TargetPlatform $PACKAGE_PLATFORM' ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
