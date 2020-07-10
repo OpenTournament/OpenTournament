@@ -108,7 +108,7 @@ function Main
         "Stage"
         {
             Remove-Item -Recurse -Force "$PathToArtifacts\$Project-$TargetType-$TargetConfiguration-$TargetPlatform"
-            Invoke-Process -FilePath $PathToUnrealAutomationTool -ArgumentList @(BuildCookRun, -Project="$PathToProject\$Project.uproject", "-Target=$Project$TargetType", "-Configuration=$TargetConfiguration", "-Platform=$TargetPlatform", '-Stage', "-StagingDirectory=""$PathToArtifacts""", '-SkipCook')
+            Invoke-Process -FilePath $PathToUnrealAutomationTool -ArgumentList @('BuildCookRun', "-Project=""$PathToProject\$Project.uproject""", "-Target=$Project$TargetType", "-Configuration=$TargetConfiguration", "-Platform=$TargetPlatform", '-Stage', "-StagingDirectory=""$PathToArtifacts""", '-SkipCook')
             $PathOld = ""
             $PathNew = "$PathToArtifacts\$Project-$TargetType-$TargetConfiguration-$TargetPlatform"
             switch ($TargetPlatform)
