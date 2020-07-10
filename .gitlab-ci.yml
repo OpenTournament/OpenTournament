@@ -74,7 +74,7 @@ stages:
 # --------------------------------------------------
 
 .template:
-  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation.ps1`" -PathToEngine `"C:\UE\Engine`" -PathToProject `"$CI_PROJECT_DIR`" -PathToArtifacts `"$CI_PROJECT_DIR\Artifacts`" -Command $COMMAND -TargetType $PACKAGE_TARGET -TargetConfiguration $PACKAGE_CONFIGURATION -TargetPlatform $PACKAGE_PLATFORM' ]
+  script: [ 'Write-Host | PowerShell -File `"$CI_PROJECT_DIR\Automation.ps1`" -PathToEngine `"C:\UE`" -PathToProject `"$CI_PROJECT_DIR`" -PathToArtifacts `"$CI_PROJECT_DIR\Artifacts`" -Command $COMMAND -TargetType $PACKAGE_TARGET -TargetConfiguration $PACKAGE_CONFIGURATION -TargetPlatform $PACKAGE_PLATFORM' ]
   only:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
