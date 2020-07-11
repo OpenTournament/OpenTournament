@@ -273,12 +273,14 @@ void AUR_Teleporter::SetTargetVelocity(AActor* TargetActor, ACharacter* TargetCh
                 auto NewTargetVelocity = DestinationRotation.RotateVector(FVector::ForwardVector * CharacterMovement->Velocity.Size2D());
                 NewTargetVelocity.Z = CharacterMovement->Velocity.Z;
                 CharacterMovement->Velocity = NewTargetVelocity;
+                TargetCharacter->GetController()->SetControlRotation(DestinationRotation);
             }
             else
             {
                 auto NewTargetVelocity = DestinationRotation.RotateVector(FVector::ForwardVector * TargetActor->GetRootComponent()->ComponentVelocity.Size2D());
                 NewTargetVelocity.Z = TargetActor->GetRootComponent()->ComponentVelocity.Z;
                 TargetActor->GetRootComponent()->ComponentVelocity = NewTargetVelocity;
+                TargetActor->SetActorRotation(DestinationRotation);
             }
         }
     }
