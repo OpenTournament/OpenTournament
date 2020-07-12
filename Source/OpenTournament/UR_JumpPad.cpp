@@ -31,9 +31,12 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer),
     Destination(FTransform()),
     bLockDestination(true),
+    bRetainHorizontalVelocity(false),
     JumpActorClass(AUR_Character::StaticClass()),
     JumpDuration(2.f),
     JumpPadLaunchSound(nullptr),
+    JumpPadLaunchParticleClass(nullptr),
+    SplineProjectionDuration(2.f),
     bRequiredTagsExact(false),
     bExcludedTagsExact(true),
     bUseJumpPadMaterialInstance(true),
@@ -41,7 +44,6 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     JumpPadMaterialIndex(0),
     JumpPadMaterialParameterName("Color")
 {
-    // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = false;
     PrimaryActorTick.bStartWithTickEnabled = false;
 
@@ -97,7 +99,7 @@ void AUR_JumpPad::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UP
         {
             GAME_LOG(Game, Log, "Entered JumpPad (%s)", *GetName());
 
-            TargetCharacter->LaunchCharacter(CalculateJumpVelocity(TargetCharacter), true, true);
+            TargetCharacter->LaunchCharacter(CalculateJumpVelocity(TargetCharacter), !bRetainHorizontalVelocity, true);
             PlayJumpPadEffects();
         }
     }
@@ -147,23 +149,20 @@ FVector AUR_JumpPad::CalculateJumpVelocity(const AActor* InCharacter) const
 {
     const float Gravity{ GetWorld()->GetGravityZ() };
 
-    FVector CharacterLocation{ 0.f, 0.f, 0.f };
+    FVector CharacterLocation{ CapsuleComponent->GetComponentLocation() };
     if (InCharacter)
     {
         CharacterLocation = InCharacter->GetActorLocation();
     }
 
-    const FVector WorldDestinationLocation{ (GetActorLocation() + Destination.GetLocation()) };
-    FVector TargetVector{ WorldDestinationLocation }; // - CharacterLocation
+    const FVector WorldDestinationLocation{ ActorToWorld().TransformPosition(Destination.GetLocation()) };
+    FVector TargetVector{ WorldDestinationLocation - CharacterLocation };
 
     const float SizeXY = TargetVector.Size2D() / JumpDuration;
-    const float SizeZ = TargetVector.Z / JumpDuration - Gravity * JumpDuration / 2.0f;
+    const float SizeZ = (TargetVector.Z / JumpDuration) - (Gravity * JumpDuration / 2.0f);
     TargetVector = TargetVector.GetSafeNormal2D() * SizeXY + FVector::UpVector * SizeZ;
 
-    FVector OutVector{ 0.f, 0.f, 0.f };
-    UGameplayStatics::SuggestProjectileVelocity(this, OutVector, CapsuleComponent->GetComponentLocation(), WorldDestinationLocation, TargetVector.Size());
-
-    return OutVector;
+    return TargetVector;
 }
 
 void AUR_JumpPad::SetDestination(const FVector InPosition, const bool IsRelativePosition)
@@ -183,7 +182,7 @@ void AUR_JumpPad::UpdateSpline() const
 {
     SplineComponent->ClearSplinePoints();
 
-    FPredictProjectilePathParams PredictProjectilePathParams{ 50.f, CapsuleComponent->GetComponentLocation(), CalculateJumpVelocity(nullptr), JumpDuration };
+    FPredictProjectilePathParams PredictProjectilePathParams{ 50.f, CapsuleComponent->GetComponentLocation(), CalculateJumpVelocity(nullptr), SplineProjectionDuration };
     FPredictProjectilePathResult PredictProjectilePathResult{ };
 
     UGameplayStatics::PredictProjectilePath(this, PredictProjectilePathParams, PredictProjectilePathResult);
@@ -236,7 +235,16 @@ void AUR_JumpPad::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 {
     Super::PostEditChangeProperty(PropertyChangedEvent);
 
-    if (PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_JumpPad, Destination))
+    const FName PropertyName = PropertyChangedEvent.Property->GetFName();
+
+    if (PropertyName == GET_MEMBER_NAME_CHECKED(AUR_JumpPad, JumpDuration))
+    {
+        SplineProjectionDuration = JumpDuration;
+        UpdateSpline();
+    }
+    
+    if (PropertyName == GET_MEMBER_NAME_CHECKED(AUR_JumpPad, Destination)
+        || PropertyName == GET_MEMBER_NAME_CHECKED(AUR_JumpPad, SplineProjectionDuration))
     {
         UpdateSpline();
     }
