@@ -1,160 +1,223 @@
-# TO-DO Place the output in a dedicated log file.
+<#
 
-# $($args[0]) = C:\UE_4.25.1\Engine
-Write-Output "ARG-0: $($args[0])"
+.SYNOPSIS
 
-# $($args[1]) = C:\UE_PROJECTS\ProjectRoot
-Write-Output "ARG-1: $($args[1])"
-# $($args[2]) = ProjectName
-Write-Output "ARG-2: $($args[2])"
+Handles all the individual steps required to turn an unpackaged project into a packaged project.
 
-# $($args[3]) = Editor\Client\Server\[Blank]
-Write-Output "ARG-3: $($args[3])"
-# $($args[4]) = Development\Shipping\Debug
-Write-Output "ARG-4: $($args[4])"
-# $($args[5]) = Win64\Linux
-Write-Output "ARG-5: $($args[5])"
+.DESCRIPTION
 
-# $($args[6]) = Validate|Build|Cook|Stage|Safeguard|Archive|Other_A|Other_B|etc.
-Write-Output "ARG-6: $($args[6])"
+Insert description here.
 
-$TOOLS_ROOT = "$($args[0])"
-Write-Output "TOOLS_ROOT: $TOOLS_ROOT"
-$TOOLS_UBT = "$($args[0])\Binaries\DotNET\UnrealBuildTool.exe"
-Write-Output "TOOLS_UBT: $TOOLS_UBT"
-$TOOLS_UAT = "$($args[0])\Build\BatchFiles\RunUAT.bat"
-Write-Output "TOOLS_UAT: $TOOLS_UAT"
-$TOOLS_UE = "$($args[0])\Binaries\Win64\UE4Editor-Cmd.exe"
+.EXAMPLE
 
-$PROJECT_ROOT = "$($args[1])"
-Write-Output "PROJECT_ROOT: $PROJECT_ROOT"
-$PROJECT_TITLE = "$($args[2])"
-Write-Output "PROJECT_TITLE: $PROJECT_TITLE"
-$PROJECT_DESCRIPTOR = "$PROJECT_ROOT\$PROJECT_TITLE.uproject"
-Write-Output "PROJECT_DESCRIPTOR: $PROJECT_DESCRIPTOR"
+Insert example here.
 
-$PACKAGE_TARGET = "$($args[3])"
-Write-Output "PACKAGE_TARGET: $PACKAGE_TARGET"
-$PACKAGE_CONFIGURATION = "$($args[4])"
-Write-Output "PACKAGE_CONFIGURATION: $PACKAGE_CONFIGURATION"
-$PACKAGE_PLATFORM = "$($args[5])"
-Write-Output "PACKAGE_PLATFORM: $PACKAGE_PLATFORM"
+#>
 
-$COMMAND = "$($args[6])"
-Write-Output "COMMAND: $COMMAND"
+[CmdletBinding()]
+param
+(
+    # 'C:\UE_4.25.1'
+    [string]$PathToEngine = $(throw "The <PathToEngine> parameter is required."),
+    
+    # 'C:\UE_PROJECTS\ProjectName'
+    [string]$PathToProject = $(throw "The <PathToProject> parameter is required."),
+    
+    # 'C:\UE_PROJECTS\ProjectName\Artifacts'
+    [string]$PathToArtifacts = $(throw "The <PathToArtifacts> parameter is required."),
+    
+    # Assemble|Resave|Build|Cook|Stage|Safeguard|Archive|Deploy
+    [string]$Command = $(throw "The <Command> parameter is required."),
+    
+    # Editor|Client|Server|Game
+    [string]$TargetType,
+    
+    # Development|Shipping|Debug
+    [string]$TargetConfiguration,
+    
+    # Win64|Linux|Mac
+    [string]$TargetPlatform
+)
 
-switch ($COMMAND)
+function Main
 {
-    "Assemble"
+    # Log the raw parameters.
+
+    Write-Output "[Parameter-Raw] PathToEngine: $PathToEngine"
+    Write-Output "[Parameter-Raw] PathToProject: $PathToProject"
+    Write-Output "[Parameter-Raw] PathToArtifacts: $PathToArtifacts"
+    Write-Output "[Parameter-Raw] Command: $Command"
+    Write-Output "[Parameter-Raw] TargetType: $TargetType"
+    Write-Output "[Parameter-Raw] TargetConfiguration: $TargetConfiguration"
+    Write-Output "[Parameter-Raw] TargetPlatform: $TargetPlatform"
+
+    # Extract the derived parameters.
+
+    # To-Do: Make these relative to the hosting machine's OS rather than hard-coding them for Win64.
+    $PathToUnrealBuildTool = "$PathToEngine\Engine\Binaries\DotNET\UnrealBuildTool.exe"
+    $PathToUnrealAutomationTool = "$PathToEngine\Engine\Build\BatchFiles\RunUAT.bat"
+    $PathToUnrealEditor = "$PathToEngine\Engine\Binaries\Win64\UE4Editor-Cmd.exe"
+
+    [string[]]$Projects = (Get-ChildItem "$PathToProject\*.uproject").BaseName
+
+    if ($Projects.Length -ne 1)
     {
-        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, -ProjectFiles, -Game, -Progress;
-        if ($LASTEXITCODE -ne 0)
-        {
-            exit $LASTEXITCODE;
-        }
-        Write-Host | & $TOOLS_UBT $PROJECT_DESCRIPTOR, "$($PROJECT_TITLE)Editor", Development, Win64, -WaitMutex, -FromMsBuild;
-        if ($LASTEXITCODE -ne 0)
-        {
-            exit $LASTEXITCODE;
-        }
-        break
+        throw "Unable to extract the project title. There needs to be exactly one project descriptor located at <$PathToProject>."
     }
-    "Validate"
+
+    [string]$Project = $Projects[0]
+
+    # Log the derived parameters.
+
+    Write-Output "[Parameter-Derived] PathToUnrealBuildTool: $PathToUnrealBuildTool"
+    Write-Output "[Parameter-Derived] PathToUnrealAutomationTool: $PathToUnrealAutomationTool"
+    Write-Output "[Parameter-Derived] PathToUnrealEditor: $PathToUnrealEditor"
+    Write-Output "[Parameter-Derived] Project: $Project"
+
+    # Prepare the script.
+
+    $ErrorActionPreference = 'Stop'
+
+    if ($Command -notin @('Assemble', 'Resave') -and ([string]::IsNullOrEmpty($TargetType) -or [string]::IsNullOrEmpty($TargetConfiguration) -or [string]::IsNullOrEmpty($TargetPlatform)))
     {
-        Write-Host | & $TOOLS_UE $PROJECT_DESCRIPTOR, -Run=CompileAllBlueprints, "-IgnoreFolder=/Engine,/RuntimeTests";
-        if ($LASTEXITCODE -ne 0)
-        {
-            exit $LASTEXITCODE;
-        }
-        break
+        throw "Only the <Assemble> and <Resave> commands can run without the <TargetType>, <TargetConfiguration> and <TargetPlatform> parameters."
     }
-    "Resave"
+
+    # Run the specified command.
+
+    switch ($Command)
     {
-        Write-Host | & $TOOLS_UE $PROJECT_DESCRIPTOR, -Run=ResavePackages, -ProjectOnly, -AllowCommandletRendering, -IgnoreChangelist, -BuildReflectionCaptures, -BuildTextureStreaming, -BuildNavigationData, -BuildLighting, -Quality=Preview;
-        if ($LASTEXITCODE -ne 0)
+        "Assemble"
         {
-            exit $LASTEXITCODE;
+            Invoke-Process -FilePath $PathToUnrealBuildTool -ArgumentList @("$PathToProject\$Project.uproject", '-ProjectFiles', '-Game', '-Progress')
+            # To-Do: The <Win64> parameter should be determined automatically based on the hosting machine's OS.
+            Invoke-Process -FilePath $PathToUnrealBuildTool -ArgumentList @("$PathToProject\$Project.uproject", "$($Project)Editor", 'Development', 'Win64', '-WaitMutex', '-FromMsBuild')
+            Invoke-Process -FilePath $PathToUnrealEditor -ArgumentList @("$PathToProject\$Project.uproject", '-Run=CompileAllBlueprints', '-IgnoreFolder=/Engine,/RuntimeTests')
         }
-        break
-    }
-    "Build"
-    {
-        Write-Host | & $TOOLS_UAT BuildTarget, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM";
-        if ($LASTEXITCODE -ne 0)
+        "Resave"
         {
-            exit $LASTEXITCODE;
+            Invoke-Process -FilePath $PathToUnrealEditor -ArgumentList @("$PathToProject\$Project.uproject", '-Run=ResavePackages', '-ProjectOnly', '-AllowCommandletRendering', '-IgnoreChangelist', '-BuildReflectionCaptures', '-BuildTextureStreaming', '-BuildNavigationData', '-BuildLighting', '-Quality=Preview')
         }
-        break
-    }
-    "Cook"
-    {
-        Write-Host | & $TOOLS_UAT BuildCookRun, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM", -Cook, -SkipEditorContent, -Compressed, -Unversioned;
-        if ($LASTEXITCODE -ne 0)
+        "Build"
         {
-            exit $LASTEXITCODE;
+            Invoke-Process -FilePath $PathToUnrealAutomationTool -ArgumentList @('BuildTarget', "-Project=""$PathToProject\$Project.uproject""", "-Target=$Project$TargetType", "-Configuration=$TargetConfiguration", "-Platform=$TargetPlatform")
         }
-        break
-    }
-    "Stage"
-    {
-        Write-Host | & $TOOLS_UAT BuildCookRun, -Project="$PROJECT_DESCRIPTOR", -Target="$PROJECT_TITLE$PACKAGE_TARGET", -Configuration="$PACKAGE_CONFIGURATION", -Platform="$PACKAGE_PLATFORM", -Stage, -StagingDirectory="$PROJECT_ROOT\Packages", -SkipCook;
-        if ($LASTEXITCODE -ne 0)
+        "Cook"
         {
-            exit $LASTEXITCODE;
+            Invoke-Process -FilePath $PathToUnrealAutomationTool -ArgumentList @('BuildCookRun', "-Project=""$PathToProject\$Project.uproject""", "-Target=$Project$TargetType", "-Configuration=$TargetConfiguration", "-Platform=$TargetPlatform", '-Cook', '-SkipEditorContent', '-Compressed')
         }
-        $PATH_OLD = "";
-        $PATH_NEW = "$PROJECT_ROOT\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM";
-        switch ($PACKAGE_PLATFORM)
+        "Stage"
         {
-            "Win64"
+            Remove-Item -Recurse -Force "$PathToArtifacts\$Project-$TargetType-$TargetConfiguration-$TargetPlatform"
+            Invoke-Process -FilePath $PathToUnrealAutomationTool -ArgumentList @('BuildCookRun', "-Project=""$PathToProject\$Project.uproject""", "-Target=$Project$TargetType", "-Configuration=$TargetConfiguration", "-Platform=$TargetPlatform", '-Stage', "-StagingDirectory=""$PathToArtifacts""", '-SkipCook')
+            $PathOld = ""
+            $PathNew = "$PathToArtifacts\$Project-$TargetType-$TargetConfiguration-$TargetPlatform"
+            switch ($TargetPlatform)
             {
-                $PATH_OLD = "$PROJECT_ROOT\Packages\Windows$PACKAGE_TARGET"
-                break
+                "Win64"
+                {
+                    $PathOld = "$PathToArtifacts\Windows$TargetType"
+                    break
+                }
+                "Linux"
+                {
+                    $PathOld = "$PathToArtifacts\Linux$TargetType"
+                    break
+                }
+                "Mac"
+                {
+                    # Nothing to do at the moment.
+                    break
+                }
+                default
+                {
+                    # No default actions are required, at the moment.
+                }
             }
-            "Linux"
-            {
-                $PATH_OLD = "$PROJECT_ROOT\Packages\Linux$PACKAGE_TARGET"
-                break
-            }
-            "Mac"
-            {
-                # Nothing to do at the moment.
-                break
-            }
-            default
-            {
-                # Should probably throw an exception here.
-            }
+            Rename-Item -Path "$PathOld" -NewName "$PathNew"
         }
-        Rename-Item -Path "$PATH_OLD" -NewName "$PATH_NEW";
-        if ($LASTEXITCODE -ne 0)
+        "Safeguard"
         {
-            exit $LASTEXITCODE;
+            $RedistributablesSource = "$PathToEngine\Engine\Binaries\ThirdParty\AppLocalDependencies\$TargetPlatform\*"
+            $RedistributablesDestination = "$PathToArtifacts\$Project-$TargetType-$TargetConfiguration-$TargetPlatform\"
+            Copy-Item -Force -Recurse -Verbose "$RedistributablesSource" -Destination "$RedistributablesDestination"
         }
-        break
-    }
-    "Safeguard"
-    {
-        $REDISTRIBUTABLES_SOURCE = "$TOOLS_ROOT\Binaries\ThirdParty\AppLocalDependencies\$PACKAGE_PLATFORM\*"
-        $REDISTRIBUTABLES_DESTINATION = "$PROJECT_ROOT\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM\"
-        Copy-Item -Force -Recurse -Verbose "$REDISTRIBUTABLES_SOURCE" -Destination "$REDISTRIBUTABLES_DESTINATION";
-    }
-    "Archive"
-    {
-        Compress-Archive -Path "$PROJECT_ROOT\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM" -DestinationPath "$PROJECT_ROOT\Packages\$PROJECT_TITLE-$PACKAGE_TARGET-$PACKAGE_CONFIGURATION-$PACKAGE_PLATFORM.zip"
-        if ($LASTEXITCODE -ne 0)
+        "Archive"
         {
-            exit $LASTEXITCODE;
+            Remove-Item -Recurse -Force "$PathToArtifacts\$Project-$TargetType-$TargetConfiguration-$TargetPlatform.zip"
+            Compress-Archive -Path "$PathToArtifacts\$Project-$TargetType-$TargetConfiguration-$TargetPlatform" -DestinationPath "$PathToArtifacts\$Project-$TargetType-$TargetConfiguration-$TargetPlatform.zip"
         }
-        break
-    }
-    default
-    {
-        # Should probably throw an exception here.
+        "Deploy"
+        {
+            # To-Do: Add logs and maybe move this to an entirely separated script, since this has nothing to do with Unreal.
+            Stop-Process -Name "OpenTournamentServer"
+            Start-Process -FilePath "$PathToArtifacts\$Project-$TargetType-$TargetConfiguration-$TargetPlatform\OpenTournamentServer.exe" -ArgumentList ['-log']
+        }
+        default
+        {
+            throw "The <Command> parameter contains an unexpected string. Valid values are: <Assemble|Resave|Build|Cook|Stage|Safeguard|Archive|Deploy>."
+        }
     }
 }
 
-# These commands will be part of a different script, dedicated to provide maintenance to the required tools.
-#
-# Write-Host | & $TOOLS_UBT BootstrapPackagedGame, Development, Win64;
-# Write-Host | & $TOOLS_UBT UnrealLightmass, Development, Win64;
+function Invoke-Process
+{
+    <#
+
+    .SYNOPSIS
+    
+    Starts a process and then captures its output and error streams.
+
+    .DESCRIPTION
+    
+    Insert description here.
+
+    .EXAMPLE
+    
+    Invoke-Process -FilePath 'C:\UE_4.25.1\Engine\Binaries\DotNET\UnrealBuildTool.exe' -ArgumentList @("$PathToProject\$Project.uproject", '-ProjectFiles', '-Game', '-Progress')
+
+    #>
+
+    [CmdletBinding()]
+    param
+    (
+        # 'C:\Users\Name\Desktop'
+        [string]$FilePath,
+
+        # @('A', 'B', 'C')
+        [string[]]$ArgumentList
+    )
+
+    # Initialize the desired process.
+    $Process = New-Object System.Diagnostics.Process
+    $Process.StartInfo.FileName = $FilePath
+    $Process.StartInfo.Arguments = $ArgumentList
+    $Process.StartInfo.UseShellExecute = $false
+    $Process.StartInfo.RedirectStandardOutput = $true
+    $Process.StartInfo.RedirectStandardError = $true
+    
+    # Register the output and error events.
+    $OutEvent = Register-ObjectEvent -Action { Write-Host "[Stream-Out] $($Event.SourceEventArgs.Data)" } -InputObject $Process -EventName 'OutputDataReceived'
+    $ErrEvent = Register-ObjectEvent -Action { Write-Host "[Stream-Err] $($Event.SourceEventArgs.Data)" -ForegroundColor DarkRed } -InputObject $Process -EventName 'ErrorDataReceived'
+
+    # Start the process.
+    $Process.Start()
+    
+    # Begin to read the output and error streams.
+    $Process.BeginOutputReadLine()
+    $Process.BeginErrorReadLine()
+    
+    # Force the function to wait for the process to exit.
+    while (!$Process.HasExited) {}
+    
+    # Unregister the output and error events.
+    Unregister-Event -SourceIdentifier $OutEvent.Name
+    Unregister-Event -SourceIdentifier $ErrEvent.Name
+
+    if ($Process.ExitCode -ne 0)
+    {
+        Write-Error "Process exited with code $($Process.ExitCode)."
+    }
+}
+
+Main

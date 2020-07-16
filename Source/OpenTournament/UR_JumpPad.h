@@ -97,6 +97,12 @@ public:
     bool bLockDestination;
 
     /**
+    * Should players retain Horizontal (XY) Velocity when they hit this JumpPad?
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad")
+    bool bRetainHorizontalVelocity;
+
+    /**
     * Class of Actors capable of interacting with JumpPad
     */
     UPROPERTY(EditAnywhere, Category = "JumpPad")
@@ -119,6 +125,13 @@ public:
     */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad")
     UParticleSystem* JumpPadLaunchParticleClass;
+
+    /**
+    * Editor-only.
+    * Spline Jump-Arc Projection will Calculate for this many Seconds
+    */
+    UPROPERTY(EditInstanceOnly, Category = "JumpPad|Editor", Meta=(UIMin = "0.0", UIMax ="10.0"))
+    float SplineProjectionDuration;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
