@@ -77,6 +77,9 @@ void UUR_Widget_ControlsListEntry::UpdateEntry()
     //EntryName->SetText(FText::FromName((KeyBind->ActionName)));
 
     // @! TODO Remove hardcoded asset reference
-    EntryName->SetText(FText::FromStringTable("/Game/OpenTournament/StringTables/ST_KeyBindingNames.ST_KeyBindingNames", KeyBind->Name.ToString()));
+    //EntryName->SetText(FText::FromStringTable("/Game/OpenTournament/StringTables/ST_KeyBindingNames.ST_KeyBindingNames", KeyBind->Name.ToString()));
+    // I am getting rid of that table! sorry!
+    //TODO: Use proper localization instead
+    EntryName->SetText(FText::FromName(KeyBind->Name));
     EntryKeySelector->SetSelectedKey(FInputChord(KeyBind->Key));
 }

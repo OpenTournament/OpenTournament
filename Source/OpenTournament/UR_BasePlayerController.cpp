@@ -15,6 +15,7 @@
 AUR_BasePlayerController::AUR_BasePlayerController(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	ConfiguredFOV = 90;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -37,4 +38,39 @@ UUR_PlayerInput* AUR_BasePlayerController::GetPlayerInput() const
 void AUR_BasePlayerController::ReturnToMainMenu()
 {
 	UGameplayStatics::OpenLevel(this, FName(*GetDefault<UGameMapsSettings>()->GetGameDefaultMap()));
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_BasePlayerController::SpawnPlayerCameraManager()
+{
+	Super::SpawnPlayerCameraManager();
+
+	if (PlayerCameraManager)
+	{
+		ClampConfiguredFOV();
+		PlayerCameraManager->DefaultFOV = ConfiguredFOV;
+		PlayerCameraManager->SetFOV(ConfiguredFOV);
+	}
+}
+
+void AUR_BasePlayerController::SetConfiguredFOV(int32 NewFOV)
+{
+	ConfiguredFOV = NewFOV;
+	ClampConfiguredFOV();
+	SaveConfig();
+
+	if (PlayerCameraManager)
+	{
+		if (PlayerCameraManager->GetFOVAngle() == PlayerCameraManager->DefaultFOV)
+		{
+			PlayerCameraManager->SetFOV(ConfiguredFOV);
+		}
+		PlayerCameraManager->DefaultFOV = ConfiguredFOV;
+	}
+}
+
+void AUR_BasePlayerController::ClampConfiguredFOV()
+{
+	ConfiguredFOV = FMath::Clamp(ConfiguredFOV, 80, 120);
 }

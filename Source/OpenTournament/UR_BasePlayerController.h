@@ -30,6 +30,8 @@ public:
 
     virtual void InitInputSystem() override;
 
+    virtual void SpawnPlayerCameraManager() override;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     UFUNCTION(BlueprintCallable, Category = "PlayerController|Input")
@@ -40,4 +42,17 @@ public:
     */
     UFUNCTION(Exec, BlueprintCallable, BlueprintCosmetic)
     void ReturnToMainMenu();
+
+    /**
+    * User configured FOV.
+    */
+    UPROPERTY(Config, BlueprintReadOnly)
+    int32 ConfiguredFOV;
+
+    UFUNCTION(Exec, BlueprintCallable, BlueprintCosmetic)
+    void SetConfiguredFOV(int32 NewFOV);
+
+    UFUNCTION()
+    void ClampConfiguredFOV();
+
 };

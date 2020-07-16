@@ -6,10 +6,10 @@
 
 #include "Engine/Engine.h"
 #include "GameFramework/GameStateBase.h"
-#include "GameFramework/InputSettings.h"
 #include "Internationalization/Regex.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "Animation/AnimInstance.h"
@@ -19,6 +19,7 @@
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 #include "UR_Character.h"
+#include "UR_PlayerInput.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -106,26 +107,30 @@ FString UUR_FunctionLibrary::StripRichTextDecorators(const FString& InText)
 
 bool UUR_FunctionLibrary::IsKeyMappedToAction(const FKey& Key, FName ActionName)
 {
-    UInputSettings* Settings = UInputSettings::GetInputSettings();
+    const UUR_PlayerInput* PlayerInput = GetDefault<UUR_PlayerInput>();
     TArray<FInputActionKeyMapping> Mappings;
-    Settings->GetActionMappingByName(ActionName, Mappings);
-    for (const auto& Mapping : Mappings)
+    if (PlayerInput && PlayerInput->FindUserActionMappings(ActionName, Mappings))
     {
-        if (Mapping.Key == Key)
-            return true;
+        for (const auto& Mapping : Mappings)
+        {
+            if (Mapping.Key == Key)
+                return true;
+        }
     }
     return false;
 }
 
 bool UUR_FunctionLibrary::IsKeyMappedToAxis(const FKey& Key, FName AxisName, float Direction)
 {
-    UInputSettings* Settings = UInputSettings::GetInputSettings();
+    const UUR_PlayerInput* PlayerInput = GetDefault<UUR_PlayerInput>();
     TArray<FInputAxisKeyMapping> Mappings;
-    Settings->GetAxisMappingByName(AxisName, Mappings);
-    for (const auto& Mapping : Mappings)
+    if (PlayerInput && PlayerInput->FindUserAxisMappings(AxisName, Mappings))
     {
-        if (Mapping.Key == Key && (FMath::IsNearlyZero(Direction) || (Direction*Mapping.Scale > 0)))
-            return true;
+        for (const auto& Mapping : Mappings)
+        {
+            if (Mapping.Key == Key && (FMath::IsNearlyZero(Direction) || (Direction * Mapping.Scale > 0)))
+                return true;
+        }
     }
     return false;
 }
@@ -223,4 +228,12 @@ UAnimMontage* UUR_FunctionLibrary::GetCurrentActiveMontageInSlot(UAnimInstance* 
     bIsValid = false;
     Weight = 0.f;
     return NULL;
+}
+
+
+void UUR_FunctionLibrary::ParseFloatTextInput(FText Text, bool& bIsNumeric, float& OutValue)
+{
+    FString Str = Text.ToString().TrimStartAndEnd().Replace(TEXT(" "), TEXT("")).Replace(TEXT(","), TEXT("."));
+    bIsNumeric = Str.IsNumeric();
+    OutValue = bIsNumeric ? UKismetStringLibrary::Conv_StringToFloat(Str) : 0.f;
 }

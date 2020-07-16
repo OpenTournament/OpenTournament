@@ -240,4 +240,8 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Animation", Meta = (NotBlueprintThreadSafe))
     static UAnimMontage* GetCurrentActiveMontageInSlot(UAnimInstance* AnimInstance, FName SlotName, bool& bIsValid, float& Weight);
 
+
+    UFUNCTION(BlueprintPure, Category = "Text")
+    static void ParseFloatTextInput(FText Text, bool& bIsNumeric, float& OutValue);
+
 };

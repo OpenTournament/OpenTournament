@@ -10,6 +10,7 @@
 
 #include "Data/UR_Object_KeyBind.h"
 #include "UR_BasePlayerController.h"
+#include "UR_PlayerInput.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -72,40 +73,36 @@ void UUR_Widget_KeyBindingMenu::CreateKeyBindObject(FName Name, FKey Key)
 
 void UUR_Widget_KeyBindingMenu::PopulateKeyBindingList()
 {
-    AUR_BasePlayerController* Player = Cast<AUR_BasePlayerController>(GetOwningPlayer());
-    const UInputSettings * Settings = GetDefault<UInputSettings>();
+    const UInputSettings* ProjectDefaults = GetDefault<UInputSettings>();
 
-    for (TIndexedContainerIterator<TArray<FName>, FName, int32> IterAxis = AxisNames.CreateIterator(); IterAxis; ++IterAxis)
+    const AUR_BasePlayerController* PC = Cast<AUR_BasePlayerController>(GetOwningPlayer());
+    UUR_PlayerInput* UserSettings = PC->GetPlayerInput();
+
+    TArray<FInputAxisKeyMapping> AxisMappings;
+    for (const FName& AxisName : AxisNames)
     {
-        TArray<FInputAxisKeyMapping> AxisMappingsForName;
-        FName AxisName = AxisNames[IterAxis.GetIndex()];
-        Settings->GetAxisMappingByName(AxisName, AxisMappingsForName);
-
-        if (AxisMappingsForName.Num() > 0)
+        if (UserSettings->FindUserAxisMappings(AxisName, AxisMappings))
         {
-            const FInputAxisKeyMapping AxisMapping = AxisMappingsForName[0];
-            CreateKeyBindObject(AxisMapping.AxisName, AxisMapping.Key);
+            CreateKeyBindObject(AxisName, AxisMappings[0].Key);
         }
         else
         {
             UE_LOG(LogTemp, Error, TEXT("No axis with that name found. Name was: %s"), *AxisName.ToString());
+            CreateKeyBindObject(AxisName, FKey());
         }
     }
 
-    for (TIndexedContainerIterator<TArray<FName>, FName, int32> IterAction = ActionNames.CreateIterator(); IterAction; ++IterAction)
+    TArray<FInputActionKeyMapping> ActionMappings;
+    for (const FName& ActionName : ActionNames)
     {
-        TArray<FInputActionKeyMapping> ActionMappingsForName;
-        FName ActionName = ActionNames[IterAction.GetIndex()];
-        Settings->GetActionMappingByName(ActionName, ActionMappingsForName);
-
-        if (ActionMappingsForName.Num() > 0)
+        if (UserSettings->FindUserActionMappings(ActionName, ActionMappings))
         {
-            const FInputActionKeyMapping ActionMapping = ActionMappingsForName[0];
-            CreateKeyBindObject(ActionMapping.ActionName, ActionMapping.Key);
+            CreateKeyBindObject(ActionName, ActionMappings[0].Key);
         }
         else
         {
             UE_LOG(LogTemp, Error, TEXT("No action with that name found. Name was: %s"), *ActionName.ToString());
+            CreateKeyBindObject(ActionName, FKey());
         }
     }
 }
