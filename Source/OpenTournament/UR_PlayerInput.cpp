@@ -14,10 +14,6 @@ void UUR_PlayerInput::PostInitProperties()
 {
     Super::PostInitProperties();
 
-    InputSettings = GetDefault<UInputSettings>()->GetInputSettings();
-
-    SetupUserSettings();
-
     if (GWorld && GWorld->IsGameWorld())
     {
         SetupUserSettings();
@@ -29,6 +25,9 @@ void UUR_PlayerInput::SetupUserSettings()
     int32 SavedActionsNum = UserActionMappings.Num();
     int32 SavedAxisNum = UserAxisMappings.Num();
     int32 SavedAxisConfigNum = UserAxisConfigs.Num();
+
+    // Project defaults
+    const UInputSettings* InputSettings = UInputSettings::GetInputSettings();
 
     // Merge any default action missing in user config
     TArray<FInputActionKeyMapping> DefaultActionMappings = InputSettings->GetActionMappings();
@@ -83,39 +82,52 @@ void UUR_PlayerInput::SetupUserSettings()
     RegenerateInternalBindings();
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-//deprecated
-void UUR_PlayerInput::SetActionKeyMappingKey(const FInputActionKeyMapping& ActionKeyMapping, const FKey& Key)
+void UUR_PlayerInput::SaveUserSettings()
 {
-    int32 FoundIndex = -1;
-    if (ActionMappings.Find(ActionKeyMapping, FoundIndex))
+    UserActionMappings.Sort();
+    UserAxisMappings.Sort();
+
+    SaveConfig();
+}
+
+void UUR_PlayerInput::RegenerateInternalBindings()
+{
+    FName TapActionName;
+
+    AxisMappings = UserAxisMappings;
+    ActionMappings = UserActionMappings;
+    AxisConfig = UserAxisConfigs;
+
+    // Remove Tap* actions if they are present
+    for (const auto& AxisMapping : AxisMappings)
     {
-        FInputActionKeyMapping & KeyMappingToModify = ActionMappings[FoundIndex];
-        KeyMappingToModify.Key = Key;
-        ForceRebuildingKeyMaps(false);
+        if (AxisShouldGenerateTapAction(AxisMapping.AxisName, TapActionName))
+        {
+            ActionMappings.RemoveAll([TapActionName](const FInputActionKeyMapping& Other) {
+                return Other.ActionName.IsEqual(TapActionName);
+            });
+        }
     }
+
+    // Re-add them with proper bindings
+    for (const auto& AxisMapping : AxisMappings)
+    {
+        if (AxisShouldGenerateTapAction(AxisMapping.AxisName, TapActionName))
+        {
+            ActionMappings.Add(FInputActionKeyMapping(TapActionName, AxisMapping.Key));
+        }
+    }
+
+    ForceRebuildingKeyMaps(false);
 }
 
-//deprecated
-void UUR_PlayerInput::ModifyActionKeyMapping(const FName& ActionName, const FInputActionKeyMapping& ModActionKeyMapping)
-{
-    TArray<FInputActionKeyMapping> FoundActionMappings;
-    InputSettings->GetActionMappingByName(ActionName, FoundActionMappings);
-
-    InputSettings->RemoveActionMapping(FoundActionMappings[0], false);
-    InputSettings->AddActionMapping(ModActionKeyMapping, true);
-
-    InputSettings->SaveKeyMappings();
-}
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool UUR_PlayerInput::ModifyKeyMapping(const FName& MappingName, const FInputChord& InputChord)
 {
     // Get action mappings and axis mappings
     TArray<FInputActionKeyMapping> FoundActionMappings;
     TArray<FInputAxisKeyMapping> FoundAxisMappings;
-    //InputSettings->GetActionMappingByName(MappingName, FoundActionMappings);
-    //InputSettings->GetAxisMappingByName(MappingName, FoundAxisMappings);
     FindUserActionMappings(MappingName, FoundActionMappings);
     FindUserAxisMappings(MappingName, FoundAxisMappings);
 
@@ -145,31 +157,11 @@ bool UUR_PlayerInput::ModifyKeyMapping(const FName& MappingName, const FInputCho
         RemapAxis(FoundAxisMappings[0], InputChord.Key);
     }
 
-    //InputSettings->SaveKeyMappings();
     return true;
 }
 
-//deprecated
-void UUR_PlayerInput::SaveMappings()
-{
-    /*UInputSettings * InputSettings = GetMutableDefault<UInputSettings>();
-    InputSettings->ActionMappings = ActionMappings;
-    InputSettings->SaveKeyMappings();*/
-
-    PlayerActionMappings = ActionMappings;
-    SaveConfig();
-}
-
-/*
-Remap the given action to the given key
-*/
 void UUR_PlayerInput::RemapAction(FInputActionKeyMapping& ActionKeyMapping, const FKey& Key)
 {
-    /*
-    InputSettings->RemoveActionMapping(ActionKeyMapping, false);
-    ActionKeyMapping.Key = Key;
-    InputSettings->AddActionMapping(ActionKeyMapping, true);
-    */
     UserActionMappings.Remove(ActionKeyMapping);
     ActionKeyMapping.Key = Key;
     UserActionMappings.AddUnique(ActionKeyMapping);
@@ -177,23 +169,8 @@ void UUR_PlayerInput::RemapAction(FInputActionKeyMapping& ActionKeyMapping, cons
     RegenerateInternalBindings();
 }
 
-/*
-Remap the given axis to the given key
-This will also map a corresponding Tap action to the given axis (ex: MoveForward and TapForward)
-*/
 void UUR_PlayerInput::RemapAxis(FInputAxisKeyMapping& AxisKeyMapping, const FKey& Key)
 {
-    /*
-    const FString AxisString = AxisKeyMapping.AxisName.ToString();
-    const FString TapActionString = AxisString.Replace(TEXT("Move"), TEXT("Tap"));
-    FInputActionKeyMapping TapActionMapping = FInputActionKeyMapping(FName(*TapActionString), AxisKeyMapping.Key);
-    InputSettings->RemoveAxisMapping(AxisKeyMapping, false);
-    InputSettings->RemoveActionMapping(TapActionMapping, false);
-    AxisKeyMapping.Key = Key;
-    TapActionMapping.Key = Key;
-    InputSettings->AddActionMapping(TapActionMapping, false);
-    InputSettings->AddAxisMapping(AxisKeyMapping, true);
-    */
     UserAxisMappings.Remove(AxisKeyMapping);
     AxisKeyMapping.Key = Key;
     UserAxisMappings.AddUnique(AxisKeyMapping);
@@ -201,13 +178,7 @@ void UUR_PlayerInput::RemapAxis(FInputAxisKeyMapping& AxisKeyMapping, const FKey
     RegenerateInternalBindings();
 }
 
-void UUR_PlayerInput::SaveUserSettings()
-{
-    UserActionMappings.Sort();
-    UserAxisMappings.Sort();
-
-    SaveConfig();
-}
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool UUR_PlayerInput::FindUserActionMappings(FName ActionName, TArray<FInputActionKeyMapping>& OutMappings) const
 {
@@ -278,37 +249,6 @@ bool UUR_PlayerInput::K2_UpdateUserAxisConfig(FName AxisKeyName, float Sensitivi
         }
     }
     return false;
-}
-
-void UUR_PlayerInput::RegenerateInternalBindings()
-{
-    FName TapActionName;
-
-    AxisMappings = UserAxisMappings;
-    ActionMappings = UserActionMappings;
-    AxisConfig = UserAxisConfigs;
-
-    // Remove Tap* actions if they are present
-    for (const auto& AxisMapping : AxisMappings)
-    {
-        if (AxisShouldGenerateTapAction(AxisMapping.AxisName, TapActionName))
-        {
-            ActionMappings.RemoveAll([TapActionName](const FInputActionKeyMapping& Other) {
-                return Other.ActionName.IsEqual(TapActionName);
-            });
-        }
-    }
-
-    // Re-add them with proper bindings
-    for (const auto& AxisMapping : AxisMappings)
-    {
-        if (AxisShouldGenerateTapAction(AxisMapping.AxisName, TapActionName))
-        {
-            ActionMappings.Add(FInputActionKeyMapping(TapActionName, AxisMapping.Key));
-        }
-    }
-
-    ForceRebuildingKeyMaps(false);
 }
 
 bool UUR_PlayerInput::AxisShouldGenerateTapAction(FName AxisName, FName& OutTapActionName)

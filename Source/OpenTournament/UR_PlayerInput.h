@@ -24,41 +24,13 @@ class OPENTOURNAMENT_API UUR_PlayerInput : public UPlayerInput
     
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-public:
+protected:
 
     virtual void PostInitProperties() override;
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    UFUNCTION(BlueprintCallable, Category="UR_PlayerInput", Meta=(DeprecatedFunction))
-    void SetActionKeyMappingKey(const FInputActionKeyMapping& ActionKeyMapping, const FKey& Key);
-
-    UFUNCTION(BlueprintCallable, Category = "UR_PlayerInput", Meta=(DeprecatedFunction))
-    void ModifyActionKeyMapping(const FName& ActionName, const FInputActionKeyMapping& ModActionKeyMapping);
-
-    UFUNCTION(BlueprintCallable, Category = "UR_PlayerInput", Meta=(DeprecatedFunction))
-    void SaveMappings();
-
     /**
-    * Modify a key mapping for an action or axis
-    * returns true if the key mapping was modified successfully, otherwise returns false
-    */
-    bool ModifyKeyMapping(const FName& MappingName, const FInputChord& InputChord);
-
-    //deprecated
-    UPROPERTY(Config)
-    TArray<struct FInputActionKeyMapping> PlayerActionMappings;
-
-private:
-
-    void RemapAction(FInputActionKeyMapping& ActionKeyMapping, const FKey& Key);
-    void RemapAxis(FInputAxisKeyMapping& AxisKeyMapping, const FKey& Key);
-
-    UPROPERTY()
-    UInputSettings* InputSettings;
-
-    /**
-    * There is a problem with user settings conflicting with project defaults.
+    * NOTE:
+    * With UInputSettings, there was a problem with user settings conflicting with project defaults.
     * We want developers to be able to use their own settings for PIE.
     * When changing keybindings in PIE, they are saved in Saved/Config/Input.ini.
     * However, editor loads project settings from both DefaultInput.ini and Input.ini afterwards.
@@ -70,8 +42,6 @@ private:
     * - Store user config in separate config section (here in UR_PlayerInput).
     * - Override mappings on load, except in editor mode.
     */
-
-protected:
 
     //NOTE: Later on, we will probably want these settings externalized (cloud...)
 
@@ -87,13 +57,45 @@ protected:
     /**
     * Inject new project defaults into user settings (if any) and activate user settings.
     */
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION()
     virtual void SetupUserSettings();
+
+    UFUNCTION()
+    virtual void SaveUserSettings();
+
+    /**
+    * Activates current user settings.
+    * Automatically injects our Tap* actions derived from movement axis.
+    * Calls ForceRebuildingKeyMaps().
+    */
+    UFUNCTION()
+    virtual void RegenerateInternalBindings();
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
 
-    UFUNCTION(BlueprintCallable)
-    virtual void SaveUserSettings();
+    /**
+    * Modify a key mapping for an action or axis
+    * returns true if the key mapping was modified successfully, otherwise returns false
+    */
+    bool ModifyKeyMapping(const FName& MappingName, const FInputChord& InputChord);
+
+protected:
+
+    /**
+    * Remap the given action to the given key
+    */
+    virtual void RemapAction(FInputActionKeyMapping& ActionKeyMapping, const FKey& Key);
+
+    /**
+    * Remap the given axis to the given key
+    */
+    virtual void RemapAxis(FInputAxisKeyMapping& AxisKeyMapping, const FKey& Key);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
 
     UFUNCTION(BlueprintPure)
     virtual bool FindUserActionMappings(FName ActionName, TArray<FInputActionKeyMapping>& OutMappings) const;
@@ -110,14 +112,6 @@ public:
 
     UFUNCTION(BlueprintCallable)
     virtual bool K2_UpdateUserAxisConfig(FName AxisKeyName, float Sensitivity = 1.f, bool bInvert = false);
-
-    /**
-    * Activates current user settings.
-    * Automatically injects our Tap* actions derived from movement axis.
-    * Calls ForceRebuildingKeyMaps().
-    */
-    UFUNCTION()
-    virtual void RegenerateInternalBindings();
 
     UFUNCTION(BlueprintPure)
     virtual bool AxisShouldGenerateTapAction(FName AxisName, FName& OutTapActionName);
