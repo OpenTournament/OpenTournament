@@ -169,7 +169,7 @@
 		},
 		{
 			"Name": "MeshPainting",
-			"Enabled": false
+			"Enabled": true
 		},
 		{
 			"Name": "GoogleCloudMessaging",
@@ -361,7 +361,7 @@
 		},
 		{
 			"Name": "UMods",
-			"Enabled": true
+			"Enabled": false
 		},
 		{
 			"Name": "SoundUtilities",
