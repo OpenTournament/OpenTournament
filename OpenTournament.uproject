@@ -361,7 +361,7 @@
 		},
 		{
 			"Name": "UMods",
-			"Enabled": false
+			"Enabled": true
 		},
 		{
 			"Name": "SoundUtilities",
