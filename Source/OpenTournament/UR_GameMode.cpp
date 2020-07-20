@@ -14,11 +14,13 @@
 #include "UR_PlayerState.h"
 #include "UR_Projectile.h"
 #include "UR_Weapon.h"
+#include "UR_Widget_ScoreboardBase.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameMode::AUR_GameMode()
 {
+    ScoreboardClass = UUR_Widget_ScoreboardBase::StaticClass();
     DeathMessageClass = UUR_LocalMessage::StaticClass();
 
     GoalScore = 10;

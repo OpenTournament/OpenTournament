@@ -14,6 +14,7 @@
 // Forward Declarations
 
 class APlayerState;
+class AGameModeBase;
 class AUR_GameModeBase;
 class AUR_Character;
 class UFXSystemComponent;
@@ -38,7 +39,21 @@ public:
     /**
      * Utility for retrieving GameMode CDO
      */
-    UFUNCTION(BlueprintPure, Category = "Utility")
+    static AGameModeBase* GetGameModeBaseDefaultObject(const UObject* WorldContextObject);
+
+    /**
+     * Utility for retrieving GameMode CDO
+     */
+    template<class T>
+    static FORCEINLINE T* GetGameModeDefaultObject(const UObject* WorldContextObject)
+    {
+        return Cast<T>(GetGameModeBaseDefaultObject(WorldContextObject));
+    }
+
+    /**
+     * Utility for retrieving GameMode CDO
+     */
+    UFUNCTION(BlueprintPure, Category = "Utility", Meta = (WorldContext = "WorldContextObject"))
     static AUR_GameModeBase* GetGameModeDefaultObject(const UObject* WorldContextObject);
 
 
@@ -243,5 +258,8 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Text")
     static void ParseFloatTextInput(FText Text, bool& bIsNumeric, float& OutValue);
+
+    UFUNCTION(BlueprintPure, Category = "Game")
+    static bool IsOnlySpectator(APlayerState* PS);
 
 };

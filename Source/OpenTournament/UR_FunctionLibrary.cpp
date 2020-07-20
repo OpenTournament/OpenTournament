@@ -23,22 +23,24 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_GameModeBase* UUR_FunctionLibrary::GetGameModeDefaultObject(const UObject* WorldContextObject)
+AGameModeBase* UUR_FunctionLibrary::GetGameModeBaseDefaultObject(const UObject* WorldContextObject)
 {
-    AUR_GameModeBase* GameModeDefaultObject = nullptr;
-    
-    if (const auto World = WorldContextObject->GetWorld())
+    if (const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
     {
         if (const auto GameState = World->GetGameState())
         {
             if (const auto GameModeClass = GameState->GameModeClass)
             {
-                GameModeDefaultObject = Cast<AUR_GameModeBase>(GameModeClass->GetDefaultObject());
+                return Cast<AGameModeBase>(GameModeClass->GetDefaultObject());
             }
         }
     }
+    return nullptr;
+}
 
-    return GameModeDefaultObject;
+AUR_GameModeBase* UUR_FunctionLibrary::GetGameModeDefaultObject(const UObject* WorldContextObject)
+{
+    return GetGameModeDefaultObject<AUR_GameModeBase>(WorldContextObject);
 }
 
 FColor UUR_FunctionLibrary::GetPlayerDisplayTextColor(const APlayerState* PS)
@@ -236,4 +238,10 @@ void UUR_FunctionLibrary::ParseFloatTextInput(FText Text, bool& bIsNumeric, floa
     FString Str = Text.ToString().TrimStartAndEnd().Replace(TEXT(" "), TEXT("")).Replace(TEXT(","), TEXT("."));
     bIsNumeric = Str.IsNumeric();
     OutValue = bIsNumeric ? UKismetStringLibrary::Conv_StringToFloat(Str) : 0.f;
+}
+
+
+bool UUR_FunctionLibrary::IsOnlySpectator(APlayerState* PS)
+{
+    return PS->IsOnlyASpectator();
 }

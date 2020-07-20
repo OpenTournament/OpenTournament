@@ -85,6 +85,34 @@
 			"Type": "DynamicLibrary"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/MeshPainting/Binaries/Win64/UE4Editor-MeshPaintEditorMode.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/MeshPainting/Binaries/Win64/UE4Editor-MeshPaintingToolset.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/GeometryProcessing/Binaries/Win64/UE4Editor-GeometricObjects.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/GeometryProcessing/Binaries/Win64/UE4Editor-GeometryAlgorithms.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/GeometryProcessing/Binaries/Win64/UE4Editor-DynamicMesh.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/GeometryProcessing/Binaries/Win64/UE4Editor-MeshConversion.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/GeometryProcessing/Binaries/Win64/UE4Editor-MeshSolverUtilities.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
 			"Path": "$(ProjectDir)/Plugins/UMods/Binaries/Win64/UE4Editor-UModsEditor.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -1717,6 +1745,14 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/MeshPainting/Binaries/Win64/UE4Editor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/GeometryProcessing/Binaries/Win64/UE4Editor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(ProjectDir)/Plugins/UMods/Binaries/Win64/UE4Editor.modules",
 			"Type": "RequiredResource"
 		},
@@ -1868,6 +1904,14 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Tests/FunctionalTestingEditor/FunctionalTestingEditor.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/MeshPainting/MeshPainting.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/GeometryProcessing/GeometryProcessing.uplugin",
 			"Type": "UFS"
 		},
 		{
