@@ -227,11 +227,4 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-    * Temp:
-    */
-    UPROPERTY(EditDefaultsOnly)
-    TSubclassOf<UUR_Widget_BaseMenu> KeyBindingMenu;
-
-    UUR_Widget_BaseMenu* ControlsMenu;
 };
