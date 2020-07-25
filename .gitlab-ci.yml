@@ -60,7 +60,7 @@ stages:
 # --------------------------------------------------
 
 .template:
-  script: [ 'PowerShell -File `"$CI_BUILDS_DIR\..\Automation\Automation-Commands.ps1`"-Command $COMMAND -TargetType $PACKAGE_TARGET -TargetConfiguration $PACKAGE_CONFIGURATION -TargetPlatform $PACKAGE_PLATFORM -Identifier $CI_PIPELINE_ID' ]
+  script: [ 'PowerShell -File `"$CI_BUILDS_DIR\..\Automation\Automation-Commands.ps1`" -Command $COMMAND -TargetType $PACKAGE_TARGET -TargetConfiguration $PACKAGE_CONFIGURATION -TargetPlatform $PACKAGE_PLATFORM -Identifier $CI_PIPELINE_ID' ]
   #only:
     #variables:
       #- $CI_PIPELINE_SOURCE == "schedule"
