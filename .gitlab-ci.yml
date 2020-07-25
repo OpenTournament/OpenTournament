@@ -17,9 +17,7 @@ stages:
   - cook
   - stage
   - safeguard
-  - archive
   - upload
-  - deploy
 
 # ----------------------------------------------------------------------------------------------------
 #     Pipelines
@@ -49,14 +47,7 @@ stages:
 #   config #1
 #   config #2
 #   etc.
-# archive
-#   config #1
-#   config #2
-#   etc.
 # upload
-#   config #1
-#   config #2
-#   etc.
 
 # TO-DO - This pipeline runs on $BRANCH_TESTING, on every merge from $BRANCH_DEVELOPMENT.
 
@@ -69,10 +60,10 @@ stages:
 # --------------------------------------------------
 
 .template:
-  script: [ 'PowerShell -File `"$CI_PROJECT_DIR\Automation.ps1`" -PathToEngine `"C:\UE`" -PathToProject `"$CI_PROJECT_DIR`" -PathToArtifacts `"$CI_PROJECT_DIR\Packages`" -Command $COMMAND -TargetType $PACKAGE_TARGET -TargetConfiguration $PACKAGE_CONFIGURATION -TargetPlatform $PACKAGE_PLATFORM' ]
-  only:
-    variables:
-      - $CI_PIPELINE_SOURCE == "schedule"
+  script: [ 'PowerShell -File `"$CI_BUILDS_DIR\..\Automation\Automation-Commands.ps1`"-Command $COMMAND -TargetType $PACKAGE_TARGET -TargetConfiguration $PACKAGE_CONFIGURATION -TargetPlatform $PACKAGE_PLATFORM' -Identifier $CI_PIPELINE_ID ]
+  #only:
+    #variables:
+      #- $CI_PIPELINE_SOURCE == "schedule"
 
 # Clients
 
@@ -247,32 +238,6 @@ safeguard_server_development_win64:
 #  stage: safeguard
 #  variables:
 #    COMMAND: 'Safeguard'
-
-# Archive
-
-archive_client_development_win64:
-  extends: .template_client_development_win64
-  stage: archive
-  variables:
-    COMMAND: 'Archive'
-
-archive_server_development_win64:
-  extends: .template_server_development_win64
-  stage: archive
-  variables:
-    COMMAND: 'Archive'
-
-#archive_client_development_linux:
-#  extends: .template_client_development_linux
-#  stage: archive
-#  variables:
-#    COMMAND: 'Archive'
-#
-#archive_server_development_linux:
-#  extends: .template_server_development_linux
-#  stage: archive
-#  variables:
-#    COMMAND: 'Archive'
 
 # Upload
 
