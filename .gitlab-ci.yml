@@ -15,7 +15,6 @@ stages:
   - build
   - cook
   - stage
-  - safeguard
   - upload
 
 # ----------------------------------------------------------------------------------------------------
@@ -38,10 +37,6 @@ stages:
 #   config #2
 #   etc.
 # stage
-#   config #1
-#   config #2
-#   etc.
-# safeguard
 #   config #1
 #   config #2
 #   etc.
@@ -202,32 +197,6 @@ stage_server_development_win64:
 #  stage: stage
 #  variables:
 #    COMMAND: 'Stage'
-
-# Safeguard
-
-safeguard_client_development_win64:
-  extends: .template_client_development_win64
-  stage: safeguard
-  variables:
-    COMMAND: 'Safeguard'
-
-safeguard_server_development_win64:
-  extends: .template_server_development_win64
-  stage: safeguard
-  variables:
-    COMMAND: 'Safeguard'
-
-#safeguard_client_development_linux:
-#  extends: .template_client_development_linux
-#  stage: safeguard
-#  variables:
-#    COMMAND: 'Safeguard'
-#
-#safeguard_server_development_linux:
-#  extends: .template_server_development_linux
-#  stage: safeguard
-#  variables:
-#    COMMAND: 'Safeguard'
 
 # Upload
 
