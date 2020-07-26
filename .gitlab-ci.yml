@@ -12,7 +12,6 @@ variables:
 
 stages:
   - assemble
-  - resave
   - build
   - cook
   - stage
@@ -30,7 +29,6 @@ stages:
 # This pipeline runs on $BRANCH_DEVELOPMENT, on a daily schedule.
 #
 # assemble
-# resave
 # build
 #   config #1
 #   config #2
@@ -126,14 +124,6 @@ assemble:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
       - $CI_PIPELINE_SOURCE != "schedule"
-
-# Resave
-
-resave:
-  extends: .template
-  stage: resave
-  variables:
-    COMMAND: 'Resave'
 
 # Build
 
