@@ -203,18 +203,14 @@ stage_server_development_win64:
 upload_client_development_win64:
   extends: .template_client_development_win64
   stage: upload
-  script: [ 'Write-Output "Uploading..."' ]
-  artifacts:
-    paths: [ '$CI_PROJECT_DIR\Packages\OpenTournament-Client-Development-Win64.zip' ]
-    expire_in: 1 day
+  variables:
+    COMMAND: 'Upload'
 
 upload_server_development_win64:
   extends: .template_server_development_win64
   stage: upload
-  script: [ 'Write-Output "Uploading..."' ]
-  artifacts:
-    paths: [ '$CI_PROJECT_DIR\Packages\OpenTournament-Server-Development-Win64.zip' ]
-    expire_in: 1 day
+  variables:
+    COMMAND: 'Upload'
       
 #upload_client_development_linux:
 #  extends: .template_client_development_linux
