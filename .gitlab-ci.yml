@@ -108,7 +108,7 @@ stages:
 
 assemble:
   extends: .template
-  stage: assemble
+  stage: Assemble
   variables:
     GIT_STRATEGY: fetch
     GIT_CHECKOUT: "true"
@@ -118,88 +118,88 @@ assemble:
 
 build_client_development_win64:
   extends: .template_client_development_win64
-  stage: build
+  stage: Build
 
 build_server_development_win64:
   extends: .template_server_development_win64
-  stage: build
+  stage: Build
 
 #build_client_development_linux:
 #  extends: .template_client_development_linux
-#  stage: build
+#  stage: Build
 #
 #build_server_development_linux:
 #  extends: .template_server_development_linux
-#  stage: build
+#  stage: Build
 
 # Cook
 
 cook_client_development_win64:
   extends: .template_client_development_win64
-  stage: cook
+  stage: Cook
 
 cook_server_development_win64:
   extends: .template_server_development_win64
-  stage: cook
+  stage: Cook
 
 #cook_client_development_linux:
 #  extends: .template_client_development_linux
-#  stage: cook
+#  stage: Cook
 #
 #cook_server_development_linux:
 #  extends: .template_server_development_linux
-#  stage: cook
+#  stage: Cook
 
 # Stage
 
 stage_client_development_win64:
   extends: .template_client_development_win64
-  stage: stage
+  stage: Stage
 
 stage_server_development_win64:
   extends: .template_server_development_win64
-  stage: stage
+  stage: Stage
 
 #stage_client_development_linux:
 #  extends: .template_client_development_linux
-#  stage: stage
+#  stage: Stage
 #
 #stage_server_development_linux:
 #  extends: .template_server_development_linux
-#  stage: stage
+#  stage: Stage
 
 # Safeguard
 
 #safeguard_client_development_win64:
 #  extends: .template_client_development_win64
-#  stage: safeguard
+#  stage: Safeguard
 #
 #safeguard_server_development_win64:
 #  extends: .template_server_development_win64
-#  stage: safeguard
+#  stage: Safeguard
 #
 #safeguard_client_development_linux:
 #  extends: .template_client_development_linux
-#  stage: safeguard
+#  stage: Safeguard
 #
 #safeguard_server_development_linux:
 #  extends: .template_server_development_linux
-#  stage: safeguard
+#  stage: Safeguard
 
 # Upload
 
 upload_client_development_win64:
   extends: .template_client_development_win64
-  stage: upload
+  stage: Upload
 
 #upload_server_development_win64:
 #  extends: .template_server_development_win64
-#  stage: upload
+#  stage: Upload
       
 #upload_client_development_linux:
 #  extends: .template_client_development_linux
-#  stage: upload
+#  stage: Upload
 #         
 #upload_server_development_linux:
 #  extends: .template_server_development_linux
-#  stage: upload
+#  stage: Upload
