@@ -116,8 +116,8 @@ void AUR_Weapon::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor * Other, UP
     {
         if (AUR_Character* URChar = Cast<AUR_Character>(Other))
         {
-            UGameplayStatics::PlaySoundAtLocation(this, PickupSound, URCharOwner->GetActorLocation());
             GiveTo(URChar);
+            UGameplayStatics::PlaySoundAtLocation(this, PickupSound, URCharOwner->GetActorLocation());
         }
     }
 }
