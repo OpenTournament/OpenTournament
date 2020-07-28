@@ -227,11 +227,29 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-    * Temp:
-    */
-    UPROPERTY(EditDefaultsOnly)
-    TSubclassOf<UUR_Widget_BaseMenu> KeyBindingMenu;
+    //NOTE: might want to move that over to HUD? not sure..
+    UPROPERTY(BlueprintReadOnly)
+    class UUR_Widget_ScoreboardBase* ScoreboardWidget;
 
-    UUR_Widget_BaseMenu* ControlsMenu;
+    /**
+    * Function bound to "HoldScoreboard" action
+    */
+    UFUNCTION(Exec, BlueprintCallable, BlueprintCosmetic)
+    virtual void ShowScoreboard();
+
+    /**
+    * Function bound to "HoldScoreboard" action
+    */
+    UFUNCTION(Exec, BlueprintCallable, BlueprintCosmetic)
+    virtual void HideScoreboard();
+
+    /**
+    * Function bound to "ToggleScoreboard" action
+    */
+    UFUNCTION(Exec, BlueprintCallable, BlueprintCosmetic)
+    virtual void ToggleScoreboard()
+    {
+        ScoreboardWidget ? HideScoreboard() : ShowScoreboard();
+    }
+
 };

@@ -13,6 +13,7 @@
 class AUR_GameState;
 class AUR_Weapon;
 class ULocalMessage;
+class UUR_Widget_ScoreboardBase;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -45,9 +46,15 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
+    * Scoreboard widget class
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Classes")
+    TSubclassOf<UUR_Widget_ScoreboardBase> ScoreboardClass;
+
+    /**
     * LocalMessage class to use for death/suicide messages.
     */
-    UPROPERTY(EditAnywhere, Category="Classes")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Classes")
     TSubclassOf<ULocalMessage> DeathMessageClass;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -63,6 +70,7 @@ public:
 
     UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
     TArray<FStartingWeaponEntry> StartingWeapons;
+
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Match

@@ -21,6 +21,9 @@
 #include "UR_MessageHistory.h"
 #include "UR_PCInputDodgeComponent.h"
 #include "Widgets/UR_Widget_BaseMenu.h"
+#include "UR_FunctionLibrary.h"
+#include "UR_GameMode.h"
+#include "UR_Widget_ScoreboardBase.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -139,6 +142,10 @@ void AUR_PlayerController::SetupInputComponent()
 
     InputComponent->BindAction("AltFire", IE_Pressed, this, &AUR_PlayerController::PressedAltFire);
     InputComponent->BindAction("AltFire", IE_Released, this, &AUR_PlayerController::ReleasedAltFire);
+
+    InputComponent->BindAction("ToggleScoreboard", IE_Pressed, this, &AUR_PlayerController::ToggleScoreboard);
+    InputComponent->BindAction("HoldScoreboard", IE_Pressed, this, &AUR_PlayerController::ShowScoreboard);
+    InputComponent->BindAction("HoldScoreboard", IE_Released, this, &AUR_PlayerController::HideScoreboard);
 }
 
 void AUR_PlayerController::ProcessPlayerInput(const float DeltaTime, const bool bGamePaused)
@@ -338,3 +345,31 @@ void AUR_PlayerController::ClientMessage_Implementation(const FString& S, FName 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_PlayerController::ShowScoreboard()
+{
+    if (!ScoreboardWidget)
+    {
+        if (auto GameModeCDO = UUR_FunctionLibrary::GetGameModeDefaultObject<AUR_GameMode>(this))
+        {
+            if (auto ScoreboardClass = GameModeCDO->ScoreboardClass)
+            {
+                ScoreboardWidget = CreateWidget<UUR_Widget_ScoreboardBase>(this, ScoreboardClass);
+                if (ScoreboardWidget)
+                {
+                    //TODO: ZORDER???
+                    ScoreboardWidget->AddToViewport(5);
+                }
+            }
+        }
+    }
+}
+
+void AUR_PlayerController::HideScoreboard()
+{
+    if (ScoreboardWidget)
+    {
+        ScoreboardWidget->RemoveFromParent();
+        ScoreboardWidget = nullptr;
+    }
+}

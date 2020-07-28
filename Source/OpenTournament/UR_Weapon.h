@@ -154,7 +154,7 @@ protected:
 public:
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
-    int32 GetCurrentAmmo() const { return AmmoCount; }
+    FORCEINLINE int32 GetCurrentAmmo() const { return AmmoCount; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
     FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
