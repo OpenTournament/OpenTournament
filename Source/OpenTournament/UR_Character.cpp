@@ -746,6 +746,7 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
         }
 
         URGameMode->PlayerKilled(Killed, Killer, DamageEvent, DamageCauser);
+        OnDied(Killer, DamageEvent, DamageCauser);
     }
 
     if (AttributeSet)

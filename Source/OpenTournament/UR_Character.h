@@ -484,6 +484,12 @@ public:
     virtual void Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser);
 
     /**
+    * Event Called on Character Death
+    */
+    UFUNCTION(BlueprintImplementableEvent, Category = "Character")
+    void OnDied(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser);
+
+    /**
     * Play dying effect (animation, ragdoll, sound, blood, gib).
     * Client only.
     */
