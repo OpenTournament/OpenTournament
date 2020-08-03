@@ -58,6 +58,7 @@ https://docs.unrealengine.com/en-US/Programming/Development/VisualStudioSetup/in
 * Within your cloned Open Tournament repository, right click on the OpenTournament.uproject
 * Select "Generate Visual Studio project Files"
 * Open the OpenTournament.sln file in Visual Studio
+* Set solution configuration to `Development Editor` and platform to `Win64`
 * Build the solution by opening the "Build" menu dropdown and selecting Build
 * Once your initial project build is complete you should be able to double click on OpenTournament.uproject to open the project. This will display the Unreal Engine 4 Editor.
 
