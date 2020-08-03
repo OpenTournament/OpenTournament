@@ -1,5 +1,7 @@
 # Open Tournament
 
+## Important: If you cloned this repository prior to 2-Aug-20, please make sure you have git lfs installed and re-clone to a new location 
+
 ## Overview
 
 The **Open Tournament Project** is a community-led effort to develop a new game that will recreate and expand upon the formula of Unreal Tournament, Quake, and other classic FPS games.
@@ -45,7 +47,7 @@ The Open Tournament project is built using Unreal Engine 4.24. Please ensure tha
 
 ### Git Client
 
-Git is a version control system utilized by GitHub & the Open Tournament project. The Git tool can be interfaced through using the command line, or using graphical frontends such as GitKraken, Git Fork or Sourcetree. Please refer to Git, GitHub, or your GUI client's tutorials on how to clone the Open Tournament repository.
+Git is a version control system utilized by GitHub & the Open Tournament project. The Git tool can be interfaced through using the command line, or using graphical frontends such as GitKraken, Git Fork or Sourcetree. Make sure you install Git with LFS support. Please refer to Git, GitHub, or your GUI client's tutorials on how to clone the Open Tournament repository.
 
 
 ### Project Prerequisites
