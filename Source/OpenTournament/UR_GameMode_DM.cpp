@@ -6,6 +6,7 @@
 
 #include "UR_PlayerState.h"
 #include "UR_GameState.h"
+#include "UR_TeamInfo.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -38,11 +39,19 @@ void AUR_GameMode_DM::ScoreKill_Implementation(AController* Victim, AController*
         if (Killer == Victim)
         {
             KillerPS->AddScore(-1);
+            if (KillerPS->Team)
+            {
+                KillerPS->Team->AddScore(-1);
+            }
             CheckEndGame(nullptr);
         }
         else
         {
             KillerPS->AddScore(1);
+            if (KillerPS->Team)
+            {
+                KillerPS->Team->AddScore(1);
+            }
             CheckEndGame(Killer);
         }
     }
@@ -59,11 +68,24 @@ AActor* AUR_GameMode_DM::IsThereAWinner_Implementation()
     }
 
     // Else, check with goal score
-    for (APlayerState* PS : GS->PlayerArray)
+    if (GS->Teams.Num() > 0)
     {
-        if (PS->GetScore() >= GoalScore)
+        for (AUR_TeamInfo* Team : GS->Teams)
         {
-            return PS;
+            if (Team->GetScore() >= GoalScore)
+            {
+                return Team;
+            }
+        }
+    }
+    else
+    {
+        for (APlayerState* PS : GS->PlayerArray)
+        {
+            if (PS->GetScore() >= GoalScore)
+            {
+                return PS;
+            }
         }
     }
 

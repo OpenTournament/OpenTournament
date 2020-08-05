@@ -5,10 +5,20 @@
 #pragma once
 
 #include "GameFramework/PlayerState.h"
-
+#include "Interfaces/UR_TeamInterface.h"
 #include "UR_PlayerState.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+class AUR_PlayerState;
+class AUR_TeamInfo;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+* Event dispatcher for team change.
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTeamChangedSignature, AUR_PlayerState*, PS, int32, OldTeamIndex, int32, NewTeamIndex);
 
 
 /**
@@ -16,6 +26,7 @@
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_PlayerState : public APlayerState
+    , public IUR_TeamInterface
 {
     GENERATED_BODY()
     
@@ -24,6 +35,9 @@ class OPENTOURNAMENT_API AUR_PlayerState : public APlayerState
 protected:
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+    UFUNCTION()
+    virtual void OnRep_ReplicatedTeamIndex();
 
 public:
 
@@ -47,4 +61,36 @@ public:
 
     UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
     virtual void AddScore(int32 Value);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
+
+    UPROPERTY()
+    int32 TeamIndex;
+
+    UPROPERTY(ReplicatedUsing = OnRep_ReplicatedTeamIndex)
+    int32 ReplicatedTeamIndex;
+
+    /**
+    * Cache Team here for easier c++ access because interfaces are pain in the ass.
+    * Blueprints should use interface methods GetTeam() and GetTeamIndex().
+    */
+    UPROPERTY()
+    AUR_TeamInfo* Team;
+
+    //~ Begin TeamInterface
+    virtual int32 GetTeamIndex_Implementation() override;
+    virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
+    //~ End TeamInterface
+
+    UPROPERTY(BlueprintAssignable)
+    FTeamChangedSignature OnTeamChanged;
+
+    UFUNCTION()
+    virtual void InternalOnTeamChanged(AUR_PlayerState* PS, int32 OldTeamIndex, int32 NewTeamIndex);
+
+    UFUNCTION(BlueprintPure, BlueprintCosmetic)
+    virtual FLinearColor GetColor();
+
 };

@@ -14,6 +14,8 @@
 #include "NiagaraComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
+#include "Components/Widget.h"
+#include "Components/PanelWidget.h"
 
 #include "UR_GameModeBase.h"
 #include "UR_PlayerController.h"
@@ -43,31 +45,23 @@ AUR_GameModeBase* UUR_FunctionLibrary::GetGameModeDefaultObject(const UObject* W
     return GetGameModeDefaultObject<AUR_GameModeBase>(WorldContextObject);
 }
 
-FColor UUR_FunctionLibrary::GetPlayerDisplayTextColor(const APlayerState* PS)
+FColor UUR_FunctionLibrary::GetPlayerDisplayTextColor(APlayerState* PS)
 {
     if (!PS)
     {
-        return FColorList::Green;
+        return FColorList::White;
     }
     else if (PS->IsOnlyASpectator())
     {
         return GetSpectatorDisplayTextColor();
     }
+    else if (AUR_PlayerState* URPlayerState = Cast<AUR_PlayerState>(PS))
+    {
+        return URPlayerState->GetColor().ToFColor(true);
+    }
     else
     {
-        const AUR_PlayerState* URPlayerState = Cast<AUR_PlayerState>(PS);
-        if (URPlayerState)
-        {
-            //TODO: if team game, return team color, something like URPS->Team->GetDisplayTextColor();
-
-            //TODO: if non team game, return player's color ? if any ? or white ?
-
-            return FColorList::Red;
-        }
-        else
-        {
-            return FColorList::Green;	//???
-        }
+        return FColorList::White;	//???
     }
 }
 
@@ -244,4 +238,50 @@ void UUR_FunctionLibrary::ParseFloatTextInput(FText Text, bool& bIsNumeric, floa
 bool UUR_FunctionLibrary::IsOnlySpectator(APlayerState* PS)
 {
     return PS->IsOnlyASpectator();
+}
+
+
+float UUR_FunctionLibrary::GetFloatOption(const FString& Options, const FString& Key, float DefaultValue)
+{
+    const FString InOpt = UGameplayStatics::ParseOption(Options, Key);
+    if (!InOpt.IsEmpty())
+    {
+        return FCString::Atof(*InOpt);
+    }
+    return DefaultValue;
+}
+
+bool UUR_FunctionLibrary::FindChildrenWidgetsByClass(UWidget* Target, TSubclassOf<UWidget> WidgetClass, TArray<UWidget*>& OutWidgets, bool bRecursive)
+{
+    if (!WidgetClass)
+    {
+        return false;
+    }
+
+    // Only PanelWidget subclasses can have children
+    UPanelWidget* Panel = Cast<UPanelWidget>(Target);
+    if (!Panel)
+    {
+        return false;
+    }
+
+    int32 LengthBefore = OutWidgets.Num();
+
+    int32 Count = Panel->GetChildrenCount();
+    for (int32 i = 0; i < Count; i++)
+    {
+        UWidget* Child = Panel->GetChildAt(i);
+
+        if (Child && Child->IsA(WidgetClass))
+        {
+            OutWidgets.Add(Child);
+        }
+
+        if (bRecursive)
+        {
+            FindChildrenWidgetsByClass(Child, WidgetClass, OutWidgets, true);
+        }
+    }
+
+    return OutWidgets.Num() > LengthBefore;
 }

@@ -22,6 +22,7 @@ class UAnimInstance;
 class UAnimMontage;
 class UActorComponent;
 class AUR_PlayerController;
+class UWidget;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -81,7 +82,7 @@ public:
     * - Customizable self color in non team games
     */
     UFUNCTION(BlueprintPure)
-    static FColor GetPlayerDisplayTextColor(const APlayerState* PS);
+    static FColor GetPlayerDisplayTextColor(APlayerState* PS);
 
 
     /**
@@ -261,5 +262,25 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Game")
     static bool IsOnlySpectator(APlayerState* PS);
+
+    /** Returns true if A is between B and C (B <= A <= C) */
+    UFUNCTION(BlueprintPure, meta = (DisplayName = "integer between", CompactNodeTitle = "<=>"), Category = "Math|Integer")
+    static bool Between_IntInt(int32 A, int32 B, int32 C)
+    {
+        return A >= B && A <= C;
+    }
+
+    /** Returns true if A is between B and C (B <= A <= C) */
+    UFUNCTION(BlueprintPure, meta = (DisplayName = "float between", CompactNodeTitle = "<=>"), Category = "Math|Float")
+    static bool Between_FloatFloat(float A, float B, float C)
+    {
+        return A >= B && A <= C;
+    }
+
+    UFUNCTION(BlueprintPure, Category = "Game Options", meta = (BlueprintThreadSafe))
+    static float GetFloatOption(const FString& Options, const FString& Key, float DefaultValue);
+
+    UFUNCTION(BlueprintCallable, Category = "UMG", Meta = (DeterminesOutputType = "WidgetClass", DynamicOutputParam = "OutWidgets"))
+    static bool FindChildrenWidgetsByClass(UWidget* Target, TSubclassOf<UWidget> WidgetClass, TArray<UWidget*>& OutWidgets, bool bRecursive = true);
 
 };
