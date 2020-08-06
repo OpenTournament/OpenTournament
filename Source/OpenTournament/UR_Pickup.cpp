@@ -25,7 +25,7 @@ AUR_Pickup::AUR_Pickup(const FObjectInitializer& ObjectInitializer) :
     CollisionComponent->SetCapsuleSize(20.f, 20.f, true);
     CollisionComponent->Mobility = EComponentMobility::Static;
     CollisionComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-    CollisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+    CollisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 
     RootComponent = CollisionComponent;
 
@@ -113,7 +113,7 @@ void AUR_Pickup::OnPickup_Implementation(AUR_Character* PickupCharacter)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AUR_Pickup::SetPickupState(EPickupState NewState)
+void AUR_Pickup::SetPickupState(const EPickupState NewState)
 {
     if (PickupState == NewState)
     {
@@ -140,5 +140,7 @@ void AUR_Pickup::SetPickupState(EPickupState NewState)
 
 void AUR_Pickup::RespawnPickup()
 {
+    UGameplayStatics::PlaySoundAtLocation(GetWorld(), RespawnSound, GetActorLocation());
+
     SetPickupState(EPickupState::Active);
 }
