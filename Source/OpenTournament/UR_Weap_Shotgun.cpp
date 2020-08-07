@@ -13,7 +13,6 @@ AUR_Weap_Shotgun::AUR_Weap_Shotgun(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
     WeaponName = "Shotgun";
-    AmmoName = "Shotgun";
 
     SpawnBoxes = {
         { FVector(5.0f, 0.0f, 0.0f), FVector(5.f, 15.f, 15.f), 2 },

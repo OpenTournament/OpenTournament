@@ -14,6 +14,7 @@
 #include "UR_PlayerState.h"
 #include "UR_Projectile.h"
 #include "UR_Weapon.h"
+#include "UR_Ammo.h"
 #include "UR_Widget_ScoreboardBase.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -96,8 +97,13 @@ void AUR_GameMode::SetPlayerDefaults(APawn* PlayerPawn)
                 AUR_Weapon* StartingWeapon = GetWorld()->SpawnActor<AUR_Weapon>(Entry.WeaponClass, URCharacter->GetActorLocation(), URCharacter->GetActorRotation(), SpawnParams);
                 if (StartingWeapon)
                 {
-                    StartingWeapon->AmmoCount = Entry.Ammo;
                     StartingWeapon->GiveTo(URCharacter);
+                    //TODO: Weapons with multiple ammo classes
+                    if (StartingWeapon->AmmoRefs.Num() > 0 && StartingWeapon->AmmoRefs[0])
+                    {
+                        StartingWeapon->AmmoRefs[0]->SetAmmoCount(Entry.Ammo);
+                        StartingWeapon->AmmoRefs[0]->bPickedUpFirstWeapon = true;
+                    }
                 }
             }
         }

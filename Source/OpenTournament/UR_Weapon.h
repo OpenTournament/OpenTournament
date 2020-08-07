@@ -19,6 +19,7 @@
 
 class AUR_Character;
 class AUR_Projectile;
+class AUR_Ammo;
 class UShapeComponent;
 class UAudioComponent;
 class USkeletalMeshComponent;
@@ -73,21 +74,6 @@ protected:
     virtual void PostInitializeComponents() override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-    // ???
-
-    enum class EAmmoType
-    {
-        EBullet,
-        ERocket,
-        EMax,
-    };
-
-    virtual EAmmoType GetAmmoType() const
-    {
-        return EAmmoType::EBullet;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
     // Very, very basic support for picking up weapons on the ground.
 
 protected:
@@ -134,35 +120,47 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
     USoundBase* PickupSound;
 
-    UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_AmmoCount, Category = "Weapon")
-    int32 AmmoCount;
-
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
     FString WeaponName;
 
+    /**
+    * Ammo classes used by this weapon.
+    * Picking up weapon will stack ammo into all the classes declared here.
+    * By default all firemodes use the first ammo class.
+    * To assign an ammo class to a specific firemode, override function GetAmmoIndex(ModeIndex).
+    * If a weapon uses multiple ammo classes, be careful about event NotifyAmmoUpdated!
+    */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
-    FString AmmoName;
+    TArray<TSubclassOf<AUR_Ammo>> AmmoClasses;
 
-protected:
-
-    UFUNCTION()
-    virtual void OnRep_AmmoCount();
+    /**
+    * Map AmmoClasses indices to the real AUR_Ammo objects contained in InventoryComponent, for simpler usage.
+    * Replicated (InitialOnly) to workaround painful race conditions (eg. weapon replicated before ammo).
+    */
+    UPROPERTY(BlueprintReadOnly, Replicated)
+    TArray<AUR_Ammo*> AmmoRefs;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Some getters
 
 public:
 
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
-    FORCEINLINE int32 GetCurrentAmmo() const { return AmmoCount; }
+    UFUNCTION(BlueprintPure, BlueprintNativeEvent, Category = "Weapon")
+    int32 GetAmmoIndex(int32 ModeIndex = 0) const;
 
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    UFUNCTION(BlueprintPure)
+    AUR_Ammo* GetAmmoObject(int32 ModeIndex = 0) const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon")
+    int32 GetCurrentAmmo(int32 ModeIndex = 0) const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon")
     FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    UFUNCTION(BlueprintPure, Category = "Weapon")
     FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
 
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    UFUNCTION(BlueprintPure, Category = "Weapon")
     USkeletalMeshComponent* GetVisibleMesh() const;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -309,6 +307,8 @@ public:
     UFUNCTION()
     virtual void RequestStopFire(uint8 FireModeIndex);
 
+    UFUNCTION()
+    virtual void NotifyAmmoUpdated(AUR_Ammo* Ammo);
 
     //============================================================
     // Helpers
@@ -357,10 +357,16 @@ public:
     bool HitscanShouldHitActor(AActor* Other);
 
     UFUNCTION(BlueprintCallable)
-    bool HasEnoughAmmoFor(UUR_FireModeBase* FireMode);
+    virtual bool HasEnoughAmmoFor(UUR_FireModeBase* FireMode);
 
     UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
     virtual void ConsumeAmmo(int32 Amount = 1);
+
+    UFUNCTION(BlueprintCallable)
+    virtual void CheckAutoSwap();
+
+    UFUNCTION(BlueprintPure)
+    virtual bool HasAnyAmmo();
 
     //============================================================
     // Firemodes

@@ -29,7 +29,7 @@ void AUR_AmmoPickup::OnPickup_Implementation(AUR_Character* PickupCharacter)
     {
         if (const auto InventoryComponent = PickupCharacter->InventoryComponent)
         {
-            for (auto& Weapon : InventoryComponent->InventoryW)
+            for (auto& Weapon : InventoryComponent->WeaponArray)
             {
                 if (WeaponClass == Weapon->GetClass())
                 {

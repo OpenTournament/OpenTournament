@@ -14,6 +14,7 @@
 #include "NiagaraComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
+#include "Components/MeshComponent.h"
 
 #include "UR_GameModeBase.h"
 #include "UR_PlayerController.h"
@@ -244,4 +245,24 @@ void UUR_FunctionLibrary::ParseFloatTextInput(FText Text, bool& bIsNumeric, floa
 bool UUR_FunctionLibrary::IsOnlySpectator(APlayerState* PS)
 {
     return PS->IsOnlyASpectator();
+}
+
+void UUR_FunctionLibrary::ClearOverrideMaterials(UMeshComponent* MeshComp)
+{
+    if (MeshComp)
+    {
+        MeshComp->EmptyOverrideMaterials();
+    }
+}
+
+void UUR_FunctionLibrary::OverrideAllMaterials(UMeshComponent* MeshComp, UMaterialInterface* Material)
+{
+    if (MeshComp)
+    {
+        int32 Num = MeshComp->GetNumMaterials();
+        for (int32 i = 0; i < Num; i++)
+        {
+            MeshComp->SetMaterial(i, Material);
+        }
+    }
 }
