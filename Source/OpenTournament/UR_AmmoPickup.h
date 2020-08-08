@@ -30,6 +30,8 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
+    void OnPickup_Implementation(AUR_Character* PickupCharacter) override;
+    
     /**
     * * @! TODO : This doesn't account for weapons that might have more than one
     *           type of ammunition (e.g. Bullets + Grenades, etc).

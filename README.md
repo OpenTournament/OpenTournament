@@ -35,12 +35,11 @@ ________________________________________________________________________________
 
 * Epic Games Launcher
 * Git Client
-* Project Prerequisites
-* Visual Studio 2017 or Later
+* Visual Studio 2019 (*)
 
 ### Epic Games Launcher
 
-The Open Tournament project is built using Unreal Engine 4.24. Please ensure that you have the correct engine version installed.
+The Open Tournament project is built using Unreal Engine 4.25. Please ensure that you have the correct engine version installed.
 
 * The correct engine version can be determined by looking at the OpenTournament.uproject from within a text editor. Find the line which says "EngineAssociation" and note the numerical value associated with it.
 * The correct Unreal Engine version can be installed through the Epic Games Launcher. On the sidebar, select "Unreal Engine" then select the "Library" tab at the top. Select the "+" button next to Engine Versions and set it to the appropriate Engine version.
@@ -49,24 +48,19 @@ The Open Tournament project is built using Unreal Engine 4.24. Please ensure tha
 
 Git is a version control system utilized by GitHub & the Open Tournament project. The Git tool can be interfaced through using the command line, or using graphical frontends such as GitKraken, Git Fork or Sourcetree. Make sure you install Git with LFS support. Please refer to Git, GitHub, or your GUI client's tutorials on how to clone the Open Tournament repository.
 
-
-### Project Prerequisites
-
-The Open Tournament project has certain dependencies on assets that we didn't include in our GitHub repository for size considerations. The prerequisites can be downloaded via the batch file in <OpenTournament>\otscripts\OTSyncAssets.bat
-
-This part of our pipeline is still being figured out. If you have trouble, please reach out on Discord! 
-
 ### Visual Studio
+
+NOTE : Lately we have been experimenting with including precompiled binaries in the repository, to ease the setup for non-developers. You should now be able to run Editor straight after cloning, given you have the right UnrealEngine version installed from Epic Games Launcher. If you are not a C++ developer, you can try skipping this step, double-click OpenTournament.uproject, and report back to us any issue in Discord.
 
 * Refer to the [Unreal Engine 4 Documentation](
 https://docs.unrealengine.com/en-US/Programming/Development/VisualStudioSetup/index.html) prior to setting up Visual Studio
-* Download and Install Visual Studio 2017 or 2019
+* Download and Install Visual Studio 2019
 * Within your cloned Open Tournament repository, right click on the OpenTournament.uproject
 * Select "Generate Visual Studio project Files"
 * Open the OpenTournament.sln file in Visual Studio
+* Set solution configuration to `Development Editor` and platform to `Win64`
 * Build the solution by opening the "Build" menu dropdown and selecting Build
 * Once your initial project build is complete you should be able to double click on OpenTournament.uproject to open the project. This will display the Unreal Engine 4 Editor.
-
 
 # Code and Asset Style Guide
 
