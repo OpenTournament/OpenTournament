@@ -16,15 +16,19 @@
 AUR_BasePlayerController::AUR_BasePlayerController(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	ConfiguredFOV = 90;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+void AUR_BasePlayerController::PostInitializeComponents()
+{
+	InitUserSettings();
+
+	Super::PostInitializeComponents();
+}
+
 void AUR_BasePlayerController::InitInputSystem()
 {
-	InitUserSettings();	//Sounds like a good place to do this. Not sure where else.
-
 	if (PlayerInput == nullptr)
 	{
 		PlayerInput = NewObject<UUR_PlayerInput>(this);
@@ -51,38 +55,15 @@ void AUR_BasePlayerController::SpawnPlayerCameraManager()
 
 	if (PlayerCameraManager)
 	{
-		ClampConfiguredFOV();
-		PlayerCameraManager->DefaultFOV = ConfiguredFOV;
-		PlayerCameraManager->SetFOV(ConfiguredFOV);
+		ApplyCameraSettings();
 	}
-}
-
-void AUR_BasePlayerController::SetConfiguredFOV(int32 NewFOV)
-{
-	ConfiguredFOV = NewFOV;
-	ClampConfiguredFOV();
-	SaveConfig();
-
-	if (PlayerCameraManager)
-	{
-		if (PlayerCameraManager->GetFOVAngle() == PlayerCameraManager->DefaultFOV)
-		{
-			PlayerCameraManager->SetFOV(ConfiguredFOV);
-		}
-		PlayerCameraManager->DefaultFOV = ConfiguredFOV;
-	}
-}
-
-void AUR_BasePlayerController::ClampConfiguredFOV()
-{
-	ConfiguredFOV = FMath::Clamp(ConfiguredFOV, 80, 120);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_BasePlayerController::InitUserSettings()
 {
-	if (!UserSettings)
+	if (!UserSettings && IsLocalPlayerController())
 	{
 		UserSettings = NewObject<UUR_UserSettings>(this);
 		ApplyAllSettings();
@@ -91,7 +72,21 @@ void AUR_BasePlayerController::InitUserSettings()
 
 void AUR_BasePlayerController::ApplyAllSettings()
 {
+	ApplyCameraSettings();
 	ApplyTeamColorSettings();
+}
+
+void AUR_BasePlayerController::ApplyCameraSettings()
+{
+	if (const auto Settings = GetUserSettings())
+	{
+		if (PlayerCameraManager)
+		{
+			int32 ClampedFOV = FMath::Clamp(Settings->NormalFOV, 80, 120);
+			PlayerCameraManager->DefaultFOV = ClampedFOV;
+			PlayerCameraManager->SetFOV(ClampedFOV);
+		}
+	}
 }
 
 void AUR_BasePlayerController::ApplyTeamColorSettings()

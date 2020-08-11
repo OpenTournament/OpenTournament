@@ -31,6 +31,8 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
+    virtual void PostInitializeComponents() override;
+
     virtual void InitInputSystem() override;
 
     virtual void SpawnPlayerCameraManager() override;
@@ -46,19 +48,6 @@ public:
     UFUNCTION(Exec, BlueprintCallable, BlueprintCosmetic)
     void ReturnToMainMenu();
 
-    /**
-    * User configured FOV.
-    * TODO: move to UR_UserSettings
-    */
-    UPROPERTY(Config, BlueprintReadOnly)
-    int32 ConfiguredFOV;
-
-    UFUNCTION(Exec, BlueprintCallable, BlueprintCosmetic)
-    void SetConfiguredFOV(int32 NewFOV);
-
-    UFUNCTION()
-    void ClampConfiguredFOV();
-
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -72,17 +61,17 @@ public:
     UPROPERTY(Transient)
     class UUR_UserSettings* UserSettings;
 
-    UFUNCTION()
+    UFUNCTION(BlueprintCosmetic)
     virtual void InitUserSettings();
 
-    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
-    virtual UUR_UserSettings* GetUserSettings() const
-    {
-        return UserSettings;
-    }
+    UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Player|Settings")
+    FORCEINLINE UUR_UserSettings* GetUserSettings() const { return UserSettings; }
 
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
     virtual void ApplyAllSettings();
+
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
+    virtual void ApplyCameraSettings();
 
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
     virtual void ApplyTeamColorSettings();

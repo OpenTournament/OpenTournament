@@ -27,6 +27,9 @@ class OPENTOURNAMENT_API UUR_UserSettings : public UObject
 public:
 
     UPROPERTY(Config, BlueprintReadWrite)
+    int32 NormalFOV;
+
+    UPROPERTY(Config, BlueprintReadWrite)
     FLinearColor AllyColor;
 
     UPROPERTY(Config, BlueprintReadWrite)
