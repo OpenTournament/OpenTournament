@@ -10,7 +10,10 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UMaterialParameterCollection;
+
 class UUR_PlayerInput;
+class UUR_UserSettings;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -45,6 +48,7 @@ public:
 
     /**
     * User configured FOV.
+    * TODO: move to UR_UserSettings
     */
     UPROPERTY(Config, BlueprintReadOnly)
     int32 ConfiguredFOV;
@@ -54,5 +58,33 @@ public:
 
     UFUNCTION()
     void ClampConfiguredFOV();
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * Reference to the global-game MaterialParameterCollection.
+    */
+    UPROPERTY(EditDefaultsOnly)
+    UMaterialParameterCollection* MPC_GlobalGame;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    UPROPERTY(Transient)
+    class UUR_UserSettings* UserSettings;
+
+    UFUNCTION()
+    virtual void InitUserSettings();
+
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
+    virtual UUR_UserSettings* GetUserSettings() const
+    {
+        return UserSettings;
+    }
+
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
+    virtual void ApplyAllSettings();
+
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
+    virtual void ApplyTeamColorSettings();
 
 };

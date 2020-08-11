@@ -12,7 +12,6 @@
 // Forward Declarations
 
 class UAudioComponent;
-class UMaterialParameterCollection;
 
 class AUR_Character;
 class UUR_PCInputDodgeComponent;
@@ -79,12 +78,6 @@ public:
     */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PC|Dodge")
     UUR_PCInputDodgeComponent* InputDodgeComponent;
-
-    /**
-    * Reference to the global-game MaterialParameterCollection.
-    */
-    UPROPERTY(EditDefaultsOnly)
-    UMaterialParameterCollection* MPC_GlobalGame;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 

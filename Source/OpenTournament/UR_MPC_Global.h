@@ -133,6 +133,13 @@ public:
     UPROPERTY(BlueprintReadOnly)
     FName P_CustomColor9 = FName(TEXT("CustomColor9"));
 
+    // Accessor for blueprints
+    UFUNCTION(BlueprintPure, BlueprintCosmetic, Meta = (DisplayName = "MPC_Global_GetParams", CompactNodeTitle = "MPC"))
+    static UUR_MPC_Global* Get()
+    {
+        return GetMutableDefault<UUR_MPC_Global>();
+    }
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Meta = (DisplayName = "MPC_Global_SetScalar", WorldContext = "WorldContext"))
