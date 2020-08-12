@@ -133,12 +133,8 @@ public:
     UPROPERTY(BlueprintReadOnly)
     FName P_CustomColor9 = FName(TEXT("CustomColor9"));
 
-    // Accessor for blueprints
-    UFUNCTION(BlueprintPure, BlueprintCosmetic, Meta = (DisplayName = "MPC_Global_GetParams", CompactNodeTitle = "MPC"))
-    static UUR_MPC_Global* Get()
-    {
-        return GetMutableDefault<UUR_MPC_Global>();
-    }
+    UFUNCTION(BlueprintPure, BlueprintCosmetic, Meta = (WorldContext = "WorldContext", DisplayName = "MPC_Global_GetParams", CompactNodeTitle = "MPC"))
+    static UUR_MPC_Global* Get(UObject* WorldContext, bool bFallbackToCDO = false);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -156,7 +152,7 @@ public:
 
 protected:
 
-    static UMaterialParameterCollection* GetCollection(UObject* WorldContext);
+    static UMaterialParameterCollection* GetCollection(const UObject* WorldContext);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -171,14 +167,14 @@ public:
     /**
     * Return all parameters mapped to this source parameter.
     */
-    UFUNCTION(BlueprintPure, BlueprintCosmetic, Meta = (DisplayName = "MPC_Global_GetMappedParameters"))
-    static void GetMappedParameters(FName SourceParam, TSet<FName>& OutParams);
+    UFUNCTION(BlueprintPure, BlueprintCosmetic, Meta = (DisplayName = "MPC_Global_GetMappedParameters", WorldContext = "WorldContext"))
+    static void GetMappedParameters(UObject* WorldContext, FName SourceParam, TSet<FName>& OutParams);
 
     /**
     * Return the source parameter this parameter is mapped to, or NAME_None if not mapped.
     */
-    UFUNCTION(BlueprintPure, BlueprintCosmetic, Meta = (DisplayName = "MPC_Global_GetMapping"))
-    static FName GetMapping(FName TargetParam);
+    UFUNCTION(BlueprintPure, BlueprintCosmetic, Meta = (DisplayName = "MPC_Global_GetMapping", WorldContext = "WorldContext"))
+    static FName GetMapping(UObject* WorldContext, FName TargetParam);
 
 protected:
 

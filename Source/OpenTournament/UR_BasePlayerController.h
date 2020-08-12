@@ -14,6 +14,7 @@ class UMaterialParameterCollection;
 
 class UUR_PlayerInput;
 class UUR_UserSettings;
+class UUR_MPC_Global;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -56,10 +57,16 @@ public:
     UPROPERTY(EditDefaultsOnly)
     UMaterialParameterCollection* MPC_GlobalGame;
 
+    /**
+    * Need to store an instance of this because modifying CDO causes side effects.
+    */
+    UPROPERTY(Transient)
+    UUR_MPC_Global* UR_MPC_Global_Ref;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     UPROPERTY(Transient)
-    class UUR_UserSettings* UserSettings;
+    UUR_UserSettings* UserSettings;
 
     UFUNCTION(BlueprintCosmetic)
     virtual void InitUserSettings();

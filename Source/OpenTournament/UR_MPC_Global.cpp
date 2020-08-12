@@ -2,11 +2,39 @@
 
 #include "UR_MPC_Global.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Engine/Engine.h"
 #include "Materials/MaterialParameterCollection.h"
 
-#include "UR_PlayerController.h"
+#include "UR_BasePlayerController.h"
+
+
+UUR_MPC_Global* UUR_MPC_Global::Get(UObject* WorldContext, bool bFallbackToCDO)
+{
+    // Try to work with an instance rather than CDO
+    // Modifying CDO affects all clients in PIE multiplayer which causes issues
+
+    auto PC = Cast<AUR_BasePlayerController>(WorldContext);
+    if (!PC)
+    {
+        PC = Cast<AUR_BasePlayerController>(UGameplayStatics::GetPlayerController(WorldContext, 0));
+    }
+    if (PC)
+    {
+        if (!PC->UR_MPC_Global_Ref && PC->IsLocalPlayerController())
+        {
+            PC->UR_MPC_Global_Ref = NewObject<UUR_MPC_Global>(PC);
+        }
+        if (PC->UR_MPC_Global_Ref)
+        {
+            return PC->UR_MPC_Global_Ref;
+        }
+    }
+
+    // Provide default as fallback for access to parameters in BP construct/design
+    return bFallbackToCDO ? GetMutableDefault<UUR_MPC_Global>() : NULL;
+}
 
 
 void UUR_MPC_Global::SetScalar(UObject* WorldContext, FName Param, float Value)
@@ -15,7 +43,7 @@ void UUR_MPC_Global::SetScalar(UObject* WorldContext, FName Param, float Value)
 
     // Cascade update to mapped parameters
     TSet<FName> MappedParams;
-    GetMappedParameters(Param, MappedParams);
+    GetMappedParameters(WorldContext, Param, MappedParams);
     for (FName& Target : MappedParams)
     {
         SetScalar(WorldContext, Target, Value);
@@ -33,7 +61,7 @@ void UUR_MPC_Global::SetVector(UObject* WorldContext, FName Param, const FLinear
 
     // Cascade update to mapped parameters
     TSet<FName> MappedParams;
-    GetMappedParameters(Param, MappedParams);
+    GetMappedParameters(WorldContext, Param, MappedParams);
     for (FName& Target : MappedParams)
     {
         SetVector(WorldContext, Target, Value);
@@ -62,7 +90,7 @@ bool UUR_MPC_Global::MapParameter(UObject* WorldContext, FName TargetParam, FNam
         TSet<FName> NewSet;
         for (FName& Target : CurrentSet)
         {
-            GetMappedParameters(Target, NewSet);
+            GetMappedParameters(WorldContext, Target, NewSet);
         }
         if (NewSet.Contains(SourceParam))
         {
@@ -78,7 +106,7 @@ bool UUR_MPC_Global::MapParameter(UObject* WorldContext, FName TargetParam, FNam
 
     // Check parameter compatibility & create mapping
     const auto Collection = GetCollection(WorldContext);
-    auto Params = GetMutableDefault<UUR_MPC_Global>();
+    auto Params = UUR_MPC_Global::Get(WorldContext, false);
     if (Collection && Params)
     {
         if (Collection->GetScalarParameterByName(SourceParam))
@@ -118,15 +146,15 @@ bool UUR_MPC_Global::MapParameter(UObject* WorldContext, FName TargetParam, FNam
 
 void UUR_MPC_Global::UnmapParameter(UObject* WorldContext, FName TargetParam)
 {
-    if (auto Params = GetMutableDefault<UUR_MPC_Global>())
+    if (auto Params = UUR_MPC_Global::Get(WorldContext, false))
     {
         Params->Mappings.Remove(TargetParam);
     }
 }
 
-void UUR_MPC_Global::GetMappedParameters(FName SourceParam, TSet<FName>& OutParams)
+void UUR_MPC_Global::GetMappedParameters(UObject* WorldContext, FName SourceParam, TSet<FName>& OutParams)
 {
-    if (const auto Params = GetDefault<UUR_MPC_Global>())
+    if (const auto Params = UUR_MPC_Global::Get(WorldContext, false))
     {
         for (const TPair<FName, FName>& Pair : Params->Mappings)
         {
@@ -138,9 +166,9 @@ void UUR_MPC_Global::GetMappedParameters(FName SourceParam, TSet<FName>& OutPara
     }
 }
 
-FName UUR_MPC_Global::GetMapping(FName TargetParam)
+FName UUR_MPC_Global::GetMapping(UObject* WorldContext, FName TargetParam)
 {
-    if (const auto Params = GetDefault<UUR_MPC_Global>())
+    if (const auto Params = UUR_MPC_Global::Get(WorldContext, false))
     {
         if (const FName* SourceParam = Params->Mappings.Find(TargetParam))
         {
@@ -151,14 +179,18 @@ FName UUR_MPC_Global::GetMapping(FName TargetParam)
 }
 
 
-UMaterialParameterCollection* UUR_MPC_Global::GetCollection(UObject* WorldContext)
+UMaterialParameterCollection* UUR_MPC_Global::GetCollection(const UObject* WorldContext)
 {
-    if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::LogAndReturnNull))
+    //NOTE: When called from BasePC::PostInitializeComponents, the World has not registered the PC yet.
+    // Provide workaround when passing PC as WorldContext.
+    if (const auto PC = Cast<AUR_BasePlayerController>(WorldContext))
     {
-        if (AUR_PlayerController* PC = World->GetFirstPlayerController<AUR_PlayerController>())
-        {
-            return PC->MPC_GlobalGame;
-        }
+        return PC->MPC_GlobalGame;
     }
+    if (const auto PC = Cast<AUR_BasePlayerController>(UGameplayStatics::GetPlayerController(WorldContext, 0)))
+    {
+        return PC->MPC_GlobalGame;
+    }
+    UE_LOG(LogTemp, Warning, TEXT("MPCGlobal: GetCollection() return NULL"));
     return NULL;
 }

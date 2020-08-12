@@ -13,6 +13,7 @@
 #include "UR_GameState.h"
 #include "UR_MPC_Global.h"
 #include "UR_FunctionLibrary.h"
+#include "UR_Character.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -173,6 +174,11 @@ void AUR_PlayerState::InternalOnTeamChanged(AUR_PlayerState* PS, int32 OldTeamIn
         UUR_MPC_Global::MapParameter(this, ParamNames[1], Params->P_EnemyColor);
         UUR_MPC_Global::MapParameter(this, ParamNames[2], Params->P_EnemyColor2);
         UUR_MPC_Global::MapParameter(this, ParamNames[3], Params->P_EnemyColor3);
+    }
+
+    if (auto Char = GetPawn<AUR_Character>())
+    {
+        Char->UpdateTeamColor();
     }
 }
 
