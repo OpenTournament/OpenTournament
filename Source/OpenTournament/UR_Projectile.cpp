@@ -52,6 +52,7 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
 
     bReplicates = true;
     bCutReplicationAfterSpawn = false;
+    ClientExplosionTime = -10.f;
 
     BaseDamage = 100.f;
     SplashRadius = 0.0f;
@@ -209,24 +210,80 @@ void AUR_Projectile::DealSplashDamage()
     );
 }
 
+/**
+* When we are bNetTemporary, replication link is cut after spawn, and client is fully responsible for exploding/destroying projectile.
+*
+* When we are not, there are 4 explosion scenarios to handle :
+*
+* (1) Explode on client before receiving ServerExplosionInfo.
+*     > Play explosion, hide projectile, and wait for server confirmation.
+*     > We will either receive ServerExplosionInfo soon (confirm case), or much later (unreg case).
+*
+* (2) Explode on client after receiving ServerExplosionInfo.
+*     > This should not happen because we disable simulation in case (3).
+*
+* (3) Receive ServerExplosionInfo before exploded on client.
+*     > Play explosion, stop simulating and destroy when possible.
+*     (note: client cannot destroy as long as replication link exists)
+*
+* (4) Receive ServerExplosionInfo after exploded on client.
+*     > See case (1), this is either a confirmation, or an unreg case.
+*     > In unreg case, we should play the real explosion now.
+*/
+
+void AUR_Projectile::OnRep_ServerExplosionInfo()
+{
+    //UKismetSystemLibrary::PrintString(this, TEXT("OnRep_ServerExplosionInfo"));
+
+    // If we received server explosion later than 200ms after exploding on client
+    if (GetWorld()->TimeSince(ClientExplosionTime) > 0.200f)
+    {
+        // Play explosion again
+        Explode(ServerExplosionInfo.HitLocation, ServerExplosionInfo.HitNormal);
+    }
+
+    // Either way, stop simulating and wait for server destruction (client cannot destroy networked actor).
+    SetActorHiddenInGame(true);
+    SetActorEnableCollision(false);
+    ProjectileMovementComponent->StopSimulating(FHitResult());
+}
+
 void AUR_Projectile::Explode(const FVector& HitLocation, const FVector& HitNormal)
 {
+    //UKismetSystemLibrary::PrintString(this, TEXT("Explode"));
+
     PlayImpactEffects(HitLocation, HitNormal);
+
+    if (bNetTemporary || GetNetMode() == NM_Standalone)
+    {
+        Destroy();
+        return;
+    }
 
     if (HasAuthority())
     {
+        //UKismetSystemLibrary::PrintString(this, TEXT("HasAuthority > ServerExplosionInfo"));
+
         ServerExplosionInfo.HitLocation = HitLocation;
         ServerExplosionInfo.HitNormal = HitNormal;
         ForceNetUpdate();
 
         SetActorEnableCollision(false);
         ProjectileMovementComponent->StopSimulating(FHitResult());
-        //SetActorHiddenInGame(true);
-        SetLifeSpan(0.2f);
+
+        // Give 200ms to replicate explosion before destroy
+        SetLifeSpan(0.200f);
     }
     else
     {
-        Destroy();
+        //UKismetSystemLibrary::PrintString(this, TEXT("Client > Hide"));
+
+        ClientExplosionTime = GetWorld()->GetTimeSeconds();
+
+        // On networked client, hide projectile and collision but continue simulating.
+        // If we don't receive server confirmation, we might want to re-show projectile after a delay (TODO).
+        SetActorHiddenInGame(true);
+        SetActorEnableCollision(false);
     }
 }
 
