@@ -22,7 +22,7 @@ enum class EWallDodgeBehavior : uint8
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
-* 
+* Character Movement Component
 */
 UCLASS()
 class OPENTOURNAMENT_API UUR_CharacterMovementComponent : public UCharacterMovementComponent

@@ -307,8 +307,11 @@ void UUR_CharacterMovementComponent::ProcessLanded(const FHitResult& Hit, float 
 {
     Super::ProcessLanded(Hit, RemainingTime, Iterations);
 
-    if (GetOwner())
+    if (auto Owner = Cast<AUR_Character>(GetOwner()))
     {
+        // @! TODO Gameplay Tags
+        Owner->UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{});
+    
         if (bIsDodging)
         {
             Velocity *= DodgeLandingSpeedScale;
@@ -317,6 +320,7 @@ void UUR_CharacterMovementComponent::ProcessLanded(const FHitResult& Hit, float 
 
         bIsDodging = false;
     }
+
     CurrentWallDodgeCount = 0;
 }
 
@@ -377,6 +381,7 @@ void UUR_CharacterMovementComponent::AdjustMovementTimers(float Adjustment)
 {
     DodgeResetTime -= Adjustment;
 }
+
 
 bool UUR_CharacterMovementComponent::CanJump()
 {
