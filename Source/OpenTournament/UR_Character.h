@@ -420,10 +420,22 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Gameplay Tags
 
-    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; }
-
+    /**
+    * Character's GameplayTags
+    */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
     FGameplayTagContainer GameplayTags;
+
+    /**
+    * Get Character's GameplayTags
+    */
+    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; }
+
+    /**
+    * Update Character GameplayTags
+    */
+    UFUNCTION(BlueprintCallable, Category = "GameplayTags")
+    void UpdateGameplayTags(const FGameplayTagContainer TagsToRemove, const FGameplayTagContainer TagsToAdd);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // GAS

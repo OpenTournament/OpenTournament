@@ -127,6 +127,12 @@ void AUR_Character::Tick(float DeltaTime)
     TickEyePosition(DeltaTime);
 }
 
+void AUR_Character::UpdateGameplayTags(const FGameplayTagContainer TagsToRemove, const FGameplayTagContainer TagsToAdd)
+{
+    GameplayTags.RemoveTags(TagsToRemove);
+    GameplayTags.AppendTags(TagsToAdd);
+}
+
 UAbilitySystemComponent* AUR_Character::GetAbilitySystemComponent() const
 {
     return AbilitySystemComponent;
