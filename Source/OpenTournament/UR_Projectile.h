@@ -167,11 +167,11 @@ protected:
     UPROPERTY(ReplicatedUsing = OnRep_ServerExplosionInfo)
     FReplicatedExplosionInfo ServerExplosionInfo;
 
+    UPROPERTY()
+    float ClientExplosionTime;
+
     UFUNCTION()
-    void OnRep_ServerExplosionInfo()
-    {
-        Explode(ServerExplosionInfo.HitLocation, ServerExplosionInfo.HitNormal);
-    }
+    virtual void OnRep_ServerExplosionInfo();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
