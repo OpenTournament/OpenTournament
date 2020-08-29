@@ -100,3 +100,4 @@ Plugins/*/Binaries/Win64/*
 !Plugins/*/Binaries/Win64/UE4Editor-*.dll
 Plugins/*/Binaries/Win64/*-[0-9][0-9][0-9][0-9].dll
 !Plugins/*/Binaries/Win64/UE4Editor.modules
+Content/StarterContent/Maps/
