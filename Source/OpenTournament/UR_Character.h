@@ -11,12 +11,14 @@
 #include "GameplayTagAssetInterface.h"
 
 #include "UR_Type_DodgeDirection.h"
+#include "Enums/UR_MovementAction.h"
 
 #include "UR_Character.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 class UAnimationMontage;
+class UGameplayTagsManager;
 class UUR_AbilitySystemComponent;
 class UUR_AttributeSet;
 class UUR_GameplayAbility;
@@ -125,6 +127,9 @@ public:
 
     virtual void BecomeViewTarget(APlayerController* PC) override;
     virtual void EndViewTarget(APlayerController* PC) override;
+
+    // Override to update Physics Movement GameplayTags
+    virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Camera Management
@@ -421,6 +426,17 @@ public:
     // Gameplay Tags
 
     /**
+    * GameplayTagsManager
+    */
+    UPROPERTY(BlueprintReadOnly, Category = "GameplayTags")
+    UGameplayTagsManager* GameplayTagsManager;
+
+    /**
+    * Initialize the GameplayTagsManager reference
+    */
+    void InitializeGameplayTagsManager();
+    
+    /**
     * Character's GameplayTags
     */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
@@ -432,10 +448,25 @@ public:
     virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; }
 
     /**
+    * Get the GameplayTag associated with given MovementAction
+    */
+    FGameplayTag GetMovementActionTagByMovementAction(const EMovementAction InMovementAction);
+    
+    /**
+    * Get the GameplayTag associated with given EMovementMode
+    */
+    FGameplayTag GetMovementPhysicsTagByMovementMode(const EMovementMode MovementMode);
+
+    /**
+    * Update Movement GameplayTags pertaining to Physics
+    */
+    void UpdateMovementPhysicsGameplayTags(const EMovementMode PreviousMovementMode);
+
+    /**
     * Update Character GameplayTags
     */
     UFUNCTION(BlueprintCallable, Category = "GameplayTags")
-    void UpdateGameplayTags(const FGameplayTagContainer TagsToRemove, const FGameplayTagContainer TagsToAdd);
+    void UpdateGameplayTags(const FGameplayTagContainer& TagsToRemove, const FGameplayTagContainer& TagsToAdd);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // GAS

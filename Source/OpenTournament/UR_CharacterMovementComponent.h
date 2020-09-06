@@ -140,6 +140,12 @@ public:
     */
     virtual bool DoJump(bool bReplayingMoves) override;
 
+    /**
+    * Flag. Are we jumping?
+    */
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Dodging")
+    uint8 bIsJumping:1;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Dodge
 
