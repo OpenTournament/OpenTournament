@@ -448,16 +448,6 @@ public:
     virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; }
 
     /**
-    * Get the GameplayTag associated with given MovementAction
-    */
-    FGameplayTag GetMovementActionTagByMovementAction(const EMovementAction InMovementAction);
-    
-    /**
-    * Get the GameplayTag associated with given EMovementMode
-    */
-    FGameplayTag GetMovementPhysicsTagByMovementMode(const EMovementMode MovementMode);
-
-    /**
     * Update Movement GameplayTags pertaining to Physics
     */
     void UpdateMovementPhysicsGameplayTags(const EMovementMode PreviousMovementMode);
@@ -467,6 +457,43 @@ public:
     */
     UFUNCTION(BlueprintCallable, Category = "GameplayTags")
     void UpdateGameplayTags(const FGameplayTagContainer& TagsToRemove, const FGameplayTagContainer& TagsToAdd);
+
+    /**
+    * MovementAction enums mapped to GameplayTags
+    */
+    UPROPERTY(BlueprintReadOnly, Category = "GameplayTags")
+    TMap<EMovementAction, FGameplayTag> MovementActionGameplayTags;
+
+    /**
+    * MovementMode enums mapped to GameplayTags
+    */
+    UPROPERTY(BlueprintReadOnly, Category = "GameplayTags")
+    TMap<TEnumAsByte<EMovementMode>, FGameplayTag> MovementModeGameplayTags;
+
+    /**
+    * Initialize our GameplayTag data structures
+    */
+    void InitializeGameplayTags();
+
+    /**
+    * Initialize the MovementAction GameplayTags data structure
+    */
+    void InitializeMovementActionGameplayTags();
+
+    /**
+    * Initialize the MovementMode GameplayTags data structure
+    */
+    void InitializeMovementModeGameplayTags();
+
+    /**
+    * Get the GameplayTag associated with given MovementAction
+    */
+    FGameplayTag GetMovementActionGameplayTag(const EMovementAction InMovementAction);
+    
+    /**
+    * Get the GameplayTag associated with given EMovementMode
+    */
+    FGameplayTag GetMovementModeGameplayTag(const EMovementMode InMovementMode);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // GAS

@@ -518,7 +518,7 @@ void AUR_Character::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeight
 
     OldLocationZ = GetActorLocation().Z;
 
-    UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ GetMovementActionTagByMovementAction(EMovementAction::Crouching) });
+    UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ GetMovementActionGameplayTag(EMovementAction::Crouching) });
 
     // Anims, sounds
 }
@@ -533,7 +533,7 @@ void AUR_Character::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAd
 
     OldLocationZ = GetActorLocation().Z;
 
-    UpdateGameplayTags(FGameplayTagContainer{ GetMovementActionTagByMovementAction(EMovementAction::Crouching) }, FGameplayTagContainer{});
+    UpdateGameplayTags(FGameplayTagContainer{ GetMovementActionGameplayTag(EMovementAction::Crouching) }, FGameplayTagContainer{});
 
     // Anims, sounds
 }
@@ -1067,96 +1067,66 @@ void AUR_Character::Server_SetAbilityLevel_Implementation(TSubclassOf<UUR_Gamepl
     }
 }
 
+void AUR_Character::InitializeMovementActionGameplayTags()
+{
+    MovementActionGameplayTags.Add(EMovementAction::Jumping, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Jumping")));
+    MovementActionGameplayTags.Add(EMovementAction::Dodging, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Dodging")));
+    MovementActionGameplayTags.Add(EMovementAction::Crouching, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Crouching")));
+    MovementActionGameplayTags.Add(EMovementAction::Running, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Running")));
+}
+
+void AUR_Character::InitializeMovementModeGameplayTags()
+{
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Walking, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Walking")));
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_NavWalking, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Walking")));
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Falling, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Falling")));
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Swimming, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Swimming")));
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Flying, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Flying")));
+}
+
+void AUR_Character::InitializeGameplayTags()
+{
+    InitializeMovementActionGameplayTags();
+
+    InitializeMovementModeGameplayTags();
+}
+
 void AUR_Character::InitializeGameplayTagsManager()
 {
     if (!GameplayTagsManager)
     {
         GameplayTagsManager = &UGameplayTagsManager::Get();
+
+        InitializeGameplayTags();
     }
 }
 
-FGameplayTag AUR_Character::GetMovementActionTagByMovementAction(const EMovementAction InMovementAction)
+FGameplayTag AUR_Character::GetMovementActionGameplayTag(const EMovementAction InMovementAction)
 {
-    InitializeGameplayTagsManager();
-    
-    FGameplayTag OutTag{};
-
-    switch (InMovementAction)
-    {
-        case 0:
-        {
-            OutTag = GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Jumping"));
-            break;
-        }
-        case 1:
-        {
-            OutTag = GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Dodging"));
-            break;
-        }
-        case 2:
-        {
-            OutTag = GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Crouching"));
-            break;
-        }
-        case 3:
-        {
-            OutTag = GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Running"));
-            break;
-        }
-        default:
-        {
-            GAME_LOG(Game, Error, "Error: Trying to retrieve GameplayTag for Unhandled MovementAction!")
-            break;
-        }
-    }
-
-    return OutTag;
+    return *MovementActionGameplayTags.Find(InMovementAction);
 }
 
-FGameplayTag AUR_Character::GetMovementPhysicsTagByMovementMode(const EMovementMode MovementMode)
+FGameplayTag AUR_Character::GetMovementModeGameplayTag(const EMovementMode InMovementMode)
 {
-    InitializeGameplayTagsManager();
-    
-    FGameplayTag OutTag{};
-
-    switch (MovementMode)
+    if (const UWorld* World{GetWorld()})
     {
-        case EMovementMode::MOVE_Walking: // Explicit Fall Through
-        case EMovementMode::MOVE_NavWalking:
+        if (const AGameStateBase* GameState{World->GetGameState()})
         {
-            OutTag = GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Walking"));
-            break;
+            if (GameState->HasMatchStarted())
+            {
+                return *MovementModeGameplayTags.Find(InMovementMode);
+            }
         }
-        case EMovementMode::MOVE_Falling:
-        {
-            OutTag = GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Falling"));
-            break;
-        }
-        case EMovementMode::MOVE_Swimming:
-        {
-            OutTag = GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Swimming"));
-            break;
-        }
-        case EMovementMode::MOVE_Flying:
-        {
-            OutTag = GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Flying"));
-            break;
-        }
-        default:
-        {
-            GAME_LOG(Game, Error, "Error: Trying to retrieve GameplayTag for Unhandled MovementMode!")
-            break;
-        };
     }
     
-    return OutTag;
+    return FGameplayTag{};
 }
 
 void AUR_Character::UpdateMovementPhysicsGameplayTags(const EMovementMode PreviousMovementMode)
 {
     const TEnumAsByte<EMovementMode> MovementMode = GetCharacterMovement()->MovementMode;
-    const FGameplayTagContainer TagsToRemove{ GetMovementPhysicsTagByMovementMode(PreviousMovementMode) };
-    const FGameplayTagContainer TagsToAdd{ GetMovementPhysicsTagByMovementMode(MovementMode) };
+    const FGameplayTagContainer TagsToRemove{ GetMovementModeGameplayTag(PreviousMovementMode) };
+    const FGameplayTagContainer TagsToAdd{ GetMovementModeGameplayTag(MovementMode) };
 
     UpdateGameplayTags(TagsToRemove, TagsToAdd);
 }

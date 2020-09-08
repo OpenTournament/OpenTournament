@@ -317,13 +317,13 @@ void UUR_CharacterMovementComponent::ProcessLanded(const FHitResult& Hit, float 
             Velocity *= DodgeLandingSpeedScale;
             DodgeResetTime = GetWorld()->TimeSeconds + DodgeResetInterval; // Get Server adjusted Time
             bIsDodging = false;
-            Owner->UpdateGameplayTags(FGameplayTagContainer{ Owner->GetMovementActionTagByMovementAction(EMovementAction::Dodging) }, FGameplayTagContainer{});
+            Owner->UpdateGameplayTags(FGameplayTagContainer{ Owner->GetMovementActionGameplayTag(EMovementAction::Dodging) }, FGameplayTagContainer{});
         }
 
         if (bIsJumping)
         {
             bIsJumping = false;
-            Owner->UpdateGameplayTags(FGameplayTagContainer{ Owner->GetMovementActionTagByMovementAction(EMovementAction::Jumping) }, FGameplayTagContainer{});
+            Owner->UpdateGameplayTags(FGameplayTagContainer{ Owner->GetMovementActionGameplayTag(EMovementAction::Jumping) }, FGameplayTagContainer{});
         }
     }
 
@@ -409,7 +409,7 @@ void UUR_CharacterMovementComponent::CheckJumpInput(float DeltaTime)
                 if (DoJump(CharacterOwner->bClientUpdating))
                 {
                     bIsJumping = true;
-                    URCharacterOwner->UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ URCharacterOwner->GetMovementActionTagByMovementAction(EMovementAction::Jumping) });
+                    URCharacterOwner->UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ URCharacterOwner->GetMovementActionGameplayTag(EMovementAction::Jumping) });
                 }
 
                 // If we didn't perform a jump, reset the bPressedJump flag to prevent OnJump effects
@@ -551,7 +551,7 @@ bool UUR_CharacterMovementComponent::PerformDodge(FVector& DodgeDir, FVector& Do
     
     if (bIsDodging)
     {
-        URCharacterOwner->UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ URCharacterOwner->GetMovementActionTagByMovementAction(EMovementAction::Dodging) });
+        URCharacterOwner->UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ URCharacterOwner->GetMovementActionGameplayTag(EMovementAction::Dodging) });
     }
 
     if (!IsMovingOnGround())
