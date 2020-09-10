@@ -165,7 +165,13 @@ void AUR_PickupFactory::BeginRespawnTimer(float InRespawnTime)
     }
     else
     {
-        RespawnTimer();
+        // Force a frame to avoid pickup-loop problem
+        GetWorld()->GetTimerManager().ClearTimer(RespawnTimerHandle);
+        RespawnTimerHandle = GetWorld()->GetTimerManager().SetTimerForNextTick(this, &AUR_PickupFactory::RespawnTimer);
+        //TODO: Might want to come up with something better, as this will spam network heavily.
+        // Eg. instant respawn under player's feet but without giving it to him unless he goes out and back in.
+        // But that's harder to do with pickup as a separate class.
+        // Also must consider when multiple players are standing on it.
     }
 }
 
@@ -246,7 +252,6 @@ void AUR_PickupFactory::OnPickupPickedUp_Implementation(AUR_Pickup* Other, APawn
 void AUR_PickupFactory::PreRespawnTimer()
 {
     MulticastWillRespawn();
-    GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &AUR_PickupFactory::RespawnTimer, PreRespawnEffectDuration, false);
 }
 
 void AUR_PickupFactory::MulticastWillRespawn_Implementation()
@@ -254,6 +259,18 @@ void AUR_PickupFactory::MulticastWillRespawn_Implementation()
     if (!IsNetMode(NM_DedicatedServer))
     {
         PlayRespawnEffects();
+    }
+
+    if (HasAuthority())
+    {
+        if (PreRespawnEffectDuration > 0.f)
+        {
+            GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &AUR_PickupFactory::RespawnTimer, PreRespawnEffectDuration, false);
+        }
+        else
+        {
+            RespawnTimer();
+        }
     }
 }
 
