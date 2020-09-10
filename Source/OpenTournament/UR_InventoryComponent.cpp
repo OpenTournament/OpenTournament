@@ -49,10 +49,12 @@ void UUR_InventoryComponent::AddWeapon(AUR_Weapon* InWeapon)
     }
 
     // Initialize or stack ammo
-    TSet<TSubclassOf<AUR_Ammo>> WeaponAmmoClasses(InWeapon->AmmoClasses);
-    for (const auto& AmmoClass : WeaponAmmoClasses)
+    for (const auto& AmmoDef : InWeapon->AmmoDefinitions)
     {
-        GetAmmoByClass(AmmoClass, true)->StackWeapon();
+        if (AmmoDef.AmmoClass)
+        {
+            GetAmmoByClass(AmmoDef.AmmoClass, true)->StackAmmo(AmmoDef.AmmoAmount, InWeapon);
+        }
     }
 
     // If we already have this weapon class, do nothing more
@@ -67,13 +69,21 @@ void UUR_InventoryComponent::AddWeapon(AUR_Weapon* InWeapon)
 
     // Else, add weapon
     WeaponArray.Add(InWeapon);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You have the %s (ammo = %i)"), *InWeapon->WeaponName, InWeapon->GetCurrentAmmo()));
+
+    // Message (temporary)
+    if (auto Pawn = Cast<APawn>(GetOwner()))
+    {
+        if (auto PC = Pawn->GetController<APlayerController>())
+        {
+            PC->ClientMessage(FString::Printf(TEXT("You have the %s"), *InWeapon->WeaponName));
+        }
+    }
 
     // Set ammo refs
-    InWeapon->AmmoRefs.SetNumZeroed(InWeapon->AmmoClasses.Num());
-    for (int32 i = 0; i < InWeapon->AmmoClasses.Num(); i++)
+    InWeapon->AmmoRefs.SetNumZeroed(InWeapon->AmmoDefinitions.Num());
+    for (int32 i = 0; i < InWeapon->AmmoDefinitions.Num(); i++)
     {
-        InWeapon->AmmoRefs[i] = GetAmmoByClass(InWeapon->AmmoClasses[i]);
+        InWeapon->AmmoRefs[i] = GetAmmoByClass(InWeapon->AmmoDefinitions[i].AmmoClass);
     }
 
     // In standalone or listen host, call OnRep next tick so we can pick amongst new weapons what to swap to.
@@ -83,12 +93,12 @@ void UUR_InventoryComponent::AddWeapon(AUR_Weapon* InWeapon)
     }
 }
 
-void UUR_InventoryComponent::AddAmmo(TSubclassOf<AUR_Ammo> InAmmoClass)
+void UUR_InventoryComponent::AddAmmo(TSubclassOf<AUR_Ammo> InAmmoClass, int32 InAmount)
 {
-    GetAmmoByClass(InAmmoClass, true)->StackAmmoPack();
+    GetAmmoByClass(InAmmoClass, true)->StackAmmo(InAmount);
 }
 
-AUR_Ammo* UUR_InventoryComponent::GetAmmoByClass(TSubclassOf<AUR_Ammo> InAmmoClass, bool bAllowCreate)
+AUR_Ammo* UUR_InventoryComponent::GetAmmoByClass(TSubclassOf<AUR_Ammo> InAmmoClass, bool bAutoCreate)
 {
     if (InAmmoClass)
     {
@@ -100,7 +110,7 @@ AUR_Ammo* UUR_InventoryComponent::GetAmmoByClass(TSubclassOf<AUR_Ammo> InAmmoCla
             }
         }
 
-        if (bAllowCreate && GetOwnerRole() == ROLE_Authority)
+        if (bAutoCreate && GetOwnerRole() == ROLE_Authority)
         {
             FActorSpawnParameters SpawnParams;
             SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;

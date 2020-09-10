@@ -57,7 +57,7 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
     PutDownTime = 0.25f;
     CooldownDelaysPutDownByPercent = 0.5f;
     bReducePutDownDelayByPutDownTime = false;
-    AmmoClasses = { AUR_Ammo::StaticClass() };
+    AmmoDefinitions = { FWeaponAmmoDefinition(AUR_Ammo::StaticClass(), 10) };
 
     SetCanBeDamaged(false);
 }

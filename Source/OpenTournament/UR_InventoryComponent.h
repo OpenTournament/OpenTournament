@@ -68,10 +68,10 @@ public:
     virtual void AddWeapon(AUR_Weapon* InWeapon);
 
     UFUNCTION(BlueprintAuthorityOnly)
-    virtual void AddAmmo(TSubclassOf<AUR_Ammo> InAmmoClass);
+    virtual void AddAmmo(TSubclassOf<AUR_Ammo> InAmmoClass, int32 InAmount);
 
     UFUNCTION(BlueprintCallable)
-    virtual AUR_Ammo* GetAmmoByClass(TSubclassOf<AUR_Ammo> InAmmoClass, bool bAllowCreate = false);
+    virtual AUR_Ammo* GetAmmoByClass(TSubclassOf<AUR_Ammo> InAmmoClass, bool bAutoCreate = false);
 
     void AmmoCountInInventory(AUR_Weapon* InWeapon);
 

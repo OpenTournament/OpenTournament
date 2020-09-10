@@ -35,81 +35,59 @@ public:
 
 	/**
 	* Ammo name.
+	* Not sure if useful.
 	*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FString AmmoName;
-
-	/**
-	* Ammo given when a weapon using this ammo is picked up.
-	*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 AmmoPerWeapon;
-
-	/**
-	* Maximum ammo that can be stacked from picking up weapon multiple times.
-	* Should be <= MaxAmmo.
-	*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 WeaponPickupMaxAmmo;
-
-	/**
-	* Ammo given when picking up an ammo pack of this type.
-	*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 AmmoPerPickup;
 
 	/**
 	* Maximum ammo reachable by picking up ammo packs.
 	* Should be >= WeaponPickupMaxAmmo.
 	*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	int32 MaxAmmo;
 
 	/**
-	* Ammo pickup mesh.
+	* Current ammo amount.
 	*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	UStaticMesh* PickupMesh;
-
-	/**
-	* Ammo pickup sound.
-	*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	USoundBase* PickupSound;
-
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_AmmoCount)
 	int32 AmmoCount;
-
-	UPROPERTY()
-	bool bPickedUpFirstWeapon;
 
 public:
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
-	virtual void StackWeapon()
+	virtual void StackAmmo(int32 InAmount, AUR_Weapon* FromWeapon = NULL)
 	{
-		if (bPickedUpFirstWeapon)
+		int32 AmmoCap = MaxAmmo;
+
+		//NOTE: Here we can add something to handle quake-like case, to prevent weapon ammo stacking.
+		// I don't want to use properties for this because it's probably gonna end up depending on gamemode.
+		// For example casual FFA would have fast respawn times ==> prevent weapon ammo stacking
+		// But Duel have long respawn times ==> allow weapon ammo stacking
+		// So the gamemode should be responsible for controlling this behavior.
+
+		// We can add a hook here which does something like this :
+		/*
+		if (InventoryComponent->WeaponArray.Contains(FromWeapon))
 		{
-			if (AmmoCount < WeaponPickupMaxAmmo)
+			int32 WeaponAmmo = 0;
+			for (const auto& AmmoDef : FromWeapon->AmmoDefinitions)
 			{
-				AmmoCount = FMath::Min(AmmoCount + AmmoPerWeapon, WeaponPickupMaxAmmo);
+				if (AmmoDef.AmmoClass == StaticClass() && AmmoDef.AmmoAmount > WeaponAmmo)
+				{
+					WeaponAmmo = AmmoDef.AmmoAmount;
+				}
+			}
+			if (WeaponAmmo > 0)
+			{
+				AmmoCap = WeaponAmmo + 1;
 			}
 		}
-		else if (AmmoCount < MaxAmmo)
-		{
-			// No weapon picked up yet, assume all current stack is from ammo packs.
-			// In this case we should not be limited by WeaponPickupMaxAmmo.
-			AmmoCount = FMath::Min(AmmoCount + AmmoPerWeapon, MaxAmmo);
-			bPickedUpFirstWeapon = true;
-		}
-	}
+		*/
 
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
-	virtual void StackAmmoPack()
-	{
-		if (AmmoCount < MaxAmmo)
+		if (AmmoCount < AmmoCap)
 		{
-			AmmoCount = FMath::Min(AmmoCount + AmmoPerPickup, MaxAmmo);
+			AmmoCount = FMath::Min(AmmoCount + InAmount, AmmoCap);
 		}
 	}
 
@@ -121,6 +99,9 @@ public:
 		OnRep_AmmoCount(OldAmmoCount);
 	}
 
+	/**
+	* Set ammo count to desired value regardless of MaxAmmo.
+	*/
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
 	virtual void SetAmmoCount(int32 NewAmmoCount)
 	{

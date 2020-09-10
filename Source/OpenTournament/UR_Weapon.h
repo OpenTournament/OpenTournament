@@ -48,6 +48,21 @@ enum class EWeaponState : uint8
     MAX             UMETA(Hidden)
 };
 
+USTRUCT(BlueprintType)
+struct FWeaponAmmoDefinition
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TSubclassOf<AUR_Ammo> AmmoClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 AmmoAmount;
+
+    FWeaponAmmoDefinition() : AmmoClass(NULL), AmmoAmount(0) {}
+    FWeaponAmmoDefinition(TSubclassOf<AUR_Ammo> InClass, int32 InAmount) : AmmoClass(InClass), AmmoAmount(InAmount) {}
+};
+
 /**
 * Event dispatcher.
 * Notify the weapon has changed state.
@@ -131,10 +146,10 @@ public:
     * If a weapon uses multiple ammo classes, be careful about event NotifyAmmoUpdated!
     */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
-    TArray<TSubclassOf<AUR_Ammo>> AmmoClasses;
+    TArray<FWeaponAmmoDefinition> AmmoDefinitions;
 
     /**
-    * Map AmmoClasses indices to the real AUR_Ammo objects contained in InventoryComponent, for simpler usage.
+    * Map AmmoDefinition indices to the real AUR_Ammo objects contained in InventoryComponent, for simpler usage.
     * Replicated (InitialOnly) to workaround painful race conditions (eg. weapon replicated before ammo).
     */
     UPROPERTY(BlueprintReadOnly, Replicated)

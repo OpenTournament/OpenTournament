@@ -20,13 +20,8 @@ AUR_Ammo::AUR_Ammo()
 	SetReplicatingMovement(false);
 
 	AmmoName = TEXT("Ammo");
-	AmmoPerWeapon = 10;
-	WeaponPickupMaxAmmo = 30;
-	AmmoPerPickup = 10;
 	MaxAmmo = 30;
-
 	AmmoCount = 0;
-	bPickedUpFirstWeapon = false;
 }
 
 void AUR_Ammo::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -42,7 +37,7 @@ void AUR_Ammo::OnRep_AmmoCount(int32 OldAmmoCount)
 	{
 		if (AUR_Character* Char = Cast<AUR_Character>(GetOwner()))
 		{
-			if (Char->InventoryComponent && Char->InventoryComponent->ActiveWeapon && Char->InventoryComponent->ActiveWeapon->AmmoClasses.Contains(GetClass()))
+			if (Char->InventoryComponent && Char->InventoryComponent->ActiveWeapon && Char->InventoryComponent->ActiveWeapon->AmmoRefs.Contains(this))
 			{
 				Char->InventoryComponent->ActiveWeapon->NotifyAmmoUpdated(this);
 			}

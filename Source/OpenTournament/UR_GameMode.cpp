@@ -102,7 +102,6 @@ void AUR_GameMode::SetPlayerDefaults(APawn* PlayerPawn)
                     if (StartingWeapon->AmmoRefs.Num() > 0 && StartingWeapon->AmmoRefs[0])
                     {
                         StartingWeapon->AmmoRefs[0]->SetAmmoCount(Entry.Ammo);
-                        StartingWeapon->AmmoRefs[0]->bPickedUpFirstWeapon = true;
                     }
                 }
             }
