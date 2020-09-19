@@ -1077,6 +1077,9 @@ void AUR_Character::InitializeMovementActionGameplayTags()
 
 void AUR_Character::InitializeMovementModeGameplayTags()
 {
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_None, FGameplayTag{});
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Custom, FGameplayTag{});
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_MAX, FGameplayTag{});
     MovementModeGameplayTags.Add(EMovementMode::MOVE_Walking, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Walking")));
     MovementModeGameplayTags.Add(EMovementMode::MOVE_NavWalking, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Walking")));
     MovementModeGameplayTags.Add(EMovementMode::MOVE_Falling, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Falling")));
@@ -1125,8 +1128,8 @@ FGameplayTag AUR_Character::GetMovementModeGameplayTag(const EMovementMode InMov
 void AUR_Character::UpdateMovementPhysicsGameplayTags(const EMovementMode PreviousMovementMode)
 {
     const TEnumAsByte<EMovementMode> MovementMode = GetCharacterMovement()->MovementMode;
-    const FGameplayTagContainer TagsToRemove{ GetMovementModeGameplayTag(PreviousMovementMode) };
     const FGameplayTagContainer TagsToAdd{ GetMovementModeGameplayTag(MovementMode) };
+    const FGameplayTagContainer TagsToRemove{ GetMovementModeGameplayTag(PreviousMovementMode) };
 
     UpdateGameplayTags(TagsToRemove, TagsToAdd);
 }
