@@ -11,7 +11,7 @@
 /**
  * Enumeration for Dodge Directions used by Character Movement & Input
  */
-UENUM()
+UENUM(BlueprintType)
 enum class EDodgeDirection : uint8
 {
     None,
