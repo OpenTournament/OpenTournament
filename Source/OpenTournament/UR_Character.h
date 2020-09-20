@@ -382,6 +382,12 @@ public:
     */
     virtual void Dodge(FVector DodgeDir, FVector DodgeCross);
 
+    /**
+    * Perform a Dodge. Testing purposes only.
+    */
+    UFUNCTION(BlueprintCallable, Category = "Character|Dodge")
+    void Dodge(const EDodgeDirection InDodgeDirection);
+
     /** 
     * Hook for sounds / effects OnDodge
     */

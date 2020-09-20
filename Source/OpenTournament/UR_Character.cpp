@@ -593,6 +593,13 @@ void AUR_Character::Dodge(FVector DodgeDir, FVector DodgeCross)
     }
 }
 
+void AUR_Character::Dodge(const EDodgeDirection InDodgeDirection)
+{
+    // @! TODO Testing only...
+
+    SetDodgeDirection(InDodgeDirection);
+}
+
 void AUR_Character::OnDodge_Implementation(const FVector& DodgeLocation, const FVector& DodgeDir)
 {
     // @! TODO Effects
