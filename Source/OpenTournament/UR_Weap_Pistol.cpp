@@ -18,6 +18,4 @@ AUR_Weap_Pistol::AUR_Weap_Pistol(const FObjectInitializer& ObjectInitializer)
     USoundCue* helperSound;
     helperSound = newAssetSound.Object;
     Sound->SetSound(helperSound);*/
-
-    AmmoName = "Pistol";
 }

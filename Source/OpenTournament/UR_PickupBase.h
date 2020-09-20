@@ -18,7 +18,14 @@ class ULocalMessage;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Pickup Base Actor
+ * PickupBase Actor
+ *
+ * DEPRECATION NOTICE
+ * We settled upon separating classes for the Pickups and the Factories that respawns them.
+ * And decided to rename "Base" to "Factory" for intelligibility.
+ * See UR_Pickup and UR_PickupFactory.
+ *
+ * This class is pending deletion, as soon as all subclasses have been migrated.
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_PickupBase : public AActor
