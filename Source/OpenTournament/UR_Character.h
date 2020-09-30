@@ -12,12 +12,14 @@
 #include "GameplayAbilitySpec.h"
 #include "GameplayEffect.h"
 #include "UR_Type_DodgeDirection.h"
+#include "Enums/UR_MovementAction.h"
 
 #include "UR_Character.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 class UAnimationMontage;
+class UGameplayTagsManager;
 class UUR_AbilitySystemComponent;
 class UUR_AttributeSet;
 class UUR_GameplayAbility;
@@ -140,6 +142,9 @@ public:
     virtual void EndViewTarget(APlayerController* PC) override;
 
     virtual void OnRep_PlayerState() override;
+
+    // Override to update Physics Movement GameplayTags
+    virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Camera Management
@@ -391,6 +396,12 @@ public:
     */
     virtual void Dodge(FVector DodgeDir, FVector DodgeCross);
 
+    /**
+    * Perform a Dodge. Testing purposes only.
+    */
+    UFUNCTION(BlueprintCallable, Category = "Character|Dodge")
+    void Dodge(const EDodgeDirection InDodgeDirection);
+
     /** 
     * Hook for sounds / effects OnDodge
     */
@@ -434,10 +445,75 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Gameplay Tags
 
-    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; }
+    /**
+    * GameplayTagsManager
+    */
+    UPROPERTY(BlueprintReadOnly, Category = "GameplayTags")
+    UGameplayTagsManager* GameplayTagsManager;
 
+    /**
+    * Initialize the GameplayTagsManager reference
+    */
+    void InitializeGameplayTagsManager();
+    
+    /**
+    * Character's GameplayTags
+    */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
     FGameplayTagContainer GameplayTags;
+
+    /**
+    * Get Character's GameplayTags
+    */
+    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; }
+
+    /**
+    * Update Movement GameplayTags pertaining to Physics
+    */
+    void UpdateMovementPhysicsGameplayTags(const EMovementMode PreviousMovementMode);
+
+    /**
+    * Update Character GameplayTags
+    */
+    UFUNCTION(BlueprintCallable, Category = "GameplayTags")
+    void UpdateGameplayTags(const FGameplayTagContainer& TagsToRemove, const FGameplayTagContainer& TagsToAdd);
+
+    /**
+    * MovementAction enums mapped to GameplayTags
+    */
+    UPROPERTY(BlueprintReadOnly, Category = "GameplayTags")
+    TMap<EMovementAction, FGameplayTag> MovementActionGameplayTags;
+
+    /**
+    * MovementMode enums mapped to GameplayTags
+    */
+    UPROPERTY(BlueprintReadOnly, Category = "GameplayTags")
+    TMap<TEnumAsByte<EMovementMode>, FGameplayTag> MovementModeGameplayTags;
+
+    /**
+    * Initialize our GameplayTag data structures
+    */
+    void InitializeGameplayTags();
+
+    /**
+    * Initialize the MovementAction GameplayTags data structure
+    */
+    void InitializeMovementActionGameplayTags();
+
+    /**
+    * Initialize the MovementMode GameplayTags data structure
+    */
+    void InitializeMovementModeGameplayTags();
+
+    /**
+    * Get the GameplayTag associated with given MovementAction
+    */
+    FGameplayTag GetMovementActionGameplayTag(const EMovementAction InMovementAction);
+    
+    /**
+    * Get the GameplayTag associated with given EMovementMode
+    */
+    FGameplayTag GetMovementModeGameplayTag(const EMovementMode InMovementMode);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // GAS

@@ -9,10 +9,12 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/GameState.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameplayTagsManager.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 #include "OpenTournament.h"
+#include "Interfaces/UR_ActivatableInterface.h"
 #include "UR_InventoryComponent.h"
 #include "UR_CharacterMovementComponent.h"
 #include "UR_AttributeSet.h"
@@ -22,7 +24,6 @@
 #include "UR_GameMode.h"
 #include "UR_Weapon.h"
 #include "UR_Projectile.h"
-#include "Interfaces/UR_ActivatableInterface.h"
 #include "UR_PlayerState.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,6 +112,8 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 void AUR_Character::BeginPlay()
 {
+    InitializeGameplayTagsManager();
+    
     Super::BeginPlay();
 
     AttributeSet->SetHealth(100.f);
@@ -298,6 +301,13 @@ void AUR_Character::EndViewTarget(APlayerController* PC)
     }
 
     Super::EndViewTarget(PC);
+}
+
+void AUR_Character::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+    UpdateMovementPhysicsGameplayTags(PrevMovementMode);
+    
+    Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
 }
 
 void AUR_Character::RegisterZoomInterface(TScriptInterface<IUR_ActivatableInterface> NewZoomInterface)
@@ -558,6 +568,8 @@ void AUR_Character::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeight
 
     OldLocationZ = GetActorLocation().Z;
 
+    UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ GetMovementActionGameplayTag(EMovementAction::Crouching) });
+
     // Anims, sounds
 }
 
@@ -570,6 +582,8 @@ void AUR_Character::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAd
     CrouchEyeOffset.Z += 64.f - BaseEyeHeight + HalfHeightAdjust; // @! TODO 64.f = StartingBaseEyeHeight
 
     OldLocationZ = GetActorLocation().Z;
+
+    UpdateGameplayTags(FGameplayTagContainer{ GetMovementActionGameplayTag(EMovementAction::Crouching) }, FGameplayTagContainer{});
 
     // Anims, sounds
 }
@@ -627,6 +641,13 @@ void AUR_Character::Dodge(FVector DodgeDir, FVector DodgeCross)
     {
         URMovementComponent->ClearDodgeInput();
     }
+}
+
+void AUR_Character::Dodge(const EDodgeDirection InDodgeDirection)
+{
+    // @! TODO Testing only...
+
+    SetDodgeDirection(InDodgeDirection);
 }
 
 void AUR_Character::OnDodge_Implementation(const FVector& DodgeLocation, const FVector& DodgeDir)
@@ -1131,6 +1152,97 @@ void AUR_Character::Server_SetAbilityLevel_Implementation(TSubclassOf<UUR_Gamepl
             }
         }
     }
+}
+
+void AUR_Character::InitializeMovementActionGameplayTags()
+{
+    MovementActionGameplayTags.Add(EMovementAction::Jumping, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Jumping")));
+    MovementActionGameplayTags.Add(EMovementAction::Dodging, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Dodging")));
+    MovementActionGameplayTags.Add(EMovementAction::Crouching, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Crouching")));
+    MovementActionGameplayTags.Add(EMovementAction::Running, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Running")));
+}
+
+void AUR_Character::InitializeMovementModeGameplayTags()
+{
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_None, FGameplayTag{});
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Custom, FGameplayTag{});
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_MAX, FGameplayTag{});
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Walking, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Walking")));
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_NavWalking, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Walking")));
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Falling, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Falling")));
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Swimming, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Swimming")));
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Flying, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Flying")));
+}
+
+void AUR_Character::InitializeGameplayTags()
+{
+    InitializeMovementActionGameplayTags();
+
+    InitializeMovementModeGameplayTags();
+}
+
+void AUR_Character::InitializeGameplayTagsManager()
+{
+    if (!GameplayTagsManager)
+    {
+        GameplayTagsManager = &UGameplayTagsManager::Get();
+
+        InitializeGameplayTags();
+    }
+}
+
+FGameplayTag AUR_Character::GetMovementActionGameplayTag(const EMovementAction InMovementAction)
+{
+    return *MovementActionGameplayTags.Find(InMovementAction);
+}
+
+FGameplayTag AUR_Character::GetMovementModeGameplayTag(const EMovementMode InMovementMode)
+{
+    if (const UWorld* World{GetWorld()})
+    {
+        if (const AGameStateBase* GameState{World->GetGameState()})
+        {
+            if (GameState->HasMatchStarted())
+            {
+                return *MovementModeGameplayTags.Find(InMovementMode);
+            }
+        }
+    }
+    
+    return FGameplayTag{};
+}
+
+void AUR_Character::UpdateMovementPhysicsGameplayTags(const EMovementMode PreviousMovementMode)
+{
+    const TEnumAsByte<EMovementMode> MovementMode = GetCharacterMovement()->MovementMode;
+    const FGameplayTagContainer TagsToAdd{ GetMovementModeGameplayTag(MovementMode) };
+    const FGameplayTagContainer TagsToRemove{ GetMovementModeGameplayTag(PreviousMovementMode) };
+
+    UpdateGameplayTags(TagsToRemove, TagsToAdd);
+}
+
+void AUR_Character::UpdateGameplayTags(const FGameplayTagContainer& TagsToRemove, const FGameplayTagContainer& TagsToAdd)
+{
+#if WITH_EDITOR
+    FString TagsToPrint{};
+    for (const FGameplayTag& Tag : GameplayTags)
+    {
+        TagsToPrint.Append(Tag.ToString() + ", ");
+    }
+    GAME_LOG(Game, Verbose, "Pre: Character (%s) has Tags: %s", *this->GetName(), *TagsToPrint);
+#endif
+    
+    GameplayTags.RemoveTags(TagsToRemove);
+    GameplayTags.AppendTags(TagsToAdd);
+
+#if WITH_EDITOR
+    TagsToPrint.Empty();
+    for (const FGameplayTag& Tag : GameplayTags)
+    {
+        TagsToPrint.Append(Tag.ToString() + ", ");
+    }
+    GAME_LOG(Game, Verbose, "Post: Character (%s) has Tags: %s", *this->GetName(), *TagsToPrint);
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
