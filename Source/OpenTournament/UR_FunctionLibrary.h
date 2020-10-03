@@ -22,6 +22,8 @@ class UAnimInstance;
 class UAnimMontage;
 class UActorComponent;
 class AUR_PlayerController;
+class UMeshComponent;
+class UMaterialInterface;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -261,5 +263,17 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Game")
     static bool IsOnlySpectator(APlayerState* PS);
+
+    /**
+    * Remove all override materials from a mesh component, restoring it to its defaults.
+    */
+    UFUNCTION(BlueprintCallable, Category = "Mesh|Material")
+    static void ClearOverrideMaterials(UMeshComponent* MeshComp);
+
+    /**
+    * Override all materials of a mesh component with a single material.
+    */
+    UFUNCTION(BlueprintCallable, Category = "Mesh|Material")
+    static void OverrideAllMaterials(UMeshComponent* MeshComp, UMaterialInterface* Material);
 
 };
