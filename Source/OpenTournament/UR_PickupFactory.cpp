@@ -16,14 +16,14 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
-* NOTES about rotating movement :
+* NOTES about rotating movement:
 *
 * Could use RotatingMovementComponent, but I rather cut the overhead by doing directly what we want.
 *
 * Finished maps can have a lot of pickups in them... weapons, healths, armors, powerups, vials...
 * I have seen some UT maps with many rotating pickups, where it had a significant impact on performance.
 *
-* We should :
+* We should:
 * - minimize that impact as much as possible
 * - even better, provide a configurable option to disable rotating pickups on client, so we can disable Tick altogether in this class.
 */
@@ -35,7 +35,7 @@ AUR_PickupFactory::AUR_PickupFactory()
     PrimaryActorTick.bStartWithTickEnabled = false;
     //PrimaryActorTick.bRunOnAnyThread = true;	//CRASH?
 
-    //NOTE: Consider using TickInterval to improve performance.
+    // NOTE: Consider using TickInterval to improve performance.
     // Rotating pickup might not need to update any faster than 60hz,
     // so if player is running at higher FPS some frames could be entirely skipped.
 
@@ -44,7 +44,7 @@ AUR_PickupFactory::AUR_PickupFactory()
 
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 
-    //NOTE: Cannot point to RootComponent here or it is impossible to override in BP construction script.
+    // NOTE: Cannot point to RootComponent here or it is impossible to override in BP construction script.
     AttachComponent = NULL;
 
     EditorPreview = CreateEditorOnlyDefaultSubobject<UStaticMeshComponent>(TEXT("EditorPreview"), true);
@@ -119,7 +119,7 @@ void AUR_PickupFactory::BeginPlay()
 
     if (!IsNetMode(NM_DedicatedServer) && AttachComponent && (RotationRate != 0.f || BobbingHeight != 0.f))
     {
-        //TODO: configurable rotating pickups ?
+        // TODO: configurable rotating pickups?
         SetActorTickEnabled(true);
     }
     else
@@ -168,7 +168,7 @@ void AUR_PickupFactory::BeginRespawnTimer(float InRespawnTime)
         // Force a frame to avoid pickup-loop problem
         GetWorld()->GetTimerManager().ClearTimer(RespawnTimerHandle);
         RespawnTimerHandle = GetWorld()->GetTimerManager().SetTimerForNextTick(this, &AUR_PickupFactory::RespawnTimer);
-        //TODO: Might want to come up with something better, as this will spam network heavily.
+        // TODO: Might want to come up with something better, as this will spam network heavily.
         // Eg. instant respawn under player's feet but without giving it to him unless he goes out and back in.
         // But that's harder to do with pickup as a separate class.
         // Also must consider when multiple players are standing on it.
@@ -186,7 +186,7 @@ void AUR_PickupFactory::SpawnPickup()
 
     FTransform Transform = AttachComponent ? AttachComponent->GetComponentTransform() : GetTransform();
 
-    //NOTE: Use deferred spawn so we can bind OnPickedUp event before actor is added to the scene.
+    // NOTE: Use deferred spawn so we can bind OnPickedUp event before actor is added to the scene.
     // Otherwise it can trigger during SpawnActor routine, and if pickup destroys itself, we just get NULL.
 
     Pickup = Cast<AUR_Pickup>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, ClassToSpawn, Transform, ESpawnActorCollisionHandlingMethod::AlwaysSpawn, this));
@@ -216,7 +216,7 @@ void AUR_PickupFactory::SpawnPickup()
 
     if (AttachComponent)
     {
-        //TBD: AttachmentRules
+        // TBD: AttachmentRules
         Pickup->AttachToComponent(AttachComponent, FAttachmentTransformRules::SnapToTargetIncludingScale);
 
         // Attaching may trigger overlap + destroy
