@@ -26,7 +26,8 @@ public class OpenTournament : ModuleRules
                 "GameplayTasks",
                 "MoviePlayer",
                 "Niagara",
-                "SoundFieldRendering" // Linux needs a symbold that it cannot find so we try to link this library by force.
+                "SoundFieldRendering", // Linux needs a symbold that it cannot find so we try to link this library by force.
+                "Paper2D",
             }
         );
 

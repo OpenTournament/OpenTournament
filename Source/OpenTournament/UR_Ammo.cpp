@@ -35,9 +35,12 @@ void AUR_Ammo::OnRep_AmmoCount(int32 OldAmmoCount)
 {
 	if (AmmoCount != OldAmmoCount)
 	{
-		if (AUR_Character* Char = Cast<AUR_Character>(GetOwner()))
+		auto Char = Cast<AUR_Character>(GetOwner());
+		if (Char && Char->InventoryComponent)
 		{
-			if (Char->InventoryComponent && Char->InventoryComponent->ActiveWeapon && Char->InventoryComponent->ActiveWeapon->AmmoRefs.Contains(this))
+			Char->InventoryComponent->OnAmmoUpdated.Broadcast(Char->InventoryComponent, this);
+
+			if (Char->InventoryComponent->ActiveWeapon && Char->InventoryComponent->ActiveWeapon->AmmoRefs.Contains(this))
 			{
 				Char->InventoryComponent->ActiveWeapon->NotifyAmmoUpdated(this);
 			}

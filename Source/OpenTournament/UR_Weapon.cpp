@@ -100,6 +100,24 @@ void AUR_Weapon::PostInitializeComponents()
     }
 }
 
+UClass* AUR_Weapon::GetNextFallbackConfigWeapon(TSubclassOf<AUR_Weapon> ForClass)
+{
+    if (ForClass)
+    {
+        if (auto ModDefined = ForClass->GetDefaultObject<AUR_Weapon>()->ModFallbackToWeaponConfig)
+        {
+            return (ModDefined != ForClass) ? ModDefined : NULL;
+        }
+
+        UClass* ParentClass = ForClass->GetSuperClass();
+        if (ParentClass->IsChildOf<AUR_Weapon>())
+        {
+            return ParentClass;
+        }
+    }
+    return NULL;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Very, very basic support for picking up weapons on the ground.
 

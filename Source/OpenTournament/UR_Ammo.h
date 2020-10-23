@@ -87,7 +87,9 @@ public:
 
 		if (AmmoCount < AmmoCap)
 		{
+			int32 OldAmmoCount = AmmoCount;
 			AmmoCount = FMath::Min(AmmoCount + InAmount, AmmoCap);
+			OnRep_AmmoCount(OldAmmoCount);
 		}
 	}
 
