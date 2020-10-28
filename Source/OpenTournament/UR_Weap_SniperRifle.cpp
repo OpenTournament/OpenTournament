@@ -18,6 +18,4 @@ AUR_Weap_SniperRifle::AUR_Weap_SniperRifle(const FObjectInitializer& ObjectIniti
     USoundCue* helperSound;
     helperSound = newAssetSound.Object;
     Sound->SetSound(helperSound);*/
-
-    AmmoName = "Sniper";
 }

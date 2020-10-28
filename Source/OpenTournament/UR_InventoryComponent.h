@@ -39,11 +39,17 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    UPROPERTY(ReplicatedUsing = OnRep_InventoryW, BlueprintReadOnly, Category = "InventoryComponent")
-    TArray<AUR_Weapon*> InventoryW;
+    UPROPERTY(ReplicatedUsing = OnRep_WeaponArray, BlueprintReadOnly, Category = "InventoryComponent")
+    TArray<AUR_Weapon*> WeaponArray;
 
-    UPROPERTY(BlueprintReadOnly, Category = "InventoryComponent")
-    TArray<AUR_Ammo*> InventoryA;
+    /**
+    * Ammo types are instanced and stored in this array, independently from weapons.
+    * Ammo array is initially empty.
+    * An ammo type is instanced and added here as soon as an ammo pack OR a weapon using this type is picked up.
+    * Like weapons, there are no duplicates of the same class in the array.
+    */
+    UPROPERTY(Replicated, BlueprintReadOnly, Category = "InventoryComponent")
+    TArray<AUR_Ammo*> AmmoArray;
 
     UPROPERTY(BlueprintReadOnly, Category = "InventoryComponent")
     AUR_Weapon* ActiveWeapon;
@@ -58,9 +64,14 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
     bool IsLocallyControlled() const;
 
-    void Add(AUR_Weapon* InWeapon);
+    UFUNCTION(BlueprintAuthorityOnly)
+    virtual void AddWeapon(AUR_Weapon* InWeapon);
 
-    void Add(AUR_Ammo* InAmmo);
+    UFUNCTION(BlueprintAuthorityOnly)
+    virtual void AddAmmo(TSubclassOf<AUR_Ammo> InAmmoClass, int32 InAmount);
+
+    UFUNCTION(BlueprintCallable)
+    virtual AUR_Ammo* GetAmmoByClass(TSubclassOf<AUR_Ammo> InAmmoClass, bool bAutoCreate = false);
 
     void AmmoCountInInventory(AUR_Weapon* InWeapon);
 
@@ -103,7 +114,7 @@ public:
 protected:
 
     UFUNCTION()
-    virtual void OnRep_InventoryW();
+    virtual void OnRep_WeaponArray();
 
     UFUNCTION()
     virtual void OnRep_DesiredWeapon();

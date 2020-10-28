@@ -7,45 +7,38 @@
 #include "OpenTournament.h"
 #include "UR_Character.h"
 #include "UR_InventoryComponent.h"
+#include "UR_Ammo.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_AmmoPickup::AUR_AmmoPickup(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer),
-    WeaponClass(nullptr),
-    AmmoValue(10)
+    AmmoClass(AUR_Ammo::StaticClass()),
+    AmmoAmount(10)
 {
-    DisplayName = FString("Ammo");
+    DisplayName = TEXT("Ammo");
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-void AUR_AmmoPickup::OnPickup_Implementation(AUR_Character* PickupCharacter)
+#if WITH_EDITOR
+void AUR_AmmoPickup::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
-    Super::OnPickup_Implementation(PickupCharacter);
+    Super::PostEditChangeProperty(PropertyChangedEvent);
 
-    // @! TODO : Probably preferable to handle this via GameplayEffect in order to reduce custom logic in pickup class.
-    if (PickupCharacter && WeaponClass)
+    if (PropertyChangedEvent.GetPropertyName().IsEqual(FName(TEXT("AmmoClass"))))
     {
-        if (const auto InventoryComponent = PickupCharacter->InventoryComponent)
-        {
-            for (auto& Weapon : InventoryComponent->InventoryW)
-            {
-                if (WeaponClass == Weapon->GetClass())
-                {
-                    // @! TODO : Confusing/Bad Weapon-Ammo API here.
-                    Weapon->ConsumeAmmo(-1 * AmmoValue);
-
-                    // @! TODO : No AmmoMax value currently (and we probably shouldn't do this here. But stubbed just in case)
-                    //if (Weapon->GetCurrentAmmo() > Weapon->AmmoMax)
-                    //{
-                    //    Weapon->AmmoCount = Weapon->AmmoMax;
-                    //}
-                }
-            }
-        }
+        DisplayName = AmmoClass ? AmmoClass->GetDefaultObject<AUR_Ammo>()->AmmoName : TEXT("Ammo");
     }
 }
+#endif
+
+bool AUR_AmmoPickup::OnPickup_Implementation(AUR_Character* PickupCharacter)
+{
+    if (AmmoClass && PickupCharacter && PickupCharacter->InventoryComponent)
+    {
+        PickupCharacter->InventoryComponent->AddAmmo(AmmoClass, AmmoAmount);
+    }
+
+    return Super::OnPickup_Implementation(PickupCharacter);
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
