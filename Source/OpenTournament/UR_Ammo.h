@@ -56,61 +56,17 @@ public:
 public:
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
-	virtual void StackAmmo(int32 InAmount, AUR_Weapon* FromWeapon = NULL)
-	{
-		int32 AmmoCap = MaxAmmo;
-
-		//NOTE: Here we can add something to handle quake-like case, to prevent weapon ammo stacking.
-		// I don't want to use properties for this because it's probably gonna end up depending on gamemode.
-		// For example casual FFA would have fast respawn times ==> prevent weapon ammo stacking
-		// But Duel have long respawn times ==> allow weapon ammo stacking
-		// So the gamemode should be responsible for controlling this behavior.
-
-		// We can add a hook here which does something like this :
-		/*
-		if (InventoryComponent->WeaponArray.Contains(FromWeapon))
-		{
-			int32 WeaponAmmo = 0;
-			for (const auto& AmmoDef : FromWeapon->AmmoDefinitions)
-			{
-				if (AmmoDef.AmmoClass == StaticClass() && AmmoDef.AmmoAmount > WeaponAmmo)
-				{
-					WeaponAmmo = AmmoDef.AmmoAmount;
-				}
-			}
-			if (WeaponAmmo > 0)
-			{
-				AmmoCap = WeaponAmmo + 1;
-			}
-		}
-		*/
-
-		if (AmmoCount < AmmoCap)
-		{
-			int32 OldAmmoCount = AmmoCount;
-			AmmoCount = FMath::Min(AmmoCount + InAmount, AmmoCap);
-			OnRep_AmmoCount(OldAmmoCount);
-		}
-	}
+	virtual void StackAmmo(int32 InAmount, AUR_Weapon* FromWeapon = NULL);
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
-	virtual void ConsumeAmmo(int32 Amount = 1)
-	{
-		int32 OldAmmoCount = AmmoCount;
-		AmmoCount = FMath::Clamp(AmmoCount - Amount, 0, 999);
-		OnRep_AmmoCount(OldAmmoCount);
-	}
+	virtual void ConsumeAmmo(int32 Amount = 1);
 
 	/**
 	* Set ammo count to desired value regardless of MaxAmmo.
+	* Still hard-capped between 0 and 999.
 	*/
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
-	virtual void SetAmmoCount(int32 NewAmmoCount)
-	{
-		int32 OldAmmoCount = AmmoCount;
-		AmmoCount = FMath::Clamp(NewAmmoCount, 0, 999);
-		OnRep_AmmoCount(OldAmmoCount);
-	}
+	virtual void SetAmmoCount(int32 NewAmmoCount);
 
 protected:
 
