@@ -9,6 +9,7 @@
 #include "GameplayAbilitySpec.h"
 #include "GameplayEffect.h"
 #include "GameplayTagAssetInterface.h"
+#include "Components/InputComponent.h"  //struct FInputKeyBinding
 
 #include "UR_Type_DodgeDirection.h"
 #include "Enums/UR_MovementAction.h"
@@ -122,6 +123,7 @@ public:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
+    virtual UInputComponent* CreatePlayerInputComponent() override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual void CalcCamera(float DeltaTime, struct FMinimalViewInfo& OutResult) override;
 
@@ -233,6 +235,15 @@ public:
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Walk")
     float FootstepTimeIntervalBase;
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // Weapons bindings
+
+    TArray<FInputKeyBinding> WeaponBindings;
+
+    // Called on possess, and when controlling player changes binds.
+    UFUNCTION(BlueprintCallable)
+    virtual void SetupWeaponBindings();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // General - EyeHeight Adjustment
@@ -614,16 +625,6 @@ public:
     virtual void PawnStartFire(uint8 FireModeNum = 0) override;
     virtual void PawnStopFire(uint8 FireModeNum = 0);
 
-    //Weapon select
-    UFUNCTION()
-    void WeaponSelect(int32 InWeaponGroup);
-
-    UFUNCTION(Exec, BlueprintCallable)
-    void NextWeapon();
-
-    UFUNCTION(Exec, BlueprintCallable)
-    void PrevWeapon();
-
     /** get weapon attach point */
     UFUNCTION()
     FName GetWeaponAttachPoint() const;
@@ -632,20 +633,14 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game")
     FVector MuzzleOffset;
 
-protected:
-    //pickup handlers
-    void BeginPickup();
-    void EndPickup();
+    UFUNCTION(Exec, BlueprintCallable)
+    virtual void SelectWeapon(int32 Index);
 
-    //these are to be improved later on
-    void SelectWeapon0(); //pistol
-    void SelectWeapon1(); //assault rifle
-    void SelectWeapon2(); //shotgun
-    void SelectWeapon3(); //rocket launcher
-    void SelectWeapon4(); //grenade launcher
-    void SelectWeapon5(); //sniper rifle
+    UFUNCTION(Exec, BlueprintCallable)
+    virtual void NextWeapon();
 
-    void ShowInventory();
+    UFUNCTION(Exec, BlueprintCallable)
+    virtual void PrevWeapon();
 
     /** socket or bone name for attaching weapon mesh */
     UPROPERTY(EditDefaultsOnly, Category = "Character|Inventory")

@@ -21,6 +21,7 @@
 #include "UR_PlayerState.h"
 #include "UR_Character.h"
 #include "UR_PlayerInput.h"
+#include "UR_Weapon.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -263,6 +264,25 @@ void UUR_FunctionLibrary::OverrideAllMaterials(UMeshComponent* MeshComp, UMateri
         for (int32 i = 0; i < Num; i++)
         {
             MeshComp->SetMaterial(i, Material);
+        }
+    }
+}
+
+void UUR_FunctionLibrary::GetAllWeaponClasses(TSubclassOf<AUR_Weapon> InClassFilter, TArray<TSubclassOf<AUR_Weapon>>& OutWeaponClasses)
+{
+    // NOTE: this is temporary. We will need proper asset registry management later on.
+    for (TObjectIterator<UClass> Itr; Itr; ++Itr)
+    {
+        UClass* Class = *Itr;
+        if ((InClassFilter && Class->IsChildOf(InClassFilter)) || Class->IsChildOf<AUR_Weapon>())
+        {
+#if WITH_EDITOR
+            if (Class->HasAnyFlags(RF_Transient) && Class->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
+            {
+                continue;
+            }
+#endif
+            OutWeaponClasses.Add(Class);
         }
     }
 }

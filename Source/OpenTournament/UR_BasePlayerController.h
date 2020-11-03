@@ -11,8 +11,11 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 class UUR_PlayerInput;
+class UUR_UserSettings;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FViewTargetChangedSignature, AUR_BasePlayerController*, PC, AActor*, NewVT, AActor*, OldVT);
 
 /**
  * Base class for MenuPlayerController and URPlayerController.
@@ -27,6 +30,8 @@ public:
     AUR_BasePlayerController(const FObjectInitializer& ObjectInitializer);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+	virtual void PostInitializeComponents() override;
 
     virtual void InitInputSystem() override;
 
@@ -43,6 +48,8 @@ public:
     UFUNCTION(Exec, BlueprintCallable, BlueprintCosmetic)
     void ReturnToMainMenu();
 
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
     /**
     * User configured FOV.
     */
@@ -54,5 +61,25 @@ public:
 
     UFUNCTION()
     void ClampConfiguredFOV();
+
+    UPROPERTY(Transient)
+    UUR_UserSettings* UserSettings;
+
+    UFUNCTION(BlueprintCosmetic)
+    virtual void InitUserSettings();
+
+    UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Player|Settings")
+    FORCEINLINE UUR_UserSettings* GetUserSettings() const { return UserSettings; }
+
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
+    virtual void ApplyAllSettings();
+
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
+    virtual void ApplyWeaponGroupSettings();
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    UPROPERTY(BlueprintAssignable)
+    FViewTargetChangedSignature OnViewTargetChanged;
 
 };

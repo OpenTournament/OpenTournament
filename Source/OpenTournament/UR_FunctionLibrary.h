@@ -24,6 +24,7 @@ class UActorComponent;
 class AUR_PlayerController;
 class UMeshComponent;
 class UMaterialInterface;
+class AUR_Weapon;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -276,4 +277,6 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Mesh|Material")
     static void OverrideAllMaterials(UMeshComponent* MeshComp, UMaterialInterface* Material);
 
+    UFUNCTION(BlueprintCallable)
+    static void GetAllWeaponClasses(TSubclassOf<AUR_Weapon> InClassFilter, TArray<TSubclassOf<AUR_Weapon>>& OutWeaponClasses);
 };
