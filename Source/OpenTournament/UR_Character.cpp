@@ -25,6 +25,8 @@
 #include "UR_Weapon.h"
 #include "UR_Projectile.h"
 #include "UR_PlayerState.h"
+#include "UR_InputComponent.h"
+#include "UR_UserSettings.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -138,31 +140,25 @@ UAbilitySystemComponent* AUR_Character::GetAbilitySystemComponent() const
     return AbilitySystemComponent;
 }
 
+UInputComponent* AUR_Character::CreatePlayerInputComponent()
+{
+    static const FName InputComponentName(TEXT("URCharacterInputComponent0"));
+    return NewObject<UUR_InputComponent>(this, InputComponentName);
+}
+
 void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    PlayerInputComponent->BindAction("Pickup", IE_Pressed, this, &AUR_Character::BeginPickup);
-    PlayerInputComponent->BindAction("Pickup", IE_Released, this, &AUR_Character::EndPickup);
+    PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
+    PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
 
-    PlayerInputComponent->BindAction("ShowInventory", IE_Pressed, this, &AUR_Character::ShowInventory);
+    SetupWeaponBindings();
 
-    PlayerInputComponent->BindAction("ARifle", IE_Pressed, this, &AUR_Character::SelectWeapon1);
-    PlayerInputComponent->BindAction("Shotgun", IE_Pressed, this, &AUR_Character::SelectWeapon2);
-    PlayerInputComponent->BindAction("RLauncher", IE_Pressed, this, &AUR_Character::SelectWeapon3);
-    PlayerInputComponent->BindAction("GLauncher", IE_Pressed, this, &AUR_Character::SelectWeapon4);
-    PlayerInputComponent->BindAction("SRifle", IE_Pressed, this, &AUR_Character::SelectWeapon5);
-    PlayerInputComponent->BindAction("Pistol", IE_Pressed, this, &AUR_Character::SelectWeapon0);
-
-    // Select Weapon Bind
     // Throw Weapon
-
     // Voice
     // Ping
     // Emote
-
-    PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
-    PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
 }
 
 void AUR_Character::SetupMaterials_Implementation()
@@ -403,6 +399,32 @@ void AUR_Character::PlayFootstepEffects(const float WalkingSpeedPercentage) cons
 {
     const float FootstepVolume = FMath::Clamp<float>(0.2f, 1.f, WalkingSpeedPercentage);
     UGameplayStatics::PlaySound2D(GetWorld(), CharacterVoice.FootstepSound, FootstepVolume, 1.f);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_Character::SetupWeaponBindings()
+{
+    if (auto URInputComponent = Cast<UUR_InputComponent>(InputComponent))
+    {
+        for (const auto& Binding : WeaponBindings)
+        {
+            URInputComponent->RemoveKeyBinding(Binding);
+        }
+        WeaponBindings.Empty();
+
+        if (auto Settings = UUR_UserSettings::Get(this))
+        {
+            for (int32 Index = 0; Index < Settings->WeaponGroups.Num(); Index++)
+            {
+                const auto& Group = Settings->WeaponGroups[Index];
+                if (Group.Keybind.IsValidChord())
+                {
+                    WeaponBindings.Add(URInputComponent->BindKeyParameterized<TBaseDelegate<void, int32>>(Group.Keybind, IE_Pressed, this, &AUR_Character::SelectWeapon, Index));
+                }
+            }
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -932,63 +954,6 @@ void AUR_Character::ServerSuicide_Implementation()
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AUR_Character::BeginPickup()
-{
-    bIsPickingUp = true;
-}
-
-void AUR_Character::EndPickup()
-{
-    bIsPickingUp = false;
-}
-
-void AUR_Character::SelectWeapon1()
-{
-    FString name;
-    name = "Assault Rifle";
-    InventoryComponent->SelectWeapon(1);
-}
-
-void AUR_Character::SelectWeapon2()
-{
-    FString name;
-    name = "Shotgun";
-    InventoryComponent->SelectWeapon(2);
-}
-
-void AUR_Character::SelectWeapon3()
-{
-    FString name;
-    name = "Rocket Launcher";
-    InventoryComponent->SelectWeapon(3);
-}
-
-void AUR_Character::SelectWeapon4()
-{
-    FString name;
-    name = "Grenade Launcher";
-    InventoryComponent->SelectWeapon(4);
-}
-
-void AUR_Character::SelectWeapon5()
-{
-    FString name;
-    name = "Sniper Rifle";
-    InventoryComponent->SelectWeapon(5);
-}
-
-void AUR_Character::SelectWeapon0()
-{
-    FString name;
-    name = "Pistol";
-    InventoryComponent->SelectWeapon(0);
-}
-
-void AUR_Character::ShowInventory()
-{
-    InventoryComponent->ShowInventory();
-}
-
 FName AUR_Character::GetWeaponAttachPoint() const
 {
     return WeaponAttachPoint;
@@ -997,27 +962,6 @@ FName AUR_Character::GetWeaponAttachPoint() const
 USkeletalMeshComponent* AUR_Character::GetPawnMesh() const
 {
     return MeshFirstPerson;
-}
-
-void AUR_Character::WeaponSelect(int32 InWeaponGroup)
-{
-    InventoryComponent->SelectWeapon(InWeaponGroup);
-}
-
-void AUR_Character::NextWeapon()
-{
-    if (InventoryComponent)
-    {
-        InventoryComponent->NextWeapon();
-    }
-}
-
-void AUR_Character::PrevWeapon()
-{
-    if (InventoryComponent)
-    {
-        InventoryComponent->PrevWeapon();
-    }
 }
 
 void AUR_Character::PawnStartFire(uint8 FireModeNum)
@@ -1060,6 +1004,30 @@ void AUR_Character::PawnStopFire(uint8 FireModeNum)
         {
             InventoryComponent->ActiveWeapon->RequestStartFire(DesiredFireModeNum[0]);
         }
+    }
+}
+
+void AUR_Character::SelectWeapon(int32 Index)
+{
+    if (InventoryComponent)
+    {
+        InventoryComponent->SelectWeapon(Index);
+    }
+}
+
+void AUR_Character::NextWeapon()
+{
+    if (InventoryComponent)
+    {
+        InventoryComponent->NextWeapon();
+    }
+}
+
+void AUR_Character::PrevWeapon()
+{
+    if (InventoryComponent)
+    {
+        InventoryComponent->PrevWeapon();
     }
 }
 

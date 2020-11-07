@@ -25,6 +25,7 @@
 #include "UR_Projectile.h"
 #include "UR_PlayerController.h"
 #include "UR_FunctionLibrary.h"
+#include "UR_Ammo.h"
 
 #include "UR_FireModeBasic.h"
 #include "UR_FireModeCharged.h"
@@ -56,6 +57,7 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
     PutDownTime = 0.25f;
     CooldownDelaysPutDownByPercent = 0.5f;
     bReducePutDownDelayByPutDownTime = false;
+    AmmoDefinitions = { FWeaponAmmoDefinition(AUR_Ammo::StaticClass(), 10) };
 
     SetCanBeDamaged(false);
 }
@@ -66,7 +68,8 @@ void AUR_Weapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(AUR_Weapon, AmmoCount, COND_OwnerOnly);
+    //NOTE: Cannot have OwnerOnly + InitialOnly :(
+    DOREPLIFETIME_CONDITION(AUR_Weapon, AmmoRefs, COND_InitialOnly);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +98,24 @@ void AUR_Weapon::PostInitializeComponents()
             FireMode->SetCallbackInterface(this);
         }
     }
+}
+
+UClass* AUR_Weapon::GetNextFallbackConfigWeapon(TSubclassOf<AUR_Weapon> ForClass)
+{
+    if (ForClass)
+    {
+        if (auto ModDefined = ForClass->GetDefaultObject<AUR_Weapon>()->ModFallbackToWeaponConfig)
+        {
+            return (ModDefined != ForClass) ? ModDefined : NULL;
+        }
+
+        UClass* ParentClass = ForClass->GetSuperClass();
+        if (ParentClass->IsChildOf<AUR_Weapon>())
+        {
+            return ParentClass;
+        }
+    }
+    return NULL;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -138,7 +159,7 @@ void AUR_Weapon::GiveTo(AUR_Character* NewOwner)
     URCharOwner = NewOwner;
     if (NewOwner && NewOwner->InventoryComponent)
     {
-        NewOwner->InventoryComponent->Add(this);
+        NewOwner->InventoryComponent->AddWeapon(this);
     }
 }
 
@@ -393,9 +414,15 @@ void AUR_Weapon::Deactivate()
     }
 }
 
-void AUR_Weapon::OnRep_AmmoCount()
+void AUR_Weapon::NotifyAmmoUpdated(AUR_Ammo* Ammo)
 {
-    if (CurrentFireMode && CurrentFireMode->IsBusy())
+    if (!Ammo)
+    {
+        return;
+    }
+
+    // Only care about ammo updates of current firemode
+    if (CurrentFireMode && CurrentFireMode->IsBusy() && GetAmmoObject(CurrentFireMode->Index) == Ammo)
     {
         if (auto FMCharged = Cast<UUR_FireModeCharged>(CurrentFireMode))
         {
@@ -404,17 +431,18 @@ void AUR_Weapon::OnRep_AmmoCount()
         }
         else if (auto FMContinuous = Cast<UUR_FireModeContinuous>(CurrentFireMode))
         {
-            if (AmmoCount < 1 && FMContinuous->AmmoCostPerSecond > 0.f)
+            if (Ammo->AmmoCount < 1 && FMContinuous->AmmoCostPerSecond > 0.f)
             {
                 // The continuous mode allows firing with 0 ammo up till the next ammo consumption
                 float Delay = 1.f / FMContinuous->AmmoCostPerSecond;
                 FTimerHandle Handle;
                 FTimerDelegate Callback;
-                Callback.BindLambda([this, FMContinuous]
+                Callback.BindLambda([this, Ammo, FMContinuous]
                 {
-                    if (AmmoCount < 1 && FMContinuous)
+                    if (Ammo->AmmoCount < 1 && FMContinuous)
                     {
                         FMContinuous->StopFire();
+                        CheckAutoSwap();
                     }
                 });
                 GetWorld()->GetTimerManager().SetTimer(Handle, Callback, Delay, false);
@@ -427,10 +455,7 @@ void AUR_Weapon::OnRep_AmmoCount()
         }
     }
 
-    if (AmmoCount == 0)
-    {
-        //TODO: auto swap here
-    }
+    CheckAutoSwap();
 }
 
 
@@ -818,16 +843,61 @@ bool AUR_Weapon::HitscanShouldHitActor_Implementation(AActor* Other)
     return false;
 }
 
+int32 AUR_Weapon::GetAmmoIndex_Implementation(int32 ModeIndex) const
+{
+    return 0;
+}
+
+AUR_Ammo* AUR_Weapon::GetAmmoObject(int32 ModeIndex) const
+{
+    int32 i = GetAmmoIndex(ModeIndex);
+    return AmmoRefs.IsValidIndex(i) ? AmmoRefs[i] : NULL;
+}
+
+int32 AUR_Weapon::GetCurrentAmmo(int32 ModeIndex) const
+{
+    if (auto Ammo = GetAmmoObject(ModeIndex))
+    {
+        return Ammo->AmmoCount;
+    }
+    return 0;
+}
+
 bool AUR_Weapon::HasEnoughAmmoFor(UUR_FireModeBase* FireMode)
 {
-    return AmmoCount >= FireMode->InitialAmmoCost;
+    return GetCurrentAmmo(FireMode->Index) >= FireMode->InitialAmmoCost;
 }
 
 void AUR_Weapon::ConsumeAmmo(int32 Amount)
 {
-    AmmoCount = FMath::Clamp(AmmoCount - Amount, 0, 999);
+    int32 ModeIndex = CurrentFireMode ? CurrentFireMode->Index : 0;
+    if (auto Ammo = GetAmmoObject(ModeIndex))
+    {
+        Ammo->ConsumeAmmo(Amount);
+    }
+}
 
-    OnRep_AmmoCount();
+void AUR_Weapon::CheckAutoSwap()
+{
+    if ( UUR_FunctionLibrary::IsLocallyControlled(this) && !HasAnyAmmo() && URCharOwner && URCharOwner->InventoryComponent)
+    {
+        if (!URCharOwner->InventoryComponent->DesiredWeapon || URCharOwner->InventoryComponent->DesiredWeapon == this)
+        {
+            URCharOwner->InventoryComponent->NextWeapon();
+        }
+    }
+}
+
+bool AUR_Weapon::HasAnyAmmo()
+{
+    for (const auto FireMode : FireModes)
+    {
+        if (FireMode && HasEnoughAmmoFor(FireMode))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 
@@ -1092,7 +1162,7 @@ void AUR_Weapon::ChargeLevel_Implementation(UUR_FireModeCharged* FireMode, int32
         }
 
         // If we don't have enough ammo for next charge, stop charging
-        if (AmmoCount < 1)
+        if (GetCurrentAmmo(FireMode->Index) < 1)
         {
             FireMode->BlockNextCharge(FireMode->MaxChargeHoldTime);
         }
@@ -1158,7 +1228,7 @@ void AUR_Weapon::AuthorityContinuousHitCheck_Implementation(UUR_FireModeContinuo
         // Eg. if we have 1 ammo, it drops to zero and then we can continue firing until next ammo consumption.
         // --> This is because we have an initial ammo cost to prevent abuse.
         // This is easier to handle (and prevent abuse) than the other way around.
-        if (AmmoCount <= 0)
+        if (GetCurrentAmmo(FireMode->Index) <= 0)
         {
             FireMode->StopFire();
             return;

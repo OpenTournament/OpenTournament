@@ -7,6 +7,9 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/Object.h"
+
+#include "UR_Type_WeaponGroup.h"
+
 #include "UR_UserSettings.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -40,6 +43,9 @@ public:
 
     UPROPERTY(Config, BlueprintReadWrite)
     FLinearColor EnemyColor3;
+
+    UPROPERTY(Config, BlueprintReadWrite)
+    TArray<FWeaponGroup> WeaponGroups;
 
 public:
 

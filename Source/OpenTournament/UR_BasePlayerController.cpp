@@ -7,15 +7,19 @@
 #include "GameMapsSettings.h"
 #include "Kismet/GameplayStatics.h"
 
+#include "UR_PlayerCameraManager.h"
 #include "UR_PlayerInput.h"
 #include "UR_UserSettings.h"
 #include "UR_MPC_Global.h"
+#include "UR_Character.h"
+#include "UR_InventoryComponent.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_BasePlayerController::AUR_BasePlayerController(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	PlayerCameraManagerClass = AUR_PlayerCameraManager::StaticClass();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,6 +78,7 @@ void AUR_BasePlayerController::ApplyAllSettings()
 {
 	ApplyCameraSettings();
 	ApplyTeamColorSettings();
+	ApplyWeaponGroupSettings();
 }
 
 void AUR_BasePlayerController::ApplyCameraSettings()
@@ -98,5 +103,18 @@ void AUR_BasePlayerController::ApplyTeamColorSettings()
 		UUR_MPC_Global::SetVector(this, Params->P_EnemyColor, Settings->EnemyColor);
 		UUR_MPC_Global::SetVector(this, Params->P_EnemyColor2, Settings->EnemyColor2);
 		UUR_MPC_Global::SetVector(this, Params->P_EnemyColor3, Settings->EnemyColor3);
+	}
+}
+
+void AUR_BasePlayerController::ApplyWeaponGroupSettings()
+{
+	if (auto URCharacter = GetPawn<AUR_Character>())
+	{
+		URCharacter->SetupWeaponBindings();
+
+		if (URCharacter->InventoryComponent)
+		{
+			URCharacter->InventoryComponent->RefillWeaponGroups();
+		}
 	}
 }

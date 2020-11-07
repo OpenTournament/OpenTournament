@@ -16,12 +16,14 @@
 #include "Animation/AnimMontage.h"
 #include "Components/Widget.h"
 #include "Components/PanelWidget.h"
+#include "Components/MeshComponent.h"
 
 #include "UR_GameModeBase.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 #include "UR_Character.h"
 #include "UR_PlayerInput.h"
+#include "UR_Weapon.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -240,7 +242,6 @@ bool UUR_FunctionLibrary::IsOnlySpectator(APlayerState* PS)
     return PS->IsOnlyASpectator();
 }
 
-
 float UUR_FunctionLibrary::GetFloatOption(const FString& Options, const FString& Key, float DefaultValue)
 {
     const FString InOpt = UGameplayStatics::ParseOption(Options, Key);
@@ -284,4 +285,43 @@ bool UUR_FunctionLibrary::FindChildrenWidgetsByClass(UWidget* Target, TSubclassO
     }
 
     return OutWidgets.Num() > LengthBefore;
+}
+
+void UUR_FunctionLibrary::ClearOverrideMaterials(UMeshComponent* MeshComp)
+{
+    if (MeshComp)
+    {
+        MeshComp->EmptyOverrideMaterials();
+    }
+}
+
+void UUR_FunctionLibrary::OverrideAllMaterials(UMeshComponent* MeshComp, UMaterialInterface* Material)
+{
+    if (MeshComp)
+    {
+        int32 Num = MeshComp->GetNumMaterials();
+        for (int32 i = 0; i < Num; i++)
+        {
+            MeshComp->SetMaterial(i, Material);
+        }
+    }
+}
+
+void UUR_FunctionLibrary::GetAllWeaponClasses(TSubclassOf<AUR_Weapon> InClassFilter, TArray<TSubclassOf<AUR_Weapon>>& OutWeaponClasses)
+{
+    // NOTE: this is temporary. We will need proper asset registry management later on.
+    for (TObjectIterator<UClass> Itr; Itr; ++Itr)
+    {
+        UClass* Class = *Itr;
+        if ((InClassFilter && Class->IsChildOf(InClassFilter)) || Class->IsChildOf<AUR_Weapon>())
+        {
+#if WITH_EDITOR
+            if (Class->HasAnyFlags(RF_Transient) && Class->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
+            {
+                continue;
+            }
+#endif
+            OutWeaponClasses.Add(Class);
+        }
+    }
 }

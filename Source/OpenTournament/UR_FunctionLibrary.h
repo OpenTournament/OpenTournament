@@ -23,6 +23,9 @@ class UAnimMontage;
 class UActorComponent;
 class AUR_PlayerController;
 class UWidget;
+class UMeshComponent;
+class UMaterialInterface;
+class AUR_Weapon;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -283,4 +286,18 @@ public:
     UFUNCTION(BlueprintCallable, Category = "UMG", Meta = (DeterminesOutputType = "WidgetClass", DynamicOutputParam = "OutWidgets"))
     static bool FindChildrenWidgetsByClass(UWidget* Target, TSubclassOf<UWidget> WidgetClass, TArray<UWidget*>& OutWidgets, bool bRecursive = true);
 
+    /**
+    * Remove all override materials from a mesh component, restoring it to its defaults.
+    */
+    UFUNCTION(BlueprintCallable, Category = "Mesh|Material")
+    static void ClearOverrideMaterials(UMeshComponent* MeshComp);
+
+    /**
+    * Override all materials of a mesh component with a single material.
+    */
+    UFUNCTION(BlueprintCallable, Category = "Mesh|Material")
+    static void OverrideAllMaterials(UMeshComponent* MeshComp, UMaterialInterface* Material);
+
+    UFUNCTION(BlueprintCallable)
+    static void GetAllWeaponClasses(TSubclassOf<AUR_Weapon> InClassFilter, TArray<TSubclassOf<AUR_Weapon>>& OutWeaponClasses);
 };

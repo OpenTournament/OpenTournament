@@ -18,6 +18,8 @@ class UUR_MPC_Global;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FViewTargetChangedSignature, AUR_BasePlayerController*, PC, AActor*, NewVT, AActor*, OldVT);
+
 /**
  * Base class for MenuPlayerController and URPlayerController.
  */
@@ -49,7 +51,7 @@ public:
     UFUNCTION(Exec, BlueprintCallable, BlueprintCosmetic)
     void ReturnToMainMenu();
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
     * Reference to the global-game MaterialParameterCollection.
@@ -82,5 +84,13 @@ public:
 
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
     virtual void ApplyTeamColorSettings();
+
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
+    virtual void ApplyWeaponGroupSettings();
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    UPROPERTY(BlueprintAssignable)
+    FViewTargetChangedSignature OnViewTargetChanged;
 
 };

@@ -1,78 +1,100 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Ammo.h"
-#include "UR_Weapon.h"
-#include "UR_InventoryComponent.h"
-#include "Engine.h"
-#include "OpenTournament.h"
+
+#include "Net/UnrealNetwork.h"
+
 #include "UR_Character.h"
+#include "UR_InventoryComponent.h"
 
-// Sets default values
-AUR_Ammo::AUR_Ammo(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+AUR_Ammo::AUR_Ammo()
 {
-	Tbox = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
-	Tbox->SetGenerateOverlapEvents(true);
-	Tbox->OnComponentBeginOverlap.AddDynamic(this, &AUR_Ammo::OnTriggerEnter);
-	Tbox->OnComponentEndOverlap.AddDynamic(this, &AUR_Ammo::OnTriggerExit);
+	PrimaryActorTick.bCanEverTick = false;
 
-	RootComponent = Tbox;
+	bReplicates = true;
+	bOnlyRelevantToOwner = true;
+	SetReplicatingMovement(false);
 
-	SM_TBox = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Box Mesh"));
-	SM_TBox->SetupAttachment(RootComponent);
-
-	AmmoMesh = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("AmmoMesh1"));
-	AmmoMesh->SetupAttachment(RootComponent);
-
-	Sound = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("Sound"));
-	Sound->SetupAttachment(RootComponent);
-
-	PrimaryActorTick.bCanEverTick = true;
+	AmmoName = TEXT("Ammo");
+	MaxAmmo = 30;
+	AmmoCount = 0;
 }
 
-// Called when the game starts or when spawned
-void AUR_Ammo::BeginPlay()
+void AUR_Ammo::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::BeginPlay();
-	Sound->SetActive(false);
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(AUR_Ammo, AmmoCount, COND_OwnerOnly);
 }
 
-// Called every frame
-void AUR_Ammo::Tick(float DeltaTime)
+void AUR_Ammo::StackAmmo(int32 InAmount, AUR_Weapon* FromWeapon)
 {
-	Super::Tick(DeltaTime);
+	int32 AmmoCap = MaxAmmo;
 
-	if (PlayerController != NULL)
+	//NOTE: Here we can add something to handle quake-like case, to prevent weapon ammo stacking.
+	// I don't want to use properties for this because it's probably gonna end up depending on gamemode.
+	// For example casual FFA would have fast respawn times ==> prevent weapon ammo stacking
+	// But Duel have long respawn times ==> allow weapon ammo stacking
+	// So the gamemode should be responsible for controlling this behavior.
+
+	// We can add a hook here which does something like this :
+	/*
+	if (InventoryComponent->WeaponArray.Contains(FromWeapon))
 	{
-		if (bItemIsWithinRange)
+		int32 WeaponAmmo = 0;
+		for (const auto& AmmoDef : FromWeapon->AmmoDefinitions)
 		{
-			Pickup();
+			if (AmmoDef.AmmoClass == StaticClass() && AmmoDef.AmmoAmount > WeaponAmmo)
+			{
+				WeaponAmmo = AmmoDef.AmmoAmount;
+			}
 		}
+		if (WeaponAmmo > 0)
+		{
+			AmmoCap = WeaponAmmo + 1;
+		}
+	}
+	*/
+
+	if (AmmoCount < AmmoCap)
+	{
+		SetAmmoCount(FMath::Min(AmmoCount + InAmount, AmmoCap));
 	}
 }
 
-void AUR_Ammo::Pickup()
+void AUR_Ammo::ConsumeAmmo(int32 Amount)
 {
-	Sound->SetActive(true);
-	Sound = UGameplayStatics::SpawnSoundAtLocation(this, Sound->Sound, this->GetActorLocation(), FRotator::ZeroRotator, 1.0f, 1.0f, 0.0f, nullptr, nullptr, true);
-	PlayerController->InventoryComponent->Add(this);
-	Destroy();
+	SetAmmoCount(AmmoCount - Amount);
 }
 
-void AUR_Ammo::GetPlayer(AActor* Player)
+void AUR_Ammo::SetAmmoCount(int32 NewAmmoCount)
 {
-	PlayerController = Cast<AUR_Character>(Player);
+	NewAmmoCount = FMath::Clamp(NewAmmoCount, 0, 999);
+	if (NewAmmoCount != AmmoCount)
+	{
+		int32 OldAmmoCount = AmmoCount;
+		AmmoCount = NewAmmoCount;
+		OnRep_AmmoCount(OldAmmoCount);
+	}
 }
 
-void AUR_Ammo::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AUR_Ammo::OnRep_AmmoCount(int32 OldAmmoCount)
 {
-	bItemIsWithinRange = true;
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("HI this is ammo")));
-	GetPlayer(Other);
-}
+	if (AmmoCount != OldAmmoCount)
+	{
+		auto Char = Cast<AUR_Character>(GetOwner());
+		if (Char && Char->InventoryComponent)
+		{
+			Char->InventoryComponent->OnAmmoUpdated.Broadcast(Char->InventoryComponent, this);
 
-void AUR_Ammo::OnTriggerExit(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("BYE this is ammo")));
+			if (Char->InventoryComponent->ActiveWeapon && Char->InventoryComponent->ActiveWeapon->AmmoRefs.Contains(this))
+			{
+				Char->InventoryComponent->ActiveWeapon->NotifyAmmoUpdated(this);
+			}
+		}
+	}
 }
-

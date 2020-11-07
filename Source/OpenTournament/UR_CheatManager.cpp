@@ -40,7 +40,7 @@ void UUR_CheatManager::Cheat_Loaded()
             {
                 const auto World = URCharacter->GetWorld();
                 auto SpawnedWeapon = World->SpawnActor<AUR_Weapon>(WeaponClass);
-                Inventory->Add(SpawnedWeapon);
+                Inventory->AddWeapon(SpawnedWeapon);
             }            
         }
     }

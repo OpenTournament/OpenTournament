@@ -17,8 +17,11 @@ class UCapsuleComponent;
 class UParticleSystemComponent;
 class UPrimitiveComponent;
 class AUR_Character;
+class UFXSystemAsset;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPickedUpSignature, AUR_Pickup*, Pickup, APawn*, Recipient);
 
 /**
  * Pickup Base Class - Actor representing a given Inventory class within the game world.
@@ -34,7 +37,7 @@ class OPENTOURNAMENT_API AUR_Pickup : public AActor,
 public:	
 
     AUR_Pickup(const FObjectInitializer& ObjectInitializer);
-    
+   
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -85,40 +88,25 @@ public:
     UFUNCTION()
     void Pickup(AUR_Character* PickupCharacter);
 
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastPickedUp(AUR_Character* PickupCharacter);
+
     /**
-    * BP-Implementable Hook Event for actions to perform on Pickup
+    * Server & Client.
+    * Actions to perform on pickup.
+    * Return true to destroy the pickup, false to keep it alive.
     */
     UFUNCTION(BlueprintNativeEvent, Category = "Pickup")
-    void OnPickup(AUR_Character* PickupCharacter);
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+    bool OnPickup(AUR_Character* PickupCharacter);
 
     /**
-    * Set the Pickup State
+    * Client only. Play pickup effects/sounds.
     */
-    UFUNCTION(BlueprintCallable, Category = "Pickup")
-    void SetPickupState(EPickupState NewState);
+    UFUNCTION(BlueprintCosmetic, BlueprintNativeEvent, BlueprintCallable, Category = "Pickup")
+    void PlayPickupEffects(AUR_Character* PickupCharacter);
 
-    /**
-    * Respawn Pickup
-    */
-    UFUNCTION(Category = "Pickup")
-    void RespawnPickup();
-
-    /**
-    * Pickup State
-    */
-    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Pickup")
-    EPickupState PickupState;
-
-    /**
-    * Time (in Seconds) for an Inactive Pickup to become Active
-    */
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Pickup")
-    float RespawnInterval;
-
-
-    FTimerHandle RespawnHandle;
+    UPROPERTY(BlueprintAssignable)
+    FOnPickedUpSignature OnPickedUp;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -127,6 +115,12 @@ public:
     */
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Pickup")
     USoundBase* PickupSound;
+
+    /**
+    * Effect played on Pickup
+    */
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Pickup")
+    UFXSystemAsset* PickupEffect;
 
     /**
     * Sound played on Respawn
