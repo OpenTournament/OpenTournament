@@ -10,6 +10,10 @@
 #include "UR_GameState.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+class AUR_TeamInfo;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 // Delegates
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMatchStateChanged, AUR_GameState*, GS);
@@ -138,6 +142,34 @@ protected:
     {
         bTriggeredTimeUp = false;
     }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Teams
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
+
+    /** Array of TeamInfos, maintained on both server and clients (TeamInfos are always relevant) */
+    UPROPERTY(BlueprintReadOnly)
+    TArray<AUR_TeamInfo*> Teams;
+
+    /**
+    * Create and register a new Team.
+    */
+    UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
+    virtual AUR_TeamInfo* AddNewTeam();
+
+    /**
+    * Remove trailing empty teams, keeping a minimum of 2 teams.
+    */
+    UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
+    virtual void TrimTeams();
+
+    /**
+    * Utility - Get all PlayerStates with bOnlySpectator = true.
+    */
+    UFUNCTION(BlueprintCallable)
+    virtual void GetSpectators(TArray<APlayerState*>& OutSpectators);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // End Game

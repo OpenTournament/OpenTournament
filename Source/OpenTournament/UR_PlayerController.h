@@ -5,7 +5,7 @@
 #pragma once
 
 #include "UR_BasePlayerController.h"
-
+#include "Interfaces/UR_TeamInterface.h"
 #include "UR_PlayerController.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,6 +34,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FReceiveSystemMessageSignature, cons
  */
 UCLASS(Config = Game)
 class OPENTOURNAMENT_API AUR_PlayerController : public AUR_BasePlayerController
+    , public IUR_TeamInterface
 {
     GENERATED_BODY()
 
@@ -251,5 +252,12 @@ public:
     {
         ScoreboardWidget ? HideScoreboard() : ShowScoreboard();
     }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //~ Begin TeamInterface
+    virtual int32 GetTeamIndex_Implementation() override;
+    virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
+    //~ End TeamInterface
 
 };

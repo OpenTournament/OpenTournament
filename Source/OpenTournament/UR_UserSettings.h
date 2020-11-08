@@ -30,6 +30,21 @@ class OPENTOURNAMENT_API UUR_UserSettings : public UObject
 public:
 
     UPROPERTY(Config, BlueprintReadWrite)
+    int32 NormalFOV;
+
+    UPROPERTY(Config, BlueprintReadWrite)
+    FLinearColor AllyColor;
+
+    UPROPERTY(Config, BlueprintReadWrite)
+    FLinearColor EnemyColor;
+
+    UPROPERTY(Config, BlueprintReadWrite)
+    FLinearColor EnemyColor2;
+
+    UPROPERTY(Config, BlueprintReadWrite)
+    FLinearColor EnemyColor3;
+
+    UPROPERTY(Config, BlueprintReadWrite)
     TArray<FWeaponGroup> WeaponGroups;
 
 public:
