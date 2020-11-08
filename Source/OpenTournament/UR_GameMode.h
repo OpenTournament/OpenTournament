@@ -14,6 +14,7 @@ class AUR_GameState;
 class AUR_Weapon;
 class ULocalMessage;
 class UUR_Widget_ScoreboardBase;
+class AUR_TeamInfo;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -27,6 +28,12 @@ struct FStartingWeaponEntry
 
     UPROPERTY(EditAnywhere)
     int32 Ammo;
+};
+
+namespace ETeamsFillMode
+{
+    static const FString Even = TEXT("Even");
+    static const FString Squads = TEXT("Squads");
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,6 +51,12 @@ public:
     AUR_GameMode();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * TeamInfo class.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Classes")
+    TSubclassOf<AUR_TeamInfo> TeamInfoClass;
 
     /**
     * Scoreboard widget class
@@ -71,6 +84,36 @@ public:
     UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
     TArray<FStartingWeaponEntry> StartingWeapons;
 
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
+    int32 MaxPlayers;
+
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|TeamGame")
+    int32 NumTeams;
+
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|TeamGame")
+    FString TeamsFillMode;
+
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
+    float SelfDamage;
+
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|TeamGame")
+    float TeamDamageDirect;
+
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|TeamGame")
+    float TeamDamageRetaliate;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    UPROPERTY(BlueprintReadOnly)
+    int32 DesiredTeamSize;
+
+    virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+    virtual void InitGameState() override;
+
+    virtual void GenericPlayerInitialization(AController* C) override;
+
+    UFUNCTION()
+    virtual void AssignDefaultTeam(AUR_PlayerState* PS);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Match
@@ -84,8 +127,14 @@ public:
     virtual void SetPlayerDefaults(APawn* PlayerPawn) override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-    // Killing
+    // Damage & Kill
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+    * Damage hook.
+    */
+    UFUNCTION(BlueprintNativeEvent)
+    void ModifyDamage(float& Damage, float& KnockbackPower, AUR_Character* Victim, AController* DamageInstigator, const FDamageEvent& DamageEvent, AActor* DamageCauser);
 
     /**
     * Early hook to prevent player from dying by damage.

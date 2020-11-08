@@ -10,8 +10,11 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UMaterialParameterCollection;
+
 class UUR_PlayerInput;
 class UUR_UserSettings;
+class UUR_MPC_Global;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -31,7 +34,7 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	virtual void PostInitializeComponents() override;
+    virtual void PostInitializeComponents() override;
 
     virtual void InitInputSystem() override;
 
@@ -51,16 +54,18 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-    * User configured FOV.
+    * Reference to the global-game MaterialParameterCollection.
     */
-    UPROPERTY(Config, BlueprintReadOnly)
-    int32 ConfiguredFOV;
+    UPROPERTY(EditDefaultsOnly)
+    UMaterialParameterCollection* MPC_GlobalGame;
 
-    UFUNCTION(Exec, BlueprintCallable, BlueprintCosmetic)
-    void SetConfiguredFOV(int32 NewFOV);
+    /**
+    * Need to store an instance of this because modifying CDO causes side effects.
+    */
+    UPROPERTY(Transient)
+    UUR_MPC_Global* UR_MPC_Global_Ref;
 
-    UFUNCTION()
-    void ClampConfiguredFOV();
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
     UPROPERTY(Transient)
     UUR_UserSettings* UserSettings;
@@ -73,6 +78,12 @@ public:
 
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
     virtual void ApplyAllSettings();
+
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
+    virtual void ApplyCameraSettings();
+
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
+    virtual void ApplyTeamColorSettings();
 
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
     virtual void ApplyWeaponGroupSettings();
