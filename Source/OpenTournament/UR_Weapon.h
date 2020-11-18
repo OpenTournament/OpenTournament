@@ -26,6 +26,7 @@ class USkeletalMeshComponent;
 class USoundBase;
 class UFXSystemAsset;
 class UAnimMontage;
+class UPaperSprite;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -155,6 +156,25 @@ public:
     UPROPERTY(BlueprintReadOnly, Replicated)
     TArray<AUR_Ammo*> AmmoRefs;
 
+    /**
+    * Fallback to that weapon if no user configuration is found for this weapon.
+    * Used to apply plug-and-play user settings on mod-weapons by falling back to more common (core) weapons.
+    *
+    * User settings should include weaponbar, grouping, keybindings, and crosshairs (to start with).
+    * Might add per-weapon sensitivity, fov, and firemode remapping in the future as well.
+    * 
+    * If unspecified, the game will fallback to parent weapon by default.
+    * Specify this only if you want to target a different weapon for good reason.
+    */
+    UPROPERTY(EditAnywhere)
+    TSubclassOf<AUR_Weapon> ModFallbackToWeaponConfig;
+
+    /**
+    * Atlas texture sprite to use in UI.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    UPaperSprite* WeaponSprite;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Some getters
 
@@ -177,6 +197,8 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Weapon")
     USkeletalMeshComponent* GetVisibleMesh() const;
+
+    static UClass* GetNextFallbackConfigWeapon(TSubclassOf<AUR_Weapon> ForClass);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Weapon Attachment

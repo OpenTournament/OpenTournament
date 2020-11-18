@@ -24,6 +24,9 @@
 #include "UR_GameMode.h"
 #include "UR_Weapon.h"
 #include "UR_Projectile.h"
+#include "UR_PlayerState.h"
+#include "UR_InputComponent.h"
+#include "UR_UserSettings.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -120,6 +123,8 @@ void AUR_Character::BeginPlay()
     AttributeSet->SetArmor(100.f);
     AttributeSet->SetArmorMax(100.f);
     AttributeSet->SetShieldMax(100.f);
+
+    SetupMaterials();
 }
 
 void AUR_Character::Tick(float DeltaTime)
@@ -135,32 +140,72 @@ UAbilitySystemComponent* AUR_Character::GetAbilitySystemComponent() const
     return AbilitySystemComponent;
 }
 
+UInputComponent* AUR_Character::CreatePlayerInputComponent()
+{
+    static const FName InputComponentName(TEXT("URCharacterInputComponent0"));
+    return NewObject<UUR_InputComponent>(this, InputComponentName);
+}
+
 void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    PlayerInputComponent->BindAction("Pickup", IE_Pressed, this, &AUR_Character::BeginPickup);
-    PlayerInputComponent->BindAction("Pickup", IE_Released, this, &AUR_Character::EndPickup);
+    PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
+    PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
 
-    PlayerInputComponent->BindAction("ShowInventory", IE_Pressed, this, &AUR_Character::ShowInventory);
+    SetupWeaponBindings();
 
-    PlayerInputComponent->BindAction("ARifle", IE_Pressed, this, &AUR_Character::SelectWeapon1);
-    PlayerInputComponent->BindAction("Shotgun", IE_Pressed, this, &AUR_Character::SelectWeapon2);
-    PlayerInputComponent->BindAction("RLauncher", IE_Pressed, this, &AUR_Character::SelectWeapon3);
-    PlayerInputComponent->BindAction("GLauncher", IE_Pressed, this, &AUR_Character::SelectWeapon4);
-    PlayerInputComponent->BindAction("SRifle", IE_Pressed, this, &AUR_Character::SelectWeapon5);
-    PlayerInputComponent->BindAction("Pistol", IE_Pressed, this, &AUR_Character::SelectWeapon0);
-
-    // Select Weapon Bind
     // Throw Weapon
-
     // Voice
     // Ping
     // Emote
-
-    PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
-    PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
 }
+
+void AUR_Character::SetupMaterials_Implementation()
+{
+    /*
+    for (UPrimitiveComponent* Component : { GetMesh3P(), GetMesh1P() })
+    {
+        for (int32 i = 0; i < Component->GetNumMaterials(); i++)
+        {
+            Component->CreateDynamicMaterialInstance(i);
+        }
+    }
+    */
+    //NOTE: this is not required because MeshComponent::SetParameterValueOnMaterials already generates MIDs as needed.
+    // Might want to remove this function altogether
+
+    UpdateTeamColor();
+}
+
+void AUR_Character::UpdateTeamColor_Implementation()
+{
+    if (GetMesh3P())
+    {
+        GetMesh3P()->SetScalarParameterValueOnMaterials(FName(TEXT("TeamIndex")), IUR_TeamInterface::Execute_GetTeamIndex(this));
+        GetMesh3P()->SetScalarParameterValueOnMaterials(FName(TEXT("IsSelf")), Cast<APlayerController>(GetController()) ? 1.f : 0.f);
+    }
+    if (GetMesh1P())
+    {
+        GetMesh1P()->SetScalarParameterValueOnMaterials(FName(TEXT("TeamIndex")), IUR_TeamInterface::Execute_GetTeamIndex(this));
+        // FirstPerson mesh is always considered "self" and should use AllyColor
+        GetMesh1P()->SetScalarParameterValueOnMaterials(FName(TEXT("IsSelf")), 1.f);
+    }
+}
+
+void AUR_Character::OnRep_PlayerState()
+{
+    Super::OnRep_PlayerState();
+
+    if (GetNetMode() != NM_DedicatedServer)
+    {
+        UpdateTeamColor();
+    }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// Camera
 
 void AUR_Character::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
 {
@@ -291,6 +336,7 @@ void AUR_Character::BehindView(int32 Switch)
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+// Movement
 
 void AUR_Character::MoveForward(const float InValue)
 {
@@ -353,6 +399,32 @@ void AUR_Character::PlayFootstepEffects(const float WalkingSpeedPercentage) cons
 {
     const float FootstepVolume = FMath::Clamp<float>(0.2f, 1.f, WalkingSpeedPercentage);
     UGameplayStatics::PlaySound2D(GetWorld(), CharacterVoice.FootstepSound, FootstepVolume, 1.f);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_Character::SetupWeaponBindings()
+{
+    if (auto URInputComponent = Cast<UUR_InputComponent>(InputComponent))
+    {
+        for (const auto& Binding : WeaponBindings)
+        {
+            URInputComponent->RemoveKeyBinding(Binding);
+        }
+        WeaponBindings.Empty();
+
+        if (auto Settings = UUR_UserSettings::Get(this))
+        {
+            for (int32 Index = 0; Index < Settings->WeaponGroups.Num(); Index++)
+            {
+                const auto& Group = Settings->WeaponGroups[Index];
+                if (Group.Keybind.IsValidChord())
+                {
+                    WeaponBindings.Add(URInputComponent->BindKeyParameterized<TBaseDelegate<void, int32>>(Group.Keybind, IE_Pressed, this, &AUR_Character::SelectWeapon, Index));
+                }
+            }
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -630,78 +702,97 @@ void AUR_Character::OnWallDodge_Implementation(const FVector& DodgeLocation, con
 
 float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-    GAME_LOG(Game, Log, "Damage Incoming (%f)", Damage);
+    const float OriginalDamage = Damage;
 
-    if (!ShouldTakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser))
+    GAME_LOG(Game, Log, "Damage Incoming (%f)", OriginalDamage);
+
+    //NOTE:
+    // Super() takes care of :
+    // - low level checks (returns 0.0 if not pass)
+    // - calculate proper splash damage values (original Damage is the full damage regardless of radius)
+    // - impart physics impulses to physics components
+    //
+    //NOTE: Low level checks include an authority check, meaning Super() only imparts components physics on server side,
+    // which makes no sense. We might have to rework this.
+    //
+    //NOTE: Either way, impulses are only for physics-enabled components.
+    // There is nothing builtin for character knockback, so we will have to do it ourselves.
+    // We can access the projectile or the weapon (hitscan) trough DamageCauser, and fetch knockback properties there.
+    // Calculate falloff manually, then apply knockback manually using CharacterMovement->AddImpulse.
+
+    // Calculate damage with falloff if this is splash
+    Damage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+
+    // Floor
+    Damage = FMath::FloorToFloat(Damage);
+
+    if (Damage == 0.f)
     {
         return 0.f;
     }
 
-    // Super() takes care of calculating proper splash damage values and imparting components physics.
-    // Then it triggers events : OnTakePointDamage, OnTakeRadialDamage, OnTakeAnyDamage.
-    Damage = FMath::FloorToFloat(Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser));
-    //GAME_PRINT(10.f, FColor::Purple, "Damage Floor (%f)", DamageToArmor);
-    GAME_LOG(Game, Log, "Damage Incoming Floor (%f)", Damage);
+    GAME_LOG(Game, Log, "Damage pre-hook = %f", Damage);
 
-    float TotalDamage = Damage;
+    const float Falloff = Damage / OriginalDamage;
 
-    if (AttributeSet)
+    // Calculate knockback power
+    float KnockbackPower = 1500.f * OriginalDamage; //TODO: this is where we should fetch projectile/weapon's knockback value
+    KnockbackPower *= Falloff;
+
+    // Gamemode hook
+    if (AUR_GameMode* URGameMode = GetWorld()->GetAuthGameMode<AUR_GameMode>())
     {
-        if (AttributeSet->Health.GetCurrentValue() > 0.f)
+        URGameMode->ModifyDamage(Damage, KnockbackPower, this, EventInstigator, DamageEvent, DamageCauser);
+
+        if (Damage == 0.f)
         {
-            const float CurrentShield = FMath::FloorToFloat(AttributeSet->Shield.GetCurrentValue());
-            if (CurrentShield > 0.f)
-            {
-                //GAME_PRINT(10.f, FColor::Yellow, "Damage to Shield (%f)", FMath::Min(Damage, CurrentShield));
-                GAME_LOG(Game, Log, "Damage to Shield (%f)", FMath::Min(Damage, CurrentShield));
-
-                AttributeSet->SetShield(FMath::FloorToFloat(FMath::Max(CurrentShield - Damage, 0.f)));
-                Damage = CurrentShield - Damage > 0.f ? 0.f : Damage - CurrentShield;
-            }
-
-            const float CurrentArmor = FMath::FloorToFloat(AttributeSet->Armor.GetCurrentValue());
-            const float ArmorAbsorption = AttributeSet->ArmorAbsorptionPercent.GetCurrentValue();
-            if (CurrentArmor > 0.f && Damage > 0.f)
-            {
-                const float DamageToArmor = FMath::FloorToFloat(FMath::Min(Damage * ArmorAbsorption, CurrentArmor));
-
-                //GAME_PRINT(10.f, FColor::Emerald, "Damage to Armor (%f)", DamageToArmor);
-                GAME_LOG(Game, Log, "Damage to Armor (%f)", DamageToArmor);
-
-                AttributeSet->SetArmor(FMath::Max(CurrentArmor - DamageToArmor, 0.f));
-                Damage = FMath::Max(Damage - DamageToArmor, 0.f);
-            }
-
-            const float CurrentHealth = AttributeSet->Health.GetCurrentValue();
-            if (CurrentHealth > 0.f && Damage > 0.f)
-            {
-                //GAME_PRINT(10.f, FColor::Red, "Damage to Health (%f)", Damage);
-                GAME_LOG(Game, Log, "Damage to Health (%f)", Damage);
-
-                AttributeSet->SetHealth(FMath::FloorToFloat(FMath::Max(CurrentHealth - Damage, 0.f)));
-
-                // @! TODO Limit Pain by time, vary by damage etc.
-                if (Damage > 10.f)
-                {
-                    UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.PainSound, GetActorLocation(), GetActorRotation());
-                }
-            }
+            return 0.f;
         }
     }
 
-    //NOTE: it seems like we are lacking control of damage momentum (knockback) overall.
-    // DamageType has DamageImpulse but it is part of CDO, which is a bit annoying.
-    // We cannot adjust DamageImpulse on the fly with gamemode/mutators.
-    // Also it only applies to physics-enabled stuff. Characters need custom knockback anyways.
+    GAME_LOG(Game, Log, "Damage post-hook = %f", Damage);
 
-    // We will probably need to find a way back to the projectile/weapon (DamageCauser?),
-    // so we can use custom-defined knockback values there.
+    ////////////////////////////////////////////////////////////
+    // Apply Damage
 
-    // Then we can apply splash falloff using (ActualDamage/Damage) to the knockback power.
-    // And finally, apply knockback manually with a custom impulse.
+    float DamageToShield = 0.f;
+    float DamageToArmor = 0.f;
+    float DamageToHealth = 0.f;
+    float DamageRemaining = Damage;
 
-    // For now, let's try basic values
-    float KnockbackPower = 1500.f * TotalDamage;
+    if (AttributeSet && AttributeSet->Health.GetCurrentValue() > 0.f)
+    {
+        const float CurrentShield = FMath::FloorToFloat(AttributeSet->Shield.GetCurrentValue());
+        if (CurrentShield > 0.f)
+        {
+            DamageToShield = FMath::Min(DamageRemaining, CurrentShield);
+            AttributeSet->SetShield(CurrentShield - DamageToShield);
+            DamageRemaining -= DamageToShield;
+        }
+
+        const float CurrentArmor = FMath::FloorToFloat(AttributeSet->Armor.GetCurrentValue());
+        const float ArmorAbsorption = AttributeSet->ArmorAbsorptionPercent.GetCurrentValue();
+        if (CurrentArmor > 0.f && DamageRemaining > 0.f)
+        {
+            DamageToArmor = FMath::Min(DamageRemaining * ArmorAbsorption, CurrentArmor);
+            DamageToArmor = FMath::FloorToFloat(DamageToArmor);
+            AttributeSet->SetArmor(CurrentArmor - DamageToArmor);
+            DamageRemaining -= DamageToArmor;
+        }
+
+        const float CurrentHealth = AttributeSet->Health.GetCurrentValue();
+        if (CurrentHealth > 0.f && DamageRemaining > 0.f)
+        {
+            DamageToHealth = FMath::Min(DamageRemaining, CurrentHealth);
+            AttributeSet->SetHealth(CurrentHealth - DamageToHealth);
+            DamageRemaining -= DamageToHealth;
+        }
+    }
+
+    GAME_LOG(Game, Log, "Damage repartition: Shield(%f), Armor(%f), Health(%f), Extra(%f)", DamageToShield, DamageToArmor, DamageToHealth, DamageRemaining);
+
+    ////////////////////////////////////////////////////////////
+    // Apply Knockback
 
     // Avoid very small knockbacks
     if (KnockbackPower / GetCharacterMovement()->Mass >= 100.f)
@@ -724,19 +815,30 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
 
             // Use no falloff (constant) because we already scaled KnockbackPower
             GetCharacterMovement()->AddRadialImpulse(RadialDamageEvent->Origin, RadialDamageEvent->Params.GetMaxRadius(), KnockbackPower, ERadialImpulseFalloff::RIF_Constant, false);
-
-            /*
-            // Experimental: use vector (HitLocation->EyeLocation) as knockback direction to make it feel more natural
-
-            KnockbackDir = (GetPawnViewLocation() - RadialDamageEvent->Origin);
-            KnockbackDir.Normalize();
-            GetCharacterMovement()->AddImpulse(KnockbackPower*KnockbackDir);
-            */
+            //TODO: Want to bias towards +Z as well, but dunno how to deal with Radial
+        }
+        else
+        {
+            // This is most likely a code-generated FDamageEvent() with no real source.
         }
     }
 
-    if (AttributeSet->Health.GetCurrentValue() <= 0)
+    ////////////////////////////////////////////////////////////
+    // Other
+
+    // @! TODO Limit Pain by time, vary by damage etc.
+    if (DamageToHealth > 10.f)
     {
+        //TODO: Replicate
+        UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.PainSound, GetActorLocation(), GetActorRotation());
+    }
+
+    ////////////////////////////////////////////////////////////
+    // Death
+
+    if (AttributeSet && AttributeSet->Health.GetCurrentValue() <= 0)
+    {
+        // Can use DamageRemaining here to GIB
         Die(EventInstigator, DamageEvent, DamageCauser);
     }
 
@@ -852,63 +954,6 @@ void AUR_Character::ServerSuicide_Implementation()
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AUR_Character::BeginPickup()
-{
-    bIsPickingUp = true;
-}
-
-void AUR_Character::EndPickup()
-{
-    bIsPickingUp = false;
-}
-
-void AUR_Character::SelectWeapon1()
-{
-    FString name;
-    name = "Assault Rifle";
-    InventoryComponent->SelectWeapon(1);
-}
-
-void AUR_Character::SelectWeapon2()
-{
-    FString name;
-    name = "Shotgun";
-    InventoryComponent->SelectWeapon(2);
-}
-
-void AUR_Character::SelectWeapon3()
-{
-    FString name;
-    name = "Rocket Launcher";
-    InventoryComponent->SelectWeapon(3);
-}
-
-void AUR_Character::SelectWeapon4()
-{
-    FString name;
-    name = "Grenade Launcher";
-    InventoryComponent->SelectWeapon(4);
-}
-
-void AUR_Character::SelectWeapon5()
-{
-    FString name;
-    name = "Sniper Rifle";
-    InventoryComponent->SelectWeapon(5);
-}
-
-void AUR_Character::SelectWeapon0()
-{
-    FString name;
-    name = "Pistol";
-    InventoryComponent->SelectWeapon(0);
-}
-
-void AUR_Character::ShowInventory()
-{
-    InventoryComponent->ShowInventory();
-}
-
 FName AUR_Character::GetWeaponAttachPoint() const
 {
     return WeaponAttachPoint;
@@ -917,27 +962,6 @@ FName AUR_Character::GetWeaponAttachPoint() const
 USkeletalMeshComponent* AUR_Character::GetPawnMesh() const
 {
     return MeshFirstPerson;
-}
-
-void AUR_Character::WeaponSelect(int32 InWeaponGroup)
-{
-    InventoryComponent->SelectWeapon(InWeaponGroup);
-}
-
-void AUR_Character::NextWeapon()
-{
-    if (InventoryComponent)
-    {
-        InventoryComponent->NextWeapon();
-    }
-}
-
-void AUR_Character::PrevWeapon()
-{
-    if (InventoryComponent)
-    {
-        InventoryComponent->PrevWeapon();
-    }
 }
 
 void AUR_Character::PawnStartFire(uint8 FireModeNum)
@@ -980,6 +1004,30 @@ void AUR_Character::PawnStopFire(uint8 FireModeNum)
         {
             InventoryComponent->ActiveWeapon->RequestStartFire(DesiredFireModeNum[0]);
         }
+    }
+}
+
+void AUR_Character::SelectWeapon(int32 Index)
+{
+    if (InventoryComponent)
+    {
+        InventoryComponent->SelectWeapon(Index);
+    }
+}
+
+void AUR_Character::NextWeapon()
+{
+    if (InventoryComponent)
+    {
+        InventoryComponent->NextWeapon();
+    }
+}
+
+void AUR_Character::PrevWeapon()
+{
+    if (InventoryComponent)
+    {
+        InventoryComponent->PrevWeapon();
     }
 }
 
@@ -1163,4 +1211,23 @@ void AUR_Character::UpdateGameplayTags(const FGameplayTagContainer& TagsToRemove
     }
     GAME_LOG(Game, Verbose, "Post: Character (%s) has Tags: %s", *this->GetName(), *TagsToPrint);
 #endif
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+int32 AUR_Character::GetTeamIndex_Implementation()
+{
+    if (const auto PS = GetPlayerState<AUR_PlayerState>())
+    {
+        return IUR_TeamInterface::Execute_GetTeamIndex(PS);
+    }
+    return -1;
+}
+
+void AUR_Character::SetTeamIndex_Implementation(int32 NewTeamIndex)
+{
+    if (auto PS = GetPlayerState<AUR_PlayerState>())
+    {
+        IUR_TeamInterface::Execute_SetTeamIndex(PS, NewTeamIndex);
+    }
 }

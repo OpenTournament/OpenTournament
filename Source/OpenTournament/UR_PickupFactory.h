@@ -102,7 +102,7 @@ public:
     * Can be used on client for cosmetic purposes (holo...)
     * Replicated initial-only to let gamemode replace pickups on startup.
     */
-    UPROPERTY(EditDefaultsOnly, ReplicatedUsing = OnRep_PickupClass)
+    UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_PickupClass)
     TSubclassOf<AUR_Pickup> PickupClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)

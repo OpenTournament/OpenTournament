@@ -4,12 +4,14 @@
 
 #pragma once
 
-#include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
+#include "AbilitySystemInterface.h"
+#include "GameplayTagAssetInterface.h"
+#include "Interfaces/UR_TeamInterface.h"
+#include "Components/InputComponent.h"  //struct FInputKeyBinding
+
 #include "GameplayAbilitySpec.h"
 #include "GameplayEffect.h"
-#include "GameplayTagAssetInterface.h"
-
 #include "UR_Type_DodgeDirection.h"
 #include "Enums/UR_MovementAction.h"
 
@@ -56,9 +58,10 @@ struct FCharacterVoice
  *
  */
 UCLASS()
-class OPENTOURNAMENT_API AUR_Character : public ACharacter,
-    public IAbilitySystemInterface,
-    public IGameplayTagAssetInterface
+class OPENTOURNAMENT_API AUR_Character : public ACharacter
+    , public IAbilitySystemInterface
+    , public IGameplayTagAssetInterface
+    , public IUR_TeamInterface
 {
     GENERATED_BODY()
 
@@ -70,16 +73,8 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
+    //deprecated
     bool bIsPickingUp = false;
-
-    /** DEPRECATED. Use GetMesh1P() or GetMesh3P() instead */
-    USkeletalMeshComponent* GetPawnMesh() const;
-
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
-    FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return MeshFirstPerson; }
-
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
-    FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
 
     /**
     * First person Camera
@@ -119,21 +114,42 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
+    UFUNCTION(BlueprintCosmetic, BlueprintNativeEvent)
+    void SetupMaterials();
+
+    UFUNCTION(BlueprintCosmetic, BlueprintNativeEvent, BlueprintCallable)
+    void UpdateTeamColor();
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /** DEPRECATED. Use GetMesh1P() or GetMesh3P() instead */
+    USkeletalMeshComponent* GetPawnMesh() const;
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return MeshFirstPerson; }
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+    FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
+    virtual UInputComponent* CreatePlayerInputComponent() override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual void CalcCamera(float DeltaTime, struct FMinimalViewInfo& OutResult) override;
 
     virtual void BecomeViewTarget(APlayerController* PC) override;
     virtual void EndViewTarget(APlayerController* PC) override;
 
+    virtual void OnRep_PlayerState() override;
+
     // Override to update Physics Movement GameplayTags
     virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Camera Management
-    /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
     * Updated by CalcCamera. Controlled by PickCamera/IsThirdPersonCamera.
@@ -233,6 +249,15 @@ public:
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Walk")
     float FootstepTimeIntervalBase;
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // Weapons bindings
+
+    TArray<FInputKeyBinding> WeaponBindings;
+
+    // Called on possess, and when controlling player changes binds.
+    UFUNCTION(BlueprintCallable)
+    virtual void SetupWeaponBindings();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // General - EyeHeight Adjustment
@@ -614,16 +639,6 @@ public:
     virtual void PawnStartFire(uint8 FireModeNum = 0) override;
     virtual void PawnStopFire(uint8 FireModeNum = 0);
 
-    //Weapon select
-    UFUNCTION()
-    void WeaponSelect(int32 InWeaponGroup);
-
-    UFUNCTION(Exec, BlueprintCallable)
-    void NextWeapon();
-
-    UFUNCTION(Exec, BlueprintCallable)
-    void PrevWeapon();
-
     /** get weapon attach point */
     UFUNCTION()
     FName GetWeaponAttachPoint() const;
@@ -632,22 +647,24 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game")
     FVector MuzzleOffset;
 
-protected:
-    //pickup handlers
-    void BeginPickup();
-    void EndPickup();
-
-    //these are to be improved later on
-    void SelectWeapon0(); //pistol
-    void SelectWeapon1(); //assault rifle
-    void SelectWeapon2(); //shotgun
-    void SelectWeapon3(); //rocket launcher
-    void SelectWeapon4(); //grenade launcher
-    void SelectWeapon5(); //sniper rifle
-
-    void ShowInventory();
-
     /** socket or bone name for attaching weapon mesh */
     UPROPERTY(EditDefaultsOnly, Category = "Character|Inventory")
     FName WeaponAttachPoint;
+
+    UFUNCTION(Exec, BlueprintCallable)
+    virtual void SelectWeapon(int32 Index);
+
+    UFUNCTION(Exec, BlueprintCallable)
+    virtual void NextWeapon();
+
+    UFUNCTION(Exec, BlueprintCallable)
+    virtual void PrevWeapon();
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //~ Begin TeamInterface
+    virtual int32 GetTeamIndex_Implementation() override;
+    virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
+    //~ End TeamInterface
+   
 };

@@ -13,7 +13,7 @@
 /**
  * Scoreboard Base Widget
  */
-UCLASS()
+UCLASS(Abstract)
 class OPENTOURNAMENT_API UUR_Widget_ScoreboardBase : public UUserWidget
 {
     GENERATED_BODY()
