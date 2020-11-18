@@ -12,25 +12,22 @@
 
 #include "OpenTournament.h"
 #include "UR_Character.h"
+#include "UR_FunctionLibrary.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_Pickup::AUR_Pickup(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer),
-    PickupState(EPickupState::Active),
-    RespawnInterval(20.f),
-    DisplayName("Pickup")
+    DisplayName(TEXT("Item"))
 {
     CollisionComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Collision"));
     CollisionComponent->SetCapsuleSize(20.f, 20.f, true);
-    CollisionComponent->Mobility = EComponentMobility::Static;
     CollisionComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-    CollisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+    CollisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+    CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Pickup::OnOverlap);
+    CollisionComponent->SetGenerateOverlapEvents(true);
 
     RootComponent = CollisionComponent;
-
-    CollisionComponent->SetGenerateOverlapEvents(true);
-    CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Pickup::OnOverlap);
 
     StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
     StaticMesh->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
@@ -38,6 +35,9 @@ AUR_Pickup::AUR_Pickup(const FObjectInitializer& ObjectInitializer) :
 
     ParticleSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleSystemComponent"));
     ParticleSystemComponent->SetupAttachment(RootComponent);
+
+    SetReplicates(true);
+    SetReplicatingMovement(false);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ void AUR_Pickup::OnOverlap(UPrimitiveComponent* HitComp, AActor* Other, UPrimiti
 
 bool AUR_Pickup::IsPickupValid(const AUR_Character* PickupCharacter) const
 {
-    return !GetWorld()->LineTraceTestByChannel(PickupCharacter->GetActorLocation(), GetActorLocation(), ECC_Pawn, FCollisionQueryParams(), WorldResponseParams);
+    return HasAuthority() && !GetWorld()->LineTraceTestByChannel(PickupCharacter->GetActorLocation(), GetActorLocation(), ECC_Pawn, FCollisionQueryParams(), WorldResponseParams);
 }
 
 bool AUR_Pickup::IsPickupPermitted(const AUR_Character* PickupCharacter) const
@@ -94,51 +94,45 @@ void AUR_Pickup::Pickup(AUR_Character* PickupCharacter)
 {
     if (IsPickupPermitted(PickupCharacter))
     {
-        OnPickup(PickupCharacter);
-        SetPickupState(EPickupState::Inactive);
-
-        // TODO : Actual Pickup change for Character
+        MulticastPickedUp(PickupCharacter);
     }
 }
 
-void AUR_Pickup::OnPickup_Implementation(AUR_Character* PickupCharacter)
+void AUR_Pickup::MulticastPickedUp_Implementation(AUR_Character* PickupCharacter)
 {
+    bool bDestroy = OnPickup(PickupCharacter);
+
+    if (!IsNetMode(NM_DedicatedServer))
+    {
+        PlayPickupEffects(PickupCharacter);
+    }
+
+    OnPickedUp.Broadcast(this, PickupCharacter);
+
+    if (bDestroy)
+    {
+        //NOTE: I'm not sure if it is viable to Multicast & Destroy in the same frame.
+        // If clients occasionally don't receive it, this will likely be the culprit.
+        Destroy();
+    }
+}
+
+bool AUR_Pickup::OnPickup_Implementation(AUR_Character* PickupCharacter)
+{
+    return true;
+}
+
+void AUR_Pickup::PlayPickupEffects_Implementation(AUR_Character* PickupCharacter)
+{
+    //TBD: may want to attach effect to character? probably depends on cases.
+    // Maybe leave this to BP subclasses?
+    UUR_FunctionLibrary::SpawnEffectAtLocation(this, PickupEffect, GetTransform());
+
     UGameplayStatics::PlaySoundAtLocation(GetWorld(), PickupSound, GetActorLocation());
 
-    if (auto PC = Cast<APlayerController>(PickupCharacter->GetController()))
+    if (UUR_FunctionLibrary::IsLocallyViewed(PickupCharacter))
     {
-        PC->ClientMessage(TEXT("Got Pickup"));
+        //temporary
+        GetWorld()->GetFirstPlayerController()->ClientMessage(FString::Printf(TEXT("Picked up %s"), *DisplayName));
     }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-void AUR_Pickup::SetPickupState(EPickupState NewState)
-{
-    if (PickupState == NewState)
-    {
-        return;
-    }
-
-    PickupState = NewState;
-
-    if (PickupState == EPickupState::Active)
-    {
-        StaticMesh->SetVisibility(true);
-        SetActorEnableCollision(true);
-
-        GetWorld()->GetTimerManager().ClearTimer(RespawnHandle);
-    }
-    else if (PickupState == EPickupState::Inactive)
-    {
-        StaticMesh->SetVisibility(false);
-        SetActorEnableCollision(false);
-
-        GetWorld()->GetTimerManager().SetTimer(RespawnHandle, this, &AUR_Pickup::RespawnPickup, RespawnInterval, false);
-    }
-}
-
-void AUR_Pickup::RespawnPickup()
-{
-    SetPickupState(EPickupState::Active);
 }

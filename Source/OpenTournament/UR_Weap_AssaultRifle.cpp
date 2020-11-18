@@ -18,8 +18,6 @@ AUR_Weap_AssaultRifle::AUR_Weap_AssaultRifle(const FObjectInitializer& ObjectIni
     USoundCue* helperSound;
     helperSound = newAssetSound.Object;
     Sound->SetSound(helperSound);*/
-
-    AmmoName = "Assault";
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

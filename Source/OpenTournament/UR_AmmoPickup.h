@@ -12,7 +12,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-class AUR_Weapon;
+class AUR_Ammo;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -28,24 +28,17 @@ public:
 
     AUR_AmmoPickup(const FObjectInitializer& ObjectInitializer);
 
+#if WITH_EDITOR
+    virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-    * * @! TODO : This doesn't account for weapons that might have more than one
-    *           type of ammunition (e.g. Bullets + Grenades, etc).
-    *           This also doesn't account for weapons that might share ammo
-    *           (e.g. Pistol Bullets / Minigun Bullets).
-    */
-    //   @! TODO        Should change to TSubclassOf<AUR_Ammo>. 
-    /**
-    * Weapon class this Ammo is Associated with.
-    */
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Ammo")
-    TSubclassOf<AUR_Weapon> WeaponClass;
+    bool OnPickup_Implementation(AUR_Character* PickupCharacter) override;
 
-    /**
-    * Count of Ammo Replenished by this Pickup
-    */
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Ammo")
-    int32 AmmoValue;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<AUR_Ammo> AmmoClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+    int32 AmmoAmount;
 };

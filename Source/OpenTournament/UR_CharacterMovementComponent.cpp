@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 
 #include "OpenTournament.h"
+#include "Enums/UR_MovementAction.h"
 #include "Interfaces/UR_WallDodgeSurfaceInterface.h"
 #include "UR_Character.h"
 #include "UR_PlayerController.h"
@@ -307,16 +308,25 @@ void UUR_CharacterMovementComponent::ProcessLanded(const FHitResult& Hit, float 
 {
     Super::ProcessLanded(Hit, RemainingTime, Iterations);
 
-    if (GetOwner())
+    if (auto Owner = Cast<AUR_Character>(GetOwner()))
     {
+        Owner->UnCrouch(false);
+    
         if (bIsDodging)
         {
             Velocity *= DodgeLandingSpeedScale;
             DodgeResetTime = GetWorld()->TimeSeconds + DodgeResetInterval; // Get Server adjusted Time
+            bIsDodging = false;
+            Owner->UpdateGameplayTags(FGameplayTagContainer{ Owner->GetMovementActionGameplayTag(EMovementAction::Dodging) }, FGameplayTagContainer{});
         }
 
-        bIsDodging = false;
+        if (bIsJumping)
+        {
+            bIsJumping = false;
+            Owner->UpdateGameplayTags(FGameplayTagContainer{ Owner->GetMovementActionGameplayTag(EMovementAction::Jumping) }, FGameplayTagContainer{});
+        }
     }
+
     CurrentWallDodgeCount = 0;
 }
 
@@ -378,6 +388,7 @@ void UUR_CharacterMovementComponent::AdjustMovementTimers(float Adjustment)
     DodgeResetTime -= Adjustment;
 }
 
+
 bool UUR_CharacterMovementComponent::CanJump()
 {
     // @! TODO DoubleJump/DodgeJump
@@ -395,10 +406,14 @@ void UUR_CharacterMovementComponent::CheckJumpInput(float DeltaTime)
         {
             if ((MovementMode == MOVE_Walking) || (MovementMode == MOVE_Falling))
             {
-                const auto bPerformedJump = DoJump(CharacterOwner->bClientUpdating);
+                if (DoJump(CharacterOwner->bClientUpdating))
+                {
+                    bIsJumping = true;
+                    URCharacterOwner->UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ URCharacterOwner->GetMovementActionGameplayTag(EMovementAction::Jumping) });
+                }
 
                 // If we didn't perform a jump, reset the bPressedJump flag to prevent OnJump effects
-                CharacterOwner->bPressedJump = bPerformedJump;
+                CharacterOwner->bPressedJump = bIsJumping;
             }
             else if ((MovementMode == MOVE_Swimming) && CanDodge())
             {
@@ -532,6 +547,11 @@ bool UUR_CharacterMovementComponent::PerformDodge(FVector& DodgeDir, FVector& Do
 
         URCharacterOwner->OnDodge(URCharacterOwner->GetActorLocation(), Velocity);
         // @! TODO Swim Dodge needs its own DodgeReset time value or have a timer that resets a dodge
+    }
+    
+    if (bIsDodging)
+    {
+        URCharacterOwner->UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ URCharacterOwner->GetMovementActionGameplayTag(EMovementAction::Dodging) });
     }
 
     if (!IsMovingOnGround())
