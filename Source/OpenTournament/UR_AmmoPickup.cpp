@@ -35,7 +35,10 @@ bool AUR_AmmoPickup::OnPickup_Implementation(AUR_Character* PickupCharacter)
 {
     if (AmmoClass && PickupCharacter && PickupCharacter->InventoryComponent)
     {
-        PickupCharacter->InventoryComponent->AddAmmo(AmmoClass, AmmoAmount);
+        if (HasAuthority())
+        {
+            PickupCharacter->InventoryComponent->AddAmmo(AmmoClass, AmmoAmount);
+        }
     }
 
     return Super::OnPickup_Implementation(PickupCharacter);
