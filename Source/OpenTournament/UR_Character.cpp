@@ -79,8 +79,8 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 
     WeaponAttachPoint = FName(TEXT("GripPoint"));
 
-    // Mesh third person
-    GetMesh()->bOwnerNoSee = true;
+    // Mesh third person (now using SetVisibility in CameraViewChanged)
+    GetMesh()->bOwnerNoSee = false;
 
     // Third person camera
     ThirdPersonArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonArm"));
@@ -261,8 +261,11 @@ bool AUR_Character::IsThirdPersonCamera_Implementation(UCameraComponent* Camera)
 
 void AUR_Character::CameraViewChanged_Implementation()
 {
-    GetMesh()->SetOwnerNoSee(!bViewingThirdPerson);
+    GetMesh()->SetVisibility(bViewingThirdPerson, true);
     MeshFirstPerson->SetVisibility(!bViewingThirdPerson, true);
+
+    //NOTE: If visibility propagation works as expected and if the weapon is properly attached to meshes,
+    // then it might not be necessary to update weapon visibility. Needs checking out.
 
     if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
