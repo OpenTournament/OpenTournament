@@ -123,7 +123,7 @@ protected:
     virtual void OnRep_WeaponArray();
 
     UFUNCTION()
-    virtual void OnRep_DesiredWeapon();
+    virtual void OnRep_DesiredWeapon(AUR_Weapon* OldDesired);
 
 public:
 
