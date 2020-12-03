@@ -95,7 +95,10 @@ void UUR_InventoryComponent::AddWeapon(AUR_Weapon* InWeapon)
 
 void UUR_InventoryComponent::AddAmmo(TSubclassOf<AUR_Ammo> InAmmoClass, int32 InAmount)
 {
-    GetAmmoByClass(InAmmoClass, true)->StackAmmo(InAmount);
+    if (AUR_Ammo* Ammo = GetAmmoByClass(InAmmoClass, true))
+    {
+        Ammo->StackAmmo(InAmount);
+    }
 }
 
 AUR_Ammo* UUR_InventoryComponent::GetAmmoByClass(TSubclassOf<AUR_Ammo> InAmmoClass, bool bAutoCreate)
@@ -262,10 +265,12 @@ void UUR_InventoryComponent::ServerSetDesiredWeapon_Implementation(AUR_Weapon* I
     SetDesiredWeapon(InWeapon);
 }
 
-void UUR_InventoryComponent::OnRep_DesiredWeapon()
+void UUR_InventoryComponent::OnRep_DesiredWeapon(AUR_Weapon* OldDesired)
 {
     // On remote clients
-    SetDesiredWeapon(DesiredWeapon);
+    AUR_Weapon* NewDesired = DesiredWeapon;
+    DesiredWeapon = OldDesired;
+    SetDesiredWeapon(NewDesired);
 }
 
 void UUR_InventoryComponent::OnActiveWeaponStateChanged(AUR_Weapon* Weapon, EWeaponState NewState)
