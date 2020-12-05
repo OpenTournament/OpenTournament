@@ -6,16 +6,18 @@
 
 #include "CoreMinimal.h"
 
-#include "GameplayTagContainer.h"
-#include "Sound/SoundBase.h"
+#include "UR_AnnouncementVoice.h"
 #include "Subsystems/LocalPlayerSubsystem.h"
 
 #include "UR_AnnouncementSubsystem.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
 // Forward Declarations
-// 
+
+class USoundBase;
+class UUR_AnnouncementVoice;
+struct FGameplayTag;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -28,6 +30,12 @@ class OPENTOURNAMENT_API UUR_AnnouncementSubsystem : public ULocalPlayerSubsyste
 {
 	GENERATED_BODY()
 
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
+	UUR_AnnouncementSubsystem();
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
 	public:
 	
 	/**
@@ -37,19 +45,34 @@ class OPENTOURNAMENT_API UUR_AnnouncementSubsystem : public ULocalPlayerSubsyste
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
-	
+
 	/**
-	*
+	* Set the AnnouncementVoice
+	*/ 
+	UFUNCTION(BlueprintCallable, Category = "AnnouncementSystem")
+	void SetAnnouncementVoice(const TSubclassOf<UUR_AnnouncementVoice> InAnnouncementVoiceClass);
+
+	/**
+	* Get the Announcement Audio for the given GameplayTag
 	*/
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AnnouncementSystem")
 	USoundBase* GetAnnouncementSound(const FGameplayTag& GameplayTag);
 
 	/**
-	*
+	* Play an Announcement corresponding to the given GameplayTag
 	*/
 	UFUNCTION(BlueprintCallable, Category = "AnnouncementSystem")
 	void PlayAnnouncement(const FGameplayTag& InAnnouncement);
 
+	/**
+	* Class of AnnouncementVoice used
+	*/
+	UPROPERTY(BlueprintReadWrite, Category = "AnnouncementSystem")
+	TSubclassOf<UUR_AnnouncementVoice> AnnouncementVoiceClass;
 	
-	TMap<FGameplayTag, USoundBase> TagAnnouncementMap;
+	/**
+	* Announcement Voice
+	*/
+	UPROPERTY(BlueprintReadWrite, Category = "AnnouncementSystem")
+	UUR_AnnouncementVoice* AnnouncementVoice;
 };
