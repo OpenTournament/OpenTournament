@@ -4,6 +4,8 @@
 
 #include "UR_AnnouncementSubsystem.h"
 
+#include "UObject/Object.h"
+
 #include "Kismet/GameplayStatics.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -11,16 +13,12 @@
 UUR_AnnouncementSubsystem::UUR_AnnouncementSubsystem()
 	: Super(),
 	AnnouncementVoiceClass(nullptr),
-	AnnouncementVoice(nullptr)
+	AnnouncementVoice(nullptr),
+	AnnouncementVolume(1.f)
 {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
-void UUR_AnnouncementSubsystem::Initialize(FSubsystemCollectionBase& Collection)
-{
-	Super::Initialize(Collection);
-}
 
 void UUR_AnnouncementSubsystem::SetAnnouncementVoice(const TSubclassOf<UUR_AnnouncementVoice> InAnnouncementVoiceClass)
 {
@@ -29,11 +27,17 @@ void UUR_AnnouncementSubsystem::SetAnnouncementVoice(const TSubclassOf<UUR_Annou
 }
 
 USoundBase* UUR_AnnouncementSubsystem::GetAnnouncementSound(const FGameplayTag& GameplayTag)
-{
+{	
 	USoundBase* AnnouncementSound{};
-	if (AnnouncementVoice)
+
+	if (AnnouncementVoiceClass)
 	{
-		AnnouncementSound = AnnouncementVoice->GetAnnouncementSound(GameplayTag);
+		// Ensure the AnnouncementVoice is set
+		AnnouncementVoice = AnnouncementVoiceClass.GetDefaultObject();
+		if (AnnouncementVoice)
+		{
+			AnnouncementSound = AnnouncementVoice->GetAnnouncementSound(GameplayTag);
+		}
 	}
 	
 	return AnnouncementSound;
@@ -42,5 +46,5 @@ USoundBase* UUR_AnnouncementSubsystem::GetAnnouncementSound(const FGameplayTag& 
 void UUR_AnnouncementSubsystem::PlayAnnouncement(const FGameplayTag& InAnnouncement)
 {
 	USoundBase* AnnouncementSound = GetAnnouncementSound(InAnnouncement);
-	UGameplayStatics::PlaySound2D(this, AnnouncementSound);
+	UGameplayStatics::PlaySound2D(this, AnnouncementSound, AnnouncementVolume);
 }

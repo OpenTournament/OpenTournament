@@ -25,7 +25,7 @@ struct FGameplayTag;
 * AnnouncementSubsystem.
 * Handles playing Game Announcements for Local Player
 */
-UCLASS()
+UCLASS(Config = OTUserSettings)
 class OPENTOURNAMENT_API UUR_AnnouncementSubsystem : public ULocalPlayerSubsystem
 {
 	GENERATED_BODY()
@@ -37,14 +37,6 @@ class OPENTOURNAMENT_API UUR_AnnouncementSubsystem : public ULocalPlayerSubsyste
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public:
-	
-	/**
-	* Implement this for initialization of instances of the system
-	* 
-	*/
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-
-	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 	/**
 	* Set the AnnouncementVoice
@@ -67,7 +59,7 @@ class OPENTOURNAMENT_API UUR_AnnouncementSubsystem : public ULocalPlayerSubsyste
 	/**
 	* Class of AnnouncementVoice used
 	*/
-	UPROPERTY(BlueprintReadWrite, Category = "AnnouncementSystem")
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "AnnouncementSystem")
 	TSubclassOf<UUR_AnnouncementVoice> AnnouncementVoiceClass;
 	
 	/**
@@ -75,4 +67,10 @@ class OPENTOURNAMENT_API UUR_AnnouncementSubsystem : public ULocalPlayerSubsyste
 	*/
 	UPROPERTY(BlueprintReadWrite, Category = "AnnouncementSystem")
 	UUR_AnnouncementVoice* AnnouncementVoice;
+
+	/**
+	* Announcement Volume
+	*/
+	UPROPERTY(Config, BlueprintReadWrite, Category = "AnnouncementSystem")
+	float AnnouncementVolume;
 };
