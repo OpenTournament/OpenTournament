@@ -23,6 +23,17 @@ class OPENTOURNAMENT_API UUR_GameInstance : public UGameInstance
 public:
     virtual void Init() override;
 
+	// @! TODO : Restrict to certain build types / configurations?
+	/**
+	* FTest_AddLocalPlayer
+	* Simulates creating ULocalPlayer and AController.
+	* Exposed this function to Blueprint for Feature Testing
+	*/
+	UFUNCTION(BlueprintCallable, Category = "GameInstance")
+	virtual void FTest_AddLocalPlayer(int32 ControllerId);
+	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
     UFUNCTION()
     virtual void BeginLoadingScreen(const FString& MapName);
 
