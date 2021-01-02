@@ -48,8 +48,11 @@ AUR_PickupFactory::AUR_PickupFactory()
     AttachComponent = NULL;
 
     EditorPreview = CreateEditorOnlyDefaultSubobject<UStaticMeshComponent>(TEXT("EditorPreview"), true);
-    EditorPreview->SetupAttachment(RootComponent);
-    EditorPreview->SetHiddenInGame(true);
+    if (EditorPreview != NULL)
+    {
+        EditorPreview->SetupAttachment(RootComponent);
+        EditorPreview->SetHiddenInGame(true);
+    }
 
     RotationRate = 180;
     BobbingHeight = 0;
