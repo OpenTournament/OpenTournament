@@ -17,14 +17,6 @@ void UUR_GameInstance::Init()
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UUR_GameInstance::EndLoadingScreen);
 }
 
-void UUR_GameInstance::FTest_AddLocalPlayer(int32 ControllerId)
-{
-#if !UE_BUILD_SHIPPING
-	FString OutError{};
-	ULocalPlayer* NewPlayer = CreateLocalPlayer(0, OutError, true);
-#endif
-}
-
 void UUR_GameInstance::BeginLoadingScreen(const FString& InMapName)
 {
 	if (!IsRunningDedicatedServer())
