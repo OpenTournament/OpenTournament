@@ -14,6 +14,8 @@
 class UAudioComponent;
 
 class AUR_Character;
+class AUR_PlayerState;
+class AUR_Pickup;
 class UUR_PCInputDodgeComponent;
 class UUR_Widget_BaseMenu;
 
@@ -225,6 +227,12 @@ public:
     */
     UFUNCTION(BlueprintCallable, Exec, Meta = (DisplayName = "Client Message"))
     void K2_ClientMessage(const FString& Message) { ClientMessage(Message); }
+
+    /**
+    * Bridge for GameState->MulticastPickupEvent.
+    */
+    UFUNCTION(Client, Reliable)
+    void ClientReceivePickupEvent(AUR_Pickup* Pickup, AUR_PlayerState* Recipient);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -25,6 +25,7 @@
 #include "UR_GameMode.h"
 #include "UR_Widget_ScoreboardBase.h"
 #include "UR_PlayerState.h"
+#include "UR_Pickup.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -83,6 +84,8 @@ void AUR_PlayerController::SetMusicVolume(float MusicVolume)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+#include "UR_GameState.h"
+
 void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
 {
     Super::SetPlayer(InPlayer);
@@ -90,11 +93,7 @@ void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
     UUR_LocalPlayer* LocalPlayer = Cast<UUR_LocalPlayer>(GetLocalPlayer());
     if (LocalPlayer && LocalPlayer->MessageHistory)
     {
-        // bind chat dispatcher to MessageHistory handler
-        ChatComponent->OnReceiveChatMessage.AddUniqueDynamic(LocalPlayer->MessageHistory, &UUR_MessageHistory::OnReceiveChatMessage);
-
-        // bind system message dispatcher to MessageHistory handler
-        OnReceiveSystemMessage.AddUniqueDynamic(LocalPlayer->MessageHistory, &UUR_MessageHistory::OnReceiveSystemMessage);
+        LocalPlayer->MessageHistory->InitWithPlayer(this);
     }
     else
     {
@@ -343,6 +342,17 @@ void AUR_PlayerController::ClientMessage_Implementation(const FString& S, FName 
         OnReceiveSystemMessage.Broadcast(S);
     else
         Super::ClientMessage_Implementation(S, Type, MsgLifeTime);
+}
+
+void AUR_PlayerController::ClientReceivePickupEvent_Implementation(AUR_Pickup* Pickup, AUR_PlayerState* Recipient)
+{
+    if (IsValid(Pickup))
+    {
+        if (AUR_GameState* GS = GetWorld()->GetGameState<AUR_GameState>())
+        {
+            GS->PickupEvent.Broadcast(Pickup, Recipient);
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

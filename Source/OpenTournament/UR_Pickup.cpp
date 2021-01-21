@@ -13,6 +13,8 @@
 #include "OpenTournament.h"
 #include "UR_Character.h"
 #include "UR_FunctionLibrary.h"
+#include "UR_GameState.h"
+#include "UR_PlayerState.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -94,6 +96,10 @@ void AUR_Pickup::Pickup(AUR_Character* PickupCharacter)
 {
     if (IsPickupPermitted(PickupCharacter))
     {
+        if (AUR_GameState* GS = GetWorld()->GetGameState<AUR_GameState>())
+        {
+            GS->MulticastPickupEvent(this, PickupCharacter->GetPlayerState<AUR_PlayerState>());
+        }
         MulticastPickedUp(PickupCharacter);
     }
 }
@@ -129,10 +135,4 @@ void AUR_Pickup::PlayPickupEffects_Implementation(AUR_Character* PickupCharacter
     UUR_FunctionLibrary::SpawnEffectAtLocation(this, PickupEffect, GetTransform());
 
     UGameplayStatics::PlaySoundAtLocation(GetWorld(), PickupSound, GetActorLocation());
-
-    if (UUR_FunctionLibrary::IsLocallyViewed(PickupCharacter))
-    {
-        //temporary
-        GetWorld()->GetFirstPlayerController()->ClientMessage(FString::Printf(TEXT("Picked up %s"), *DisplayName));
-    }
 }

@@ -12,6 +12,21 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 class AUR_TeamInfo;
+class AUR_Pickup;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace FragEventExtras
+{
+    //NOTE: Multis and Sprees sit in TArray properties to be easily moddable
+
+    static const FName SpreeEnded = FName(TEXT("SpreeEnded"));
+
+    static const FName AmazingCombo = FName(TEXT("AmazingCombo"));
+    static const FName AirRocket = FName(TEXT("AirRocket"));
+
+    static const FName Revenge = FName(TEXT("Revenge"));
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Delegates
@@ -19,6 +34,12 @@ class AUR_TeamInfo;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMatchStateChanged, AUR_GameState*, GS);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTimeUpSignature, AUR_GameState*, GS);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FFragEventSignature, AUR_PlayerState*, Victim, AUR_PlayerState*, Killer, TSubclassOf<UDamageType>, DamType, const TArray<FName>&, Extras);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPickupEventSignature, AUR_Pickup*, Pickup, AUR_PlayerState*, Recipient);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWinnerAssignedSignature, AUR_GameState*, GS);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -33,20 +54,67 @@ class OPENTOURNAMENT_API AUR_GameState : public AGameState
 
 protected:
 
+    AUR_GameState();
+
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-public:
-
-    virtual void OnRep_MatchState() override;
-
     /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Match state
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
 
     UPROPERTY(BlueprintAssignable)
     FMatchStateChanged OnMatchStateChanged;
 
+    UPROPERTY(BlueprintAssignable)
+    FMatchStateChanged OnMatchSubStateChanged;
+
+    UFUNCTION(BlueprintPure)
+    FName GetMatchSubState() const { return MatchSubState; }
+
+    UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
+    void SetMatchSubState(FName NewState);
+
+protected:
+
+    virtual void OnRep_MatchState() override;
+
+    /**
+    * Sub-state for the InProgress match state.
+    *
+    * We don't want to mess with the existing framework provided for MatchState.
+    * GameMode.h specifically states the following :
+    * MatchState::InProgress = Normal gameplay is occurring. Specific games will have their own state machine inside this state
+    *
+    * Within the InProgress state we can implement possible sub-states such as :
+    * - Warmup
+    * - Countdown
+    * - First Half
+    * - Intermission
+    * - Second Half
+    * - Overtime
+    */
+    UPROPERTY(ReplicatedUsing = OnRep_MatchSubState)
+    FName MatchSubState;
+
+    UFUNCTION()
+    virtual void OnRep_MatchSubState();
+
+    /**
+    * When a match state repeats itself, MatchSubState would not replicate again (because it doesn't change).
+    * This is automatically detected (in SetMatchSubState) and Multicast is used instead to force replication & RepNotify events.
+    *
+    * Use case: When entering a second OVERTIME, we want to notify players with a second OVERTIME game event.
+    */
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastMatchSubState(FName NewState);
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Clock Management
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+protected:
 
     /**
     * Engine framework provides ElapsedTime, with replication InitialOnly.
@@ -63,6 +131,8 @@ public:
     * Now we can use ElapsedTime as an internal clock.
     * Most of the time however, we are more interested in remaining time from a time limit.
     */
+
+public:
 
     /**
     * Current match/round/stage time limit.
@@ -172,15 +242,52 @@ public:
     virtual void GetSpectators(TArray<APlayerState*>& OutSpectators);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Game Events
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TArray<FName> MultiKillEventNames;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TArray<FName> SpreeEventNames;
+
+    UPROPERTY(BlueprintAssignable)
+    FFragEventSignature FragEvent;
+
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastFragEvent(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DamType, const TArray<FName>& Events);
+    virtual void MulticastFragEvent_Implementation(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DamType, const TArray<FName>& Extras)
+    {
+        FragEvent.Broadcast(Victim, Killer, DamType, Extras);
+    }
+
+    UPROPERTY(BlueprintAssignable)
+    FPickupEventSignature PickupEvent;
+
+    /**
+    * NOTE: Not really a multicast for security reasons.
+    * Replication is handled manually.
+    */
+    UFUNCTION(BlueprintAuthorityOnly)
+    virtual void MulticastPickupEvent(AUR_Pickup* Pickup, AUR_PlayerState* Recipient);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
     // End Game
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
 
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(ReplicatedUsing = OnRep_Winner, BlueprintReadOnly)
     AActor* Winner;
 
     UPROPERTY(BlueprintReadOnly)
     AActor* EndGameFocus;
 
+    UFUNCTION()
+    virtual void OnRep_Winner();
+
+    UPROPERTY(BlueprintAssignable)
+    FWinnerAssignedSignature OnWinnerAssigned;
 };

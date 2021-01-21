@@ -7,12 +7,32 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
-#include "GameFramework/PlayerState.h"
 
 #include "UR_GameMode.h"
 #include "UR_TeamInfo.h"
+#include "UR_LocalPlayer.h"
+#include "UR_MessageHistory.h"
+#include "UR_PlayerController.h"
+#include "UR_PlayerState.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+AUR_GameState::AUR_GameState()
+{
+    MultiKillEventNames = {
+        FName(TEXT("Multi1")),  /* double */
+        FName(TEXT("Multi2")),  /* triple */
+        FName(TEXT("Multi3")),  /* mega */
+        FName(TEXT("Multi4")),  /* ultra */
+        FName(TEXT("Multi5")),  /* monster*/
+    };
+    SpreeEventNames = {
+        FName(TEXT("Spree1")),  /* spree */
+        FName(TEXT("Spree2")),  /* rampage */
+        FName(TEXT("Spree3")),  /* unstoppable */
+        FName(TEXT("Spree4")),  /* godlike */
+    };
+}
 
 void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -20,15 +40,45 @@ void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
     DOREPLIFETIME(AUR_GameState, TimeLimit);
     DOREPLIFETIME(AUR_GameState, ClockReferencePoint);
+    DOREPLIFETIME(AUR_GameState, MatchSubState);
+    DOREPLIFETIME(AUR_GameState, Winner);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_GameState::SetMatchSubState(FName NewState)
+{
+    if (HasAuthority())
+    {
+        UE_LOG(LogGameState, Log, TEXT("Match Sub-State changing from %s to %s"), *MatchSubState.ToString(), *NewState.ToString());
+        if (NewState == MatchSubState)
+        {
+            MulticastMatchSubState(NewState);
+        }
+        else
+        {
+            MatchSubState = NewState;
+            OnRep_MatchSubState();
+        }
+    }
+}
+
+void AUR_GameState::MulticastMatchSubState_Implementation(FName NewState)
+{
+    MatchSubState = NewState;
+    OnRep_MatchSubState();
+}
 
 void AUR_GameState::OnRep_MatchState()
 {
     OnMatchStateChanged.Broadcast(this);
     
     Super::OnRep_MatchState();
+}
+
+void AUR_GameState::OnRep_MatchSubState()
+{
+    OnMatchSubStateChanged.Broadcast(this);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -119,4 +169,32 @@ void AUR_GameState::GetSpectators(TArray<APlayerState*>& OutSpectators)
             OutSpectators.Add(PS);
         }
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_GameState::MulticastPickupEvent(AUR_Pickup* Pickup, AUR_PlayerState* Recipient)
+{
+    if (IsNetMode(NM_DedicatedServer))
+    {
+        PickupEvent.Broadcast(Pickup, Recipient);
+    }
+
+    for (auto PCIt = GetWorld()->GetPlayerControllerIterator(); PCIt; ++PCIt)
+    {
+        if (auto PC = Cast<AUR_PlayerController>(PCIt->Get()))
+        {
+            if (PC->PlayerState && (PC->PlayerState == Recipient || PC->PlayerState->IsOnlyASpectator()))
+            {
+                PC->ClientReceivePickupEvent(Pickup, Recipient);
+            }
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_GameState::OnRep_Winner()
+{
+    OnWinnerAssigned.Broadcast(this);
 }

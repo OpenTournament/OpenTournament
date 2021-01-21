@@ -10,7 +10,6 @@
 #include "UR_Character.h"
 #include "UR_GameState.h"
 #include "UR_InventoryComponent.h"
-#include "UR_LocalMessage.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 #include "UR_Projectile.h"
@@ -20,12 +19,19 @@
 #include "UR_TeamInfo.h"
 #include "GameFramework/Controller.h"
 
+namespace MatchSubState
+{
+    const FName Warmup = FName(TEXT("Warmup"));
+    const FName Countdown = FName(TEXT("Countdown"));
+    const FName Match = FName(TEXT("Match"));
+    const FName Overtime = FName(TEXT("Overtime"));
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameMode::AUR_GameMode()
 {
     ScoreboardClass = UUR_Widget_ScoreboardBase::StaticClass();
-    DeathMessageClass = UUR_LocalMessage::StaticClass();
 
     GoalScore = 10;
     TimeLimit = 300;
@@ -176,11 +182,15 @@ void AUR_GameMode::AssignDefaultTeam(AUR_PlayerState* PS)
 
 void AUR_GameMode::HandleMatchHasStarted()
 {
+    // WARNING: Parent starts recording replay here. We don't want that when we have Warmup first.
     Super::HandleMatchHasStarted();
 
     AUR_GameState* GS = GetGameState<AUR_GameState>();
     if (GS)
     {
+        // TODO: Here we would do Warmup first
+        GS->SetMatchSubState(MatchSubState::Match);
+
         if (TimeLimit > 0)
         {
             GS->SetTimeLimit(TimeLimit);
@@ -202,8 +212,7 @@ void AUR_GameMode::OnMatchTimeUp_Implementation(AUR_GameState* GS)
     {
         // Overtime
 
-        //TODO: msg class
-        BroadcastLocalized(this, UUR_LocalMessage::StaticClass(), 0, nullptr, nullptr, GS);
+        GS->SetMatchSubState(MatchSubState::Overtime);
 
         if (OvertimeExtraTime > 0)
         {
@@ -325,28 +334,30 @@ void AUR_GameMode::RegisterKill(AController* Victim, AController* Killer, const 
     if (Victim)
     {
         AUR_PlayerState* VictimPS = Victim->GetPlayerState<AUR_PlayerState>();
+        AUR_PlayerState* KillerPS = NULL;
+        TArray<FName> Extras;
 
         if (VictimPS)
         {
-            VictimPS->AddDeath(Killer);
+            VictimPS->RegisterDeath(Killer, Extras);
         }
 
         if (Killer && Killer != Victim)
         {
-            AUR_PlayerState* KillerPS = Killer->GetPlayerState<AUR_PlayerState>();
+            KillerPS = Killer->GetPlayerState<AUR_PlayerState>();
             if (KillerPS)
             {
-                KillerPS->AddKill(Victim);
+                KillerPS->RegisterKill(Victim, Extras);
             }
-            BroadcastLocalized(Killer, DeathMessageClass, 0, Victim->GetPlayerState<APlayerState>(), Killer->GetPlayerState<APlayerState>(), DamageEvent.DamageTypeClass);
         }
-        else
+        else if (VictimPS)
         {
-            if (VictimPS)
-            {
-                VictimPS->AddSuicide();
-            }
-            BroadcastLocalized(Killer, DeathMessageClass, 1, Victim->GetPlayerState<APlayerState>(), nullptr, DamageEvent.DamageTypeClass);
+            VictimPS->RegisterSuicide(Extras);
+        }
+
+        if (VictimPS || KillerPS)
+        {
+            GetGameState<AUR_GameState>()->MulticastFragEvent(VictimPS, KillerPS, DamageEvent.DamageTypeClass, Extras);
         }
     }
 }
@@ -471,8 +482,20 @@ void AUR_GameMode::TriggerEndMatch_Implementation(AActor* Winner, AActor* Focus)
 {
     if (AUR_GameState* GS = GetGameState<AUR_GameState>())
     {
-        GS->Winner = Winner;
+        // Winner needs to be replicated. Should never be a controller!
+        if (AController* C = Cast<AController>(Winner))
+        {
+            if (IsValid(C->PlayerState))
+                GS->Winner = C->PlayerState;
+            else
+                GS->Winner = C->GetPawn();
+        }
+        else
+        {
+            GS->Winner = Winner;
+        }
         GS->EndGameFocus = Focus;
+        GS->OnRep_Winner(); // trigger events on server side
     }
     SetMatchState(MatchState::WaitingPostMatch);
 }
@@ -533,9 +556,6 @@ void AUR_GameMode::AnnounceWinner_Implementation(AActor* Winner)
     {
         WinnerPS = C->GetPlayerState<APlayerState>();
     }
-
-    //TODO: msg class
-    BroadcastLocalized(Winner, UUR_LocalMessage::StaticClass(), 0, WinnerPS, nullptr, Winner);
 }
 
 void AUR_GameMode::OnEndGameTimeUp(AUR_GameState* GS)

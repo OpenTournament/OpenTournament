@@ -25,6 +25,7 @@ class AUR_PlayerController;
 class UWidget;
 class UMeshComponent;
 class UMaterialInterface;
+class UInterface;
 class AUR_Weapon;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -300,4 +301,44 @@ public:
 
     UFUNCTION(BlueprintCallable)
     static void GetAllWeaponClasses(TSubclassOf<AUR_Weapon> InClassFilter, TArray<TSubclassOf<AUR_Weapon>>& OutWeaponClasses);
+
+    UFUNCTION(BlueprintPure, CustomThunk, Category = "Utilities|Array", Meta = (ArrayParm = "Source", ArrayTypeDependentParams = "Result"))
+    static void Array_Slice(const TArray<int32>& Source, TArray<int32>& Result, int32 Start, int32 End = -1);
+    static void GenericArray_Slice(void* SourceArray, const FArrayProperty* SourceArrayProp, void* ResultArray, const FArrayProperty* ResultArrayProp, int32 Start, int32 End);
+    DECLARE_FUNCTION(execArray_Slice)
+    {
+        // Retrieve the target array
+        Stack.MostRecentProperty = nullptr;
+        Stack.StepCompiledIn<FArrayProperty>(NULL);
+        void* SourceArrayAddr = Stack.MostRecentPropertyAddress;
+        FArrayProperty* SourceArrayProp = CastField<FArrayProperty>(Stack.MostRecentProperty);
+        if (!SourceArrayProp)
+        {
+            Stack.bArrayContextFailed = true;
+            return;
+        }
+        // Retrieve the result array
+        Stack.MostRecentProperty = nullptr;
+        Stack.StepCompiledIn<FArrayProperty>(NULL);
+        void* ResultArrayAddr = Stack.MostRecentPropertyAddress;
+        FArrayProperty* ResultArrayProp = CastField<FArrayProperty>(Stack.MostRecentProperty);
+        if (!ResultArrayProp)
+        {
+            Stack.bArrayContextFailed = true;
+            return;
+        }
+
+        P_GET_PROPERTY(FIntProperty, Start);
+        P_GET_PROPERTY(FIntProperty, End);
+        P_FINISH;
+        P_NATIVE_BEGIN;
+        GenericArray_Slice(SourceArrayAddr, SourceArrayProp, ResultArrayAddr, ResultArrayProp, Start, End);
+        P_NATIVE_END;
+    }
+
+    // c++ version
+    template<typename T> static TArray<T> ArraySlice(const TArray<T>& InArray, int32 Start, int32 End = -1);
+
+    UFUNCTION(BlueprintPure, Category = "Utilities")
+    static bool ClassImplementsInterface(UClass* TestClass, TSubclassOf<UInterface> Interface);
 };
