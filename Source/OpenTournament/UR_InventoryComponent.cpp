@@ -41,6 +41,12 @@ bool UUR_InventoryComponent::IsLocallyControlled() const
 
 void UUR_InventoryComponent::AddWeapon(AUR_Weapon* InWeapon)
 {
+    // Sanity check - seems the BlueprintAuthorityOnly does not prevent non-authority calls.
+    if (GetOwnerRole() != ROLE_Authority)
+    {
+        return;
+    }
+
     if (WeaponArray.Contains(InWeapon))
     {
         // If we already have this weapon instance... there is a logic error
