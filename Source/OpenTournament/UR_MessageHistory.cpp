@@ -13,6 +13,7 @@
 #include "UR_GameState.h"
 #include "UR_PlayerController.h"
 #include "UR_Pickup.h"
+#include "UR_Character.h"
 
 #include "Slate/UR_RichTextDecorator_CustomStyle.h"
 
@@ -36,8 +37,14 @@ void UUR_MessageHistory::InitWithPlayer(AUR_PlayerController* PC)
 
     PC->OnReceiveSystemMessage.AddUniqueDynamic(this, &UUR_MessageHistory::OnReceiveSystemMessage);
 
+    // Listen to gamestate events
+    // NOTE: there should be only one gamestate at a time so no need to unbind previous
     GetWorld()->GameStateSetEvent.AddUObject(this, &UUR_MessageHistory::OnGameStateCreated);
     OnGameStateCreated(GetWorld()->GetGameState());
+
+    // Bind ViewTarget event so we can listen to events within the viewed character
+    PC->OnViewTargetChanged.AddUniqueDynamic(this, &UUR_MessageHistory::OnViewTargetChanged);
+    OnViewTargetChanged(PC, PC->GetViewTarget(), NULL);
 }
 
 void UUR_MessageHistory::OnGameStateCreated(AGameStateBase* GS)
@@ -46,7 +53,19 @@ void UUR_MessageHistory::OnGameStateCreated(AGameStateBase* GS)
     {
         URGS->OnMatchSubStateChanged.AddUniqueDynamic(this, &UUR_MessageHistory::OnMatchSubStateChanged);
         URGS->FragEvent.AddUniqueDynamic(this, &UUR_MessageHistory::OnFrag);
-        URGS->PickupEvent.AddUniqueDynamic(this, &UUR_MessageHistory::OnPickup);
+        URGS->PickupEvent.AddUniqueDynamic(this, &UUR_MessageHistory::OnGlobalPickup);
+    }
+}
+
+void UUR_MessageHistory::OnViewTargetChanged(class AUR_BasePlayerController* PC, AActor* NewVT, AActor* OldVT)
+{
+    if (auto OldChar = Cast<AUR_Character>(OldVT))
+    {
+        OldChar->PickupEvent.RemoveDynamic(this, &UUR_MessageHistory::OnCharacterPickup);
+    }
+    if (auto NewChar = Cast<AUR_Character>(NewVT))
+    {
+        NewChar->PickupEvent.AddUniqueDynamic(this, &UUR_MessageHistory::OnCharacterPickup);
     }
 }
 
@@ -74,7 +93,7 @@ void UUR_MessageHistory::OnReceiveChatMessage(const FString& SenderName, const F
     else
         Entry.Type = MessageType::GlobalChat;
 
-    Entry.Parts = { SenderName, Message };
+    Entry.Parts = { FText::FromString(SenderName), FText::FromString(Message) };
     Entry.Colors = {
         UUR_FunctionLibrary::GetPlayerDisplayTextColor(SenderPS),
         UUR_ChatComponent::GetChatMessageColor(this, TeamIndex),
@@ -91,7 +110,7 @@ void UUR_MessageHistory::OnReceiveSystemMessage(const FString& Message)
     FMessageHistoryEntry Entry;
     Entry.Time = FDateTime::Now();
     Entry.Type = MessageType::System;
-    Entry.Parts = { Message };
+    Entry.Parts = { FText::FromString(Message) };
     Entry.Colors = {};
     Append(Entry);
 
@@ -103,7 +122,7 @@ void UUR_MessageHistory::OnMatchSubStateChanged(AUR_GameState* GS)
     FMessageHistoryEntry Entry;
     Entry.Time = FDateTime::Now();
     Entry.Type = MessageType::Match;
-    Entry.Parts = { GS->GetMatchSubState().ToString() };
+    Entry.Parts = { FText::FromName(GS->GetMatchSubState()) };
     Entry.Colors.Empty();
     Append(Entry);
 
@@ -121,54 +140,55 @@ void UUR_MessageHistory::OnFrag(AUR_PlayerState* Victim, AUR_PlayerState* Killer
     Entry.Time = FDateTime::Now();
     Entry.Type = MessageType::Death;
 
-    Entry.Parts = { TEXT("$1 killed $2"), TEXT("Somebody"), TEXT("Somebody") };
+    Entry.Parts = { FText::FromString(TEXT("{Killer} killed {Victim}")), FText::FromString(TEXT("Somebody")), FText::FromString(TEXT("Somebody")) };
     Entry.Colors = { FColor::White, FColor::White };
 
     if (!Killer || Killer == Victim)
     {
         // Suicide
-        // DmgType->GetSuicideString()
-        Entry.Parts[0] = FString::Printf(TEXT("$2 suicided with %s"), DmgType ? *DmgType->GetName() : TEXT("???"));
+        // TODO: DmgType->GetSuicideText()
+        Entry.Parts[0] = FText::FromString(FString::Printf(TEXT("{Victim} suicided with %s"), DmgType ? *DmgType->GetName() : TEXT("???")));
     }
     else
     {
         // Kill
-        // DmgType->GetKillString()
-        Entry.Parts[0] = FString::Printf(TEXT("$1 killed $2 with %s"), DmgType ? *DmgType->GetName() : TEXT("???"));
+        // TODO: DmgType->GetKillText()
+        Entry.Parts[0] = FText::FromString(FString::Printf(TEXT("{Killer} killed {Victim} with %s"), DmgType ? *DmgType->GetName() : TEXT("???")));
     }
 
     if (Killer)
     {
-        Entry.Parts[1] = Killer->GetPlayerName();
+        Entry.Parts[1] = FText::FromString(Killer->GetPlayerName());
         Entry.Colors[0] = UUR_FunctionLibrary::GetPlayerDisplayTextColor(Killer);
     }
 
     if (Victim)
     {
-        Entry.Parts[2] = Victim->GetPlayerName();
+        Entry.Parts[2] = FText::FromString(Victim->GetPlayerName());
         Entry.Colors[1] = UUR_FunctionLibrary::GetPlayerDisplayTextColor(Victim);
     }
 
     for (const FName& Extra : Extras)
     {
-        Entry.Parts.Add(Extra.ToString());
+        Entry.Parts.Add(FText::FromName(Extra));
     }
 
     Append(Entry);
 
+    FText FragLine = FText::FormatNamed(Entry.Parts[0], TEXT("Killer"), Entry.Parts[1], TEXT("Victim"), Entry.Parts[2]);
     if (Extras.Num() > 0)
     {
-        UE_LOG(LogFrags, Log, TEXT("%s [%s]"), *Entry.Parts[0].Replace(TEXT("$1"), *Entry.Parts[1]).Replace(TEXT("$2"), *Entry.Parts[2]), *FString::JoinBy(Extras, TEXT(","), [](const FName& Name) { return Name.ToString(); }));
+        UE_LOG(LogFrags, Log, TEXT("%s [%s]"), *FragLine.ToString(), *FString::JoinBy(Extras, TEXT(","), [](const FName& Name) { return Name.ToString(); }));
     }
     else
     {
-        UE_LOG(LogFrags, Log, TEXT("%s"), *Entry.Parts[0].Replace(TEXT("$1"), *(Entry.Parts[1])).Replace(TEXT("$2"), *(Entry.Parts[2])));
+        UE_LOG(LogFrags, Log, TEXT("%s"), *FragLine.ToString());
     }
 }
 
-void UUR_MessageHistory::OnPickup(AUR_Pickup* Pickup, AUR_PlayerState* Recipient)
+void UUR_MessageHistory::OnGlobalPickup(TSubclassOf<AUR_Pickup> PickupClass, AUR_PlayerState* Recipient)
 {
-    if (!IsValid(Pickup) && !IsValid(Recipient))
+    if (!IsValid(PickupClass) && !IsValid(Recipient))
     {
         return;
     }
@@ -177,14 +197,46 @@ void UUR_MessageHistory::OnPickup(AUR_Pickup* Pickup, AUR_PlayerState* Recipient
     Entry.Time = FDateTime::Now();
     Entry.Type = MessageType::Pickup;
 
-    Entry.Parts = { TEXT("$1 picked up $2"), TEXT("Somebody"), TEXT("Something") };
+    Entry.Parts = { FText::FromString(TEXT("{Recipient} has {Pickup}")), FText::FromString(TEXT("Somebody")), FText::FromString(TEXT("Something")) };
     Entry.Colors = { FColor::White };
 
     if (Recipient)
     {
-        Entry.Parts[1] = Recipient->GetPlayerName();
+        Entry.Parts[1] = FText::FromString(Recipient->GetPlayerName());
         Entry.Colors[0] = UUR_FunctionLibrary::GetPlayerDisplayTextColor(Recipient);
     }
+
+    if (PickupClass)
+    {
+        AUR_Pickup* CDO = PickupClass->GetDefaultObject<AUR_Pickup>();
+        Entry.Parts[2] = CDO->DisplayName;
+    }
+
+    Append(Entry);
+
+    UE_LOG(LogPickups, Log, TEXT("%s"), *FText::FormatNamed(Entry.Parts[0], TEXT("Recipient"), Entry.Parts[1], TEXT("Pickup"), Entry.Parts[2]).ToString());
+}
+
+void UUR_MessageHistory::OnCharacterPickup(AUR_Pickup* Pickup)
+{
+    if (!IsValid(Pickup))
+    {
+        return;
+    }
+
+    // If pickup is broadcasting a global event, avoid adding a duplicate entry
+    if (Pickup->bBroadcastPickupEvent)
+    {
+        return;
+    }
+
+    FMessageHistoryEntry Entry;
+    Entry.Time = FDateTime::Now();
+    Entry.Type = MessageType::Pickup;
+
+    // NOTE: Keep same amount of parts as OnGlobalPickup, to make things simpler for BP.
+    Entry.Parts = { FText::FromString(TEXT("Picked up {Pickup}")), FText::GetEmpty(), FText::FromString(TEXT("Something")) };
+    Entry.Colors = { FColor::White };
 
     if (Pickup)
     {
@@ -193,5 +245,5 @@ void UUR_MessageHistory::OnPickup(AUR_Pickup* Pickup, AUR_PlayerState* Recipient
 
     Append(Entry);
 
-    UE_LOG(LogPickups, Log, TEXT("%s"), *Entry.Parts[0].Replace(TEXT("$1"), *Entry.Parts[1]).Replace(TEXT("$2"), *Entry.Parts[2]));
+    UE_LOG(LogPickups, Log, TEXT("%s"), *FText::FormatNamed(Entry.Parts[0], TEXT("Pickup"), Entry.Parts[2]).ToString());
 }

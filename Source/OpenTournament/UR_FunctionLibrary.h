@@ -341,4 +341,11 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Utilities")
     static bool ClassImplementsInterface(UClass* TestClass, TSubclassOf<UInterface> Interface);
+
+    UFUNCTION(BlueprintPure, Category = "Utilities|Text")
+    static FText JoinTextArray(const TArray<FText>& SourceArray, const FString& Separator = FString(TEXT(" ")))
+    {
+        return FText::Join(FText::FromString(Separator), SourceArray);
+    }
+
 };

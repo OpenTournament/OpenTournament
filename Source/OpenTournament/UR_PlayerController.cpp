@@ -344,17 +344,6 @@ void AUR_PlayerController::ClientMessage_Implementation(const FString& S, FName 
         Super::ClientMessage_Implementation(S, Type, MsgLifeTime);
 }
 
-void AUR_PlayerController::ClientReceivePickupEvent_Implementation(AUR_Pickup* Pickup, AUR_PlayerState* Recipient)
-{
-    if (IsValid(Pickup))
-    {
-        if (AUR_GameState* GS = GetWorld()->GetGameState<AUR_GameState>())
-        {
-            GS->PickupEvent.Broadcast(Pickup, Recipient);
-        }
-    }
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_PlayerController::ShowScoreboard()

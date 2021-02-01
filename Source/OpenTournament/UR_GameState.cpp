@@ -173,27 +173,6 @@ void AUR_GameState::GetSpectators(TArray<APlayerState*>& OutSpectators)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AUR_GameState::MulticastPickupEvent(AUR_Pickup* Pickup, AUR_PlayerState* Recipient)
-{
-    if (IsNetMode(NM_DedicatedServer))
-    {
-        PickupEvent.Broadcast(Pickup, Recipient);
-    }
-
-    for (auto PCIt = GetWorld()->GetPlayerControllerIterator(); PCIt; ++PCIt)
-    {
-        if (auto PC = Cast<AUR_PlayerController>(PCIt->Get()))
-        {
-            if (PC->PlayerState && (PC->PlayerState == Recipient || PC->PlayerState->IsOnlyASpectator()))
-            {
-                PC->ClientReceivePickupEvent(Pickup, Recipient);
-            }
-        }
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
 void AUR_GameState::OnRep_Winner()
 {
     OnWinnerAssigned.Broadcast(this);

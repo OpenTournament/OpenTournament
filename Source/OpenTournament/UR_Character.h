@@ -104,6 +104,11 @@ struct FReplicatedDamageEvent
 */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCharacterDeathSignature, AUR_Character*, Character, AController*, Killer);
 
+/**
+* Pickup event dispatcher.
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPickupEventSignature, AUR_Pickup*, Pickup);
+
 
 /**
  *
@@ -723,6 +728,12 @@ public:
 
     UFUNCTION(Exec, BlueprintCallable)
     virtual void PrevWeapon();
+
+    /**
+    * Pickup event.
+    */
+    UPROPERTY(BlueprintAssignable)
+    FPickupEventSignature PickupEvent;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 

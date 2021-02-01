@@ -77,6 +77,7 @@ void UUR_InventoryComponent::AddWeapon(AUR_Weapon* InWeapon)
     WeaponArray.Add(InWeapon);
 
     // Message (temporary)
+    /*
     if (auto Pawn = Cast<APawn>(GetOwner()))
     {
         if (auto PC = Pawn->GetController<APlayerController>())
@@ -84,6 +85,7 @@ void UUR_InventoryComponent::AddWeapon(AUR_Weapon* InWeapon)
             PC->ClientMessage(FString::Printf(TEXT("You have the %s"), *InWeapon->WeaponName));
         }
     }
+    */
 
     // Set ammo refs
     InWeapon->AmmoRefs.SetNumZeroed(InWeapon->AmmoDefinitions.Num());

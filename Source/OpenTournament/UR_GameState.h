@@ -37,7 +37,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTimeUpSignature, AUR_GameState*, GS
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FFragEventSignature, AUR_PlayerState*, Victim, AUR_PlayerState*, Killer, TSubclassOf<UDamageType>, DamType, const TArray<FName>&, Extras);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPickupEventSignature, AUR_Pickup*, Pickup, AUR_PlayerState*, Recipient);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGlobalPickupEventSignature, TSubclassOf<AUR_Pickup>, PickupClass, AUR_PlayerState*, Recipient);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWinnerAssignedSignature, AUR_GameState*, GS);
 
@@ -257,21 +257,25 @@ public:
     FFragEventSignature FragEvent;
 
     UFUNCTION(NetMulticast, Reliable)
-    void MulticastFragEvent(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DamType, const TArray<FName>& Events);
+    void MulticastFragEvent(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DamType, const TArray<FName>& Extras);
     virtual void MulticastFragEvent_Implementation(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DamType, const TArray<FName>& Extras)
     {
         FragEvent.Broadcast(Victim, Killer, DamType, Extras);
     }
 
-    UPROPERTY(BlueprintAssignable)
-    FPickupEventSignature PickupEvent;
-
     /**
-    * NOTE: Not really a multicast for security reasons.
-    * Replication is handled manually.
+    * Global pickup event for major items.
+    * We pass a PickupClass here because the pickup may not always be relevant to players.
     */
-    UFUNCTION(BlueprintAuthorityOnly)
-    virtual void MulticastPickupEvent(AUR_Pickup* Pickup, AUR_PlayerState* Recipient);
+    UPROPERTY(BlueprintAssignable)
+    FGlobalPickupEventSignature PickupEvent;
+
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastPickupEvent(TSubclassOf<AUR_Pickup> PickupClass, AUR_PlayerState* Recipient);
+    virtual void MulticastPickupEvent_Implementation(TSubclassOf<AUR_Pickup> PickupClass, AUR_PlayerState* Recipient)
+    {
+        PickupEvent.Broadcast(PickupClass, Recipient);
+    }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // End Game

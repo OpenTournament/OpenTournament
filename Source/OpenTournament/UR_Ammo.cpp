@@ -19,7 +19,7 @@ AUR_Ammo::AUR_Ammo()
 	bOnlyRelevantToOwner = true;
 	SetReplicatingMovement(false);
 
-	AmmoName = TEXT("Ammo");
+	AmmoName = FText::FromString(TEXT("Ammo"));
 	MaxAmmo = 30;
 	AmmoCount = 0;
 }

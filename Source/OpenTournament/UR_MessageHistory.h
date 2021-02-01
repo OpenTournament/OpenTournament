@@ -118,7 +118,7 @@ struct FMessageHistoryEntry
 
 	/**
 	* Instead of one fully formatted rich string done in c++,
-	* we simply prepare string parts and let BP/UMG reconstruct the final line.
+	* we simply prepare text parts and let BP/UMG reconstruct the final line.
 	*
 	* This gives the designer (UMG) more liberty to format/design the line,
 	* in whatever way he sees fit.
@@ -127,7 +127,7 @@ struct FMessageHistoryEntry
 	* to a fixed set of variables, like we had in first iteration.
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<FString> Parts;
+	TArray<FText> Parts;
 
 	/**
 	* Similarly we put colors of interest (eg: players colors...) here in an array,
@@ -156,6 +156,9 @@ class OPENTOURNAMENT_API UUR_MessageHistory : public UObject
 	UUR_MessageHistory();
 
     virtual void OnGameStateCreated(class AGameStateBase* GS);
+
+    UFUNCTION()
+    virtual void OnViewTargetChanged(class AUR_BasePlayerController* PC, AActor* NewVT, AActor* OldVT);
 
 public:
 
@@ -204,7 +207,10 @@ public:
     virtual void OnFrag(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DmgType, const TArray<FName>& Extras);
 
     UFUNCTION()
-    virtual void OnPickup(AUR_Pickup* Pickup, AUR_PlayerState* Recipient);
+    virtual void OnGlobalPickup(TSubclassOf<AUR_Pickup> PickupClass, AUR_PlayerState* Recipient);
+
+    UFUNCTION()
+    virtual void OnCharacterPickup(AUR_Pickup* Pickup);
 
 	/**
 	* Expose SaveConfig to blueprints so widget can manipulate filters.

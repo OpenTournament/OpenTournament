@@ -38,7 +38,7 @@ public:
 	* Not sure if useful.
 	*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	FString AmmoName;
+	FText AmmoName;
 
 	/**
 	* Maximum ammo reachable by picking up ammo packs.
