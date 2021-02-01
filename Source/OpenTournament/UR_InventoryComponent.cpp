@@ -41,6 +41,12 @@ bool UUR_InventoryComponent::IsLocallyControlled() const
 
 void UUR_InventoryComponent::AddWeapon(AUR_Weapon* InWeapon)
 {
+    // Sanity check - seems the BlueprintAuthorityOnly does not prevent non-authority calls.
+    if (GetOwnerRole() != ROLE_Authority)
+    {
+        return;
+    }
+
     if (WeaponArray.Contains(InWeapon))
     {
         // If we already have this weapon instance... there is a logic error
@@ -71,6 +77,7 @@ void UUR_InventoryComponent::AddWeapon(AUR_Weapon* InWeapon)
     WeaponArray.Add(InWeapon);
 
     // Message (temporary)
+    /*
     if (auto Pawn = Cast<APawn>(GetOwner()))
     {
         if (auto PC = Pawn->GetController<APlayerController>())
@@ -78,6 +85,7 @@ void UUR_InventoryComponent::AddWeapon(AUR_Weapon* InWeapon)
             PC->ClientMessage(FString::Printf(TEXT("You have the %s"), *InWeapon->WeaponName));
         }
     }
+    */
 
     // Set ammo refs
     InWeapon->AmmoRefs.SetNumZeroed(InWeapon->AmmoDefinitions.Num());

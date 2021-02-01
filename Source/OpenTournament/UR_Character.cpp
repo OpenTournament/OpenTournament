@@ -203,6 +203,18 @@ void AUR_Character::OnRep_PlayerState()
     }
 }
 
+void AUR_Character::UnPossessed()
+{
+    Super::UnPossessed();
+
+    // Force stop firing
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
+    {
+        InventoryComponent->ActiveWeapon->Deactivate();
+    }
+    DesiredFireModeNum.Empty();
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Camera
@@ -795,35 +807,54 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     GAME_LOG(Game, Log, "Damage repartition: Shield(%f), Armor(%f), Health(%f), Extra(%f)", DamageToShield, DamageToArmor, DamageToHealth, DamageRemaining);
 
     ////////////////////////////////////////////////////////////
-    // Apply Knockback
+    // Knockback & replicated info
 
-    // Avoid very small knockbacks
-    if (KnockbackPower / GetCharacterMovement()->Mass >= 100.f)
+    FReplicatedDamageEvent RepDamageEvent;
+    RepDamageEvent.Type = DamageEvent.GetTypeID();
+    RepDamageEvent.Damage = Damage;
+
+    // NOTE: Adding impulses to CharacterMovement are just velocity changes.
+    // Point or Radial doesn't make any difference.
+    // Those only matter for skeletal physics (ragdoll), which we apply on client.
+    FVector KnockbackDir;
+
+    if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
     {
-        FVector KnockbackDir;
-        if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
-        {
-            FPointDamageEvent* PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
+        FPointDamageEvent* PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
 
-            // Always use shot direction for knockback
-            KnockbackDir = PointDamageEvent->ShotDirection;
-            // Bias towards +Z
-            KnockbackDir = 0.75*KnockbackDir + FVector(0, 0, 0.25);
+        KnockbackDir = PointDamageEvent->ShotDirection;
 
-            GetCharacterMovement()->AddImpulse(KnockbackPower*KnockbackDir);
-        }
-        else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
-        {
-            FRadialDamageEvent* RadialDamageEvent = (FRadialDamageEvent*)&DamageEvent;
+        RepDamageEvent.Location = PointDamageEvent->HitInfo.ImpactPoint;
+        RepDamageEvent.Knockback = KnockbackPower * PointDamageEvent->ShotDirection;
+    }
+    else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+    {
+        FRadialDamageEvent* RadialDamageEvent = (FRadialDamageEvent*)&DamageEvent;
 
-            // Use no falloff (constant) because we already scaled KnockbackPower
-            GetCharacterMovement()->AddRadialImpulse(RadialDamageEvent->Origin, RadialDamageEvent->Params.GetMaxRadius(), KnockbackPower, ERadialImpulseFalloff::RIF_Constant, false);
-            //TODO: Want to bias towards +Z as well, but dunno how to deal with Radial
-        }
-        else
-        {
-            // This is most likely a code-generated FDamageEvent() with no real source.
-        }
+        KnockbackDir = (GetActorLocation() - RadialDamageEvent->Origin).GetSafeNormal();
+
+        RepDamageEvent.Location = RadialDamageEvent->Origin;
+        RepDamageEvent.Knockback = FVector(KnockbackPower / Falloff, RadialDamageEvent->Params.GetMaxRadius(), 0);
+    }
+    else
+    {
+        // This is most likely a code-generated FDamageEvent() with no real source.
+        KnockbackDir = FVector::ZeroVector;
+        RepDamageEvent.Location = GetActorLocation();
+        RepDamageEvent.Knockback = FVector::ZeroVector;
+    }
+
+    // When character is on ground, bias knockback towards +Z to lift him
+    if (GetCharacterMovement()->IsMovingOnGround() && KnockbackDir.Z < 0.1f)
+    {
+        KnockbackDir = FVector(KnockbackDir.X, KnockbackDir.Y, FMath::Max(0.1, KnockbackDir.Z + 0.33));
+        KnockbackDir.Normalize();
+    }
+
+    FVector FinalKnockback = KnockbackPower * KnockbackDir;
+    if (FinalKnockback.Size() > 100.f)
+    {
+        GetCharacterMovement()->AddImpulse(FinalKnockback);
     }
 
     ////////////////////////////////////////////////////////////
@@ -842,13 +873,13 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     if (AttributeSet && AttributeSet->Health.GetCurrentValue() <= 0)
     {
         // Can use DamageRemaining here to GIB
-        Die(EventInstigator, DamageEvent, DamageCauser);
+        Die(EventInstigator, DamageEvent, DamageCauser, RepDamageEvent);
     }
 
     return Damage;
 }
 
-void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser)
+void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser, const FReplicatedDamageEvent& RepDamageEvent)
 {
     // Already killed (might happen when multiple damage sources in 1 frame)
     if (GetTearOff() || IsPendingKillPending())
@@ -872,7 +903,6 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
         }
 
         URGameMode->PlayerKilled(Killed, Killer, DamageEvent, DamageCauser);
-        OnDied(Killer, DamageEvent, DamageCauser);
     }
 
     if (AttributeSet)
@@ -887,23 +917,29 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
     }
     DesiredFireModeNum.Empty();
 
+    // Replicate
+    MulticastDied(Killer, RepDamageEvent);
+
     // Cut the replication link
     TearOff();
 
-    if (GetNetMode() == NM_DedicatedServer)
+    if (IsNetMode(NM_DedicatedServer))
     {
         //Destroy();
-        SetLifeSpan(0.200f);	// give it time to replicate the tear off ?
+        // On dedicated server, we could theoretically destroy right away, but need to give it a bit of slack to replicate PlayDeath & TearOff.
+        SetLifeSpan(0.200f);
         SetActorEnableCollision(false);
-    }
-    else
-    {
-        PlayDeath();
+
+        // Event on server
+        OnDeath.Broadcast(this, Killer);
     }
 }
 
-void AUR_Character::PlayDeath()
+void AUR_Character::PlayDeath_Implementation(AController* Killer, const FReplicatedDamageEvent& RepDamageEvent)
 {
+    if (IsNetMode(NM_DedicatedServer))
+        return;
+
     APlayerController* OldController = nullptr;
     if (Controller && Controller->GetPawn() == this)
         OldController = Cast<APlayerController>(Controller);
@@ -921,7 +957,7 @@ void AUR_Character::PlayDeath()
     ThirdPersonArm->bEnableCameraLag = true;
     ThirdPersonArm->bEnableCameraRotationLag = true;
 
-    GetCharacterMovement()->StopActiveMovement();
+    GetCharacterMovement()->DisableMovement();
 
     // Disable capsule
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -936,7 +972,30 @@ void AUR_Character::PlayDeath()
     // Attach capsule back to mesh
     GetCapsuleComponent()->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
 
+    // Apply knockback to ragdoll
+    if (RepDamageEvent.IsOfType(FPointDamageEvent::ClassID))
+    {
+        GetMesh()->AddImpulseAtLocation(RepDamageEvent.Knockback, RepDamageEvent.Location);
+    }
+    else if (RepDamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+    {
+        GetMesh()->AddRadialImpulse(RepDamageEvent.Location, RepDamageEvent.Knockback.Y, RepDamageEvent.Knockback.X, ERadialImpulseFalloff::RIF_Linear, false);
+    }
+
+    // NOTE: we can only set lifespan after receiving TornOff(), otherwise it is locked by Authority.
+    // I am not sure if we can guarantee the order of the two calls here, so handle both.
+    bPlayingDeath = true;
     SetLifeSpan(5.0f);
+
+    // Event on clients
+    OnDeath.Broadcast(this, Killer);
+}
+
+void AUR_Character::TornOff()
+{
+    Super::TornOff();
+
+    SetLifeSpan(bPlayingDeath ? 5.0f : 0.200f);
 }
 
 bool AUR_Character::IsAlive() const
@@ -951,7 +1010,7 @@ bool AUR_Character::IsAlive() const
 
 void AUR_Character::ServerSuicide_Implementation()
 {
-    Die(nullptr, FDamageEvent(), nullptr);
+    Die(nullptr, FDamageEvent(), nullptr, FReplicatedDamageEvent());
 }
 
 

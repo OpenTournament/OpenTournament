@@ -75,12 +75,12 @@ TSharedPtr<ITextDecorator> UUR_RichTextDecorator_CustomStyle::CreateDecorator(UR
 }
 
 
-FString UUR_RichTextDecorator_CustomStyle::DecorateRichText(const FString& InText, bool bColorize, const FColor& Color, const FString& Typeface, bool bNoEscape)
+FString UUR_RichTextDecorator_CustomStyle::DecorateRichString(const FString& InString, bool bColorize, const FColor& Color, const FString& Typeface, bool bNoEscape)
 {
-    if (InText.Len() == 0)
+    if (InString.Len() == 0)
         return TEXT("");
 
-    FString Result(TEXT("<S"), InText.Len() + 4);
+    FString Result(TEXT("<S"), InString.Len() + 4);
 
     if (bColorize)
         Result.Append(FString::Printf(TEXT(" Color=\"%s\""), *Color.ToHex()));
@@ -88,7 +88,7 @@ FString UUR_RichTextDecorator_CustomStyle::DecorateRichText(const FString& InTex
     if (Typeface.Len() > 0)
         Result.Append(FString::Printf(TEXT(" Typeface=\"%s\""), *Typeface));
 
-    Result.Append(FString::Printf(TEXT(">%s</>"), bNoEscape ? *InText : *UUR_FunctionLibrary::EscapeForRichText(InText)));
+    Result.Append(FString::Printf(TEXT(">%s</>"), bNoEscape ? *InString : *UUR_FunctionLibrary::EscapeForRichText(InString)));
 
     return Result;
 }
