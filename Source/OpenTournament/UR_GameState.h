@@ -6,12 +6,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameState.h"
+#include "GameplayTagContainer.h"
 
 #include "UR_GameState.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 class AUR_TeamInfo;
+class AUR_Pickup;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Delegates
@@ -19,6 +21,12 @@ class AUR_TeamInfo;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMatchStateChanged, AUR_GameState*, GS);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTimeUpSignature, AUR_GameState*, GS);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FFragEventSignature, AUR_PlayerState*, Victim, AUR_PlayerState*, Killer, TSubclassOf<UDamageType>, DamType, const FGameplayTagContainer&, EventTags);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGlobalPickupEventSignature, TSubclassOf<AUR_Pickup>, PickupClass, AUR_PlayerState*, Recipient);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWinnerAssignedSignature, AUR_GameState*, GS);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -33,20 +41,67 @@ class OPENTOURNAMENT_API AUR_GameState : public AGameState
 
 protected:
 
+    AUR_GameState();
+
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-public:
-
-    virtual void OnRep_MatchState() override;
-
     /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Match state
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
 
     UPROPERTY(BlueprintAssignable)
     FMatchStateChanged OnMatchStateChanged;
 
+    UPROPERTY(BlueprintAssignable)
+    FMatchStateChanged OnMatchStateTagChanged;
+
+    UFUNCTION(BlueprintPure)
+    FGameplayTag GetMatchStateTag() const { return MatchStateTag; }
+
+    UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
+    void SetMatchStateTag(const FGameplayTag& NewTag);
+
+protected:
+
+    virtual void OnRep_MatchState() override;
+
+    /**
+    * GameplayTag defining a sub-state for the current match state.
+    *
+    * We don't want to mess with the existing framework provided for MatchState.
+    * GameMode.h specifically states the following :
+    * MatchState::InProgress = Normal gameplay is occurring. Specific games will have their own state machine inside this state
+    *
+    * Within the InProgress state we can implement possible sub-states such as :
+    * - Warmup
+    * - Countdown
+    * - First Half
+    * - Intermission
+    * - Second Half
+    * - Overtime
+    */
+    UPROPERTY(ReplicatedUsing = OnRep_MatchStateTag)
+    FGameplayTag MatchStateTag;
+
+    UFUNCTION()
+    virtual void OnRep_MatchStateTag();
+
+    /**
+    * When a match state repeats itself, MatchStateTag would not replicate again (because it doesn't change).
+    * This is automatically detected (in SetMatchStateTag) and Multicast is used instead to force replication & RepNotify events.
+    *
+    * Use case: When entering a second OVERTIME, we want to notify players with a second OVERTIME game event.
+    */
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastMatchStateTag(const FGameplayTag& NewTag);
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Clock Management
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+protected:
 
     /**
     * Engine framework provides ElapsedTime, with replication InitialOnly.
@@ -63,6 +118,8 @@ public:
     * Now we can use ElapsedTime as an internal clock.
     * Most of the time however, we are more interested in remaining time from a time limit.
     */
+
+public:
 
     /**
     * Current match/round/stage time limit.
@@ -172,15 +229,50 @@ public:
     virtual void GetSpectators(TArray<APlayerState*>& OutSpectators);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Game Events
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
+
+    UPROPERTY(BlueprintAssignable)
+    FFragEventSignature FragEvent;
+
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastFragEvent(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DamType, const FGameplayTagContainer& EventTags);
+    virtual void MulticastFragEvent_Implementation(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DamType, const FGameplayTagContainer& EventTags)
+    {
+        FragEvent.Broadcast(Victim, Killer, DamType, EventTags);
+    }
+
+    /**
+    * Global pickup event for major items.
+    * We pass a PickupClass here because the pickup may not always be relevant to players.
+    */
+    UPROPERTY(BlueprintAssignable)
+    FGlobalPickupEventSignature PickupEvent;
+
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastPickupEvent(TSubclassOf<AUR_Pickup> PickupClass, AUR_PlayerState* Recipient);
+    virtual void MulticastPickupEvent_Implementation(TSubclassOf<AUR_Pickup> PickupClass, AUR_PlayerState* Recipient)
+    {
+        PickupEvent.Broadcast(PickupClass, Recipient);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
     // End Game
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
 
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(ReplicatedUsing = OnRep_Winner, BlueprintReadOnly)
     AActor* Winner;
 
     UPROPERTY(BlueprintReadOnly)
     AActor* EndGameFocus;
 
+    UFUNCTION()
+    virtual void OnRep_Winner();
+
+    UPROPERTY(BlueprintAssignable)
+    FWinnerAssignedSignature OnWinnerAssigned;
 };

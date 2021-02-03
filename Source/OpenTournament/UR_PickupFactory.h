@@ -222,7 +222,7 @@ public:
     /**
     * Client only.
     * Show or hide pickup availability.
-    * Do not play effects or sounds here, this is used for initial rep / late joins.
+    * Do not play effects or sounds here, this is used for general state which can replicate anytime (late join, relevancy).
     */
     UFUNCTION(BlueprintCosmetic, BlueprintNativeEvent)
     void ShowPickupAvailable(bool bAvailable);
@@ -233,4 +233,13 @@ public:
     */
     UFUNCTION(BlueprintAuthorityOnly)
     virtual void RespawnTimer();
+
+    /**
+    * Setter to ensure triggering OnRep & ShowPickupAvailable in standalone.
+    */
+    UFUNCTION()
+    virtual void SetPickup(AUR_Pickup* NewPickup);
+
+    UFUNCTION()
+    virtual void OnPickupDestroyed(AActor* DestroyedActor);
 };

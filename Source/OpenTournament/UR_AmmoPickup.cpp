@@ -16,7 +16,7 @@ AUR_AmmoPickup::AUR_AmmoPickup(const FObjectInitializer& ObjectInitializer) :
     AmmoClass(AUR_Ammo::StaticClass()),
     AmmoAmount(10)
 {
-    DisplayName = TEXT("Ammo");
+    DisplayName = FText::FromString(TEXT("Ammo"));
 }
 
 #if WITH_EDITOR
@@ -26,7 +26,7 @@ void AUR_AmmoPickup::PostEditChangeProperty(FPropertyChangedEvent& PropertyChang
 
     if (PropertyChangedEvent.GetPropertyName().IsEqual(FName(TEXT("AmmoClass"))))
     {
-        DisplayName = AmmoClass ? AmmoClass->GetDefaultObject<AUR_Ammo>()->AmmoName : TEXT("Ammo");
+        DisplayName = AmmoClass ? AmmoClass->GetDefaultObject<AUR_Ammo>()->AmmoName : GetDefault<AUR_AmmoPickup>()->DisplayName;
     }
 }
 #endif

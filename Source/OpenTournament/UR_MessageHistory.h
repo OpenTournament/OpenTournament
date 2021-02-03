@@ -6,11 +6,13 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "GameplayTagContainer.h"
 #include "UR_MessageHistory.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-class APlayerState;
+class AUR_PlayerController;
+class AUR_PlayerState;
 class UDamageType;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -25,9 +27,16 @@ namespace MessageType
 	// System messages
 	static const FName System = FName(TEXT("MSG_System"));
 
+    // Match state
+    static const FName Match = FName(TEXT("MSG_Match"));
+
+    // Death/frags
+    static const FName Death = FName(TEXT("MSG_Death"));
+
+    // Pickups
+    static const FName Pickup = FName(TEXT("MSG_Pickup"));
+
 	// Some other examples - not implemented yet
-	static const FName Death = FName(TEXT("MSG_Death"));
-	static const FName Pickup = FName(TEXT("MSG_Pickup"));
 	static const FName Objectives = FName(TEXT("MSG_Objective"));
 	static const FName BotChat = FName(TEXT("MSG_BotChat"));
 	static const FName BotTaunt = FName(TEXT("MSG_BotTaunt"));
@@ -47,48 +56,49 @@ struct FMessageHistoryFilters
 	bool bSpec;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bSystem;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bMatch;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bFrags;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bPickups;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 DECLARE_LOG_CATEGORY_EXTERN(LogChat, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogMessages, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogFrags, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogPickups, Log, All);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
-* Direct model for our MessageHistory/HistoryMessage UMG widget.
+* Data structure MessageHistory/HistoryMessage UMG widget.
 *
-* - A field for Timestamp, formatted in umg/bp.
-* - A field for the Type, filterable and localized in umg/bp.
-* - A field for the message, formatted in c++ and displayed via RichTextBlock.
+* - A timestamp, to be formatted in umg/bp.
+* - A type field, to be filterable and localized in umg/bp.
+* - An array of text parts, which are to be put together in umg/bp.
+* - An array of colors, which are to be used (or not) by umg/bp.
 *
-* This is the simplest way to do it, because we have lots of different kind of messages, formatted in a different way.
+* Examples
 *
-* Still, I would like to format in blueprint because it makes more sense.
-* The UMG interface displays the things, and should be the one that formats as well.
+* A chat message is represented by the following :
+* - Type = MSG_Chat
+* - Parts = [ "PlayerName", "The message." ]
+* - Colors = [ #PlayerTeamColor, #ChannelTeamColor ]
 *
-* Two examples of things bothering me right now :
+* A death message is represented by the following :
+* - Type = MSG_Death
+* - Parts = [ "KillerName", "VictimName", "$1 killed $2 with shock." ]
+* - Colors = [ #KillerTeamColor, #VictimTeamColor ]
 *
-* 1) For chat message we cannot get rid of the colon between player and message in BP,
-* or change whitespaces around it. That should be the designer job, not c++, so it feels wrong.
-*
-* 2) I cannot colorize the Type column appropriately for TeamChat,
-* because I don't have the team/color info, because it's already formatted into FormattedText.
-*
-* I can see one possible solution.
-* Instead of fully formatting in c++, we can instead prepare a TArray/TMap with parts.
-* For example, a chat message could be represented by ["PlayerName", "#f00", "Some message"],
-* and then BP would easily reconstruct the RichText line using Type + the parts.
-*
-* The above solution seems good because it is very modular. We can still have a part that acts as a template.
-* For example for death messages we could have ["%1 sniped %2", "player1", "#f00", "player2", "#00f"]
-* (The template in this case should be the resolved/localized death string pulled from DamageType)
-* And BP can reconstruct message easily, choose whether to use colors or not (designer decision!), etc.
-*
-* Would probably be better with an array/map of strings and an array of colors.
-*
-* Not important but small problem = we kind of fuck up the logging part which was easy now.
+* This gives the designer side a lot of flexibility to display history in the desired way,
+* without being stuck with C++ pre-formatted strings.
+* 
+* The only downside is that internal logging might not match exactly what is displayed on screen,
+* since logging is done in C++ while formatting is done in umg/bp.
+* But it matters little as the logs should not be visible to end user.
 */
 USTRUCT(BlueprintType)
 struct FMessageHistoryEntry
@@ -109,7 +119,7 @@ struct FMessageHistoryEntry
 
 	/**
 	* Instead of one fully formatted rich string done in c++,
-	* we simply prepare string parts and let BP/UMG reconstruct the final line.
+	* we simply prepare text parts and let BP/UMG reconstruct the final line.
 	*
 	* This gives the designer (UMG) more liberty to format/design the line,
 	* in whatever way he sees fit.
@@ -118,7 +128,7 @@ struct FMessageHistoryEntry
 	* to a fixed set of variables, like we had in first iteration.
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<FString> Parts;
+	TArray<FText> Parts;
 
 	/**
 	* Similarly we put colors of interest (eg: players colors...) here in an array,
@@ -144,9 +154,16 @@ class OPENTOURNAMENT_API UUR_MessageHistory : public UObject
 {
 	GENERATED_BODY()
 
-	UUR_MessageHistory(const FObjectInitializer& ObjectInitializer);
+	UUR_MessageHistory();
+
+    virtual void OnGameStateCreated(class AGameStateBase* GS);
+
+    UFUNCTION()
+    virtual void OnViewTargetChanged(class AUR_BasePlayerController* PC, AActor* NewVT, AActor* OldVT);
 
 public:
+
+    virtual void InitWithPlayer(AUR_PlayerController* PC);
 
 	/**
 	* Persistent global history of messages.
@@ -184,12 +201,17 @@ public:
 	UFUNCTION()
 	virtual void OnReceiveSystemMessage(const FString& Message);
 
-	/**
-	* Listen to death messages, and add them to history.
-	* This is a stub.
-	*/
-	UFUNCTION()
-	virtual void OnReceiveDeathMessage(APlayerState* Killer, APlayerState* Victim, TSubclassOf<UDamageType> DmgType);
+    UFUNCTION()
+    virtual void OnMatchStateTagChanged(AUR_GameState* GS);
+
+    UFUNCTION()
+    virtual void OnFrag(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DmgType, const FGameplayTagContainer& Tags);
+
+    UFUNCTION()
+    virtual void OnGlobalPickup(TSubclassOf<AUR_Pickup> PickupClass, AUR_PlayerState* Recipient);
+
+    UFUNCTION()
+    virtual void OnCharacterPickup(AUR_Pickup* Pickup);
 
 	/**
 	* Expose SaveConfig to blueprints so widget can manipulate filters.

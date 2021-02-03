@@ -3,21 +3,24 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_PlayerCameraManager.h"
+
+#include "Engine/World.h"
 #include "UR_BasePlayerController.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_PlayerCameraManager::AssignViewTarget(AActor* NewTarget, FTViewTarget& VT, struct FViewTargetTransitionParams TransitionParams)
 {
-	AActor* OldViewTarget = VT.Target;
+    AActor* OldViewTarget = VT.Target;
 
-	Super::AssignViewTarget(NewTarget, VT, TransitionParams);
+    Super::AssignViewTarget(NewTarget, VT, TransitionParams);
 
-	if (VT.Target != OldViewTarget)
-	{
-		if (auto PC = Cast<AUR_BasePlayerController>(PCOwner))
-		{
-			PC->OnViewTargetChanged.Broadcast(PC, VT.Target, OldViewTarget);
-		}
-	}
+    // NOTE: avoid triggering events when World is tearing down, BPs cannot check this and shit goes nuts.
+    if (VT.Target != OldViewTarget && !GetWorld()->bIsTearingDown)
+    {
+        if (auto PC = Cast<AUR_BasePlayerController>(PCOwner))
+        {
+            PC->OnViewTargetChanged.Broadcast(PC, VT.Target, OldViewTarget);
+        }
+    }
 }

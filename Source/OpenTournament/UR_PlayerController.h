@@ -14,6 +14,8 @@
 class UAudioComponent;
 
 class AUR_Character;
+class AUR_PlayerState;
+class AUR_Pickup;
 class UUR_PCInputDodgeComponent;
 class UUR_Widget_BaseMenu;
 
