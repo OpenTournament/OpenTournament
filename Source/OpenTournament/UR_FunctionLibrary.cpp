@@ -379,7 +379,6 @@ FGameplayTagContainer UUR_FunctionLibrary::FindChildTags(const FGameplayTagConta
     FGameplayTagContainer Result;
     for (const FGameplayTag& Tag : TagContainer)
     {
-        UE_LOG(LogTemp, Log, TEXT("DEBUG Tag = %s"), *Tag.GetTagName().ToString());
         if (Tag.MatchesTag(TagToMatch) && !Tag.MatchesTagExact(TagToMatch))
         {
             Result.AddTagFast(Tag);
