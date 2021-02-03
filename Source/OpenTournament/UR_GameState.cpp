@@ -19,19 +19,6 @@
 
 AUR_GameState::AUR_GameState()
 {
-    MultiKillEventNames = {
-        FName(TEXT("Multi1")),  /* double */
-        FName(TEXT("Multi2")),  /* triple */
-        FName(TEXT("Multi3")),  /* mega */
-        FName(TEXT("Multi4")),  /* ultra */
-        FName(TEXT("Multi5")),  /* monster*/
-    };
-    SpreeEventNames = {
-        FName(TEXT("Spree1")),  /* spree */
-        FName(TEXT("Spree2")),  /* rampage */
-        FName(TEXT("Spree3")),  /* unstoppable */
-        FName(TEXT("Spree4")),  /* godlike */
-    };
 }
 
 void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -40,33 +27,33 @@ void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
     DOREPLIFETIME(AUR_GameState, TimeLimit);
     DOREPLIFETIME(AUR_GameState, ClockReferencePoint);
-    DOREPLIFETIME(AUR_GameState, MatchSubState);
+    DOREPLIFETIME(AUR_GameState, MatchStateTag);
     DOREPLIFETIME(AUR_GameState, Winner);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AUR_GameState::SetMatchSubState(FName NewState)
+void AUR_GameState::SetMatchStateTag(const FGameplayTag& NewTag)
 {
     if (HasAuthority())
     {
-        UE_LOG(LogGameState, Log, TEXT("Match Sub-State changing from %s to %s"), *MatchSubState.ToString(), *NewState.ToString());
-        if (NewState == MatchSubState)
+        UE_LOG(LogGameState, Log, TEXT("MatchStateTag changing from %s to %s"), *MatchStateTag.GetTagName().ToString(), *NewTag.GetTagName().ToString());
+        if (NewTag == MatchStateTag)
         {
-            MulticastMatchSubState(NewState);
+            MulticastMatchStateTag(NewTag);
         }
         else
         {
-            MatchSubState = NewState;
-            OnRep_MatchSubState();
+            MatchStateTag = NewTag;
+            OnRep_MatchStateTag();
         }
     }
 }
 
-void AUR_GameState::MulticastMatchSubState_Implementation(FName NewState)
+void AUR_GameState::MulticastMatchStateTag_Implementation(const FGameplayTag& NewTag)
 {
-    MatchSubState = NewState;
-    OnRep_MatchSubState();
+    MatchStateTag = NewTag;
+    OnRep_MatchStateTag();
 }
 
 void AUR_GameState::OnRep_MatchState()
@@ -76,9 +63,9 @@ void AUR_GameState::OnRep_MatchState()
     Super::OnRep_MatchState();
 }
 
-void AUR_GameState::OnRep_MatchSubState()
+void AUR_GameState::OnRep_MatchStateTag()
 {
-    OnMatchSubStateChanged.Broadcast(this);
+    OnMatchStateTagChanged.Broadcast(this);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

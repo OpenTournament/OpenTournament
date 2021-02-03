@@ -42,7 +42,7 @@ void AUR_PlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AUR_PlayerState::RegisterKill(AController* Victim, TArray<FName>& OutExtras)
+void AUR_PlayerState::RegisterKill(AController* Victim, FGameplayTagContainer& OutTags)
 {
     // TODO: might want to check teams here.
     // Although including teamkills in multikills & sprees might not be a bad thing.
@@ -62,32 +62,46 @@ void AUR_PlayerState::RegisterKill(AController* Victim, TArray<FName>& OutExtras
 
     AUR_GameState* GS = GetWorld()->GetGameState<AUR_GameState>();
 
-    if (MultiKillCount > 1 && GS && GS->MultiKillEventNames.Num() > 0)
+    if (MultiKillCount > 1)
     {
-        OutExtras.Add(GS->MultiKillEventNames[FMath::Min(MultiKillCount - 2, GS->MultiKillEventNames.Num() - 1)]);
+        static TArray<FGameplayTag> MultiKillTags = {
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Double"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Triple"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Mega"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Ultra"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Monster"))),
+        };
+        OutTags.AddTag(MultiKillTags[FMath::Min(MultiKillCount - 2, MultiKillTags.Num() - 1)]);
     }
 
     SpreeCount++;
-    if ((SpreeCount % 5) == 0 && GS && GS->SpreeEventNames.Num() > 0)
+    if ((SpreeCount % 5) == 0)
     {
         SpreeLevel = SpreeCount / 5;
-        OutExtras.Add(GS->SpreeEventNames[FMath::Min(SpreeLevel - 1, GS->SpreeEventNames.Num() - 1)]);
+
+        static TArray<FGameplayTag> SpreeTags = {
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.KillingSpree"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.Rampage"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.Unstoppable"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.Godlike"))),
+        };
+        OutTags.AddTag(SpreeTags[FMath::Min(SpreeLevel - 1, SpreeTags.Num() - 1)]);
     }
 
     if (LastKiller && Victim && Victim->GetPawn() == LastKiller)
     {
-        OutExtras.Add(FragEventExtras::Revenge);
+        OutTags.AddTag(FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Kill.Revenge"))));
     }
 }
 
-void AUR_PlayerState::RegisterDeath(AController* Killer, TArray<FName>& OutExtras)
+void AUR_PlayerState::RegisterDeath(AController* Killer, FGameplayTagContainer& OutTags)
 {
     Deaths++;
     MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Deaths, this);
 
     if (SpreeLevel > 0)
     {
-        OutExtras.Add(FragEventExtras::SpreeEnded);
+        OutTags.AddTag(FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Death.EndSpree"))));
     }
 
     SpreeLevel = 0;
@@ -101,7 +115,7 @@ void AUR_PlayerState::RegisterDeath(AController* Killer, TArray<FName>& OutExtra
     }
 }
 
-void AUR_PlayerState::RegisterSuicide(TArray<FName>& OutExtras)
+void AUR_PlayerState::RegisterSuicide(FGameplayTagContainer& OutExtras)
 {
     Suicides++;
     MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Suicides, this);

@@ -7,6 +7,7 @@
 #include "CoreMinimal.h"
 #include "InputCoreTypes.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "GameplayTagContainer.h"
 
 #include "UR_FunctionLibrary.generated.h"
 
@@ -347,5 +348,32 @@ public:
     {
         return FText::Join(FText::FromString(Separator), SourceArray);
     }
+
+    /**
+    * Find and return all tags in TagContainer matching TagToMatch.*
+    * Example container: {
+    *   Reward
+    *   Reward.MultiKill
+    *   Reward.MultiKill.Double
+    * }
+    * FindChildTags(Reward)           --> { Reward.MultiKill, Reward.MultiKill.Double }
+    * FindChildTags(Reward.MultiKill) --> { Reward.MultiKill.Double }
+    */
+    UFUNCTION(BlueprintPure, Category = "GameplayTags")
+    static FGameplayTagContainer FindChildTags(const FGameplayTagContainer& TagContainer, FGameplayTag TagToMatch);
+
+    /**
+    * Find and return any tag in TagContainer matching TagToMatch.*
+    * If several are found, only one is returned. Order is not guaranteed.
+    * If none are found, an empty GameplayTag is returned. Check result with IsValid.
+    * Example container: {
+    *   Reward
+    *   Reward.MultiKill
+    *   Reward.MultiKill.Double
+    * }
+    * FindChildTags(Reward.MultiKill) --> Reward.MultiKill.Double
+    */
+    UFUNCTION(BlueprintPure, Category = "GameplayTags")
+    static FGameplayTag FindAnyChildTag(const FGameplayTagContainer& TagContainer, FGameplayTag TagToMatch);
 
 };

@@ -51,7 +51,7 @@ void UUR_MessageHistory::OnGameStateCreated(AGameStateBase* GS)
 {
     if (AUR_GameState* URGS = Cast<AUR_GameState>(GS))
     {
-        URGS->OnMatchSubStateChanged.AddUniqueDynamic(this, &UUR_MessageHistory::OnMatchSubStateChanged);
+        URGS->OnMatchStateTagChanged.AddUniqueDynamic(this, &UUR_MessageHistory::OnMatchStateTagChanged);
         URGS->FragEvent.AddUniqueDynamic(this, &UUR_MessageHistory::OnFrag);
         URGS->PickupEvent.AddUniqueDynamic(this, &UUR_MessageHistory::OnGlobalPickup);
     }
@@ -117,19 +117,19 @@ void UUR_MessageHistory::OnReceiveSystemMessage(const FString& Message)
     UE_LOG(LogMessages, Log, TEXT("[Sys] %s"), *Message);
 }
 
-void UUR_MessageHistory::OnMatchSubStateChanged(AUR_GameState* GS)
+void UUR_MessageHistory::OnMatchStateTagChanged(AUR_GameState* GS)
 {
     FMessageHistoryEntry Entry;
     Entry.Time = FDateTime::Now();
     Entry.Type = MessageType::Match;
-    Entry.Parts = { FText::FromName(GS->GetMatchSubState()) };
+    Entry.Parts = { FText::FromName(GS->GetMatchStateTag().GetTagName()) };
     Entry.Colors.Empty();
     Append(Entry);
 
     //NOTE: no logging here, there is already Match/Sub/State logging in GameState class.
 }
 
-void UUR_MessageHistory::OnFrag(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DmgType, const TArray<FName>& Extras)
+void UUR_MessageHistory::OnFrag(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DmgType, const FGameplayTagContainer& Tags)
 {
     if (!IsValid(Victim) && !IsValid(Killer))
     {
@@ -168,17 +168,18 @@ void UUR_MessageHistory::OnFrag(AUR_PlayerState* Victim, AUR_PlayerState* Killer
         Entry.Colors[1] = UUR_FunctionLibrary::GetPlayerDisplayTextColor(Victim);
     }
 
-    for (const FName& Extra : Extras)
+    for (const FGameplayTag& Tag : Tags)
     {
-        Entry.Parts.Add(FText::FromName(Extra));
+        // HMMM
+        Entry.Parts.Add(FText::FromName(Tag.GetTagName()));
     }
 
     Append(Entry);
 
     FText FragLine = FText::FormatNamed(Entry.Parts[0], TEXT("Killer"), Entry.Parts[1], TEXT("Victim"), Entry.Parts[2]);
-    if (Extras.Num() > 0)
+    if (Tags.Num() > 0)
     {
-        UE_LOG(LogFrags, Log, TEXT("%s [%s]"), *FragLine.ToString(), *FString::JoinBy(Extras, TEXT(","), [](const FName& Name) { return Name.ToString(); }));
+        UE_LOG(LogFrags, Log, TEXT("%s [%s]"), *FragLine.ToString(), *Tags.ToStringSimple());
     }
     else
     {

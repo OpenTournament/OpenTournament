@@ -373,3 +373,29 @@ bool UUR_FunctionLibrary::ClassImplementsInterface(UClass* TestClass, TSubclassO
     }
     return false;
 }
+
+FGameplayTagContainer UUR_FunctionLibrary::FindChildTags(const FGameplayTagContainer& TagContainer, FGameplayTag TagToMatch)
+{
+    FGameplayTagContainer Result;
+    for (const FGameplayTag& Tag : TagContainer)
+    {
+        UE_LOG(LogTemp, Log, TEXT("DEBUG Tag = %s"), *Tag.GetTagName().ToString());
+        if (Tag.MatchesTag(TagToMatch) && !Tag.MatchesTagExact(TagToMatch))
+        {
+            Result.AddTagFast(Tag);
+        }
+    }
+    return Result;
+}
+
+FGameplayTag UUR_FunctionLibrary::FindAnyChildTag(const FGameplayTagContainer& TagContainer, FGameplayTag TagToMatch)
+{
+    for (const FGameplayTag& Tag : TagContainer)
+    {
+        if (Tag.MatchesTag(TagToMatch) && !Tag.MatchesTagExact(TagToMatch))
+        {
+            return Tag;
+        }
+    }
+    return FGameplayTag();
+}

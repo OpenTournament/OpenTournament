@@ -6,6 +6,7 @@
 
 #include "GameFramework/PlayerState.h"
 #include "Interfaces/UR_TeamInterface.h"
+#include "GameplayTagContainer.h"
 #include "UR_PlayerState.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,13 +70,13 @@ public:
     APawn* LastKiller;
 
     UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
-    virtual void RegisterKill(AController* Victim, UPARAM(Ref) TArray<FName>& OutExtras);
+    virtual void RegisterKill(AController* Victim, UPARAM(Ref) FGameplayTagContainer& OutTags);
 
     UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
-    virtual void RegisterDeath(AController* Killer, UPARAM(Ref) TArray<FName>& OutExtras);
+    virtual void RegisterDeath(AController* Killer, UPARAM(Ref) FGameplayTagContainer& OutTags);
 
     UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
-    virtual void RegisterSuicide(UPARAM(Ref) TArray<FName>& OutExtras);
+    virtual void RegisterSuicide(UPARAM(Ref) FGameplayTagContainer& OutTags);
 
     UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
     virtual void AddScore(int32 Value);

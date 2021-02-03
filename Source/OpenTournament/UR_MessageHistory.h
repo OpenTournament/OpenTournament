@@ -6,6 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "GameplayTagContainer.h"
 #include "UR_MessageHistory.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -201,10 +202,10 @@ public:
 	virtual void OnReceiveSystemMessage(const FString& Message);
 
     UFUNCTION()
-    virtual void OnMatchSubStateChanged(AUR_GameState* GS);
+    virtual void OnMatchStateTagChanged(AUR_GameState* GS);
 
     UFUNCTION()
-    virtual void OnFrag(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DmgType, const TArray<FName>& Extras);
+    virtual void OnFrag(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DmgType, const FGameplayTagContainer& Tags);
 
     UFUNCTION()
     virtual void OnGlobalPickup(TSubclassOf<AUR_Pickup> PickupClass, AUR_PlayerState* Recipient);

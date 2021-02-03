@@ -6,6 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameState.h"
+#include "GameplayTagContainer.h"
 
 #include "UR_GameState.generated.h"
 
@@ -15,27 +16,13 @@ class AUR_TeamInfo;
 class AUR_Pickup;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
-namespace FragEventExtras
-{
-    //NOTE: Multis and Sprees sit in TArray properties to be easily moddable
-
-    static const FName SpreeEnded = FName(TEXT("SpreeEnded"));
-
-    static const FName AmazingCombo = FName(TEXT("AmazingCombo"));
-    static const FName AirRocket = FName(TEXT("AirRocket"));
-
-    static const FName Revenge = FName(TEXT("Revenge"));
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
 // Delegates
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMatchStateChanged, AUR_GameState*, GS);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTimeUpSignature, AUR_GameState*, GS);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FFragEventSignature, AUR_PlayerState*, Victim, AUR_PlayerState*, Killer, TSubclassOf<UDamageType>, DamType, const TArray<FName>&, Extras);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FFragEventSignature, AUR_PlayerState*, Victim, AUR_PlayerState*, Killer, TSubclassOf<UDamageType>, DamType, const FGameplayTagContainer&, EventTags);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGlobalPickupEventSignature, TSubclassOf<AUR_Pickup>, PickupClass, AUR_PlayerState*, Recipient);
 
@@ -68,20 +55,20 @@ public:
     FMatchStateChanged OnMatchStateChanged;
 
     UPROPERTY(BlueprintAssignable)
-    FMatchStateChanged OnMatchSubStateChanged;
+    FMatchStateChanged OnMatchStateTagChanged;
 
     UFUNCTION(BlueprintPure)
-    FName GetMatchSubState() const { return MatchSubState; }
+    FGameplayTag GetMatchStateTag() const { return MatchStateTag; }
 
     UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
-    void SetMatchSubState(FName NewState);
+    void SetMatchStateTag(const FGameplayTag& NewTag);
 
 protected:
 
     virtual void OnRep_MatchState() override;
 
     /**
-    * Sub-state for the InProgress match state.
+    * GameplayTag defining a sub-state for the current match state.
     *
     * We don't want to mess with the existing framework provided for MatchState.
     * GameMode.h specifically states the following :
@@ -95,20 +82,20 @@ protected:
     * - Second Half
     * - Overtime
     */
-    UPROPERTY(ReplicatedUsing = OnRep_MatchSubState)
-    FName MatchSubState;
+    UPROPERTY(ReplicatedUsing = OnRep_MatchStateTag)
+    FGameplayTag MatchStateTag;
 
     UFUNCTION()
-    virtual void OnRep_MatchSubState();
+    virtual void OnRep_MatchStateTag();
 
     /**
-    * When a match state repeats itself, MatchSubState would not replicate again (because it doesn't change).
-    * This is automatically detected (in SetMatchSubState) and Multicast is used instead to force replication & RepNotify events.
+    * When a match state repeats itself, MatchStateTag would not replicate again (because it doesn't change).
+    * This is automatically detected (in SetMatchStateTag) and Multicast is used instead to force replication & RepNotify events.
     *
     * Use case: When entering a second OVERTIME, we want to notify players with a second OVERTIME game event.
     */
     UFUNCTION(NetMulticast, Reliable)
-    void MulticastMatchSubState(FName NewState);
+    void MulticastMatchStateTag(const FGameplayTag& NewTag);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Clock Management
@@ -247,20 +234,14 @@ public:
 
 public:
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    TArray<FName> MultiKillEventNames;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    TArray<FName> SpreeEventNames;
-
     UPROPERTY(BlueprintAssignable)
     FFragEventSignature FragEvent;
 
     UFUNCTION(NetMulticast, Reliable)
-    void MulticastFragEvent(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DamType, const TArray<FName>& Extras);
-    virtual void MulticastFragEvent_Implementation(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DamType, const TArray<FName>& Extras)
+    void MulticastFragEvent(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DamType, const FGameplayTagContainer& EventTags);
+    virtual void MulticastFragEvent_Implementation(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DamType, const FGameplayTagContainer& EventTags)
     {
-        FragEvent.Broadcast(Victim, Killer, DamType, Extras);
+        FragEvent.Broadcast(Victim, Killer, DamType, EventTags);
     }
 
     /**

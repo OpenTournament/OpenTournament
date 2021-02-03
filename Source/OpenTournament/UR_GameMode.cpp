@@ -19,14 +19,6 @@
 #include "UR_TeamInfo.h"
 #include "GameFramework/Controller.h"
 
-namespace MatchSubState
-{
-    const FName Warmup = FName(TEXT("Warmup"));
-    const FName Countdown = FName(TEXT("Countdown"));
-    const FName Match = FName(TEXT("Match"));
-    const FName Overtime = FName(TEXT("Overtime"));
-};
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameMode::AUR_GameMode()
@@ -189,7 +181,7 @@ void AUR_GameMode::HandleMatchHasStarted()
     if (GS)
     {
         // TODO: Here we would do Warmup first
-        GS->SetMatchSubState(MatchSubState::Match);
+        GS->SetMatchStateTag(FGameplayTag::RequestGameplayTag(FName(TEXT("MatchState.InProgress.Match"))));
 
         if (TimeLimit > 0)
         {
@@ -212,7 +204,7 @@ void AUR_GameMode::OnMatchTimeUp_Implementation(AUR_GameState* GS)
     {
         // Overtime
 
-        GS->SetMatchSubState(MatchSubState::Overtime);
+        GS->SetMatchStateTag(FGameplayTag::RequestGameplayTag(FName(TEXT("MatchState.InProgress.Overtime"))));
 
         if (OvertimeExtraTime > 0)
         {
@@ -335,11 +327,11 @@ void AUR_GameMode::RegisterKill(AController* Victim, AController* Killer, const 
     {
         AUR_PlayerState* VictimPS = Victim->GetPlayerState<AUR_PlayerState>();
         AUR_PlayerState* KillerPS = NULL;
-        TArray<FName> Extras;
+        FGameplayTagContainer EventTags;
 
         if (VictimPS)
         {
-            VictimPS->RegisterDeath(Killer, Extras);
+            VictimPS->RegisterDeath(Killer, EventTags);
         }
 
         if (Killer && Killer != Victim)
@@ -347,17 +339,17 @@ void AUR_GameMode::RegisterKill(AController* Victim, AController* Killer, const 
             KillerPS = Killer->GetPlayerState<AUR_PlayerState>();
             if (KillerPS)
             {
-                KillerPS->RegisterKill(Victim, Extras);
+                KillerPS->RegisterKill(Victim, EventTags);
             }
         }
         else if (VictimPS)
         {
-            VictimPS->RegisterSuicide(Extras);
+            VictimPS->RegisterSuicide(EventTags);
         }
 
         if (VictimPS || KillerPS)
         {
-            GetGameState<AUR_GameState>()->MulticastFragEvent(VictimPS, KillerPS, DamageEvent.DamageTypeClass, Extras);
+            GetGameState<AUR_GameState>()->MulticastFragEvent(VictimPS, KillerPS, DamageEvent.DamageTypeClass, EventTags);
         }
     }
 }
