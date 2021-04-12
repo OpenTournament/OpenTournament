@@ -17,3 +17,5 @@
 4/10/2021 - Commited changes to Weapon_Skins to make four new skins for the AssaultRifle so users get more skin options for their weapons.
 
 4/11/2021 - Commited changes to Weapon_Skins to make four new skins for the BlobGun so users get more skin options for their weapons.
+
+4/12/2021 - Commited changes to Weapon_Skins to make four new skins for the Cannon so users can have more skins optins to choose.
