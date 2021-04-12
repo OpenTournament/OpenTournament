@@ -15,3 +15,5 @@
 4/10/2021 - Commited changes to Weapon_Skins to make a new skin for the Hammer so users get more skin options for their weapons.
 
 4/10/2021 - Commited changes to Weapon_Skins to make four new skins for the AssaultRifle so users get more skin options for their weapons.
+
+4/11/2021 - Commited changes to Weapon_Skins to make four new skins for the BlobGun so users get more skin options for their weapons.
