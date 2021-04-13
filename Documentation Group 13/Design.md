@@ -21,3 +21,5 @@
 4/12/2021 - Commited changes to Weapon_Skins to make four new skins for the Cannon so users can have more skins options to choose.
 
 4/12/2021 - Commited changes to Weapon_Skins to make four new skins for the EnergyRifle so users can have more skins options to choose. 
+
+4/12/2021 - Commited changes to Weapon_Skins to make two new skin options as well as four total energy emitters for the EnergyRifleIG so users can have more options to choose. 
