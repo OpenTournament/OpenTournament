@@ -25,3 +25,5 @@
 4/12/2021 - Commited changes to Weapon_Skins to make two new skin options as well as four total energy emitters for the EnergyRifleIG so users can have more options to choose.
 
 4/14/2021 - Commited changes to Weapon_Skins to make two small and 2 regular new skin options for the Pistol for more skin options for users to choose from than just the defaults.
+
+4/14/2021 - Commited changes to Weapon_Skins to make two small and 2 regular new skin options for the PlasmaRifle for more skin options for users to choose from than just the defaults.
