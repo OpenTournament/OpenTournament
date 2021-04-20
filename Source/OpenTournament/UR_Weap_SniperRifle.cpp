@@ -13,6 +13,7 @@ AUR_Weap_SniperRifle::AUR_Weap_SniperRifle(const FObjectInitializer& ObjectIniti
     USkeletalMesh* helper = newAsset.Object;
     Mesh1P->SetSkeletalMesh(helper);*/
     WeaponName = "Sniper Rifle";
+    WeaponKnockBackValue = 10.f;
 
     /*ConstructorHelpers::FObjectFinder<USoundCue> newAssetSound(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/SniperRifle/SniperRifle_Lower_Cue.SniperRifle_Lower_Cue'"));
     USoundCue* helperSound;

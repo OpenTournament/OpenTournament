@@ -13,6 +13,7 @@ AUR_Weap_Pistol::AUR_Weap_Pistol(const FObjectInitializer& ObjectInitializer)
     USkeletalMesh* helper = newAsset.Object;
     Mesh1P->SetSkeletalMesh(helper);*/
     WeaponName = "Pistol";
+    WeaponKnockBackValue = 10.f;
 
     /*ConstructorHelpers::FObjectFinder<USoundCue> newAssetSound(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/Pistol/Pistol_Lower_Cue.Pistol_Lower_Cue'"));
     USoundCue* helperSound;

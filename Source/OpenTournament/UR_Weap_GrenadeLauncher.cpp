@@ -13,6 +13,7 @@ AUR_Weap_GrenadeLauncher::AUR_Weap_GrenadeLauncher(const FObjectInitializer& Obj
     USkeletalMesh* helper = newAsset.Object;
     Mesh1P->SetSkeletalMesh(helper);*/
     WeaponName = "Grenade Launcher";
+    WeaponKnockBackValue = 50.f;
 
     /*ConstructorHelpers::FObjectFinder<USoundCue> newAssetSound(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/GrenadeLauncher/GrenadeLauncher_Lower_Cue.GrenadeLauncher_Lower_Cue'"));
     USoundCue* helperSound;

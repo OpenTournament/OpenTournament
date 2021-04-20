@@ -138,6 +138,7 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
     FString WeaponName;
+    float WeaponKnockBackValue;
 
     /**
     * Ammo classes used by this weapon.

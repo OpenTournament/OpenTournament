@@ -13,6 +13,7 @@ AUR_Weap_AssaultRifle::AUR_Weap_AssaultRifle(const FObjectInitializer& ObjectIni
     USkeletalMesh* helper = newAsset.Object;
     Mesh1P->SetSkeletalMesh(helper);*/
     WeaponName = "Assault Rifle";
+    WeaponKnockBackValue = 30.f;
 
     /*ConstructorHelpers::FObjectFinder<USoundCue> newAssetSound(TEXT("SoundCue'/Game/SciFiWeapDark/Sound/Rifle/Rifle_Lower_Cue.Rifle_Lower_Cue'"));
     USoundCue* helperSound;
