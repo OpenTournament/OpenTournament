@@ -739,7 +739,7 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     const float Falloff = Damage / OriginalDamage;
 
     // Calculate knockback power
-    float KnockbackPower = 1500.f * OriginalDamage; //TODO: this is where we should fetch projectile/weapon's knockback value
+    float KnockbackPower = 1500.f * OriginalDamage * InventoryComponent->ActiveWeapon->GetWeaponFeedback();
     KnockbackPower *= Falloff;
 
     // Gamemode hook

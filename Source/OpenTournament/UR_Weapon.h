@@ -199,6 +199,8 @@ public:
     UFUNCTION(BlueprintPure, Category = "Weapon")
     USkeletalMeshComponent* GetVisibleMesh() const;
 
+    float GetWeaponFeedback();
+
     static UClass* GetNextFallbackConfigWeapon(TSubclassOf<AUR_Weapon> ForClass);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
