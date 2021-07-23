@@ -325,3 +325,76 @@ void UUR_FunctionLibrary::GetAllWeaponClasses(TSubclassOf<AUR_Weapon> InClassFil
         }
     }
 }
+
+void UUR_FunctionLibrary::Array_Slice(const TArray<int32>& TargetArray, TArray<int32>& Result, int32 Start, int32 End)
+{
+    check(0);
+}
+
+void UUR_FunctionLibrary::GenericArray_Slice(void* SourceArray, const FArrayProperty* SourceArrayProp, void* ResultArray, const FArrayProperty* ResultArrayProp, int32 Start, int32 End)
+{
+    if (SourceArray && ResultArray)
+    {
+        FScriptArrayHelper SourceArrayHelper(SourceArrayProp, SourceArray);
+        FScriptArrayHelper ResultArrayHelper(ResultArrayProp, ResultArray);
+        ResultArrayHelper.EmptyValues();
+
+        End = (End < 0) ? SourceArrayHelper.Num() : FMath::Min(End, SourceArrayHelper.Num());
+        int32 Count = End - Start;
+        if (Count > 0)
+        {
+            ResultArrayHelper.AddValues(Count);
+            FProperty* InnerProp = SourceArrayProp->Inner;
+            for (int32 i = Start; i < End; i++)
+            {
+                InnerProp->CopySingleValueToScriptVM(ResultArrayHelper.GetRawPtr(i - Start), SourceArrayHelper.GetRawPtr(i));
+            }
+        }
+    }
+}
+
+template<typename T> static TArray<T> UUR_FunctionLibrary::ArraySlice(const TArray<T>& InArray, int32 Start, int32 End)
+{
+    End = (End < 0) ? InArray.Num() : FMath::Min(End, InArray.Num());
+    TArray<T> Result(FMath::Max(0, End - Start));
+    for (int32 i = Start; i < End; i++)
+    {
+        Result.Add(InArray[i]);
+    }
+    return Result;
+}
+
+bool UUR_FunctionLibrary::ClassImplementsInterface(UClass* TestClass, TSubclassOf<UInterface> Interface)
+{
+    if (TestClass && Interface)
+    {
+        checkf(Interface->IsChildOf(UInterface::StaticClass()), TEXT("Interface parameter %s is not actually an interface."), *Interface->GetName());
+        return TestClass->ImplementsInterface(Interface);
+    }
+    return false;
+}
+
+FGameplayTagContainer UUR_FunctionLibrary::FindChildTags(const FGameplayTagContainer& TagContainer, FGameplayTag TagToMatch)
+{
+    FGameplayTagContainer Result;
+    for (const FGameplayTag& Tag : TagContainer)
+    {
+        if (Tag.MatchesTag(TagToMatch) && !Tag.MatchesTagExact(TagToMatch))
+        {
+            Result.AddTagFast(Tag);
+        }
+    }
+    return Result;
+}
+
+FGameplayTag UUR_FunctionLibrary::FindAnyChildTag(const FGameplayTagContainer& TagContainer, FGameplayTag TagToMatch)
+{
+    for (const FGameplayTag& Tag : TagContainer)
+    {
+        if (Tag.MatchesTag(TagToMatch) && !Tag.MatchesTagExact(TagToMatch))
+        {
+            return Tag;
+        }
+    }
+    return FGameplayTag();
+}

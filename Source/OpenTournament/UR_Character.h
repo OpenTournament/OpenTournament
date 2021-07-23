@@ -51,7 +51,63 @@ struct FCharacterVoice
     USoundBase* PainSound;
 };
 
+/**
+* Replicatable damage event.
+* Builtin damage events are not replicatable due to struct inheritance & missing reflection.
+* This shall be used for replicating damage numbers, hitsounds, physics impulses, incoming damage on HUD...
+*
+* NOTE: For something like shotgun/flak, we'll need to group up events before replicating.
+*/
+USTRUCT(BlueprintType)
+struct FReplicatedDamageEvent
+{
+    GENERATED_BODY()
+
+    /**
+    * Matches builtin DamageEvent.ClassID
+    * 1 = PointDamage
+    * 2 = RadialDamage
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 Type;
+
+    /**
+    * Damage value.
+    * In case of RadialDamage, this is already scaled by distance.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Damage;
+
+    /**
+    * Damage location.
+    * In case of PointDamage, matches HitLocation.
+    * In case of RadialDamage, matches Origin.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FVector Location;
+
+    /**
+    * Knockback.
+    * In case of PointDamage, equals to KnockbackPower * ShotDirection.
+    * In case of RadialDamage, equals to (unscaled KnockbackPower, Radius, 0).
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FVector Knockback;
+
+    virtual bool IsOfType(int32 InID) const { return Type == InID; };
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+* Death event dispatcher.
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCharacterDeathSignature, AUR_Character*, Character, AController*, Killer);
+
+/**
+* Pickup event dispatcher.
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPickupEventSignature, AUR_Pickup*, Pickup);
 
 
 /**
@@ -147,6 +203,8 @@ public:
 
     // Override to update Physics Movement GameplayTags
     virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
+
+    virtual void UnPossessed() override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Camera Management
@@ -582,28 +640,39 @@ public:
     * Authority only.
     */
     UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
-    virtual void Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser);
+    virtual void Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser, const FReplicatedDamageEvent& RepDamageEvent);
 
-    /**
-    * Event Called on Character Death
-    */
-    UFUNCTION(BlueprintImplementableEvent, Category = "Character")
-    void OnDied(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser);
-
-    /**
-    * Play dying effect (animation, ragdoll, sound, blood, gib).
-    * Client only.
-    */
-    UFUNCTION(BlueprintCosmetic)
-    virtual void PlayDeath();
-
-    /**
-    * Called on network client when replication channel is cut (ie. death).
-    */
-    virtual void TornOff() override
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastDied(AController* Killer, const FReplicatedDamageEvent RepDamageEvent);
+    virtual void MulticastDied_Implementation(AController* Killer, const FReplicatedDamageEvent RepDamageEvent)
     {
-        PlayDeath();
+        PlayDeath(Killer, RepDamageEvent);
     }
+
+    /**
+    * Play dying state on client (animation, ragdoll, sound, blood, gib, camera).
+    */
+    UFUNCTION(BlueprintCosmetic, BlueprintNativeEvent)
+    void PlayDeath(AController* Killer, const FReplicatedDamageEvent& RepDamageEvent);
+
+    /**
+    * Set to true after PlayDeath() is received on clients.
+    * Used in TornOff() to adjust life span accordingly.
+    */
+    UPROPERTY(BlueprintReadWrite)
+    bool bPlayingDeath;
+
+    /**
+    * Event Called on Character Death.
+    * Server & Client.
+    */
+    UPROPERTY(BlueprintAssignable, Category = "Character")
+    FCharacterDeathSignature OnDeath;
+
+    /**
+    * Called on network clients when replication channel is cut (ie. death).
+    */
+    virtual void TornOff() override;
 
     UFUNCTION(BlueprintCallable, BlueprintPure)
     bool IsAlive() const;
@@ -659,6 +728,12 @@ public:
 
     UFUNCTION(Exec, BlueprintCallable)
     virtual void PrevWeapon();
+
+    /**
+    * Pickup event.
+    */
+    UPROPERTY(BlueprintAssignable)
+    FPickupEventSignature PickupEvent;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 

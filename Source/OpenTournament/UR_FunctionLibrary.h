@@ -7,6 +7,7 @@
 #include "CoreMinimal.h"
 #include "InputCoreTypes.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "GameplayTagContainer.h"
 
 #include "UR_FunctionLibrary.generated.h"
 
@@ -25,6 +26,7 @@ class AUR_PlayerController;
 class UWidget;
 class UMeshComponent;
 class UMaterialInterface;
+class UInterface;
 class AUR_Weapon;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -300,4 +302,78 @@ public:
 
     UFUNCTION(BlueprintCallable)
     static void GetAllWeaponClasses(TSubclassOf<AUR_Weapon> InClassFilter, TArray<TSubclassOf<AUR_Weapon>>& OutWeaponClasses);
+
+    UFUNCTION(BlueprintPure, CustomThunk, Category = "Utilities|Array", Meta = (ArrayParm = "Source", ArrayTypeDependentParams = "Result"))
+    static void Array_Slice(const TArray<int32>& Source, TArray<int32>& Result, int32 Start, int32 End = -1);
+    static void GenericArray_Slice(void* SourceArray, const FArrayProperty* SourceArrayProp, void* ResultArray, const FArrayProperty* ResultArrayProp, int32 Start, int32 End);
+    DECLARE_FUNCTION(execArray_Slice)
+    {
+        // Retrieve the target array
+        Stack.MostRecentProperty = nullptr;
+        Stack.StepCompiledIn<FArrayProperty>(NULL);
+        void* SourceArrayAddr = Stack.MostRecentPropertyAddress;
+        FArrayProperty* SourceArrayProp = CastField<FArrayProperty>(Stack.MostRecentProperty);
+        if (!SourceArrayProp)
+        {
+            Stack.bArrayContextFailed = true;
+            return;
+        }
+        // Retrieve the result array
+        Stack.MostRecentProperty = nullptr;
+        Stack.StepCompiledIn<FArrayProperty>(NULL);
+        void* ResultArrayAddr = Stack.MostRecentPropertyAddress;
+        FArrayProperty* ResultArrayProp = CastField<FArrayProperty>(Stack.MostRecentProperty);
+        if (!ResultArrayProp)
+        {
+            Stack.bArrayContextFailed = true;
+            return;
+        }
+
+        P_GET_PROPERTY(FIntProperty, Start);
+        P_GET_PROPERTY(FIntProperty, End);
+        P_FINISH;
+        P_NATIVE_BEGIN;
+        GenericArray_Slice(SourceArrayAddr, SourceArrayProp, ResultArrayAddr, ResultArrayProp, Start, End);
+        P_NATIVE_END;
+    }
+
+    // c++ version
+    template<typename T> static TArray<T> ArraySlice(const TArray<T>& InArray, int32 Start, int32 End = -1);
+
+    UFUNCTION(BlueprintPure, Category = "Utilities")
+    static bool ClassImplementsInterface(UClass* TestClass, TSubclassOf<UInterface> Interface);
+
+    UFUNCTION(BlueprintPure, Category = "Utilities|Text")
+    static FText JoinTextArray(const TArray<FText>& SourceArray, const FString& Separator = FString(TEXT(" ")))
+    {
+        return FText::Join(FText::FromString(Separator), SourceArray);
+    }
+
+    /**
+    * Find and return all tags in TagContainer matching TagToMatch.*
+    * Example container: {
+    *   Reward
+    *   Reward.MultiKill
+    *   Reward.MultiKill.Double
+    * }
+    * FindChildTags(Reward)           --> { Reward.MultiKill, Reward.MultiKill.Double }
+    * FindChildTags(Reward.MultiKill) --> { Reward.MultiKill.Double }
+    */
+    UFUNCTION(BlueprintPure, Category = "GameplayTags")
+    static FGameplayTagContainer FindChildTags(const FGameplayTagContainer& TagContainer, FGameplayTag TagToMatch);
+
+    /**
+    * Find and return any tag in TagContainer matching TagToMatch.*
+    * If several are found, only one is returned. Order is not guaranteed.
+    * If none are found, an empty GameplayTag is returned. Check result with IsValid.
+    * Example container: {
+    *   Reward
+    *   Reward.MultiKill
+    *   Reward.MultiKill.Double
+    * }
+    * FindChildTags(Reward.MultiKill) --> Reward.MultiKill.Double
+    */
+    UFUNCTION(BlueprintPure, Category = "GameplayTags")
+    static FGameplayTag FindAnyChildTag(const FGameplayTagContainer& TagContainer, FGameplayTag TagToMatch);
+
 };

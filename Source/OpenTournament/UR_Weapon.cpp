@@ -198,8 +198,13 @@ void AUR_Weapon::AttachMeshToPawn()
     if (URCharOwner)
     {
         this->SetActorHiddenInGame(false);
+
+        Mesh1P->SetRelativeTransform(Mesh1P->GetSocketTransform(FName(TEXT("Grip")), RTS_Component).Inverse());
         Mesh1P->AttachToComponent(URCharOwner->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, URCharOwner->GetWeaponAttachPoint());
+
+        Mesh3P->SetRelativeTransform(Mesh3P->GetSocketTransform(FName(TEXT("Grip")), RTS_Component).Inverse());
         Mesh3P->AttachToComponent(URCharOwner->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(TEXT("hand_r_Socket")));
+
         UpdateMeshVisibility();
         bIsAttached = true;
     }
