@@ -181,7 +181,9 @@ void AUR_PickupFactory::BeginRespawnTimer(float InRespawnTime)
 void AUR_PickupFactory::SpawnPickup()
 {
     if (Pickup)
+    {
         Pickup->Destroy();
+    }
 
     auto ClassToSpawn = GetPickupClass();
     if (!ClassToSpawn)
@@ -192,7 +194,7 @@ void AUR_PickupFactory::SpawnPickup()
     // NOTE: Use deferred spawn so we can bind OnPickedUp event before actor is added to the scene.
     // Otherwise it can trigger during SpawnActor routine, and if pickup destroys itself, we just get NULL.
 
-    Pickup = Cast<AUR_Pickup>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, ClassToSpawn, Transform, ESpawnActorCollisionHandlingMethod::AlwaysSpawn, this));
+    SetPickup(Cast<AUR_Pickup>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, ClassToSpawn, Transform, ESpawnActorCollisionHandlingMethod::AlwaysSpawn, this)));
 
     if (!Pickup)
     {
@@ -203,6 +205,7 @@ void AUR_PickupFactory::SpawnPickup()
     }
 
     Pickup->OnPickedUp.AddDynamic(this, &AUR_PickupFactory::OnPickupPickedUp);
+    Pickup->OnDestroyed.AddDynamic(this, &AUR_PickupFactory::OnPickupDestroyed);
 
     // Blueprint init properties here
     PreInitializePickup(Pickup, Transform);
@@ -240,14 +243,18 @@ void AUR_PickupFactory::OnRep_PickupClass()
 
 void AUR_PickupFactory::OnRep_Pickup()
 {
-    ShowPickupAvailable(Pickup ? true : false);
+    if (!IsNetMode(NM_DedicatedServer))
+    {
+        ShowPickupAvailable(Pickup ? true : false);
+    }
 }
 
 void AUR_PickupFactory::OnPickupPickedUp_Implementation(AUR_Pickup* Other, APawn* Recipient)
 {
     if (Other == Pickup)
     {
-        Pickup = NULL;
+        Pickup->OnDestroyed.RemoveDynamic(this, &AUR_PickupFactory::OnPickupDestroyed);
+        SetPickup(NULL);
         BeginRespawnTimer(RespawnTime);
     }
 }
@@ -292,6 +299,23 @@ void AUR_PickupFactory::ShowPickupAvailable_Implementation(bool bAvailable)
 void AUR_PickupFactory::RespawnTimer()
 {
     SpawnPickup();
+}
+
+void AUR_PickupFactory::SetPickup(AUR_Pickup* NewPickup)
+{
+    if (NewPickup != this->Pickup)
+    {
+        this->Pickup = NewPickup;
+        OnRep_Pickup();
+    }
+}
+
+void AUR_PickupFactory::OnPickupDestroyed(AActor* DestroyedActor)
+{
+    if (DestroyedActor == Pickup)
+    {
+        SetPickup(NULL);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
