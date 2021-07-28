@@ -12,7 +12,6 @@
 
 class AUR_GameState;
 class AUR_Weapon;
-class ULocalMessage;
 class UUR_Widget_ScoreboardBase;
 class AUR_TeamInfo;
 
@@ -34,6 +33,21 @@ namespace ETeamsFillMode
 {
     static const FString Even = TEXT("Even");
     static const FString Squads = TEXT("Squads");
+};
+
+/**
+* Sub-states for the InProgress match state.
+*
+* We don't want to mess with the existing framework provided for MatchState.
+* GameMode.h specifically states the following :
+* MatchState::InProgress = Normal gameplay is occurring. Specific games will have their own state machine inside this state
+*/
+namespace MatchSubState
+{
+    extern OPENTOURNAMENT_API const FName Warmup;
+    extern OPENTOURNAMENT_API const FName Countdown;
+    extern OPENTOURNAMENT_API const FName Match;
+    extern OPENTOURNAMENT_API const FName Overtime;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -63,12 +77,6 @@ public:
     */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Classes")
     TSubclassOf<UUR_Widget_ScoreboardBase> ScoreboardClass;
-
-    /**
-    * LocalMessage class to use for death/suicide messages.
-    */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Classes")
-    TSubclassOf<ULocalMessage> DeathMessageClass;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 

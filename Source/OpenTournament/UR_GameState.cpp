@@ -7,12 +7,19 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
-#include "GameFramework/PlayerState.h"
 
 #include "UR_GameMode.h"
 #include "UR_TeamInfo.h"
+#include "UR_LocalPlayer.h"
+#include "UR_MessageHistory.h"
+#include "UR_PlayerController.h"
+#include "UR_PlayerState.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+AUR_GameState::AUR_GameState()
+{
+}
 
 void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -20,15 +27,45 @@ void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
     DOREPLIFETIME(AUR_GameState, TimeLimit);
     DOREPLIFETIME(AUR_GameState, ClockReferencePoint);
+    DOREPLIFETIME(AUR_GameState, MatchStateTag);
+    DOREPLIFETIME(AUR_GameState, Winner);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_GameState::SetMatchStateTag(const FGameplayTag& NewTag)
+{
+    if (HasAuthority())
+    {
+        UE_LOG(LogGameState, Log, TEXT("MatchStateTag changing from %s to %s"), *MatchStateTag.GetTagName().ToString(), *NewTag.GetTagName().ToString());
+        if (NewTag == MatchStateTag)
+        {
+            MulticastMatchStateTag(NewTag);
+        }
+        else
+        {
+            MatchStateTag = NewTag;
+            OnRep_MatchStateTag();
+        }
+    }
+}
+
+void AUR_GameState::MulticastMatchStateTag_Implementation(const FGameplayTag& NewTag)
+{
+    MatchStateTag = NewTag;
+    OnRep_MatchStateTag();
+}
 
 void AUR_GameState::OnRep_MatchState()
 {
     OnMatchStateChanged.Broadcast(this);
     
     Super::OnRep_MatchState();
+}
+
+void AUR_GameState::OnRep_MatchStateTag()
+{
+    OnMatchStateTagChanged.Broadcast(this);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -119,4 +156,11 @@ void AUR_GameState::GetSpectators(TArray<APlayerState*>& OutSpectators)
             OutSpectators.Add(PS);
         }
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_GameState::OnRep_Winner()
+{
+    OnWinnerAssigned.Broadcast(this);
 }

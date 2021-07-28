@@ -42,25 +42,80 @@ void AUR_PlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AUR_PlayerState::AddKill(AController* Victim)
+void AUR_PlayerState::RegisterKill(AController* Victim, FGameplayTagContainer& OutTags)
 {
+    // TODO: might want to check teams here.
+    // Although including teamkills in multikills & sprees might not be a bad thing.
+
     Kills++;
     MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Kills, this);
 
-    //TODO: count multi kills here
-    //TODO: count sprees here
-    //NOTE: can do "revenge" here
+    if (GetWorld()->TimeSince(LastKillTime) < 3.f)
+    {
+        MultiKillCount++;
+    }
+    else
+    {
+        MultiKillCount = 1;
+    }
+    LastKillTime = GetWorld()->TimeSeconds;
+
+    AUR_GameState* GS = GetWorld()->GetGameState<AUR_GameState>();
+
+    if (MultiKillCount > 1)
+    {
+        static TArray<FGameplayTag> MultiKillTags = {
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Double"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Triple"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Mega"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Ultra"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Monster"))),
+        };
+        OutTags.AddTag(MultiKillTags[FMath::Min(MultiKillCount - 2, MultiKillTags.Num() - 1)]);
+    }
+
+    SpreeCount++;
+    if ((SpreeCount % 5) == 0)
+    {
+        SpreeLevel = SpreeCount / 5;
+
+        static TArray<FGameplayTag> SpreeTags = {
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.KillingSpree"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.Rampage"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.Unstoppable"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.Godlike"))),
+        };
+        OutTags.AddTag(SpreeTags[FMath::Min(SpreeLevel - 1, SpreeTags.Num() - 1)]);
+    }
+
+    if (LastKiller && Victim && Victim->GetPawn() == LastKiller)
+    {
+        OutTags.AddTag(FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Kill.Revenge"))));
+    }
 }
 
-void AUR_PlayerState::AddDeath(AController* Killer)
+void AUR_PlayerState::RegisterDeath(AController* Killer, FGameplayTagContainer& OutTags)
 {
     Deaths++;
     MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Deaths, this);
 
-    //TODO: spree ended by killer here
+    if (SpreeLevel > 0)
+    {
+        OutTags.AddTag(FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Death.EndSpree"))));
+    }
+
+    SpreeLevel = 0;
+    SpreeCount = 0;
+    MultiKillCount = 0;
+    LastKillTime = -10;
+
+    if (Killer)
+    {
+        LastKiller = Killer->GetPawn();
+    }
 }
 
-void AUR_PlayerState::AddSuicide()
+void AUR_PlayerState::RegisterSuicide(FGameplayTagContainer& OutExtras)
 {
     Suicides++;
     MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Suicides, this);
@@ -204,4 +259,29 @@ FLinearColor AUR_PlayerState::GetColor()
         }
     }
     return UUR_MPC_Global::GetVector(this, Params->P_EnemyColor);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool AUR_PlayerState::IsAWinner()
+{
+    if (AUR_GameState* GS = GetWorld()->GetGameState<AUR_GameState>())
+    {
+        if (GS->Winner)
+        {
+            if (GS->Winner->IsA(APlayerState::StaticClass()))
+            {
+                return GS->Winner == this;
+            }
+            if (GS->Winner->IsA(APawn::StaticClass()))
+            {
+                return GS->Winner == GetPawn();
+            }
+            if (GS->Winner->IsA(AUR_TeamInfo::StaticClass()))
+            {
+                return IUR_TeamInterface::Execute_IsAlly(GS->Winner, this);
+            }
+        }
+    }
+    return false;
 }
