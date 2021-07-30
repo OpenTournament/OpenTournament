@@ -1,0 +1,129 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.2.1-Marketplace-Free-2021-03-10",
+	"FriendlyName": "Voxel Plugin Free",
+	"Description": "Create fully volumetric, entirely destructible & infinite worlds",
+	"Category": "Terrain",
+	"CreatedBy": "voxelplugin.com",
+	"CreatedByURL": "https://voxelplugin.com",
+	"DocsURL": "https://wiki.voxelplugin.com/",
+	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/c61d1941c8664436be42d649404a10e0",
+	"SupportURL": "https://discord.voxelplugin.com",
+	"EngineVersion": "4.26.0",
+	"CanContainContent": true,
+	"Installed": true,
+	"Modules": [
+		{
+			"Name": "Voxel",
+			"Type": "Runtime",
+			"LoadingPhase": "PostConfigInit",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Linux",
+				"Android",
+				"Mac"
+			]
+		},
+		{
+			"Name": "VoxelGraph",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Linux",
+				"Android",
+				"Mac"
+			]
+		},
+		{
+			"Name": "VoxelHelpers",
+			"Type": "Runtime",
+			"LoadingPhase": "PostConfigInit",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Linux",
+				"Android",
+				"Mac"
+			]
+		},
+		{
+			"Name": "VoxelVDB",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64"
+			]
+		},
+		{
+			"Name": "VoxelVDBEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64"
+			]
+		},
+		{
+			"Name": "VoxelNiagara",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Linux",
+				"Android",
+				"Mac"
+			]
+		},
+		{
+			"Name": "VoxelEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "VoxelGraphEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "VoxelEditorDefault",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "VoxelExamples",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Linux",
+				"Android",
+				"Mac"
+			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "Niagara",
+			"Enabled": true
+		},
+		{
+			"Name": "ProceduralMeshComponent",
+			"Enabled": true
+		}
+	]
+}
