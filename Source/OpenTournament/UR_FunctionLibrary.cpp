@@ -14,12 +14,16 @@
 #include "NiagaraComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
+#include "Components/Widget.h"
+#include "Components/PanelWidget.h"
+#include "Components/MeshComponent.h"
 
 #include "UR_GameModeBase.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 #include "UR_Character.h"
 #include "UR_PlayerInput.h"
+#include "UR_Weapon.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -43,31 +47,23 @@ AUR_GameModeBase* UUR_FunctionLibrary::GetGameModeDefaultObject(const UObject* W
     return GetGameModeDefaultObject<AUR_GameModeBase>(WorldContextObject);
 }
 
-FColor UUR_FunctionLibrary::GetPlayerDisplayTextColor(const APlayerState* PS)
+FColor UUR_FunctionLibrary::GetPlayerDisplayTextColor(APlayerState* PS)
 {
     if (!PS)
     {
-        return FColorList::Green;
+        return FColorList::White;
     }
     else if (PS->IsOnlyASpectator())
     {
         return GetSpectatorDisplayTextColor();
     }
+    else if (AUR_PlayerState* URPlayerState = Cast<AUR_PlayerState>(PS))
+    {
+        return URPlayerState->GetColor().ToFColor(true);
+    }
     else
     {
-        const AUR_PlayerState* URPlayerState = Cast<AUR_PlayerState>(PS);
-        if (URPlayerState)
-        {
-            //TODO: if team game, return team color, something like URPS->Team->GetDisplayTextColor();
-
-            //TODO: if non team game, return player's color ? if any ? or white ?
-
-            return FColorList::Red;
-        }
-        else
-        {
-            return FColorList::Green;	//???
-        }
+        return FColorList::White;	//???
     }
 }
 
@@ -244,4 +240,161 @@ void UUR_FunctionLibrary::ParseFloatTextInput(FText Text, bool& bIsNumeric, floa
 bool UUR_FunctionLibrary::IsOnlySpectator(APlayerState* PS)
 {
     return PS->IsOnlyASpectator();
+}
+
+float UUR_FunctionLibrary::GetFloatOption(const FString& Options, const FString& Key, float DefaultValue)
+{
+    const FString InOpt = UGameplayStatics::ParseOption(Options, Key);
+    if (!InOpt.IsEmpty())
+    {
+        return FCString::Atof(*InOpt);
+    }
+    return DefaultValue;
+}
+
+bool UUR_FunctionLibrary::FindChildrenWidgetsByClass(UWidget* Target, TSubclassOf<UWidget> WidgetClass, TArray<UWidget*>& OutWidgets, bool bRecursive)
+{
+    if (!WidgetClass)
+    {
+        return false;
+    }
+
+    // Only PanelWidget subclasses can have children
+    UPanelWidget* Panel = Cast<UPanelWidget>(Target);
+    if (!Panel)
+    {
+        return false;
+    }
+
+    int32 LengthBefore = OutWidgets.Num();
+
+    int32 Count = Panel->GetChildrenCount();
+    for (int32 i = 0; i < Count; i++)
+    {
+        UWidget* Child = Panel->GetChildAt(i);
+
+        if (Child && Child->IsA(WidgetClass))
+        {
+            OutWidgets.Add(Child);
+        }
+
+        if (bRecursive)
+        {
+            FindChildrenWidgetsByClass(Child, WidgetClass, OutWidgets, true);
+        }
+    }
+
+    return OutWidgets.Num() > LengthBefore;
+}
+
+void UUR_FunctionLibrary::ClearOverrideMaterials(UMeshComponent* MeshComp)
+{
+    if (MeshComp)
+    {
+        MeshComp->EmptyOverrideMaterials();
+    }
+}
+
+void UUR_FunctionLibrary::OverrideAllMaterials(UMeshComponent* MeshComp, UMaterialInterface* Material)
+{
+    if (MeshComp)
+    {
+        int32 Num = MeshComp->GetNumMaterials();
+        for (int32 i = 0; i < Num; i++)
+        {
+            MeshComp->SetMaterial(i, Material);
+        }
+    }
+}
+
+void UUR_FunctionLibrary::GetAllWeaponClasses(TSubclassOf<AUR_Weapon> InClassFilter, TArray<TSubclassOf<AUR_Weapon>>& OutWeaponClasses)
+{
+    // NOTE: this is temporary. We will need proper asset registry management later on.
+    for (TObjectIterator<UClass> Itr; Itr; ++Itr)
+    {
+        UClass* Class = *Itr;
+        if ((InClassFilter && Class->IsChildOf(InClassFilter)) || Class->IsChildOf<AUR_Weapon>())
+        {
+#if WITH_EDITOR
+            if (Class->HasAnyFlags(RF_Transient) && Class->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
+            {
+                continue;
+            }
+#endif
+            OutWeaponClasses.Add(Class);
+        }
+    }
+}
+
+void UUR_FunctionLibrary::Array_Slice(const TArray<int32>& TargetArray, TArray<int32>& Result, int32 Start, int32 End)
+{
+    check(0);
+}
+
+void UUR_FunctionLibrary::GenericArray_Slice(void* SourceArray, const FArrayProperty* SourceArrayProp, void* ResultArray, const FArrayProperty* ResultArrayProp, int32 Start, int32 End)
+{
+    if (SourceArray && ResultArray)
+    {
+        FScriptArrayHelper SourceArrayHelper(SourceArrayProp, SourceArray);
+        FScriptArrayHelper ResultArrayHelper(ResultArrayProp, ResultArray);
+        ResultArrayHelper.EmptyValues();
+
+        End = (End < 0) ? SourceArrayHelper.Num() : FMath::Min(End, SourceArrayHelper.Num());
+        int32 Count = End - Start;
+        if (Count > 0)
+        {
+            ResultArrayHelper.AddValues(Count);
+            FProperty* InnerProp = SourceArrayProp->Inner;
+            for (int32 i = Start; i < End; i++)
+            {
+                InnerProp->CopySingleValueToScriptVM(ResultArrayHelper.GetRawPtr(i - Start), SourceArrayHelper.GetRawPtr(i));
+            }
+        }
+    }
+}
+
+template<typename T> static TArray<T> UUR_FunctionLibrary::ArraySlice(const TArray<T>& InArray, int32 Start, int32 End)
+{
+    End = (End < 0) ? InArray.Num() : FMath::Min(End, InArray.Num());
+    TArray<T> Result(FMath::Max(0, End - Start));
+    for (int32 i = Start; i < End; i++)
+    {
+        Result.Add(InArray[i]);
+    }
+    return Result;
+}
+
+bool UUR_FunctionLibrary::ClassImplementsInterface(UClass* TestClass, TSubclassOf<UInterface> Interface)
+{
+    if (TestClass && Interface)
+    {
+        checkf(Interface->IsChildOf(UInterface::StaticClass()), TEXT("Interface parameter %s is not actually an interface."), *Interface->GetName());
+        return TestClass->ImplementsInterface(Interface);
+    }
+    return false;
+}
+
+FGameplayTagContainer UUR_FunctionLibrary::FindChildTags(const FGameplayTagContainer& TagContainer, FGameplayTag TagToMatch)
+{
+    FGameplayTagContainer Result;
+    for (const FGameplayTag& Tag : TagContainer)
+    {
+        if (Tag.MatchesTag(TagToMatch) && !Tag.MatchesTagExact(TagToMatch))
+        {
+            Result.AddTagFast(Tag);
+        }
+    }
+    return Result;
+}
+
+FGameplayTag UUR_FunctionLibrary::FindAnyChildTag(const FGameplayTagContainer& TagContainer, FGameplayTag TagToMatch)
+{
+    for (const FGameplayTag& Tag : TagContainer)
+    {
+        if (Tag.MatchesTag(TagToMatch) && !Tag.MatchesTagExact(TagToMatch))
+        {
+            return Tag;
+        }
+    }
+    return FGameplayTag();
 }

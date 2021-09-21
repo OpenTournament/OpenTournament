@@ -11,7 +11,11 @@
 UUR_LocalPlayer::UUR_LocalPlayer(const class FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	MessageHistory = CreateDefaultSubobject<UUR_MessageHistory>(TEXT("MessageHistory"));
+    // no need to create a history for the CDO
+    if (!HasAnyFlags(RF_ClassDefaultObject))
+    {
+        MessageHistory = CreateDefaultSubobject<UUR_MessageHistory>(TEXT("MessageHistory"));
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

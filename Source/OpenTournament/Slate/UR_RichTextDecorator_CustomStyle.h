@@ -23,5 +23,13 @@ public:
 	virtual TSharedPtr<ITextDecorator> CreateDecorator(URichTextBlock* InOwner) override;
 
 	UFUNCTION(BlueprintPure)
-	static FString DecorateRichText(const FString& InText, bool bColorize, const FColor& Color, const FString& Typeface = TEXT(""), bool bNoEscape = false);
+	static FString DecorateRichString(const FString& InText, bool bColorize, const FColor& Color, const FString& Typeface = TEXT(""), bool bNoEscape = false);
+
+    /** Convenience for FText */
+    UFUNCTION(BlueprintPure)
+    static FText DecorateRichText(const FText& InText, bool bColorize, const FColor& Color, const FString& Typeface = TEXT(""), bool bNoEscape = false)
+    {
+        return FText::FromString(DecorateRichString(InText.ToString(), bColorize, Color, Typeface, bNoEscape));
+    }
+
 };

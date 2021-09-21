@@ -18,6 +18,4 @@ AUR_Weap_GrenadeLauncher::AUR_Weap_GrenadeLauncher(const FObjectInitializer& Obj
     USoundCue* helperSound;
     helperSound = newAssetSound.Object;
     Sound->SetSound(helperSound);*/
-
-    AmmoName = "Grenade";
 }

@@ -22,7 +22,7 @@ enum class EWallDodgeBehavior : uint8
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
-* 
+* Character Movement Component
 */
 UCLASS()
 class OPENTOURNAMENT_API UUR_CharacterMovementComponent : public UCharacterMovementComponent
@@ -139,6 +139,12 @@ public:
     * Do Jump
     */
     virtual bool DoJump(bool bReplayingMoves) override;
+
+    /**
+    * Flag. Are we jumping?
+    */
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Dodging")
+    uint8 bIsJumping:1;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Dodge

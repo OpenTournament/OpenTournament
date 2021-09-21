@@ -9,8 +9,17 @@
 #include "TimerManager.h"
 
 #include "UR_GameMode.h"
+#include "UR_TeamInfo.h"
+#include "UR_LocalPlayer.h"
+#include "UR_MessageHistory.h"
+#include "UR_PlayerController.h"
+#include "UR_PlayerState.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+AUR_GameState::AUR_GameState()
+{
+}
 
 void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -18,15 +27,45 @@ void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
     DOREPLIFETIME(AUR_GameState, TimeLimit);
     DOREPLIFETIME(AUR_GameState, ClockReferencePoint);
+    DOREPLIFETIME(AUR_GameState, MatchStateTag);
+    DOREPLIFETIME(AUR_GameState, Winner);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_GameState::SetMatchStateTag(const FGameplayTag& NewTag)
+{
+    if (HasAuthority())
+    {
+        UE_LOG(LogGameState, Log, TEXT("MatchStateTag changing from %s to %s"), *MatchStateTag.GetTagName().ToString(), *NewTag.GetTagName().ToString());
+        if (NewTag == MatchStateTag)
+        {
+            MulticastMatchStateTag(NewTag);
+        }
+        else
+        {
+            MatchStateTag = NewTag;
+            OnRep_MatchStateTag();
+        }
+    }
+}
+
+void AUR_GameState::MulticastMatchStateTag_Implementation(const FGameplayTag& NewTag)
+{
+    MatchStateTag = NewTag;
+    OnRep_MatchStateTag();
+}
 
 void AUR_GameState::OnRep_MatchState()
 {
     OnMatchStateChanged.Broadcast(this);
     
     Super::OnRep_MatchState();
+}
+
+void AUR_GameState::OnRep_MatchStateTag()
+{
+    OnMatchStateTagChanged.Broadcast(this);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,3 +103,64 @@ void AUR_GameState::DefaultTimer()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+AUR_TeamInfo* AUR_GameState::AddNewTeam()
+{
+    TSubclassOf<AUR_TeamInfo> TeamInfoClass;
+    if (AUR_GameMode* GM = GetWorld()->GetAuthGameMode<AUR_GameMode>())
+    {
+        TeamInfoClass = GM->TeamInfoClass;
+    }
+    if (!TeamInfoClass)
+    {
+        TeamInfoClass = AUR_TeamInfo::StaticClass();
+    }
+
+    FActorSpawnParameters SpawnInfo;
+    SpawnInfo.Instigator = GetInstigator();
+    SpawnInfo.ObjectFlags |= RF_Transient;
+
+    AUR_TeamInfo* TeamInfo = GetWorld()->SpawnActor<AUR_TeamInfo>(TeamInfoClass, SpawnInfo);
+    if (TeamInfo)
+    {
+        IUR_TeamInterface::Execute_SetTeamIndex(TeamInfo, Teams.Num());
+        Teams.Add(TeamInfo);
+    }
+
+    return TeamInfo;
+}
+
+void AUR_GameState::TrimTeams()
+{
+    if (HasAuthority())
+    {
+        // Iterate from last index to 2
+        for (int32 i = Teams.Num() - 1; i >= 2; i--)
+        {
+            if (Teams[i]->Players.Num() > 0 || Teams[i]->GetScore() != 0)
+            {
+                break;
+            }
+            Teams[i]->Destroy();
+            Teams.RemoveAt(i);
+        }
+    }
+}
+
+void AUR_GameState::GetSpectators(TArray<APlayerState*>& OutSpectators)
+{
+    for (APlayerState* PS : PlayerArray)
+    {
+        if (PS && PS->IsOnlyASpectator())
+        {
+            OutSpectators.Add(PS);
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_GameState::OnRep_Winner()
+{
+    OnWinnerAssigned.Broadcast(this);
+}

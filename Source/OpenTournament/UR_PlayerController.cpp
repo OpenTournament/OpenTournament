@@ -24,6 +24,8 @@
 #include "UR_FunctionLibrary.h"
 #include "UR_GameMode.h"
 #include "UR_Widget_ScoreboardBase.h"
+#include "UR_PlayerState.h"
+#include "UR_Pickup.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -82,6 +84,8 @@ void AUR_PlayerController::SetMusicVolume(float MusicVolume)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+#include "UR_GameState.h"
+
 void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
 {
     Super::SetPlayer(InPlayer);
@@ -89,11 +93,7 @@ void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
     UUR_LocalPlayer* LocalPlayer = Cast<UUR_LocalPlayer>(GetLocalPlayer());
     if (LocalPlayer && LocalPlayer->MessageHistory)
     {
-        // bind chat dispatcher to MessageHistory handler
-        ChatComponent->OnReceiveChatMessage.AddUniqueDynamic(LocalPlayer->MessageHistory, &UUR_MessageHistory::OnReceiveChatMessage);
-
-        // bind system message dispatcher to MessageHistory handler
-        OnReceiveSystemMessage.AddUniqueDynamic(LocalPlayer->MessageHistory, &UUR_MessageHistory::OnReceiveSystemMessage);
+        LocalPlayer->MessageHistory->InitWithPlayer(this);
     }
     else
     {
@@ -371,5 +371,24 @@ void AUR_PlayerController::HideScoreboard()
     {
         ScoreboardWidget->RemoveFromParent();
         ScoreboardWidget = nullptr;
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+int32 AUR_PlayerController::GetTeamIndex_Implementation()
+{
+    if (const auto PS = GetPlayerState<AUR_PlayerState>())
+    {
+        return IUR_TeamInterface::Execute_GetTeamIndex(PS);
+    }
+    return -1;
+}
+
+void AUR_PlayerController::SetTeamIndex_Implementation(int32 NewTeamIndex)
+{
+    if (auto PS = GetPlayerState<AUR_PlayerState>())
+    {
+        IUR_TeamInterface::Execute_SetTeamIndex(PS, NewTeamIndex);
     }
 }

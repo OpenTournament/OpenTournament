@@ -10,9 +10,15 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UMaterialParameterCollection;
+
 class UUR_PlayerInput;
+class UUR_UserSettings;
+class UUR_MPC_Global;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FViewTargetChangedSignature, AUR_BasePlayerController*, PC, AActor*, NewVT, AActor*, OldVT);
 
 /**
  * Base class for MenuPlayerController and URPlayerController.
@@ -27,6 +33,8 @@ public:
     AUR_BasePlayerController(const FObjectInitializer& ObjectInitializer);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    virtual void PostInitializeComponents() override;
 
     virtual void InitInputSystem() override;
 
@@ -43,16 +51,46 @@ public:
     UFUNCTION(Exec, BlueprintCallable, BlueprintCosmetic)
     void ReturnToMainMenu();
 
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
     /**
-    * User configured FOV.
+    * Reference to the global-game MaterialParameterCollection.
     */
-    UPROPERTY(Config, BlueprintReadOnly)
-    int32 ConfiguredFOV;
+    UPROPERTY(EditDefaultsOnly)
+    UMaterialParameterCollection* MPC_GlobalGame;
 
-    UFUNCTION(Exec, BlueprintCallable, BlueprintCosmetic)
-    void SetConfiguredFOV(int32 NewFOV);
+    /**
+    * Need to store an instance of this because modifying CDO causes side effects.
+    */
+    UPROPERTY(Transient)
+    UUR_MPC_Global* UR_MPC_Global_Ref;
 
-    UFUNCTION()
-    void ClampConfiguredFOV();
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    UPROPERTY(Transient)
+    UUR_UserSettings* UserSettings;
+
+    UFUNCTION(BlueprintCosmetic)
+    virtual void InitUserSettings();
+
+    UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Player|Settings")
+    FORCEINLINE UUR_UserSettings* GetUserSettings() const { return UserSettings; }
+
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
+    virtual void ApplyAllSettings();
+
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
+    virtual void ApplyCameraSettings();
+
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
+    virtual void ApplyTeamColorSettings();
+
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
+    virtual void ApplyWeaponGroupSettings();
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    UPROPERTY(BlueprintAssignable)
+    FViewTargetChangedSignature OnViewTargetChanged;
 
 };

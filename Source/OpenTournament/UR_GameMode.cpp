@@ -5,27 +5,167 @@
 #include "UR_GameMode.h"
 
 #include "EngineUtils.h"    // for TActorIterator<>
+#include "Kismet/GameplayStatics.h"
 
 #include "UR_Character.h"
 #include "UR_GameState.h"
 #include "UR_InventoryComponent.h"
-#include "UR_LocalMessage.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 #include "UR_Projectile.h"
 #include "UR_Weapon.h"
+#include "UR_Ammo.h"
 #include "UR_Widget_ScoreboardBase.h"
+#include "UR_TeamInfo.h"
+#include "GameFramework/Controller.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameMode::AUR_GameMode()
 {
     ScoreboardClass = UUR_Widget_ScoreboardBase::StaticClass();
-    DeathMessageClass = UUR_LocalMessage::StaticClass();
 
     GoalScore = 10;
     TimeLimit = 300;
     OvertimeExtraTime = 120;
+
+    MaxPlayers = 10;
+    NumTeams = 0;
+    TeamsFillMode = ETeamsFillMode::Even;
+
+    SelfDamage = 1.f;
+    TeamDamageDirect = 0.f;
+    TeamDamageRetaliate = 0.f;
+}
+
+void AUR_GameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+    Super::InitGame(MapName, Options, ErrorMessage);
+
+    GoalScore = UGameplayStatics::GetIntOption(Options, TEXT("GoalScore"), GoalScore);
+    TimeLimit = UGameplayStatics::GetIntOption(Options, TEXT("TimeLimit"), TimeLimit);
+    OvertimeExtraTime = UGameplayStatics::GetIntOption(Options, TEXT("OvertimeExtraTime"), OvertimeExtraTime);
+    MaxPlayers = UGameplayStatics::GetIntOption(Options, TEXT("MaxPlayers"), MaxPlayers);
+    NumTeams = UGameplayStatics::GetIntOption(Options, TEXT("NumTeams"), NumTeams);
+    TeamsFillMode = UGameplayStatics::ParseOption(Options, TEXT("TeamsFillMode"));
+    SelfDamage = UUR_FunctionLibrary::GetFloatOption(Options, TEXT("SelfDamage"), SelfDamage);
+    TeamDamageDirect = UUR_FunctionLibrary::GetFloatOption(Options, TEXT("TeamDamageDirect"), TeamDamageDirect);
+    TeamDamageRetaliate = UUR_FunctionLibrary::GetFloatOption(Options, TEXT("TeamDamageRetaliate"), TeamDamageRetaliate);
+
+    if (NumTeams > 0)
+    {
+        DesiredTeamSize = FMath::CeilToInt((float)MaxPlayers / (float)NumTeams);
+    }
+    else
+    {
+        NumTeams = 0;
+        DesiredTeamSize = 1;
+    }
+}
+
+void AUR_GameMode::InitGameState()
+{
+    Super::InitGameState();
+
+    if (AUR_GameState* GS = GetGameState<AUR_GameState>())
+    {
+        for (auto Team : GS->Teams)
+        {
+            Team->Destroy();
+        }
+        GS->Teams.Empty();
+
+        // Only create 2 teams to start with, others will be added as they fill up.
+        for (int32 i = 0; i < FMath::Min(NumTeams, 2); i++)
+        {
+            GS->AddNewTeam();
+        }
+    }
+}
+
+void AUR_GameMode::GenericPlayerInitialization(AController* C)
+{
+    Super::GenericPlayerInitialization(C);
+
+    if (C && C->PlayerState && !C->PlayerState->IsOnlyASpectator())
+    {
+        if (AUR_PlayerState* PS = Cast<AUR_PlayerState>(C->PlayerState))
+        {
+            if (NumTeams > 0)
+            {
+                AssignDefaultTeam(PS);
+            }
+        }
+    }
+}
+
+void AUR_GameMode::AssignDefaultTeam(AUR_PlayerState* PS)
+{
+    if (NumTeams == 0)
+    {
+        IUR_TeamInterface::Execute_SetTeamIndex(PS, -1);
+        return;
+    }
+
+    if (NumTeams == 1)
+    {
+        IUR_TeamInterface::Execute_SetTeamIndex(PS, 0);
+        return;
+    }
+
+    if (AUR_GameState* GS = GetGameState<AUR_GameState>())
+    {
+        bool bCreateNewTeam = false;
+
+        if (TeamsFillMode.Equals(ETeamsFillMode::Squads))
+        {
+            // Create a new squad only if all existing squads are full
+            bCreateNewTeam = true;
+            for (const auto Team : GS->Teams)
+            {
+                if (Team->Players.Num() < DesiredTeamSize)
+                {
+                    bCreateNewTeam = false;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            // Create a new team if we don't have NumTeams yet
+            if (GS->Teams.Num() < NumTeams)
+            {
+                bCreateNewTeam = true;
+                // Unless one existing team has 0 players
+                for (const auto Team : GS->Teams)
+                {
+                    if (Team->Players.Num() == 0)
+                    {
+                        bCreateNewTeam = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (bCreateNewTeam)
+        {
+            GS->AddNewTeam();
+        }
+
+        // Fit player into the smallest team
+
+        AUR_TeamInfo* SmallestTeam = GS->Teams[0];
+        for (const auto Team : GS->Teams)
+        {
+            if (Team->Players.Num() < SmallestTeam->Players.Num())
+            {
+                SmallestTeam = Team;
+            }
+        }
+
+        SmallestTeam->AddPlayer(PS);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,11 +174,15 @@ AUR_GameMode::AUR_GameMode()
 
 void AUR_GameMode::HandleMatchHasStarted()
 {
+    // WARNING: Parent starts recording replay here. We don't want that when we have Warmup first.
     Super::HandleMatchHasStarted();
 
     AUR_GameState* GS = GetGameState<AUR_GameState>();
     if (GS)
     {
+        // TODO: Here we would do Warmup first
+        GS->SetMatchStateTag(FGameplayTag::RequestGameplayTag(FName(TEXT("MatchState.InProgress.Match"))));
+
         if (TimeLimit > 0)
         {
             GS->SetTimeLimit(TimeLimit);
@@ -60,8 +204,7 @@ void AUR_GameMode::OnMatchTimeUp_Implementation(AUR_GameState* GS)
     {
         // Overtime
 
-        //TODO: msg class
-        BroadcastLocalized(this, UUR_LocalMessage::StaticClass(), 0, nullptr, nullptr, GS);
+        GS->SetMatchStateTag(FGameplayTag::RequestGameplayTag(FName(TEXT("MatchState.InProgress.Overtime"))));
 
         if (OvertimeExtraTime > 0)
         {
@@ -96,8 +239,12 @@ void AUR_GameMode::SetPlayerDefaults(APawn* PlayerPawn)
                 AUR_Weapon* StartingWeapon = GetWorld()->SpawnActor<AUR_Weapon>(Entry.WeaponClass, URCharacter->GetActorLocation(), URCharacter->GetActorRotation(), SpawnParams);
                 if (StartingWeapon)
                 {
-                    StartingWeapon->AmmoCount = Entry.Ammo;
                     StartingWeapon->GiveTo(URCharacter);
+                    //TODO: Weapons with multiple ammo classes
+                    if (StartingWeapon->AmmoRefs.Num() > 0 && StartingWeapon->AmmoRefs[0])
+                    {
+                        StartingWeapon->AmmoRefs[0]->SetAmmoCount(Entry.Ammo);
+                    }
                 }
             }
         }
@@ -107,8 +254,37 @@ void AUR_GameMode::SetPlayerDefaults(APawn* PlayerPawn)
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// Killing
+// Damage & Kill
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_GameMode::ModifyDamage_Implementation(float& Damage, float& KnockbackPower, AUR_Character* Victim, AController* DamageInstigator, const FDamageEvent& DamageEvent, AActor* DamageCauser)
+{
+    if (Victim && DamageInstigator && Victim->GetController() == DamageInstigator)
+    {
+        Damage *= SelfDamage;
+        // Full self-knockback
+    }
+
+    //NOTE: Using InstigatorController to check team is not ideal because controller can change team.
+    // Character isn't any better because it can die during projectile travel time.
+    // For projectiles, we should assign a team to the projectile on spawn, and fetch that upon damage.
+
+    if (Victim && Victim->GetController() != DamageInstigator && IUR_TeamInterface::Execute_IsAlly(Victim, DamageInstigator))
+    {
+        const float Retaliate = TeamDamageRetaliate * Damage;
+        // Retaliation counts as self damage
+        if (Retaliate > 0.f && SelfDamage > 0.f)
+        {
+            if (APawn* InstigatorPawn = DamageInstigator->GetPawn())
+            {
+                InstigatorPawn->TakeDamage(Retaliate, FDamageEvent(), DamageInstigator, DamageCauser);
+            }
+        }
+
+        Damage *= TeamDamageDirect;
+        KnockbackPower *= TeamDamageDirect;
+    }
+}
 
 bool AUR_GameMode::PreventDeath_Implementation(AController* Killed, AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser)
 {
@@ -150,28 +326,30 @@ void AUR_GameMode::RegisterKill(AController* Victim, AController* Killer, const 
     if (Victim)
     {
         AUR_PlayerState* VictimPS = Victim->GetPlayerState<AUR_PlayerState>();
+        AUR_PlayerState* KillerPS = NULL;
+        FGameplayTagContainer EventTags;
 
         if (VictimPS)
         {
-            VictimPS->AddDeath(Killer);
+            VictimPS->RegisterDeath(Killer, EventTags);
         }
 
         if (Killer && Killer != Victim)
         {
-            AUR_PlayerState* KillerPS = Killer->GetPlayerState<AUR_PlayerState>();
+            KillerPS = Killer->GetPlayerState<AUR_PlayerState>();
             if (KillerPS)
             {
-                KillerPS->AddKill(Victim);
+                KillerPS->RegisterKill(Victim, EventTags);
             }
-            BroadcastLocalized(Killer, DeathMessageClass, 0, Victim->GetPlayerState<APlayerState>(), Killer->GetPlayerState<APlayerState>(), DamageEvent.DamageTypeClass);
         }
-        else
+        else if (VictimPS)
         {
-            if (VictimPS)
-            {
-                VictimPS->AddSuicide();
-            }
-            BroadcastLocalized(Killer, DeathMessageClass, 1, Victim->GetPlayerState<APlayerState>(), nullptr, DamageEvent.DamageTypeClass);
+            VictimPS->RegisterSuicide(EventTags);
+        }
+
+        if (VictimPS || KillerPS)
+        {
+            GetGameState<AUR_GameState>()->MulticastFragEvent(VictimPS, KillerPS, DamageEvent.DamageTypeClass, EventTags);
         }
     }
 }
@@ -211,32 +389,55 @@ bool AUR_GameMode::CheckEndGame(AActor* Focus)
 AActor* AUR_GameMode::IsThereAWinner_Implementation()
 {
     // By default return the highest scorer..?
-    AGameState* GS = GetGameState<AGameState>();
+    AUR_GameState* GS = GetGameState<AUR_GameState>();
     if (GS)
     {
-        APlayerState* BestPlayer = nullptr;
-        bool bTie = false;
-        for (APlayerState* PS : GS->PlayerArray)
+        if (GS->Teams.Num() > 1)
         {
-            if (!BestPlayer || PS->GetScore() > BestPlayer->GetScore())
+            AUR_TeamInfo* BestTeam = NULL;
+            bool bTie = false;
+            for (AUR_TeamInfo* Team : GS->Teams)
             {
-                BestPlayer = PS;
-                bTie = false;
+                if (!BestTeam || Team->GetScore() > BestTeam->GetScore())
+                {
+                    BestTeam = Team;
+                    bTie = false;
+                }
+                else if (Team->GetScore() == BestTeam->GetScore())
+                {
+                    bTie = true;
+                }
             }
-            else if (PS->GetScore() == BestPlayer->GetScore())
+            if (!bTie)
             {
-                bTie = true;
+                return BestTeam;
             }
         }
-        if (!bTie)
+        else
         {
-            return BestPlayer;
+            APlayerState* BestPlayer = NULL;
+            bool bTie = false;
+            for (APlayerState* PS : GS->PlayerArray)
+            {
+                if (!BestPlayer || PS->GetScore() > BestPlayer->GetScore())
+                {
+                    BestPlayer = PS;
+                    bTie = false;
+                }
+                else if (PS->GetScore() == BestPlayer->GetScore())
+                {
+                    bTie = true;
+                }
+            }
+            if (!bTie)
+            {
+                return BestPlayer;
+            }
         }
     }
 
     //NOTE: maybe we should put the DM implem here because it kind of makes sense.
     // GoalScore is part of this class so we should have a default handling here.
-    // Also we'll want the teams implementation all merged in.
 
     return nullptr;
 }
@@ -251,9 +452,21 @@ AActor* AUR_GameMode::ResolveEndGameFocus_Implementation(AActor* Winner)
     {
         return C->GetPawn();
     }
-
-    //TODO: if Winner is a team, return best player of team
-
+    if (AUR_TeamInfo* Team = Cast<AUR_TeamInfo>(Winner))
+    {
+        AUR_PlayerState* Top = NULL;
+        for (AUR_PlayerState* PS : Team->Players)
+        {
+            if (PS && PS->GetPawn() && (!Top || PS->GetScore() > Top->GetScore()))
+            {
+                Top = PS;
+            }
+        }
+        if (Top)
+        {
+            return Top->GetPawn();
+        }
+    }
     return Winner;
 }
 
@@ -261,8 +474,20 @@ void AUR_GameMode::TriggerEndMatch_Implementation(AActor* Winner, AActor* Focus)
 {
     if (AUR_GameState* GS = GetGameState<AUR_GameState>())
     {
-        GS->Winner = Winner;
+        // Winner needs to be replicated. Should never be a controller!
+        if (AController* C = Cast<AController>(Winner))
+        {
+            if (IsValid(C->PlayerState))
+                GS->Winner = C->PlayerState;
+            else
+                GS->Winner = C->GetPawn();
+        }
+        else
+        {
+            GS->Winner = Winner;
+        }
         GS->EndGameFocus = Focus;
+        GS->OnRep_Winner(); // trigger events on server side
     }
     SetMatchState(MatchState::WaitingPostMatch);
 }
@@ -323,9 +548,6 @@ void AUR_GameMode::AnnounceWinner_Implementation(AActor* Winner)
     {
         WinnerPS = C->GetPlayerState<APlayerState>();
     }
-
-    //TODO: msg class
-    BroadcastLocalized(Winner, UUR_LocalMessage::StaticClass(), 0, WinnerPS, nullptr, Winner);
 }
 
 void AUR_GameMode::OnEndGameTimeUp(AUR_GameState* GS)

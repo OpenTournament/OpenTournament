@@ -6,11 +6,12 @@
 
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
+#include "Engine.h"
 
 #include "OpenTournament.h"
 #include "UR_Weapon.h"
 #include "UR_Ammo.h"
-#include "UR_Character.h"
+#include "UR_UserSettings.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -25,7 +26,8 @@ void UUR_InventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(UUR_InventoryComponent, InventoryW, COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(UUR_InventoryComponent, WeaponArray, COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(UUR_InventoryComponent, AmmoArray, COND_OwnerOnly);
     DOREPLIFETIME_CONDITION(UUR_InventoryComponent, DesiredWeapon, COND_SkipOwner);
 }
 
@@ -37,183 +39,211 @@ bool UUR_InventoryComponent::IsLocallyControlled() const
     return P && P->IsLocallyControlled();
 }
 
-void UUR_InventoryComponent::Add(AUR_Weapon* InWeapon)
+void UUR_InventoryComponent::AddWeapon(AUR_Weapon* InWeapon)
 {
-    if (InventoryW.Contains(InWeapon))
+    // Sanity check - seems the BlueprintAuthorityOnly does not prevent non-authority calls.
+    if (GetOwnerRole() != ROLE_Authority)
+    {
+        return;
+    }
+
+    if (WeaponArray.Contains(InWeapon))
     {
         // If we already have this weapon instance... there is a logic error
         UE_LOG(LogTemp, Warning, TEXT("%s: weapon instance is already in inventory..."), *GetName());
         return;
     }
 
-    // If we already have this weapon class, just stack ammo
-    for (AUR_Weapon* IterWeapon : InventoryW)
+    // Initialize or stack ammo
+    for (const auto& AmmoDef : InWeapon->AmmoDefinitions)
     {
-        if (IterWeapon->GetClass() == InWeapon->GetClass())
+        if (AmmoDef.AmmoClass)
         {
-            const int32 NewAmmoCount = IterWeapon->AmmoCount + InWeapon->AmmoCount;
-            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("%s ammo count %i -> %i"), *IterWeapon->WeaponName, IterWeapon->AmmoCount, NewAmmoCount));
-            IterWeapon->AmmoCount = NewAmmoCount;
+            GetAmmoByClass(AmmoDef.AmmoClass, true)->StackAmmo(AmmoDef.AmmoAmount, InWeapon);
+        }
+    }
+
+    // If we already have this weapon class, do nothing more
+    for (AUR_Weapon* Weap : WeaponArray)
+    {
+        if (Weap->GetClass() == InWeapon->GetClass())
+        {
             InWeapon->Destroy();
             return;
         }
     }
 
     // Else, add weapon
-    InventoryW.Add(InWeapon);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You have the %s (ammo = %i)"), *InWeapon->WeaponName, InWeapon->AmmoCount));
+    WeaponArray.Add(InWeapon);
+
+    // Message (temporary)
+    /*
+    if (auto Pawn = Cast<APawn>(GetOwner()))
+    {
+        if (auto PC = Pawn->GetController<APlayerController>())
+        {
+            PC->ClientMessage(FString::Printf(TEXT("You have the %s"), *InWeapon->WeaponName));
+        }
+    }
+    */
+
+    // Set ammo refs
+    InWeapon->AmmoRefs.SetNumZeroed(InWeapon->AmmoDefinitions.Num());
+    for (int32 i = 0; i < InWeapon->AmmoDefinitions.Num(); i++)
+    {
+        InWeapon->AmmoRefs[i] = GetAmmoByClass(InWeapon->AmmoDefinitions[i].AmmoClass);
+    }
 
     // In standalone or listen host, call OnRep next tick so we can pick amongst new weapons what to swap to.
     if (IsLocallyControlled())
     {
-        GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UUR_InventoryComponent::OnRep_InventoryW);
+        GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UUR_InventoryComponent::OnRep_WeaponArray);
     }
 }
 
-void UUR_InventoryComponent::Add(AUR_Ammo* InAmmo)
+void UUR_InventoryComponent::AddAmmo(TSubclassOf<AUR_Ammo> InAmmoClass, int32 InAmount)
 {
-    /*if (InventoryA.Contains(ammo)) {
-        for (auto& ammo2 : InventoryA)
+    if (AUR_Ammo* Ammo = GetAmmoByClass(InAmmoClass, true))
+    {
+        Ammo->StackAmmo(InAmount);
+    }
+}
+
+AUR_Ammo* UUR_InventoryComponent::GetAmmoByClass(TSubclassOf<AUR_Ammo> InAmmoClass, bool bAutoCreate)
+{
+    if (InAmmoClass)
+    {
+        for (AUR_Ammo* Ammo : AmmoArray)
         {
-            if (ammo2->AmmoName == *ammo->AmmoName) {
-                ammo2->amount += ammo->amount;
-                GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, FString::Printf(TEXT("Added %s ammo. Current amount: %d"), *ammo2->AmmoName, ammo2->amount));
+            if (Ammo->GetClass() == InAmmoClass)
+            {
+                return Ammo;
+            }
+        }
+
+        if (bAutoCreate && GetOwnerRole() == ROLE_Authority)
+        {
+            FActorSpawnParameters SpawnParams;
+            SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+            SpawnParams.Owner = GetOwner();
+            AUR_Ammo* NewAmmo = GetWorld()->SpawnActor<AUR_Ammo>(InAmmoClass, SpawnParams);
+            if (NewAmmo)
+            {
+                AmmoArray.Add(NewAmmo);
+                return NewAmmo;
             }
         }
     }
-    else {*/
-        //InventoryA.Add(ammo);
-        //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You picked the %s"), *ammo->AmmoName));
-    //}
-        //UpdateWeaponAmmo(ammo);
+
+    return NULL;
 }
 
-void UUR_InventoryComponent::AmmoCountInInventory(AUR_Weapon* InWeapon) 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void UUR_InventoryComponent::SelectWeapon(int32 Index)
 {
-    for (auto& IterAmmo : InventoryA)
+    if (WeaponGroups.IsValidIndex(Index))
     {
-        /*if (weapon->AmmoName == *ammo->AmmoName)
+        auto GroupWeapons = WeaponGroups[Index].Weapons.FilterByPredicate([&](AUR_Weapon* W) {
+            return W && (W->HasAnyAmmo() || W == DesiredWeapon);
+        });
+        if (GroupWeapons.Num() > 0)
         {
-            weapon->AmmoCount += ammo->amount;
-        }*/
-    }
-}
-
-void UUR_InventoryComponent::UpdateWeaponAmmo(AUR_Ammo* InAmmo) 
-{
-    for (auto& IterWeapon : InventoryW)
-    {
-        /*if (weapon->AmmoName == *ammo->AmmoName)
-        {
-            weapon->AmmoCount += ammo->amount;
-        }*/
-    }
-}
-
-
-void UUR_InventoryComponent::ShowInventory()
-{
-    for (auto& IterWeapon : InventoryW)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Weapons in inventory: %s with Ammo Count: %d"), *IterWeapon->WeaponName, IterWeapon->AmmoCount));
-    }
-
-    for (auto& IterAmmo : InventoryA)
-    {
-        //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Ammo in inventory: %s"), *ammo->AmmoName));
-    }
-
-}
-
-int32 UUR_InventoryComponent::SelectWeapon(int32 WeaponGroup)
-{
-    FString DesiredWeaponName = (TArray<FString> {
-        TEXT("Assault Rifle"),
-        TEXT("Shotgun"),
-        TEXT("Rocket Launcher"),
-        TEXT("Grenade Launcher"),
-        TEXT("Sniper Rifle"),
-        TEXT("Pistol"),
-    })[WeaponGroup];
-
-    for (auto& IterWeapon : InventoryW)
-    {
-        if (IterWeapon->WeaponName == DesiredWeaponName)
-        {
-            SetDesiredWeapon(IterWeapon);
-            return WeaponGroup;
+            int32 SelectedIndex = GroupWeapons.Find(DesiredWeapon);
+            int32 DesiredIndex = (SelectedIndex + 1) % GroupWeapons.Num();
+            if (DesiredIndex != SelectedIndex)
+            {
+                SetDesiredWeapon(GroupWeapons[DesiredIndex]);
+            }
         }
     }
-    return 0;
-}
-
-AUR_Weapon * UUR_InventoryComponent::SelectWeaponG(int32 WeaponGroup)
-{
-    FString DesiredWeaponName = (TArray<FString> {
-        TEXT("Assault Rifle"),
-        TEXT("Shotgun"),
-        TEXT("Rocket Launcher"),
-        TEXT("Grenade Launcher"),
-        TEXT("Sniper Rifle"),
-        TEXT("Pistol"),
-    })[WeaponGroup];
-
-    for (auto& IterWeapon : InventoryW)
-    {
-        if (IterWeapon->WeaponName == DesiredWeaponName)
-        {
-            SetDesiredWeapon(IterWeapon);
-            break;
-        }
-    }
-    return ActiveWeapon;
 }
 
 bool UUR_InventoryComponent::NextWeapon()
 {
-    AUR_Weapon* NewWeapon = nullptr;
+    //NOTE: We want prev/next to match the visible weapon bar, because that is what makes the most sense.
 
-    for (int32 i = 0; i < InventoryW.Num(); i++)
+    //NOTE: A weapon can be present in multiple groups (including in the visible weapon bar).
+    // Handling prev/next weapon can be difficult.
+
+    // Example: sniper is present in groups 1, 3 and 9.
+    // Groups 1 and 3 are visible on weapon bar, group 9 is a hidden group with a keybind.
+    // User selects sniper by pressing 9.
+    // Groups 1 and 3 appear selected on bar because sniper is in both.
+    // What should be the next weapon ?
+
+    // Option 1 : prevent weapon from being present in multiple _visible_ groups.
+
+    // Option 2 : build an array of weapons from visible groups, remove duplicates, then work with that.
+
+    TArray<AUR_Weapon*> WorkArray;
+    for (auto& Group : WeaponGroups)
     {
-        if (InventoryW[i] == DesiredWeapon)
-            NewWeapon = InventoryW[(i + 1) % InventoryW.Num()];
+        if (Group.Visibility != EWeaponGroupVisibility::Hidden)
+        {
+            for (auto Weapon : Group.Weapons)
+            {
+                // Only include weappons with ammo, and also current weapon for reference
+                if (Weapon && (Weapon->HasAnyAmmo() || Weapon == DesiredWeapon))
+                {
+                    WorkArray.AddUnique(Weapon);
+                }
+            }
+        }
     }
-    if (!NewWeapon && InventoryW.Num() > 0)
-        NewWeapon = InventoryW[0];
-
-    if (NewWeapon && NewWeapon != DesiredWeapon)
+    if (WorkArray.Num() > 0)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Next weapon -> %s"), *NewWeapon->WeaponName));
-        SetDesiredWeapon(NewWeapon);
-        return true;
+        int32 SelectedIndex = WorkArray.Find(DesiredWeapon);
+        int32 DesiredIndex = (SelectedIndex + 1) % WorkArray.Num();
+        if (DesiredIndex != SelectedIndex)
+        {
+            SetDesiredWeapon(WorkArray[DesiredIndex]);
+            return true;
+        }
     }
     return false;
 }
 
 bool UUR_InventoryComponent::PrevWeapon()
 {
-    AUR_Weapon* NewWeapon = nullptr;
-
-    for (int32 i = 0; i < InventoryW.Num(); i++)
+    TArray<AUR_Weapon*> WorkArray;
+    for (const auto& Group : WeaponGroups)
     {
-        if (InventoryW[i] == DesiredWeapon)
-            NewWeapon = InventoryW[(i + InventoryW.Num() - 1) % InventoryW.Num()];
+        if (Group.Visibility != EWeaponGroupVisibility::Hidden)
+        {
+            for (auto Weapon : Group.Weapons)
+            {
+                if (Weapon && (Weapon->HasAnyAmmo() || Weapon == DesiredWeapon))
+                {
+                    WorkArray.AddUnique(Weapon);
+                }
+            }
+        }
     }
-    if (!NewWeapon && InventoryW.Num() > 0)
-        NewWeapon = InventoryW.Last();
-
-    if (NewWeapon && NewWeapon != DesiredWeapon)
+    if (WorkArray.Num() > 0)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Prev weapon -> %s"), *NewWeapon->WeaponName));
-        SetDesiredWeapon(NewWeapon);
-        return true;
+        int32 SelectedIndex = WorkArray.Find(DesiredWeapon);
+        int32 DesiredIndex = (WorkArray.Num() + (SelectedIndex != INDEX_NONE ? SelectedIndex : 0) - 1) % WorkArray.Num();
+        if (DesiredIndex != SelectedIndex)
+        {
+            SetDesiredWeapon(WorkArray[DesiredIndex]);
+            return true;
+        }
     }
     return false;
 }
 
 void UUR_InventoryComponent::SetDesiredWeapon(AUR_Weapon* InWeapon)
 {
+    if (DesiredWeapon == InWeapon)
+    {
+        return;
+    }
+
+    AUR_Weapon* OldDesired = DesiredWeapon;
     DesiredWeapon = InWeapon;
+
+    OnDesiredWeaponChanged.Broadcast(this, DesiredWeapon, OldDesired);
 
     if (ActiveWeapon && ActiveWeapon->WeaponState != EWeaponState::Inactive)
     {
@@ -243,10 +273,12 @@ void UUR_InventoryComponent::ServerSetDesiredWeapon_Implementation(AUR_Weapon* I
     SetDesiredWeapon(InWeapon);
 }
 
-void UUR_InventoryComponent::OnRep_DesiredWeapon()
+void UUR_InventoryComponent::OnRep_DesiredWeapon(AUR_Weapon* OldDesired)
 {
     // On remote clients
-    SetDesiredWeapon(DesiredWeapon);
+    AUR_Weapon* NewDesired = DesiredWeapon;
+    DesiredWeapon = OldDesired;
+    SetDesiredWeapon(NewDesired);
 }
 
 void UUR_InventoryComponent::OnActiveWeaponStateChanged(AUR_Weapon* Weapon, EWeaponState NewState)
@@ -259,6 +291,8 @@ void UUR_InventoryComponent::OnActiveWeaponStateChanged(AUR_Weapon* Weapon, EWea
 
 void UUR_InventoryComponent::SetActiveWeapon(AUR_Weapon* InWeapon)
 {
+    AUR_Weapon* OldActive = ActiveWeapon;
+
     if (ActiveWeapon)
     {
         ActiveWeapon->OnWeaponStateChanged.RemoveDynamic(this, &UUR_InventoryComponent::OnActiveWeaponStateChanged);
@@ -273,13 +307,15 @@ void UUR_InventoryComponent::SetActiveWeapon(AUR_Weapon* InWeapon)
         ActiveWeapon = NULL;
     }
 
-    //NOTE: InventoryW is not replicated for non-owning clients
-    if (InWeapon && (GetNetMode() == NM_Client || InventoryW.Contains(InWeapon)))
+    //NOTE: Weapons array is not replicated for non-owning clients
+    if (InWeapon && (GetNetMode() == NM_Client || WeaponArray.Contains(InWeapon)))
     {
         ActiveWeapon = InWeapon;
         ActiveWeapon->RequestBringUp();
         ActiveWeapon->OnWeaponStateChanged.AddUniqueDynamic(this, &UUR_InventoryComponent::OnActiveWeaponStateChanged);
     }
+
+    OnActiveWeaponChanged.Broadcast(this, ActiveWeapon, OldActive);
 
     //modsupport - case where SetActiveWeapon is called without setting DesiredWeapon.
     // We need to replicate to remote clients via DesiredWeapon.
@@ -289,13 +325,15 @@ void UUR_InventoryComponent::SetActiveWeapon(AUR_Weapon* InWeapon)
     }
 }
 
-void UUR_InventoryComponent::OnRep_InventoryW()
+void UUR_InventoryComponent::OnRep_WeaponArray()
 {
+    RefillWeaponGroups();
+
     if (!ActiveWeapon)
     {
         // This should only happen when we are given initial inventory on spawn
         // Here we should use user settings to pick the preferred weapon (if there are multiple).
-        for (AUR_Weapon* IterWeapon : InventoryW)
+        for (AUR_Weapon* IterWeapon : WeaponArray)
         {
             if (IterWeapon)
             {
@@ -304,6 +342,71 @@ void UUR_InventoryComponent::OnRep_InventoryW()
             }
         }
     }
+}
+
+void UUR_InventoryComponent::RefillWeaponGroups()
+{
+    if (auto Settings = UUR_UserSettings::Get(this))
+    {
+        WeaponGroups = Settings->WeaponGroups;
+    }
+    else
+    {
+        WeaponGroups.Empty();
+        return;
+    }
+
+    // Need an array of array for each group.
+    // Because one weapon class in a group can serve as a match for multiple weapon instances, due to fallbacks.
+    // We want to keep the order of grouped weapons, by the order of matched weapon classes.
+    // 1st index weapon group, 2nd index weapon class
+    TArray<TArray<TArray<AUR_Weapon*>>> Temp;
+    Temp.SetNumZeroed(WeaponGroups.Num());
+
+    for (auto Weapon : WeaponArray)
+    {
+        if (!Weapon)    // object not replicated yet
+            continue;
+
+        bool bFound = false;
+        for (UClass* TestClass = Weapon->GetClass(); !bFound && TestClass; TestClass = AUR_Weapon::GetNextFallbackConfigWeapon(TestClass))
+        {
+            for (int32 GroupIndex = 0; GroupIndex < WeaponGroups.Num(); GroupIndex++)
+            {
+                int32 ClassIndex = WeaponGroups[GroupIndex].WeaponClasses.Find(TestClass);
+                if (ClassIndex != INDEX_NONE)
+                {
+                    if (Temp[GroupIndex].Num() <= ClassIndex)
+                    {
+                        Temp[GroupIndex].SetNumZeroed(ClassIndex + 1);
+                    }
+                    if (TestClass == Weapon->GetClass())
+                    {
+                        // In case of immediate match, insert at first position always
+                        Temp[GroupIndex][ClassIndex].Insert(Weapon, 0);
+                    }
+                    else
+                    {
+                        // In case of fallback, append. If multiple weapons match by the same fallback, they will be in pickup order.
+                        Temp[GroupIndex][ClassIndex].Add(Weapon);
+                    }
+                    bFound = true;
+                }
+            }
+        }
+    }
+
+    // Concatenate arrays
+    for (int32 GroupIndex = 0; GroupIndex < WeaponGroups.Num(); GroupIndex++)
+    {
+        WeaponGroups[GroupIndex].Weapons.Empty();
+        for (auto& Weapons : Temp[GroupIndex])
+        {
+            WeaponGroups[GroupIndex].Weapons.Append(Weapons);
+        }
+    }
+
+    OnWeaponGroupsUpdated.Broadcast(this);
 }
 
 void UUR_InventoryComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
@@ -321,19 +424,19 @@ void UUR_InventoryComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
 
 void UUR_InventoryComponent::Clear_Implementation()
 {
-    for (AUR_Weapon* IterWeapon : InventoryW)
+    for (AUR_Weapon* IterWeapon : WeaponArray)
     {
         if (IterWeapon)
             IterWeapon->Destroy();
     }
-    InventoryW.Empty();
+    WeaponArray.Empty();
 
-    for (AUR_Ammo* IterAmmo : InventoryA)
+    for (AUR_Ammo* IterAmmo : AmmoArray)
     {
         if (IterAmmo)
         {
             IterAmmo->Destroy();
         }
     }
-    InventoryA.Empty();
+    AmmoArray.Empty();
 }
