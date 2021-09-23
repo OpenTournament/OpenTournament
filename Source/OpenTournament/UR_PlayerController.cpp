@@ -143,6 +143,9 @@ void AUR_PlayerController::SetupInputComponent()
     InputComponent->BindAction("AltFire", IE_Pressed, this, &AUR_PlayerController::PressedAltFire);
     InputComponent->BindAction("AltFire", IE_Released, this, &AUR_PlayerController::ReleasedAltFire);
 
+    InputComponent->BindAction("ThirdFire", IE_Pressed, this, &AUR_PlayerController::PressedThirdFire);
+    InputComponent->BindAction("ThirdFire", IE_Released, this, &AUR_PlayerController::ReleasedThirdFire);
+
     InputComponent->BindAction("ToggleScoreboard", IE_Pressed, this, &AUR_PlayerController::ToggleScoreboard);
     InputComponent->BindAction("HoldScoreboard", IE_Pressed, this, &AUR_PlayerController::ShowScoreboard);
     InputComponent->BindAction("HoldScoreboard", IE_Released, this, &AUR_PlayerController::HideScoreboard);
@@ -319,6 +322,19 @@ void AUR_PlayerController::ReleasedAltFire()
     if (URCharacter)
     {
         URCharacter->PawnStopFire(1);
+    }
+}
+
+void AUR_PlayerController::PressedThirdFire()
+{
+    StartFire(2);
+}
+
+void AUR_PlayerController::ReleasedThirdFire()
+{
+    if (URCharacter)
+    {
+        URCharacter->PawnStopFire(2);
     }
 }
 
