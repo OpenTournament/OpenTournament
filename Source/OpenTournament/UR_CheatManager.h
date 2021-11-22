@@ -33,7 +33,7 @@ class OPENTOURNAMENT_API UUR_CheatManager : public UCheatManager
     void Cheat_Loaded();
 
     UPROPERTY(Config)
-    TArray<TSubclassOf<AUR_Weapon>> LoadedWeaponClasses;
+    TArray<TSoftClassPtr<AUR_Weapon>> LoadedWeaponClasses;
 
     UFUNCTION(exec, Category = "Cheat")
     void Cheat_AddScore(int32 InValue = 1);

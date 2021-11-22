@@ -236,14 +236,17 @@ void AUR_GameMode::SetPlayerDefaults(APawn* PlayerPawn)
             SpawnParams.Instigator = URCharacter;
             for (const FStartingWeaponEntry& Entry : StartingWeapons)
             {
-                AUR_Weapon* StartingWeapon = GetWorld()->SpawnActor<AUR_Weapon>(Entry.WeaponClass, URCharacter->GetActorLocation(), URCharacter->GetActorRotation(), SpawnParams);
-                if (StartingWeapon)
+                if (Entry.WeaponClass)
                 {
-                    StartingWeapon->GiveTo(URCharacter);
-                    //TODO: Weapons with multiple ammo classes
-                    if (StartingWeapon->AmmoRefs.Num() > 0 && StartingWeapon->AmmoRefs[0])
+                    AUR_Weapon* StartingWeapon = GetWorld()->SpawnActor<AUR_Weapon>(Entry.WeaponClass.Get(), URCharacter->GetActorLocation(), URCharacter->GetActorRotation(), SpawnParams);
+                    if (StartingWeapon)
                     {
-                        StartingWeapon->AmmoRefs[0]->SetAmmoCount(Entry.Ammo);
+                        StartingWeapon->GiveTo(URCharacter);
+                        //TODO: Weapons with multiple ammo classes
+                        if (StartingWeapon->AmmoRefs.Num() > 0 && StartingWeapon->AmmoRefs[0])
+                        {
+                            StartingWeapon->AmmoRefs[0]->SetAmmoCount(Entry.Ammo);
+                        }
                     }
                 }
             }

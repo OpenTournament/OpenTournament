@@ -38,10 +38,13 @@ void UUR_CheatManager::Cheat_Loaded()
         {
             for (const auto WeaponClass : LoadedWeaponClasses)
             {
-                const auto World = URCharacter->GetWorld();
-                auto SpawnedWeapon = World->SpawnActor<AUR_Weapon>(WeaponClass);
-                Inventory->AddWeapon(SpawnedWeapon);
-            }            
+                if (WeaponClass)
+                {
+                    const auto World = URCharacter->GetWorld();
+                    auto SpawnedWeapon = World->SpawnActor<AUR_Weapon>(WeaponClass.Get());
+                    Inventory->AddWeapon(SpawnedWeapon);
+                }
+            }
         }
     }
 }
