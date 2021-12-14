@@ -60,7 +60,7 @@ class OPENTOURNAMENT_API UUR_AnnouncementSubsystem : public ULocalPlayerSubsyste
 	* Class of AnnouncementVoice used
 	*/
 	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "AnnouncementSystem")
-	TSubclassOf<UUR_AnnouncementVoice> AnnouncementVoiceClass;
+	TSoftClassPtr<UUR_AnnouncementVoice> AnnouncementVoiceClass;
 	
 	/**
 	* Announcement Voice

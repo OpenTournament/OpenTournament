@@ -23,7 +23,7 @@ struct FStartingWeaponEntry
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere)
-    TSubclassOf<AUR_Weapon> WeaponClass;
+    TSoftClassPtr<AUR_Weapon> WeaponClass;
 
     UPROPERTY(EditAnywhere)
     int32 Ammo;

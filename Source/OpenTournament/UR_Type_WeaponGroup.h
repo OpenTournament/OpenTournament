@@ -34,7 +34,7 @@ struct FWeaponGroup
     GENERATED_BODY()
 
     UPROPERTY(Config, EditAnywhere, BlueprintReadWrite)
-    TArray<TSubclassOf<AUR_Weapon>> WeaponClasses;
+    TArray<TSoftClassPtr<AUR_Weapon>> WeaponClasses;
 
     UPROPERTY(Config, EditAnywhere, BlueprintReadWrite)
     EWeaponGroupVisibility Visibility;
