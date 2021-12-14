@@ -189,6 +189,16 @@ public:
     */
     virtual void ReleasedAltFire();
 
+    /**
+    * Function bound to "AltFire" ActionMapping Input.
+    */
+    virtual void PressedThirdFire();
+
+    /**
+    * Function bound to "AltFire" ActionMapping Input.
+    */
+    virtual void ReleasedThirdFire();
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
