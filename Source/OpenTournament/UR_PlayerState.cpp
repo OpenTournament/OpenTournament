@@ -5,7 +5,7 @@
 #include "UR_PlayerState.h"
 
 #include "Net/UnrealNetwork.h"
-#include "Net/Core/PushModel/PushModel.h"
+//#include "Net/Core/PushModel/PushModel.h"
 #include "Engine/World.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -48,7 +48,7 @@ void AUR_PlayerState::RegisterKill(AController* Victim, FGameplayTagContainer& O
     // Although including teamkills in multikills & sprees might not be a bad thing.
 
     Kills++;
-    MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Kills, this);
+    //MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Kills, this);
 
     if (GetWorld()->TimeSince(LastKillTime) < 3.f)
     {
@@ -92,12 +92,14 @@ void AUR_PlayerState::RegisterKill(AController* Victim, FGameplayTagContainer& O
     {
         OutTags.AddTag(FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Kill.Revenge"))));
     }
+
+    ForceNetUpdate();
 }
 
 void AUR_PlayerState::RegisterDeath(AController* Killer, FGameplayTagContainer& OutTags)
 {
     Deaths++;
-    MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Deaths, this);
+    //MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Deaths, this);
 
     if (SpreeLevel > 0)
     {
@@ -113,12 +115,15 @@ void AUR_PlayerState::RegisterDeath(AController* Killer, FGameplayTagContainer& 
     {
         LastKiller = Killer->GetPawn();
     }
+
+    ForceNetUpdate();
 }
 
 void AUR_PlayerState::RegisterSuicide(FGameplayTagContainer& OutExtras)
 {
     Suicides++;
-    MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Suicides, this);
+    //MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Suicides, this);
+    ForceNetUpdate();
 }
 
 void AUR_PlayerState::AddScore(const int32 Value)
@@ -153,7 +158,8 @@ void AUR_PlayerState::SetTeamIndex_Implementation(int32 NewTeamIndex)
         if (HasAuthority())
         {
             ReplicatedTeamIndex = TeamIndex;
-            MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, ReplicatedTeamIndex, this);
+            //MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, ReplicatedTeamIndex, this);
+            ForceNetUpdate();
         }
 
         Team = AUR_TeamInfo::GetTeamFromIndex(this, TeamIndex);

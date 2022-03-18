@@ -37,7 +37,7 @@ void UUR_AbilitySystemComponent::GetActiveAbilitiesWithTags(const FGameplayTagCo
 
 int32 UUR_AbilitySystemComponent::GetDefaultAbilityLevel() const
 {
-    AUR_Character* OwningCharacter = Cast<AUR_Character>(OwnerActor);
+    AUR_Character* OwningCharacter = Cast<AUR_Character>(GetOwnerActor());
 
     if (OwningCharacter)
     {
