@@ -57,6 +57,8 @@ struct FKeyTapTime
     */
     UPROPERTY(BluePrintReadOnly, Category = "Dodging")
     float LastTapDownTime;
+
+    FKeyTapTime() : LastTapLeftTime(0), LastTapRightTime(0), LastTapForwardTime(0), LastTapBackTime(0), LastTapUpTime(0), LastTapDownTime(0) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

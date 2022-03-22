@@ -25,6 +25,8 @@ struct FUR_GameplayAbilityData
 
     UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "AbilityData")
     UTexture2D* AbilityIcon;
+
+    FUR_GameplayAbilityData() : AbilityIcon(NULL) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

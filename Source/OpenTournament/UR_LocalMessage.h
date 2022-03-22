@@ -38,6 +38,8 @@ struct FLocalMessageData
 
     UPROPERTY(BlueprintReadOnly)
     UObject* OptionalObject;
+
+    FLocalMessageData() : LocalPC(NULL), Switch(0), RelatedPlayer1(NULL), RelatedPlayer2(NULL), OptionalObject(NULL) {}
 };
 
 /**
