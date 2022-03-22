@@ -39,6 +39,9 @@ struct FShotgunSpawnBox
     */
     UPROPERTY(EditAnywhere)
     int32 Count;
+
+    FShotgunSpawnBox() : RelativeLoc(0, 0, 0), Extent(0, 0, 0), Count(0) {}
+    FShotgunSpawnBox(FVector RelativeLoc, FVector Extent, int32 Count) : RelativeLoc(RelativeLoc), Extent(Extent), Count(Count) {}
 };
 
 /**

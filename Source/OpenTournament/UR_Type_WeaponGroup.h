@@ -44,4 +44,6 @@ struct FWeaponGroup
 
     UPROPERTY(Transient, BlueprintReadOnly)
     TArray<AUR_Weapon*> Weapons;
+
+    FWeaponGroup() : Visibility(EWeaponGroupVisibility::Always) {}
 };

@@ -39,7 +39,7 @@ AUR_PickupFactory::AUR_PickupFactory()
     // Rotating pickup might not need to update any faster than 60hz,
     // so if player is running at higher FPS some frames could be entirely skipped.
 
-    SetReplicates(true);
+    bReplicates = true;
     SetReplicatingMovement(false);
 
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
