@@ -30,6 +30,8 @@ struct FReplicatedExplosionInfo
 
     UPROPERTY()
     FVector HitNormal;
+
+    FReplicatedExplosionInfo() : HitLocation(0, 0, 0), HitNormal(0, 0, 0) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

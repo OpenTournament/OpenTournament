@@ -39,7 +39,7 @@ AUR_Pickup::AUR_Pickup(const FObjectInitializer& ObjectInitializer) :
     ParticleSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleSystemComponent"));
     ParticleSystemComponent->SetupAttachment(RootComponent);
 
-    SetReplicates(true);
+    bReplicates = true;
     SetReplicatingMovement(false);
 }
 

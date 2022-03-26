@@ -27,6 +27,8 @@ struct FStartingWeaponEntry
 
     UPROPERTY(EditAnywhere)
     int32 Ammo;
+
+    FStartingWeaponEntry() : Ammo(0) {}
 };
 
 namespace ETeamsFillMode

@@ -49,6 +49,8 @@ struct FCharacterVoice
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
     USoundBase* PainSound;
+
+    FCharacterVoice() : FootstepSound(NULL), LandingSound(NULL), JumpSound(NULL), DodgeSound(NULL), PainSound(NULL) {}
 };
 
 /**
@@ -93,6 +95,8 @@ struct FReplicatedDamageEvent
     */
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FVector Knockback;
+
+    FReplicatedDamageEvent() : Type(0), Damage(0), Location(0,0,0), Knockback(0,0,0) {}
 
     virtual bool IsOfType(int32 InID) const { return Type == InID; };
 };

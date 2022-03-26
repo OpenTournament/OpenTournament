@@ -5,7 +5,7 @@
 #include "UR_TeamInfo.h"
 
 #include "Net/UnrealNetwork.h"
-#include "Net/Core/PushModel/PushModel.h"
+//#include "Net/Core/PushModel/PushModel.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -92,7 +92,8 @@ void AUR_TeamInfo::RemovePlayer(AUR_PlayerState* Player)
 void AUR_TeamInfo::AddScore(const int32 Value)
 {
     Score += Value;
-    MARK_PROPERTY_DIRTY_FROM_NAME(AUR_TeamInfo, Score, this);
+    //MARK_PROPERTY_DIRTY_FROM_NAME(AUR_TeamInfo, Score, this);
+    ForceNetUpdate();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -33,6 +33,8 @@ struct FSimulatedShotInfo
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 Seed;
+
+    FSimulatedShotInfo() : Seed(0) {}
 };
 
 /**
@@ -52,6 +54,8 @@ struct FHitscanVisualInfo
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 Seed;
+
+    FHitscanVisualInfo() : Seed(0) {}
 };
 
 

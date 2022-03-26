@@ -62,6 +62,8 @@ struct FMessageHistoryFilters
     bool bFrags;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     bool bPickups;
+
+    FMessageHistoryFilters() : bGlobal(false), bTeam(false), bSpec(false), bSystem(false), bMatch(false), bFrags(false), bPickups(false) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -136,6 +138,8 @@ struct FMessageHistoryEntry
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FColor> Colors;
+
+    FMessageHistoryEntry() : Time(0) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
