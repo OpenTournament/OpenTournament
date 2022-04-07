@@ -376,4 +376,23 @@ public:
     UFUNCTION(BlueprintPure, Category = "GameplayTags")
     static FGameplayTag FindAnyChildTag(const FGameplayTagContainer& TagContainer, FGameplayTag TagToMatch);
 
+    UFUNCTION(BlueprintPure, Category = "Math|Vector")
+    static FORCEINLINE FVector ClampVector(const FVector& V, const FVector& Min, const FVector& Max)
+    {
+        return FVector(
+            FMath::Clamp(V.X, Min.X, Max.X),
+            FMath::Clamp(V.Y, Min.Y, Max.Y),
+            FMath::Clamp(V.Z, Min.Z, Max.Z)
+        );
+    }
+
+    UFUNCTION(BlueprintPure, Category = "Math|Vector")
+    static FORCEINLINE FVector2D ClampVector2D(const FVector2D& V, const FVector2D& Min, const FVector2D& Max)
+    {
+        return FVector2D(
+            FMath::Clamp(V.X, Min.X, Max.X),
+            FMath::Clamp(V.Y, Min.Y, Max.Y)
+        );
+    }
+
 };

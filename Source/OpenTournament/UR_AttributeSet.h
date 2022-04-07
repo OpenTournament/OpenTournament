@@ -51,7 +51,7 @@ public:
     ATTRIBUTE_ACCESSORS(UUR_AttributeSet, OverHealth)
 
     UPROPERTY(ReplicatedUsing=OnRep_OverHealthMax, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
-        FGameplayAttributeData OverHealthMax;
+    FGameplayAttributeData OverHealthMax;
     ATTRIBUTE_ACCESSORS(UUR_AttributeSet, OverHealthMax)
 
     ////////========////////
@@ -124,6 +124,10 @@ public:
     FGameplayAttributeData DodgeImpulseVertical;
 
     //-------------------------------------------------------------------------------------//
+
+    //NOTE: Not sure how to best implement this within the GAS framework...
+    UFUNCTION(BlueprintPure, Category = "CharacterAttributes")
+    virtual float GetEffectiveHealth();
 
 protected:
 
