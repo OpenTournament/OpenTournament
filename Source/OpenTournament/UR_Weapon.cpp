@@ -36,18 +36,14 @@
 AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
-    TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
-    TriggerBox->SetGenerateOverlapEvents(false);
-    TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AUR_Weapon::OnTriggerEnter);
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
-    RootComponent = TriggerBox;
+    Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh3P"));
+    Mesh3P->SetupAttachment(RootComponent);
 
     Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh1P"));
     Mesh1P->SetupAttachment(RootComponent);
     Mesh1P->bOnlyOwnerSee = true;
-
-    Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh3P"));
-    Mesh3P->SetupAttachment(RootComponent);
 
     //PrimaryActorTick.bCanEverTick = true;
 
@@ -100,6 +96,15 @@ void AUR_Weapon::PostInitializeComponents()
     }
 }
 
+void AUR_Weapon::BeginPlay()
+{
+    Super::BeginPlay();
+
+    // Both meshes spawn hidden by default, until Attach functions are called
+    Mesh1P->SetVisibility(false, true);
+    Mesh3P->SetVisibility(false, true);
+}
+
 UClass* AUR_Weapon::GetNextFallbackConfigWeapon(TSubclassOf<AUR_Weapon> ForClass)
 {
     if (ForClass)
@@ -119,55 +124,41 @@ UClass* AUR_Weapon::GetNextFallbackConfigWeapon(TSubclassOf<AUR_Weapon> ForClass
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// Very, very basic support for picking up weapons on the ground.
-
-void AUR_Weapon::BeginPlay()
-{
-    Super::BeginPlay();
-
-    if (HasAuthority() && !GetOwner())
-    {
-        TriggerBox->SetGenerateOverlapEvents(true);
-    }
-}
-
-void AUR_Weapon::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor * Other, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
-{
-    if (HasAuthority())
-    {
-        if (AUR_Character* URChar = Cast<AUR_Character>(Other))
-        {
-            GiveTo(URChar);
-            UGameplayStatics::PlaySoundAtLocation(this, PickupSound, URCharOwner->GetActorLocation());
-        }
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
 // Weapon possession
 
 void AUR_Weapon::GiveTo(AUR_Character* NewOwner)
 {
-    TriggerBox->SetGenerateOverlapEvents(false);
-
-    if (GetNetMode() != NM_DedicatedServer)
-    {
-        SetActorHiddenInGame(true);
-    }
-
     SetOwner(NewOwner);
     URCharOwner = NewOwner;
     if (NewOwner && NewOwner->InventoryComponent)
     {
         NewOwner->InventoryComponent->AddWeapon(this);
     }
+
+    if (HasAuthority())
+    {
+        OnRep_Owner();
+    }
 }
 
 void AUR_Weapon::OnRep_Owner()
 {
     URCharOwner = Cast<AUR_Character>(GetOwner());
-    SetActorHiddenInGame(true);
-    CheckWeaponAttachment();
+    if (URCharOwner)
+    {
+        if (WeaponState == EWeaponState::Dropped)
+        {
+            SetWeaponState(EWeaponState::Holstered);
+        }
+        else
+        {
+            CheckWeaponAttachment();
+        }
+    }
+    else
+    {
+        SetWeaponState(EWeaponState::Dropped);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +168,8 @@ void AUR_Weapon::CheckWeaponAttachment()
 {
     switch (WeaponState)
     {
-    case EWeaponState::Inactive:
+    case EWeaponState::Dropped:
+    case EWeaponState::Holstered:
         if (bIsAttached)
         {
             DetachMeshFromPawn();
@@ -197,8 +189,6 @@ void AUR_Weapon::AttachMeshToPawn()
 {
     if (URCharOwner)
     {
-        this->SetActorHiddenInGame(false);
-
         Mesh1P->SetRelativeTransform(Mesh1P->GetSocketTransform(FName(TEXT("Grip")), RTS_Component).Inverse());
         Mesh1P->AttachToComponent(URCharOwner->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, URCharOwner->GetWeaponAttachPoint());
 
@@ -214,24 +204,24 @@ void AUR_Weapon::UpdateMeshVisibility()
 {
     if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
     {
-        Mesh1P->SetHiddenInGame(false);
-        Mesh3P->SetHiddenInGame(true);
+        Mesh1P->SetVisibility(true, true);
+        Mesh3P->SetVisibility(false, true);
     }
     else
     {
-        Mesh1P->SetHiddenInGame(true);
-        Mesh3P->SetHiddenInGame(false);
+        Mesh1P->SetVisibility(false, true);
+        Mesh3P->SetVisibility(true, true);
         Mesh3P->bOwnerNoSee = false;
     }
 }
 
 void AUR_Weapon::DetachMeshFromPawn()
 {
-    Mesh1P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
-    Mesh1P->SetHiddenInGame(true);
+    Mesh1P->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+    Mesh1P->SetVisibility(false, true);
 
-    Mesh3P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
-    Mesh3P->SetHiddenInGame(true);
+    Mesh3P->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+    Mesh3P->SetVisibility(false, true);
 
     bIsAttached = false;
 }
@@ -249,6 +239,12 @@ USkeletalMeshComponent* AUR_Weapon::GetVisibleMesh() const
 
 void AUR_Weapon::SetWeaponState(EWeaponState NewState)
 {
+    // Prevent some invalid state changes to alleviate some replication race conditions
+    if (NewState == EWeaponState::PutDown && (WeaponState == EWeaponState::Dropped || WeaponState == EWeaponState::Holstered))
+    {
+        return;
+    }
+
     if (NewState != WeaponState)
     {
         WeaponState = NewState;
@@ -293,7 +289,8 @@ void AUR_Weapon::SetWeaponState(EWeaponState NewState)
         break;
 
     case EWeaponState::PutDown:
-    case EWeaponState::Inactive:
+    case EWeaponState::Holstered:
+    case EWeaponState::Dropped:
         Deactivate();
         break;
 
@@ -387,7 +384,7 @@ void AUR_Weapon::PutDownCallback()
 {
     if (WeaponState == EWeaponState::PutDown)
     {
-        SetWeaponState(EWeaponState::Inactive);
+        SetWeaponState(EWeaponState::Holstered);
     }
 }
 
@@ -395,7 +392,10 @@ void AUR_Weapon::Activate()
 {
     for (UUR_FireModeBase* FireMode : FireModes)
     {
-        FireMode->Activate();
+        if (FireMode)
+        {
+            FireMode->Activate();
+        }
     }
 
     // Read desired fire modes from player
@@ -415,7 +415,10 @@ void AUR_Weapon::Deactivate()
 
     for (UUR_FireModeBase* FireMode : FireModes)
     {
-        FireMode->Deactivate();
+        if (FireMode)
+        {
+            FireMode->Deactivate();
+        }
     }
 }
 
@@ -529,7 +532,8 @@ void AUR_Weapon::RequestBringUp()
     switch (WeaponState)
     {
 
-    case EWeaponState::Inactive:
+    case EWeaponState::Holstered:
+    case EWeaponState::Dropped:
         BringUp(0.f);
         break;
 
@@ -699,6 +703,12 @@ void AUR_Weapon::OffsetFireLoc(FVector& FireLoc, const FRotator& FireRot, FName 
             }
         }
     }
+    // NOTE:
+    // FIXME: This calculation could come up wrong due to how non-rendered skeletal meshes do not update their transforms in real time.
+    // At best the client should use 1P/3P muzzle location according to camera mode, while server should use 3P socket location.
+    // But this would cause a mismatch between the two, increasing risk of server not accepting client's FireLoc.
+    // Even when both are using 3P, there could still be discrepancies due to char/arms/weapon animations.
+    // Better approach probably would be to use a fixed ProjectileSpawnOffset variable adjusted for each weapon (or global).
 }
 
 void AUR_Weapon::GetValidatedFireVector(const FSimulatedShotInfo& SimulatedInfo, FVector& FireLoc, FRotator& FireRot, FName OffsetSocketName)
@@ -884,11 +894,11 @@ void AUR_Weapon::ConsumeAmmo(int32 Amount)
 
 void AUR_Weapon::CheckAutoSwap()
 {
-    if ( UUR_FunctionLibrary::IsLocallyControlled(this) && !HasAnyAmmo() && URCharOwner && URCharOwner->InventoryComponent)
+    if (UUR_FunctionLibrary::IsLocallyControlled(this) && !HasAnyAmmo() && URCharOwner && URCharOwner->InventoryComponent)
     {
         if (!URCharOwner->InventoryComponent->DesiredWeapon || URCharOwner->InventoryComponent->DesiredWeapon == this)
         {
-            URCharOwner->InventoryComponent->NextWeapon();
+            URCharOwner->InventoryComponent->SelectPreferredWeapon();
         }
     }
 }

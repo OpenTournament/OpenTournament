@@ -398,3 +398,21 @@ FGameplayTag UUR_FunctionLibrary::FindAnyChildTag(const FGameplayTagContainer& T
     }
     return FGameplayTag();
 }
+
+void UUR_FunctionLibrary::RefreshBoneTransforms(USkeletalMeshComponent* SkelMesh)
+{
+    if (SkelMesh && SkelMesh->VisibilityBasedAnimTickOption == EVisibilityBasedAnimTickOption::AlwaysTickPose && !SkelMesh->bRecentlyRendered)
+    {
+        SkelMesh->RefreshBoneTransforms();
+    }
+}
+
+void UUR_FunctionLibrary::RefreshComponentTransforms(USceneComponent* Component)
+{
+    //NOTE: Maybe we need to refresh in reverse order (parent to child), I'm not sure about that.
+    // Don't really have a proper use case to test this for now.
+    for (USceneComponent* Comp = Component; Comp; Comp = Comp->GetAttachParent())
+    {
+        RefreshBoneTransforms(Cast<USkeletalMeshComponent>(Comp));
+    }
+}

@@ -74,7 +74,7 @@ public:
     /**
     * Is this Character permitted to pickup?
     */
-    bool IsPickupPermitted(const AUR_Character* PickupCharacter) const;
+    virtual bool IsPickupPermitted(const AUR_Character* PickupCharacter) const;
 
     /**
     * Is this actor permitted to pickup given its associated GameplayTags?

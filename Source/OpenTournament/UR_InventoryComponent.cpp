@@ -12,6 +12,7 @@
 #include "UR_Weapon.h"
 #include "UR_Ammo.h"
 #include "UR_UserSettings.h"
+#include "UR_Pickup_DroppedWeapon.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -233,6 +234,33 @@ bool UUR_InventoryComponent::PrevWeapon()
     return false;
 }
 
+void UUR_InventoryComponent::SelectPreferredWeapon()
+{
+    if (!IsLocallyControlled())
+    {
+        return;
+    }
+
+    //TODO: proper implementation
+    for (AUR_Weapon* Weapon : WeaponArray)
+    {
+        if (Weapon && Weapon->HasAnyAmmo())     //prefer weapon with ammo
+        {
+            SetDesiredWeapon(Weapon);
+            return;
+        }
+    }
+    for (AUR_Weapon* Weapon : WeaponArray)
+    {
+        if (Weapon)
+        {
+            SetDesiredWeapon(Weapon);
+            return;
+        }
+    }
+    SetDesiredWeapon(NULL);
+}
+
 void UUR_InventoryComponent::SetDesiredWeapon(AUR_Weapon* InWeapon)
 {
     if (DesiredWeapon == InWeapon)
@@ -245,9 +273,9 @@ void UUR_InventoryComponent::SetDesiredWeapon(AUR_Weapon* InWeapon)
 
     OnDesiredWeaponChanged.Broadcast(this, DesiredWeapon, OldDesired);
 
-    if (ActiveWeapon && ActiveWeapon->WeaponState != EWeaponState::Inactive)
+    if (ActiveWeapon && ActiveWeapon->WeaponState > EWeaponState::Holstered)
     {
-        if ( ActiveWeapon != DesiredWeapon )
+        if (ActiveWeapon != DesiredWeapon)
         {
             ActiveWeapon->RequestPutDown();
         }
@@ -283,9 +311,19 @@ void UUR_InventoryComponent::OnRep_DesiredWeapon(AUR_Weapon* OldDesired)
 
 void UUR_InventoryComponent::OnActiveWeaponStateChanged(AUR_Weapon* Weapon, EWeaponState NewState)
 {
-    if (Weapon && Weapon == ActiveWeapon && NewState == EWeaponState::Inactive)
+    if (Weapon && Weapon == ActiveWeapon && NewState <= EWeaponState::Holstered)
     {
-        SetActiveWeapon(DesiredWeapon);
+        // Standard weapon switch case = when ActiveWeapon becomes holstered, swap to DesiredWeapon
+        if (NewState == EWeaponState::Holstered)
+        {
+            SetActiveWeapon(DesiredWeapon);
+        }
+        // Handle replication race condition where dropped weapon changes state before being removed from inventory
+        else if (NewState == EWeaponState::Dropped && DesiredWeapon == Weapon)
+        {
+            WeaponArray.Remove(Weapon);
+            OnRep_WeaponArray();
+        }
     }
 }
 
@@ -297,11 +335,9 @@ void UUR_InventoryComponent::SetActiveWeapon(AUR_Weapon* InWeapon)
     {
         ActiveWeapon->OnWeaponStateChanged.RemoveDynamic(this, &UUR_InventoryComponent::OnActiveWeaponStateChanged);
 
-        // Edge case - eg. weapondrop doesn't go through the putdown procedure.
-        if (ActiveWeapon->WeaponState != EWeaponState::Inactive)
+        if (ActiveWeapon->WeaponState > EWeaponState::Holstered)
         {
-            // this ensures the mesh is detached from pawn
-            ActiveWeapon->SetWeaponState(EWeaponState::Inactive);
+            ActiveWeapon->SetWeaponState(EWeaponState::Holstered);
         }
 
         ActiveWeapon = NULL;
@@ -329,18 +365,21 @@ void UUR_InventoryComponent::OnRep_WeaponArray()
 {
     RefillWeaponGroups();
 
+    // Check if active weapon might have been removed from inventory
+    if (!WeaponArray.Contains(ActiveWeapon))
+    {
+        SetActiveWeapon(NULL);
+    }
+
+    // Check also desired weapon - cancel swap
+    if (ActiveWeapon && !WeaponArray.Contains(DesiredWeapon))
+    {
+        SetDesiredWeapon(ActiveWeapon);
+    }
+
     if (!ActiveWeapon)
     {
-        // This should only happen when we are given initial inventory on spawn
-        // Here we should use user settings to pick the preferred weapon (if there are multiple).
-        for (AUR_Weapon* IterWeapon : WeaponArray)
-        {
-            if (IterWeapon)
-            {
-                SetDesiredWeapon(IterWeapon);
-                break;
-            }
-        }
+        SelectPreferredWeapon();
     }
 }
 
@@ -409,13 +448,124 @@ void UUR_InventoryComponent::RefillWeaponGroups()
     OnWeaponGroupsUpdated.Broadcast(this);
 }
 
+void UUR_InventoryComponent::ServerDropActiveWeapon_Implementation()
+{
+    DropWeapon(ActiveWeapon);
+}
+
+AUR_Pickup_DroppedWeapon* UUR_InventoryComponent::DropWeapon(AUR_Weapon* WeaponToDrop)
+{
+    if (!WeaponToDrop)
+    {
+        return NULL;
+    }
+    if (!WeaponArray.Contains(WeaponToDrop))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("DropWeapon: WeaponToDrop is not in inventory (%s)"), *WeaponToDrop->GetName());
+        return NULL;
+    }
+
+    //TODO: drop only if droppable (add property in weapon)
+
+    FVector SpawnLoc;
+    FRotator SpawnRot;
+
+    if (ActiveWeapon)
+    {
+        // Aim rotation as spawn rotation
+        ActiveWeapon->GetFireVector(SpawnLoc, SpawnRot);
+
+        if (IsNetMode(NM_Standalone))
+        {
+            // In standalone, we can drop from 1p position
+            SpawnLoc = ActiveWeapon->GetVisibleMesh()->GetComponentLocation();
+        }
+        else
+        {
+            // On server, always use 3p position
+            UUR_FunctionLibrary::RefreshComponentTransforms(ActiveWeapon->GetMesh3P());   // See note in UR_Character BeginPlay
+            SpawnLoc = ActiveWeapon->GetMesh3P()->GetComponentLocation();
+        }
+    }
+    else if (GetOwner())
+    {
+        // Fallback to owner position
+        GetOwner()->GetActorEyesViewPoint(SpawnLoc, SpawnRot);
+        SpawnLoc = GetOwner()->GetActorLocation();
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("DropWeapon: Cannot find any viable spawn transform (%s)"), *WeaponToDrop->GetName());
+        return NULL;
+    }
+
+    FTransform SpawnTransform(SpawnRot, SpawnLoc);
+
+    // Spawn dropped pickup
+    auto DroppedWeapon = Cast<AUR_Pickup_DroppedWeapon>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, AUR_Pickup_DroppedWeapon::StaticClass(), SpawnTransform, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn, GetOwner()));
+    if (!DroppedWeapon)
+    {
+        return NULL;
+    }
+
+    // Change weapon immediately
+    if (WeaponToDrop == ActiveWeapon)
+    {
+        if (DesiredWeapon == WeaponToDrop)
+        {
+            DesiredWeapon = NULL;   // Client will pick new desired weapon once removal has replicated
+        }
+        SetActiveWeapon(DesiredWeapon);
+    }
+
+    // Remove weapon from inventory
+    WeaponArray.Remove(WeaponToDrop);
+    WeaponToDrop->GiveTo(NULL);
+
+    // Drop proper amount of ammo
+    for (int32 i = 0; i < WeaponToDrop->AmmoDefinitions.Num(); i++)
+    {
+        if (WeaponToDrop->AmmoRefs[i])
+        {
+            // Transfer ammo from inventory to weapon
+            WeaponToDrop->AmmoDefinitions[i].AmmoAmount = WeaponToDrop->AmmoRefs[i]->AmmoCount;
+            WeaponToDrop->AmmoRefs[i]->SetAmmoCount(0);
+        }
+    }
+
+    // Finish setting up dropped pickup
+    DroppedWeapon->SetWeapon(WeaponToDrop);
+    UGameplayStatics::FinishSpawningActor(DroppedWeapon, SpawnTransform);
+
+    // Standalone trigger
+    if (IsLocallyControlled())
+    {
+        OnRep_WeaponArray();
+    }
+
+    return DroppedWeapon;
+}
+
+void UUR_InventoryComponent::OwnerDied()
+{
+    if (ActiveWeapon)
+    {
+        // Force stop firing
+        ActiveWeapon->Deactivate();
+
+        // Drop weapon only if it has ammo
+        if (ActiveWeapon->HasAnyAmmo())
+        {
+            DropWeapon(ActiveWeapon);
+        }
+    }
+}
+
 void UUR_InventoryComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
 {
     // !IsUnreachable() avoids crash during endgame world cleanup, trying to resolve bp-enabled events
     if (GetOwnerRole() == ROLE_Authority && !IsUnreachable())
     {
-        //TODO: drop active weapon
-
         Clear();
     }
 
