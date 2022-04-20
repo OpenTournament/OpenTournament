@@ -160,3 +160,16 @@ void UUR_AttributeSet::OnRep_ShieldMax(const FGameplayAttributeData& OldShieldMa
 {
     GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, ShieldMax, OldShieldMax);
 }
+
+
+float UUR_AttributeSet::GetEffectiveHealth()
+{
+    const float TotalHealth = GetHealth() + GetOverHealth();
+
+    if (GetArmorAbsorptionPercent() < 1)
+    {
+        return GetShield() + FMath::Min(TotalHealth + GetArmor(), TotalHealth / (1.f - GetArmorAbsorptionPercent()));
+    }
+
+    return GetShield() + GetArmor() + TotalHealth;
+}

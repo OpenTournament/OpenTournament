@@ -12,6 +12,7 @@
 #include "GameplayTagsManager.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 #include "OpenTournament.h"
 #include "Interfaces/UR_ActivatableInterface.h"
@@ -27,6 +28,7 @@
 #include "UR_PlayerState.h"
 #include "UR_InputComponent.h"
 #include "UR_UserSettings.h"
+#include "UR_DamageType.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -812,10 +814,22 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     FReplicatedDamageEvent RepDamageEvent;
     RepDamageEvent.Type = DamageEvent.GetTypeID();
     RepDamageEvent.Damage = Damage;
+    RepDamageEvent.HealthDamage = DamageToHealth;
+    RepDamageEvent.ArmorDamage = DamageToShield + DamageToArmor;
+    RepDamageEvent.DamageInstigator = EventInstigator ? EventInstigator->GetPawn() : NULL;
+    if (UKismetMathLibrary::ClassIsChildOf(DamageEvent.DamageTypeClass, UUR_DamageType::StaticClass()))
+    {
+        RepDamageEvent.DamType = GetDefault<UUR_DamageType>(DamageEvent.DamageTypeClass);
+    }
+    else
+    {
+        // Avoid null damagetype, it is annoying to handle in blueprints
+        RepDamageEvent.DamType = GetDefault<UUR_DamageType>();
+    }
 
     // NOTE: Adding impulses to CharacterMovement are just velocity changes.
     // Point or Radial doesn't make any difference.
-    // Those only matter for skeletal physics (ragdoll), which we apply on client.
+    // Those only matter for skeletal physics (ragdoll), which we may apply on client.
     FVector KnockbackDir;
 
     if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
@@ -858,14 +872,18 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     }
 
     ////////////////////////////////////////////////////////////
-    // Other
+    // Event
 
     // @! TODO Limit Pain by time, vary by damage etc.
+    /*
     if (DamageToHealth > 10.f)
     {
         //TODO: Replicate
         UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.PainSound, GetActorLocation(), GetActorRotation());
     }
+    */
+
+    MulticastDamageEvent(RepDamageEvent);
 
     ////////////////////////////////////////////////////////////
     // Death
@@ -877,6 +895,21 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     }
 
     return Damage;
+}
+
+void AUR_Character::MulticastDamageEvent_Implementation(const FReplicatedDamageEvent RepDamageEvent)
+{
+    OnDamageReceived.Broadcast(this, RepDamageEvent);
+
+    //NOTE: Using pawn as instigator is not ideal because the owner of a projectile can die during projectile flight,
+    // and then the player would not be notified about the hit.
+    // Controller is not good either because spectators cannot access spectated player's controller.
+    // PlayerState might be the way to go.
+
+    if (AUR_Character* Dealer = Cast<AUR_Character>(RepDamageEvent.DamageInstigator))
+    {
+        Dealer->OnDamageDealt.Broadcast(this, RepDamageEvent);
+    }
 }
 
 void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser, const FReplicatedDamageEvent& RepDamageEvent)
