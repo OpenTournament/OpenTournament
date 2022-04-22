@@ -395,4 +395,19 @@ public:
         );
     }
 
+    /**
+    * Force refresh bone transforms on a skeletal mesh.
+    * Useful when you need to read a bone/socket transform from a mesh that may not have been rendered recently.
+    * Only makes sense when VisibilityBasedAnimTickOption == AlwaysTickPose (Always Tick, but Refresh BoneTransforms only when rendered)
+    */
+    UFUNCTION(BlueprintCallable, Category = "Game")
+    static void RefreshBoneTransforms(USkeletalMeshComponent* SkelMesh);
+
+    /**
+    * Walks up the chain of parents (including self) to call RefreshBoneTransforms on SkeletalMeshes.
+    * Will not work properly if a parent has VisibilityBasedAnimTickOption below AlwaysTickPose (ie. not ticking anims at all)
+    */
+    UFUNCTION(BlueprintCallable, Category = "Game")
+    static void RefreshComponentTransforms(USceneComponent* Component);
+
 };

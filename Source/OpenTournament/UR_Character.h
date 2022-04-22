@@ -780,6 +780,9 @@ public:
     UFUNCTION(Exec, BlueprintCallable)
     virtual void PrevWeapon();
 
+    UFUNCTION(Exec, BlueprintCallable)
+    virtual void DropWeapon();
+
     /**
     * Pickup event.
     */

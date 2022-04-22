@@ -33,11 +33,13 @@ class UPaperSprite;
 UENUM(BlueprintType)
 enum class EWeaponState : uint8
 {
-    /** Weapon is not in the hands */
-    Inactive,
+    /** Weapon is not possessed */
+    Dropped,
+    /** Weapon is possessed but not equipped */
+    Holstered,
     /** Weapon is currently being equipped, will be able to fire soon */
     BringUp,
-    /** Weapon can start firing anytime */
+    /** Weapon is equipped and can start firing anytime */
     Idle,
     /** Weapon is currently firing/charging/on cooldown - a FireMode is active */
     Firing,
@@ -75,7 +77,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponStateChangedSignature, AUR_W
 /**
  * Weapon Base Class
  */
-UCLASS()
+UCLASS(NotPlaceable)
 class OPENTOURNAMENT_API AUR_Weapon : public AActor
     //, public IUR_FireModeBaseInterface
     //, public IUR_FireModeBasicInterface
@@ -88,19 +90,7 @@ protected:
     AUR_Weapon(const FObjectInitializer& ObjectInitializer);
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void PostInitializeComponents() override;
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // Very, very basic support for picking up weapons on the ground.
-
-protected:
-
-    UPROPERTY(VisibleAnywhere)
-    UShapeComponent* TriggerBox;
-
     virtual void BeginPlay() override;
-
-    UFUNCTION()
-    void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Weapon possession

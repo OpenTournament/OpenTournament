@@ -84,6 +84,10 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     // Mesh third person (now using SetVisibility in CameraViewChanged)
     GetMesh()->bOwnerNoSee = false;
 
+    // By default, do not refresh animations/bones when not rendered
+    GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+    MeshFirstPerson->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+
     // Third person camera
     ThirdPersonArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonArm"));
     ThirdPersonArm->SetupAttachment(GetCapsuleComponent());
@@ -127,6 +131,23 @@ void AUR_Character::BeginPlay()
     AttributeSet->SetShieldMax(100.f);
 
     SetupMaterials();
+
+    if (GetNetMode() == NM_DedicatedServer)
+    {
+        // Server considers being never rendered, so it will never update anims/bones when optimization settings are enabled.
+        // We have two options here :
+        //
+        // Option 1 = Always tick pose but never update transforms.
+        //            This is most likely better for performance, but means we cannot rely on transforms (location/rotation) of bones (headshot!) nor attached objects (weapons).
+        //            The issue can be solved though by calling RefreshBoneTransforms() manually before reading them.
+        //
+        // Option 2 = Always tick pose and update transforms.
+        //            This is easier to work with, but probably less performance friendly.
+        //            However here the updating of transforms should benefit from parallelism so hopefully it's not as bad.
+
+        //GetMesh3P()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPose;
+        GetMesh3P()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+    }
 }
 
 void AUR_Character::Tick(float DeltaTime)
@@ -154,10 +175,10 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
     PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
     PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
+    PlayerInputComponent->BindAction("DropWeapon", IE_Pressed, this, &AUR_Character::DropWeapon);
 
     SetupWeaponBindings();
 
-    // Throw Weapon
     // Voice
     // Ping
     // Emote
@@ -944,10 +965,7 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
     }
 
     // Force stop firing
-    if (InventoryComponent && InventoryComponent->ActiveWeapon)
-    {
-        InventoryComponent->ActiveWeapon->Deactivate();
-    }
+    InventoryComponent->OwnerDied();
     DesiredFireModeNum.Empty();
 
     // Replicate
@@ -1123,6 +1141,14 @@ void AUR_Character::PrevWeapon()
     if (InventoryComponent)
     {
         InventoryComponent->PrevWeapon();
+    }
+}
+
+void AUR_Character::DropWeapon()
+{
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
+    {
+        InventoryComponent->ServerDropActiveWeapon();
     }
 }
 

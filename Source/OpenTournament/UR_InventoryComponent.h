@@ -96,6 +96,12 @@ public:
     UFUNCTION()
     bool PrevWeapon();
 
+    /**
+    * Players only - select preferred available weapon according to user settings.
+    */
+    UFUNCTION()
+    void SelectPreferredWeapon();
+
     UFUNCTION()
     void SetDesiredWeapon(AUR_Weapon* InWeapon);
 
@@ -113,6 +119,17 @@ public:
     void SetActiveWeapon(AUR_Weapon* InWeapon);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    UFUNCTION(Server, Reliable)
+    void ServerDropActiveWeapon();
+
+    UFUNCTION(BlueprintAuthorityOnly)
+    virtual class AUR_Pickup_DroppedWeapon* DropWeapon(AUR_Weapon* WeaponToDrop);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    UFUNCTION(BlueprintAuthorityOnly)
+    virtual void OwnerDied();
 
     UFUNCTION(BlueprintAuthorityOnly, BlueprintNativeEvent, BlueprintCallable)
     void Clear();
