@@ -135,18 +135,27 @@ bool UUR_FunctionLibrary::IsKeyMappedToAxis(const FKey& Key, FName AxisName, flo
 
 AUR_PlayerController* UUR_FunctionLibrary::GetLocalPlayerController(const UObject* WorldContextObject)
 {
+    return GetLocalPC<AUR_PlayerController>(WorldContextObject);
+}
+
+APlayerController* UUR_FunctionLibrary::GetLocalPC(const UObject* WorldContextObject)
+{
     if (const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
     {
-        return World->GetFirstPlayerController<AUR_PlayerController>();
+        ensureMsgf(!World->IsNetMode(NM_DedicatedServer), TEXT("GetLocalPC() called on DedicatedServer is recipe for disaster"));
+        return World->GetFirstPlayerController<APlayerController>();
     }
-
     return nullptr;
 }
 
 bool UUR_FunctionLibrary::IsLocallyViewed(const AActor* Other)
 {
-    AUR_PlayerController* PC = GetLocalPlayerController(Other);
-    return PC && PC->GetViewTarget() == Other;
+    if (Other && !Other->IsNetMode(NM_DedicatedServer))
+    {
+        auto PC = GetLocalPC<APlayerController>(Other);
+        return PC && PC->GetViewTarget() == Other;
+    }
+    return false;
 }
 
 bool UUR_FunctionLibrary::IsViewingFirstPerson(const AUR_Character* Other)

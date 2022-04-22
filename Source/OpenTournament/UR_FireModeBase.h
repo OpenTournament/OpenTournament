@@ -36,6 +36,7 @@ public:
 
         InitialAmmoCost = 1;
         MuzzleSocketName = FName(TEXT("Muzzle"));
+        MuzzleFlashScale = 1.f;
     }
 
     /**
@@ -102,6 +103,9 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Content")
     UFXSystemAsset* MuzzleFlashTemplate;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Content")
+    float MuzzleFlashScale;
 
 public:
 

@@ -25,6 +25,7 @@
 #include "UR_Projectile.h"
 #include "UR_PlayerController.h"
 #include "UR_FunctionLibrary.h"
+#include "UR_PaniniUtils.h"
 #include "UR_Ammo.h"
 
 #include "UR_FireModeBasic.h"
@@ -99,6 +100,9 @@ void AUR_Weapon::PostInitializeComponents()
 void AUR_Weapon::BeginPlay()
 {
     Super::BeginPlay();
+
+    // Auto-enable panini on 1P mesh and children
+    UUR_PaniniUtils::TogglePaniniProjection(Mesh1P, true, true);
 
     // Both meshes spawn hidden by default, until Attach functions are called
     Mesh1P->SetVisibility(false, true);
@@ -711,6 +715,16 @@ void AUR_Weapon::OffsetFireLoc(FVector& FireLoc, const FRotator& FireRot, FName 
     // Better approach probably would be to use a fixed ProjectileSpawnOffset variable adjusted for each weapon (or global).
 }
 
+FTransform AUR_Weapon::GetFireEffectStartTransform(UUR_FireModeBase* FireMode)
+{
+    FTransform Result = GetVisibleMesh()->GetSocketTransform(FireMode->MuzzleSocketName);
+    if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
+    {
+        Result.SetLocation(UUR_PaniniUtils::CalcPaniniProjection(this, Result.GetLocation()));
+    }
+    return Result;
+}
+
 void AUR_Weapon::GetValidatedFireVector(const FSimulatedShotInfo& SimulatedInfo, FVector& FireLoc, FRotator& FireRot, FName OffsetSocketName)
 {
     // Authority location & rotation
@@ -1124,10 +1138,18 @@ void AUR_Weapon::AuthorityHitscanShot_Implementation(UUR_FireModeBasic* FireMode
 
 void AUR_Weapon::PlayFireEffects_Implementation(UUR_FireModeBasic* FireMode)
 {
+    UGameplayStatics::SpawnSoundAttached(FireMode->FireSound, GetVisibleMesh(), FireMode->MuzzleSocketName, FVector(0), EAttachLocation::SnapToTarget);
+
+    // Panini correction attempt ??? EXPERIMENTAL
+    // Potential problem = we only calculate at attachment time, when we should recalculate every attached frame...
+    // But no problem if it doesn't move much, right??
+    FTransform Transform = GetFireEffectStartTransform(FireMode);
+    Transform.SetScale3D(Transform.GetScale3D() * FireMode->MuzzleFlashScale);
+
+    UUR_FunctionLibrary::SpawnEffectAttached(FireMode->MuzzleFlashTemplate, Transform, GetVisibleMesh(), FireMode->MuzzleSocketName, EAttachLocation::KeepWorldPosition);
+
     if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
     {
-        UGameplayStatics::SpawnSoundAttached(FireMode->FireSound, Mesh1P, FireMode->MuzzleSocketName, FVector(0), EAttachLocation::SnapToTarget);
-        UUR_FunctionLibrary::SpawnEffectAttached(FireMode->MuzzleFlashTemplate, FTransform(), Mesh1P, FireMode->MuzzleSocketName, EAttachLocation::SnapToTargetIncludingScale);
         if (URCharOwner->MeshFirstPerson && URCharOwner->MeshFirstPerson->GetAnimInstance())
         {
             //TODO: fire animation should be in weapon, maybe even in firemode?
@@ -1136,15 +1158,13 @@ void AUR_Weapon::PlayFireEffects_Implementation(UUR_FireModeBasic* FireMode)
     }
     else
     {
-        UGameplayStatics::SpawnSoundAttached(FireMode->FireSound, Mesh3P, FireMode->MuzzleSocketName, FVector(0), EAttachLocation::SnapToTarget);
-        UUR_FunctionLibrary::SpawnEffectAttached(FireMode->MuzzleFlashTemplate, FTransform(), Mesh3P, FireMode->MuzzleSocketName, EAttachLocation::SnapToTargetIncludingScale);
         //TODO: play 3p anim
     }
 }
 
 void AUR_Weapon::PlayHitscanEffects_Implementation(UUR_FireModeBasic* FireMode, const FHitscanVisualInfo& HitscanInfo)
 {
-    const FVector& BeamStart = GetVisibleMesh()->GetSocketLocation(FireMode->MuzzleSocketName);
+    FVector BeamStart = GetFireEffectStartTransform(FireMode).GetLocation();
     const FVector& BeamEnd = HitscanInfo.Vectors[0];
     FVector BeamVector = BeamEnd - BeamStart;
 
@@ -1284,7 +1304,8 @@ void AUR_Weapon::StartContinuousEffects_Implementation(UUR_FireModeContinuous* F
     if (!FireMode->BeamComponent || FireMode->BeamComponent->IsBeingDestroyed())
     {
         //UKismetSystemLibrary::PrintString(this, TEXT("NEW PARTICLE"));
-        FireMode->BeamComponent = UUR_FunctionLibrary::SpawnEffectAttached(FireMode->BeamTemplate, FTransform(), GetVisibleMesh(), FireMode->MuzzleSocketName, EAttachLocation::SnapToTargetIncludingScale);
+        FTransform Transform = GetFireEffectStartTransform(FireMode);
+        FireMode->BeamComponent = UUR_FunctionLibrary::SpawnEffectAttached(FireMode->BeamTemplate, Transform, GetVisibleMesh(), FireMode->MuzzleSocketName, EAttachLocation::KeepWorldPosition);
     }
     if (FireMode->BeamComponent)
     {

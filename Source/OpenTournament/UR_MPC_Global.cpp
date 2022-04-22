@@ -74,6 +74,37 @@ FLinearColor UUR_MPC_Global::GetVector(UObject* WorldContext, FName Param)
 }
 
 
+FPaniniMaterialParameters UUR_MPC_Global::GetPaniniParameters(UObject* WorldContext)
+{
+    FPaniniMaterialParameters* Params;
+    auto Instance = Get(WorldContext, false);
+    if (Instance)
+    {
+        Params = &Instance->PaniniValues;
+    }
+    else
+    {
+        static FPaniniMaterialParameters NewParams = FPaniniMaterialParameters();
+        NewParams.bInitialized = false;
+        Params = &NewParams;
+    }
+    if (!Params->bInitialized)
+    {
+        auto Collection = GetCollection(WorldContext);
+        Params->DistanceBias = UKismetMaterialLibrary::GetScalarParameterValue(WorldContext, Collection, FName(TEXT("Panini.DistanceBias")));
+        Params->DistanceNormalize = UKismetMaterialLibrary::GetScalarParameterValue(WorldContext, Collection, FName(TEXT("Panini.DistanceNormalize")));
+        Params->PushMin = UKismetMaterialLibrary::GetScalarParameterValue(WorldContext, Collection, FName(TEXT("Panini.PushMin")));
+        Params->PushMax = UKismetMaterialLibrary::GetScalarParameterValue(WorldContext, Collection, FName(TEXT("Panini.PushMax")));
+        Params->Scale = UKismetMaterialLibrary::GetScalarParameterValue(WorldContext, Collection, FName(TEXT("Panini.Scale")));
+        Params->Depth = UKismetMaterialLibrary::GetScalarParameterValue(WorldContext, Collection, FName(TEXT("Panini.Depth")));
+        Params->Skew = UKismetMaterialLibrary::GetScalarParameterValue(WorldContext, Collection, FName(TEXT("Panini.Skew")));
+        Params->Projection = UKismetMaterialLibrary::GetScalarParameterValue(WorldContext, Collection, FName(TEXT("Panini.Projection")));
+        Params->bInitialized = true;
+    }
+    return *Params;
+}
+
+
 bool UUR_MPC_Global::MapParameter(UObject* WorldContext, FName TargetParam, FName SourceParam)
 {
     UnmapParameter(WorldContext, TargetParam);
