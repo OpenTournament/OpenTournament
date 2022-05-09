@@ -29,6 +29,7 @@
 #include "UR_InputComponent.h"
 #include "UR_UserSettings.h"
 #include "UR_DamageType.h"
+#include "UR_PaniniUtils.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -197,6 +198,8 @@ void AUR_Character::SetupMaterials_Implementation()
     */
     //NOTE: this is not required because MeshComponent::SetParameterValueOnMaterials already generates MIDs as needed.
     // Might want to remove this function altogether
+
+    UUR_PaniniUtils::TogglePaniniProjection(GetMesh1P(), true, true);
 
     UpdateTeamColor();
 }

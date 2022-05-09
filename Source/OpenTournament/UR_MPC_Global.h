@@ -16,6 +16,37 @@ class UMaterialParameterCollection;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+* Container for panini material function parameters (MF_FirstPersonHandler)
+*/
+USTRUCT()
+struct FPaniniMaterialParameters
+{
+    GENERATED_BODY()
+
+    bool bInitialized;
+
+    // MF_ShrinkWeapon
+    float DistanceBias;
+    float DistanceNormalize;
+    float PushMin;
+    float PushMax;
+
+    // MF_FovCorrection / MF_PaniniProjection
+    float Scale;
+
+    // MF_PaniniProjection
+    float Depth;
+    float Skew;
+
+    // Lerp between MF_FovCorrection(0) or MF_PaniniProjection(1)
+    float Projection;
+
+    FPaniniMaterialParameters() : bInitialized(false) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
  * Wrapper class for manipulating the global-game MaterialParameterCollection.
  * Implements a parameter-mapping functionality so certain parameters can follow the value of other parameters.
  *
@@ -150,7 +181,13 @@ public:
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Meta = (DisplayName = "MPC_Global_GetVector", WorldContext = "WorldContext"))
     static FLinearColor GetVector(UObject* WorldContext, FName Param);
 
+    static FPaniniMaterialParameters GetPaniniParameters(UObject* WorldContext);
+
 protected:
+
+    // Cache
+    UPROPERTY()
+    FPaniniMaterialParameters PaniniValues;
 
     static UMaterialParameterCollection* GetCollection(const UObject* WorldContext);
 

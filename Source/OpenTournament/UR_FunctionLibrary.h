@@ -31,7 +31,6 @@ class AUR_Weapon;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 /**
  * 
  */
@@ -176,6 +175,11 @@ public:
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game", Meta = (WorldContext = "WorldContextObject", UnsafeDuringActorConstruction = "true"))
     static AUR_PlayerController* GetLocalPlayerController(const UObject* WorldContextObject);
 
+    static APlayerController* GetLocalPC(const UObject* WorldContextObject);
+    template<typename T> static T* GetLocalPC(const UObject* WorldContextObject)
+    {
+        return Cast<T>(GetLocalPC(WorldContextObject));
+    }
 
     /**
     * Returns true if actor is currently viewed by local player controller.

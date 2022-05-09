@@ -361,6 +361,12 @@ public:
     virtual void OffsetFireLoc(UPARAM(ref) FVector& FireLoc, const FRotator& FireRot, FName OffsetSocketName = NAME_None);
 
     /**
+    * Get the corrected muzzle flash transform, taking into account panini correction in first person view.
+    */
+    UFUNCTION(BlueprintPure, BlueprintCosmetic)
+    virtual FTransform GetFireEffectStartTransform(UUR_FireModeBase* FireMode);
+
+    /**
     * Safely read SimulatedInfo passed from client into validated FireLoc and FireRot.
     * Offsetted by socket if specified.
     */
