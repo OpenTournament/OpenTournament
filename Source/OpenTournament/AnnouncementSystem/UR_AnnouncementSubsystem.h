@@ -40,7 +40,7 @@ class OPENTOURNAMENT_API UUR_AnnouncementSubsystem : public ULocalPlayerSubsyste
 
 	/**
 	* Set the AnnouncementVoice
-	*/ 
+	*/
 	UFUNCTION(BlueprintCallable, Category = "AnnouncementSystem")
 	void SetAnnouncementVoice(const TSubclassOf<UUR_AnnouncementVoice> InAnnouncementVoiceClass);
 
@@ -60,8 +60,8 @@ class OPENTOURNAMENT_API UUR_AnnouncementSubsystem : public ULocalPlayerSubsyste
 	* Class of AnnouncementVoice used
 	*/
 	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "AnnouncementSystem")
-	TSoftClassPtr<UUR_AnnouncementVoice> AnnouncementVoiceClass;
-	
+	TSoftObjectPtr<UUR_AnnouncementVoice> AnnouncementVoiceClass;
+
 	/**
 	* Announcement Voice
 	*/

@@ -22,24 +22,24 @@ UUR_AnnouncementSubsystem::UUR_AnnouncementSubsystem()
 
 void UUR_AnnouncementSubsystem::SetAnnouncementVoice(const TSubclassOf<UUR_AnnouncementVoice> InAnnouncementVoiceClass)
 {
-	AnnouncementVoiceClass = InAnnouncementVoiceClass;
+	AnnouncementVoiceClass = InAnnouncementVoiceClass.Get();
 	AnnouncementVoice = InAnnouncementVoiceClass.GetDefaultObject();
 }
 
 USoundBase* UUR_AnnouncementSubsystem::GetAnnouncementSound(const FGameplayTag& GameplayTag)
-{	
+{
 	USoundBase* AnnouncementSound{};
 
 	if (AnnouncementVoiceClass)
 	{
 		// Ensure the AnnouncementVoice is set
-        AnnouncementVoice = AnnouncementVoiceClass->GetDefaultObject<UUR_AnnouncementVoice>();
+		AnnouncementVoice = AnnouncementVoiceClass.Get();
 		if (AnnouncementVoice)
 		{
 			AnnouncementSound = AnnouncementVoice->GetAnnouncementSound(GameplayTag);
 		}
 	}
-	
+
 	return AnnouncementSound;
 }
 
