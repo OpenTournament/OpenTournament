@@ -51,7 +51,7 @@ UUR_CharacterMovementComponent::UUR_CharacterMovementComponent(const class FObje
     MaxAcceleration = 5120.f;
     MaxStepHeight = 62.5f;
 
-    CrouchedHalfHeight = 53.625;
+    SetCrouchedHalfHeight(53.625);
 
     NavAgentProps.bCanCrouch = true;
     NavAgentProps.bCanSwim = true;
@@ -311,7 +311,7 @@ void UUR_CharacterMovementComponent::ProcessLanded(const FHitResult& Hit, float 
     if (auto Owner = Cast<AUR_Character>(GetOwner()))
     {
         Owner->UnCrouch(false);
-    
+
         if (bIsDodging)
         {
             Velocity *= DodgeLandingSpeedScale;
@@ -548,7 +548,7 @@ bool UUR_CharacterMovementComponent::PerformDodge(FVector& DodgeDir, FVector& Do
         URCharacterOwner->OnDodge(URCharacterOwner->GetActorLocation(), Velocity);
         // @! TODO Swim Dodge needs its own DodgeReset time value or have a timer that resets a dodge
     }
-    
+
     if (bIsDodging)
     {
         URCharacterOwner->UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ URCharacterOwner->GetMovementActionGameplayTag(EMovementAction::Dodging) });
@@ -588,7 +588,7 @@ void UUR_CharacterMovementComponent::PerformWallDodgeImpulse(FVector& DodgeDir, 
 
 float UUR_CharacterMovementComponent::GetWallDodgeVerticalImpulse() const
 {
-    const float CurrentVelocityZ{ Velocity.Z };
+    const float CurrentVelocityZ{ static_cast<float>(Velocity.Z) };
     float CachedVelocityZ = 0.f;
 
     if (CurrentVelocityZ < -1.f * WallDodgeImpulseVertical * 0.5f)
@@ -627,10 +627,10 @@ bool UUR_CharacterMovementComponent::TraceWallDodgeSurface(const FVector& DodgeD
 
     // Is our HitActor using the WallDodgeSurface interface?
     // We use "ImplementsInterface" method because it may be implemented in Blueprint
-    if (HitResult.Actor != nullptr && HitResult.Actor->GetClass()->ImplementsInterface(UUR_WallDodgeSurfaceInterface::StaticClass()))
+    if (HitResult.GetActor() != nullptr && HitResult.GetActor()->GetClass()->ImplementsInterface(UUR_WallDodgeSurfaceInterface::StaticClass()))
     {
         // Invoke the interface function to determine if WallDodging is permitted
-        if (!IUR_WallDodgeSurfaceInterface::Execute_IsWallDodgePermitted(HitResult.Actor.Get()))
+        if (!IUR_WallDodgeSurfaceInterface::Execute_IsWallDodgePermitted(HitResult.GetActor()))
         {
             // @! TODO Event Hook for effects?
             bIsWallDodgeSurfaceHit = false;
