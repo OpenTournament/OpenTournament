@@ -480,7 +480,7 @@ void AUR_Character::RecalculateBaseEyeHeight()
     }
 
     const float DefaultHalfHeight{ GetDefaultHalfHeight() };
-    const float AbsoluteDifference = DefaultHalfHeight - ((GetCharacterMovement()->CrouchedHalfHeight / DefaultHalfHeight) * DefaultHalfHeight);
+    const float AbsoluteDifference = DefaultHalfHeight - ((GetCharacterMovement()->GetCrouchedHalfHeight() / DefaultHalfHeight) * DefaultHalfHeight);
 
     if (GetMovementComponent()->IsMovingOnGround())
     {
