@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "4.27",
+	"EngineAssociation": "5.1",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -357,7 +357,7 @@
 		},
 		{
 			"Name": "UMods",
-			"Enabled": true
+			"Enabled": false
 		},
 		{
 			"Name": "SoundUtilities",
@@ -373,7 +373,7 @@
 		},
 		{
 			"Name": "VoxelFree",
-			"Enabled": true,
+			"Enabled": false,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/c61d1941c8664436be42d649404a10e0"
 		}
 	]
