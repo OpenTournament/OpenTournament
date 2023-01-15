@@ -54,7 +54,7 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 
     InventoryComponent = Cast<UUR_InventoryComponent>(CreateDefaultSubobject<UUR_InventoryComponent>(TEXT("InventoryComponent")));
 
-    // Create a CameraComponent	
+    // Create a CameraComponent
     CharacterCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     CharacterCameraComponent->SetupAttachment(GetCapsuleComponent());
     CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, BaseEyeHeight)); // Position the camera
@@ -98,7 +98,7 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 
     ThirdPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
     ThirdPersonCamera->SetupAttachment(ThirdPersonArm);
-    
+
     // Create the attribute set, this replicates by default
     AttributeSet = CreateDefaultSubobject<UUR_AttributeSet>(TEXT("AttributeSet"));
 
@@ -122,7 +122,7 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 void AUR_Character::BeginPlay()
 {
     InitializeGameplayTagsManager();
-    
+
     Super::BeginPlay();
 
     AttributeSet->SetHealth(100.f);
@@ -343,7 +343,7 @@ void AUR_Character::EndViewTarget(APlayerController* PC)
 void AUR_Character::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
     UpdateMovementPhysicsGameplayTags(PrevMovementMode);
-    
+
     Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
 }
 
@@ -1300,7 +1300,7 @@ FGameplayTag AUR_Character::GetMovementModeGameplayTag(const EMovementMode InMov
             }
         }
     }
-    
+
     return FGameplayTag{};
 }
 
@@ -1323,7 +1323,7 @@ void AUR_Character::UpdateGameplayTags(const FGameplayTagContainer& TagsToRemove
     }
     GAME_LOG(Game, Verbose, "Pre: Character (%s) has Tags: %s", *this->GetName(), *TagsToPrint);
 #endif
-    
+
     GameplayTags.RemoveTags(TagsToRemove);
     GameplayTags.AppendTags(TagsToAdd);
 
