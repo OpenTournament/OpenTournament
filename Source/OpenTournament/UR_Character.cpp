@@ -7,6 +7,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
+#include "Engine/DamageEvents.h"
 #include "GameFramework/GameState.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameplayTagsManager.h"

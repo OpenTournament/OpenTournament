@@ -28,11 +28,12 @@ class UMeshComponent;
 class UMaterialInterface;
 class UInterface;
 class AUR_Weapon;
+class UFXSystemAsset;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * 
+ *
  */
 UCLASS()
 class OPENTOURNAMENT_API UUR_FunctionLibrary : public UBlueprintFunctionLibrary

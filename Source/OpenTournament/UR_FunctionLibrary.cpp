@@ -242,7 +242,7 @@ void UUR_FunctionLibrary::ParseFloatTextInput(FText Text, bool& bIsNumeric, floa
 {
     FString Str = Text.ToString().TrimStartAndEnd().Replace(TEXT(" "), TEXT("")).Replace(TEXT(","), TEXT("."));
     bIsNumeric = Str.IsNumeric();
-    OutValue = bIsNumeric ? UKismetStringLibrary::Conv_StringToFloat(Str) : 0.f;
+    OutValue = bIsNumeric ? FCString::Atof(*Str) : 0.f;
 }
 
 
@@ -362,7 +362,7 @@ void UUR_FunctionLibrary::GenericArray_Slice(void* SourceArray, const FArrayProp
     }
 }
 
-template<typename T> static TArray<T> UUR_FunctionLibrary::ArraySlice(const TArray<T>& InArray, int32 Start, int32 End)
+template<typename T> TArray<T> UUR_FunctionLibrary::ArraySlice(const TArray<T>& InArray, int32 Start, int32 End)
 {
     End = (End < 0) ? InArray.Num() : FMath::Min(End, InArray.Num());
     TArray<T> Result(FMath::Max(0, End - Start));

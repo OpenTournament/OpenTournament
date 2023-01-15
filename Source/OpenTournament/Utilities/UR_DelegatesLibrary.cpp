@@ -9,7 +9,16 @@
 
 UUR_DelegatesLibrary::UUR_DelegatesLibrary()
 {
-    GEngine->GameViewport->Viewport->ViewportResizedEvent.AddUObject(this, &UUR_DelegatesLibrary::InternalOnViewportResized);
+    if (GEngine)
+    {
+        if (auto GViewport = GEngine->GameViewport.Get())
+        {
+            if (auto Viewport = GViewport->Viewport)
+            {
+                Viewport->ViewportResizedEvent.AddUObject(this, &UUR_DelegatesLibrary::InternalOnViewportResized);
+            }
+        }
+    }
 }
 
 void UUR_DelegatesLibrary::InternalOnViewportResized(FViewport* Viewport, uint32 Param)

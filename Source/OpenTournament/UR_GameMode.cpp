@@ -5,6 +5,8 @@
 #include "UR_GameMode.h"
 
 #include "EngineUtils.h"    // for TActorIterator<>
+#include "Engine/DamageEvents.h"
+#include "GameFramework/Controller.h"
 #include "Kismet/GameplayStatics.h"
 
 #include "UR_Character.h"
@@ -17,7 +19,6 @@
 #include "UR_Ammo.h"
 #include "UR_Widget_ScoreboardBase.h"
 #include "UR_TeamInfo.h"
-#include "GameFramework/Controller.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -309,7 +310,7 @@ bool AUR_GameMode::PreventDeath_Implementation(AController* Killed, AController*
 *
 * - update score based on kill ? this is heavily gamemode-dependent
 * - check end game ? again gamemode-dependent.
-* 
+*
 * In case of DM, Score = Kills-Suicides.
 * In case of CTF, Score = Caps.
 * Also need to update TeamScores somehow.
