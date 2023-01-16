@@ -383,6 +383,14 @@
 		{
 			"Name": "DumpGPUServices",
 			"Enabled": false
+		},
+		{
+			"Name": "GameFeatures",
+			"Enabled": true
+		},
+		{
+			"Name": "ModularGameplay",
+			"Enabled": true
 		}
 	]
 }
