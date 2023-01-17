@@ -320,14 +320,6 @@
 			"Enabled": false
 		},
 		{
-			"Name": "VisualStudioSourceCodeAccess",
-			"Enabled": false
-		},
-		{
-			"Name": "VisualStudioCodeSourceCodeAccess",
-			"Enabled": false
-		},
-		{
 			"Name": "RuntimePhysXCooking",
 			"Enabled": false
 		},
