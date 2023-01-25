@@ -100,7 +100,7 @@ FVector UUR_PaniniUtils::CalcMFShrinkWeapon(const UObject* WorldContext, const F
         Offset = FMath::Lerp(
             Offset.GetSafeNormal() * Params.PushMin,
             Offset.GetSafeNormal() * Params.PushMax,
-            (Offset.Size() + (FMath::Tan(0.5f * CameraManager->GetFOVAngle()) * Params.DistanceBias)) / Params.DistanceNormalize
+            (Offset.Size() + (FMath::Tan(0.5f * CameraManager->GetFOVAngle() * PI / 180.f) * Params.DistanceBias)) / Params.DistanceNormalize
         );
         return WorldPos + Offset;
     }
