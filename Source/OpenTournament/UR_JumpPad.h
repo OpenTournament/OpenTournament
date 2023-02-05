@@ -40,13 +40,14 @@ class UStaticMeshComponent;
 UCLASS(Blueprintable, Abstract,
     HideCategories = ("Actor", "Actor Tick", "Replication", "Collision", "Input", "LOD", "Cooking", "Networking", "Physics", "Data Layers"),
     meta = (PrioritizeCategories = "GameplayTags, JumpPad"))
-class OPENTOURNAMENT_API AUR_JumpPad : public AActor,
+class OPENTOURNAMENT_API AUR_JumpPad :
+    public AActor,
     public IGameplayTagAssetInterface
 {
     GENERATED_BODY()
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-public:
+protected:
 
     /**
     * Root Component
@@ -82,6 +83,7 @@ public:
     /*
     * Spline Component
     */
+    UPROPERTY()
     USplineComponent* SplineComponent;
 #endif
 
@@ -147,7 +149,7 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void BeginPlay() override;
+    virtual void BeginPlay() override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
