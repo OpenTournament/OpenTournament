@@ -15,6 +15,7 @@
 class UAudioComponent;
 class UCapsuleComponent;
 class UMaterialInstanceDynamic;
+class UNiagaraComponent;
 class UParticleSystem;
 class UParticleSystemComponent;
 class USplineComponent;
@@ -36,7 +37,9 @@ class UStaticMeshComponent;
 * - Expose API to permit adjustments to Character air control from JumpPad
 * - Updating NavMesh and other interfacing with AI
 */
-UCLASS(Blueprintable, Abstract, HideCategories = (Actor, Rendering, Replication, Collision, Input, LOD, Cooking))
+UCLASS(Blueprintable, Abstract,
+    HideCategories = ("Actor", "Actor Tick", "Replication", "Collision", "Input", "LOD", "Cooking", "Networking", "Physics", "Data Layers"),
+    meta = (PrioritizeCategories = "GameplayTags, JumpPad"))
 class OPENTOURNAMENT_API AUR_JumpPad : public AActor,
     public IGameplayTagAssetInterface
 {
@@ -48,32 +51,32 @@ public:
     /**
     * Root Component
     */
-    UPROPERTY(BlueprintReadOnly, Category = JumpPad)
+    UPROPERTY()
     USceneComponent* SceneRoot;
 
     /*
     * Static Mesh Component - JumpPad Base
     */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
+    UPROPERTY(BlueprintReadOnly)
     UStaticMeshComponent* MeshComponent;
 
     /*
     * Capsule Component - Active JumpPad Region
     */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
+    UPROPERTY(BlueprintReadOnly)
     UCapsuleComponent* CapsuleComponent;
-    
+
     /*
     * Audio Component
     */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
+    UPROPERTY(BlueprintReadOnly)
     UAudioComponent* AudioComponent;
 
     /*
     * ParticleSystem Component
     */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
-    UParticleSystemComponent* ParticleSystemComponent;
+    UPROPERTY(BlueprintReadOnly)
+    UNiagaraComponent* NiagaraSystemComponent;
 
 #if WITH_EDITOR
     /*
@@ -87,51 +90,54 @@ public:
     /*
     * Destination of the Jump - May be another JumpPad, TargetPoint, etc.
     */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad", meta = (MakeEditWidget = ""))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad", meta = (MakeEditWidget = "", DisplayPriority = 1))
     FTransform Destination;
-
-    /**
-    * If set then lock the Destination when moving/rotating the JumpPad
-    */
-    UPROPERTY(EditAnywhere, Category = "JumpPad|Editor")
-    bool bLockDestination;
 
     /**
     * Should players retain Horizontal (XY) Velocity when they hit this JumpPad?
     */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad", meta = (DisplayPriority = 2))
     bool bRetainHorizontalVelocity;
 
     /**
     * Class of Actors capable of interacting with JumpPad
     */
-    UPROPERTY(EditAnywhere, Category = "JumpPad")
+    UPROPERTY(EditAnywhere, Category = "JumpPad", meta = (DisplayPriority = 1))
     TSubclassOf<AActor> JumpActorClass;
 
     /*
     * Desired duration of the Jump (in seconds). Used to calculate velocity needed to impart
     */
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "JumpPad")
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "JumpPad", meta = (DisplayPriority = 1))
     float JumpDuration;
 
     /**
     * Sound played on Launch
     */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad", meta = (DisplayPriority = 1))
     USoundBase* JumpPadLaunchSound;
 
     /**
     * Particle System created on Launch
     */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad", meta = (DisplayPriority = 1))
     UParticleSystem* JumpPadLaunchParticleClass;
+
+#if WITH_EDITORONLY_DATA
+    /**
+    * Editor-only.
+    * If set then lock the Destination when moving/rotating the JumpPad
+    */
+    UPROPERTY(EditAnywhere, Category = "JumpPad|Editor", meta = (DisplayPriority = 2))
+    bool bLockDestination;
 
     /**
     * Editor-only.
     * Spline Jump-Arc Projection will Calculate for this many Seconds
     */
-    UPROPERTY(EditInstanceOnly, Category = "JumpPad|Editor", Meta=(UIMin = "0.0", UIMax ="10.0"))
+    UPROPERTY(EditInstanceOnly, Category = "JumpPad|Editor", meta=(UIMin = "0.0", UIMax ="10.0", DisplayPriority = 2))
     float SplineProjectionDuration;
+#endif
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -150,9 +156,9 @@ public:
     */
     UFUNCTION()
     void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-    
+
     /**
-    * Is this actor permitted to jump? 
+    * Is this actor permitted to jump?
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintPure, BlueprintCallable, Category = "JumpPad")
     bool IsPermittedToJump(const AActor* TargetActor) const;

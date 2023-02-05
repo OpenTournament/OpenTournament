@@ -4,6 +4,9 @@
 
 #include "UR_JumpPad.h"
 
+#include "AbilitySystemGlobals.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SceneComponent.h"
@@ -30,13 +33,11 @@
 AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer),
     Destination(FTransform()),
-    bLockDestination(true),
     bRetainHorizontalVelocity(false),
     JumpActorClass(AUR_Character::StaticClass()),
     JumpDuration(2.f),
     JumpPadLaunchSound(nullptr),
     JumpPadLaunchParticleClass(nullptr),
-    SplineProjectionDuration(2.f),
     bRequiredTagsExact(false),
     bExcludedTagsExact(true),
     bUseJumpPadMaterialInstance(true),
@@ -46,6 +47,7 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
 {
     PrimaryActorTick.bCanEverTick = false;
     PrimaryActorTick.bStartWithTickEnabled = false;
+    SetCanBeDamaged(false);
 
     SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
     SetRootComponent(SceneRoot);
@@ -64,8 +66,8 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
     AudioComponent->SetupAttachment(RootComponent);
 
-    ParticleSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleSystemComponent"));
-    ParticleSystemComponent->SetupAttachment(RootComponent);
+    NiagaraSystemComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraSystemComponent"));
+    NiagaraSystemComponent->SetupAttachment(RootComponent);
 
     Destination = GetActorTransform();
     Destination.SetLocation(Destination.GetLocation() + FVector(0, 0, 1000));
@@ -73,6 +75,11 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
 #if WITH_EDITOR
     SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("SplineComponent"));
     SplineComponent->SetupAttachment(RootComponent);
+#endif
+
+#if WITH_EDITORONLY_DATA
+    bLockDestination = true;
+    SplineProjectionDuration = 2.f;
 #endif
 }
 
@@ -242,7 +249,7 @@ void AUR_JumpPad::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
         SplineProjectionDuration = JumpDuration;
         UpdateSpline();
     }
-    
+
     if (PropertyName == GET_MEMBER_NAME_CHECKED(AUR_JumpPad, Destination)
         || PropertyName == GET_MEMBER_NAME_CHECKED(AUR_JumpPad, SplineProjectionDuration))
     {
