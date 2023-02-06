@@ -4,18 +4,15 @@
 
 #include "UR_JumpPad.h"
 
-#include "AbilitySystemGlobals.h"
 #include "NiagaraComponent.h"
-#include "NiagaraSystem.h"
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/Character.h"
+#include "GameplayCueManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "Particles/ParticleSystem.h"
-#include "Particles/ParticleSystemComponent.h"
 
 #include "OpenTournament.h"
 #include "UR_Character.h"
@@ -36,8 +33,6 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     bRetainHorizontalVelocity(false),
     JumpActorClass(AUR_Character::StaticClass()),
     JumpDuration(2.f),
-    JumpPadLaunchSound(nullptr),
-    JumpPadLaunchParticleClass(nullptr),
     bRequiredTagsExact(false),
     bExcludedTagsExact(true),
     bUseJumpPadMaterialInstance(true),
@@ -70,7 +65,10 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     NiagaraSystemComponent->SetupAttachment(RootComponent);
 
     Destination = GetActorTransform();
-    Destination.SetLocation(Destination.GetLocation() + FVector(0, 0, 1000));
+    FVector OffsetLocation {FVector(0, 0, 1000)};
+    Destination.SetLocation(Destination.GetLocation() + OffsetLocation);
+
+    JumpGameplayCueTag = FGameplayTag::RequestGameplayTag(FName(TEXT("GameplayCue.JumpPad.Boost"))),
 
 #if WITH_EDITOR
     SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("SplineComponent"));
@@ -114,15 +112,7 @@ void AUR_JumpPad::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UP
 
 void AUR_JumpPad::PlayJumpPadEffects_Implementation()
 {
-    if (JumpPadLaunchSound)
-    {
-        UGameplayStatics::PlaySoundAtLocation(GetWorld(), JumpPadLaunchSound, GetActorLocation());
-
-        if (auto PSComponent = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), JumpPadLaunchParticleClass, GetActorTransform()))
-        {
-            // TODO : Modify PSComponent if needed, based on Team, etc.
-        }
-    }
+    UGameplayCueManager::ExecuteGameplayCue_NonReplicated(this, JumpGameplayCueTag, FGameplayCueParameters{});
 }
 
 bool AUR_JumpPad::IsPermittedToJump_Implementation(const AActor* TargetActor) const

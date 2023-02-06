@@ -58,28 +58,28 @@ protected:
     /*
     * Static Mesh Component - JumpPad Base
     */
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
     UStaticMeshComponent* MeshComponent;
 
     /*
     * Capsule Component - Active JumpPad Region
     */
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
     UCapsuleComponent* CapsuleComponent;
 
     /*
     * Audio Component
     */
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
     UAudioComponent* AudioComponent;
 
     /*
     * ParticleSystem Component
     */
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
     UNiagaraComponent* NiagaraSystemComponent;
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
     /*
     * Spline Component
     */
@@ -104,7 +104,7 @@ protected:
     /**
     * Class of Actors capable of interacting with JumpPad
     */
-    UPROPERTY(EditAnywhere, Category = "JumpPad", meta = (DisplayPriority = 1))
+    UPROPERTY(EditAnywhere, Category = "JumpPad", AdvancedDisplay, meta = (DisplayPriority = 1))
     TSubclassOf<AActor> JumpActorClass;
 
     /*
@@ -113,17 +113,11 @@ protected:
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "JumpPad", meta = (DisplayPriority = 1))
     float JumpDuration;
 
-    /**
-    * Sound played on Launch
+    /*
+    * When the JumpPad is activated, GameplayCue used is based on this GameplayTag
     */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad", meta = (DisplayPriority = 1))
-    USoundBase* JumpPadLaunchSound;
-
-    /**
-    * Particle System created on Launch
-    */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad", meta = (DisplayPriority = 1))
-    UParticleSystem* JumpPadLaunchParticleClass;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumpPad", meta = (DisplayPriority = 1, Categories = "GameplayCue.JumpPad.Boost"))
+    FGameplayTag JumpGameplayCueTag;
 
 #if WITH_EDITORONLY_DATA
     /**
@@ -213,7 +207,7 @@ public:
     bool bRequiredTagsExact;
 
     /**
-    * Actors attempting to Teleport must have at least one exact Tag match
+    * Actors attempting to use the JumpPad must have at least one exact Tag match
     */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
     FGameplayTagContainer RequiredTags;
@@ -225,7 +219,7 @@ public:
     bool bExcludedTagsExact;
 
     /**
-    * Gameplay Tags for this Actor
+    * Actors with at least one exact Tag match are excluded from the JumpPad
     */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
     FGameplayTagContainer ExcludedTags;
