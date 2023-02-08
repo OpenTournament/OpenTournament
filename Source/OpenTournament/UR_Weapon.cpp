@@ -41,10 +41,13 @@ AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
 
     Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh3P"));
     Mesh3P->SetupAttachment(RootComponent);
+    Mesh3P->bCastHiddenShadow = true;
 
     Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh1P"));
     Mesh1P->SetupAttachment(RootComponent);
     Mesh1P->bOnlyOwnerSee = true;
+    Mesh1P->bCastDynamicShadow = false;
+    Mesh1P->CastShadow = false;
 
     //PrimaryActorTick.bCanEverTick = true;
 
@@ -65,8 +68,7 @@ void AUR_Weapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    //NOTE: Cannot have OwnerOnly + InitialOnly :(
-    DOREPLIFETIME_CONDITION(AUR_Weapon, AmmoRefs, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(AUR_Weapon, AmmoRefs, COND_OwnerOnly);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,18 +97,12 @@ void AUR_Weapon::PostInitializeComponents()
             FireMode->SetCallbackInterface(this);
         }
     }
-}
-
-void AUR_Weapon::BeginPlay()
-{
-    Super::BeginPlay();
 
     // Auto-enable panini on 1P mesh and children
     UUR_PaniniUtils::TogglePaniniProjection(Mesh1P, true, true);
 
-    // Both meshes spawn hidden by default, until Attach functions are called
-    Mesh1P->SetVisibility(false, true);
-    Mesh3P->SetVisibility(false, true);
+    // Weapon fully hidden by default, until Attach functions are called
+    ToggleGeneralVisibility(false);
 }
 
 UClass* AUR_Weapon::GetNextFallbackConfigWeapon(TSubclassOf<AUR_Weapon> ForClass)
@@ -152,7 +148,7 @@ void AUR_Weapon::OnRep_Owner()
     {
         if (WeaponState == EWeaponState::Dropped)
         {
-            SetWeaponState(EWeaponState::Holstered);
+            SetWeaponState(EWeaponState::Holstered);    // this is merely a prediction, in case we receive owner before statechange
         }
         else
         {
@@ -163,10 +159,21 @@ void AUR_Weapon::OnRep_Owner()
     {
         SetWeaponState(EWeaponState::Dropped);
     }
+
+    // always refresh 1p/3p visibility here, in case owner replicates late (after statechange)
+    UpdateMeshVisibility();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Weapon Attachment
+
+void AUR_Weapon::ToggleGeneralVisibility(bool bVisible)
+{
+    SetActorHiddenInGame(!bVisible);
+    Mesh3P->SetCastHiddenShadow(bVisible);
+    if (bVisible)
+        UpdateMeshVisibility();
+}
 
 void AUR_Weapon::CheckWeaponAttachment()
 {
@@ -199,7 +206,7 @@ void AUR_Weapon::AttachMeshToPawn()
         Mesh3P->SetRelativeTransform(Mesh3P->GetSocketTransform(FName(TEXT("Grip")), RTS_Component).Inverse());
         Mesh3P->AttachToComponent(URCharOwner->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(TEXT("hand_r_Socket")));
 
-        UpdateMeshVisibility();
+        ToggleGeneralVisibility(true);
         bIsAttached = true;
     }
 }
@@ -215,18 +222,14 @@ void AUR_Weapon::UpdateMeshVisibility()
     {
         Mesh1P->SetVisibility(false, true);
         Mesh3P->SetVisibility(true, true);
-        Mesh3P->bOwnerNoSee = false;
     }
 }
 
 void AUR_Weapon::DetachMeshFromPawn()
 {
+    ToggleGeneralVisibility(false);
     Mesh1P->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-    Mesh1P->SetVisibility(false, true);
-
     Mesh3P->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-    Mesh3P->SetVisibility(false, true);
-
     bIsAttached = false;
 }
 
@@ -1156,10 +1159,8 @@ void AUR_Weapon::PlayFireEffects_Implementation(UUR_FireModeBasic* FireMode)
             URCharOwner->MeshFirstPerson->GetAnimInstance()->Montage_Play(URCharOwner->FireAnimation);
         }
     }
-    else
-    {
-        //TODO: play 3p anim
-    }
+
+    //TODO: make and play 3p anim (in all cases since we want 3p shadow animate)
 }
 
 void AUR_Weapon::PlayHitscanEffects_Implementation(UUR_FireModeBasic* FireMode, const FHitscanVisualInfo& HitscanInfo)

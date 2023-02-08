@@ -425,3 +425,21 @@ void UUR_FunctionLibrary::RefreshComponentTransforms(USceneComponent* Component)
         RefreshBoneTransforms(Cast<USkeletalMeshComponent>(Comp));
     }
 }
+
+void UUR_FunctionLibrary::PropagateOwnerNoSee(USceneComponent* Component, bool bOwnerNoSee)
+{
+    TArray<USceneComponent*> Comps;
+    Component->GetChildrenComponents(true, Comps);
+    Comps.Add(Component);
+    for (USceneComponent* Comp : Comps)
+    {
+        if (auto PrimComp = Cast<UPrimitiveComponent>(Comp))
+        {
+            PrimComp->SetOwnerNoSee(bOwnerNoSee);
+        }
+        else
+        {
+            Comp->MarkRenderStateDirty();
+        }
+    }
+}
