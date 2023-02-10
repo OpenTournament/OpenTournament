@@ -24,6 +24,7 @@
 #include "UR_GameplayAbility.h"
 #include "UR_PlayerController.h"
 #include "UR_GameMode.h"
+#include "UR_GameplayTags.h"
 #include "UR_Weapon.h"
 #include "UR_Projectile.h"
 #include "UR_PlayerState.h"
@@ -1250,10 +1251,10 @@ void AUR_Character::Server_SetAbilityLevel_Implementation(TSubclassOf<UUR_Gamepl
 
 void AUR_Character::InitializeMovementActionGameplayTags()
 {
-    MovementActionGameplayTags.Add(EMovementAction::Jumping, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Jumping")));
-    MovementActionGameplayTags.Add(EMovementAction::Dodging, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Dodging")));
-    MovementActionGameplayTags.Add(EMovementAction::Crouching, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Crouching")));
-    MovementActionGameplayTags.Add(EMovementAction::Running, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Running")));
+    MovementActionGameplayTags.Add(EMovementAction::Jumping,    TAG_Character_States_Movement_Jumping);
+    MovementActionGameplayTags.Add(EMovementAction::Dodging,    TAG_Character_States_Movement_Dodging);
+    MovementActionGameplayTags.Add(EMovementAction::Crouching,  TAG_Character_States_Movement_Crouching);
+    MovementActionGameplayTags.Add(EMovementAction::Running,    TAG_Character_States_Movement_Running);
 }
 
 void AUR_Character::InitializeMovementModeGameplayTags()
@@ -1261,11 +1262,11 @@ void AUR_Character::InitializeMovementModeGameplayTags()
     MovementModeGameplayTags.Add(EMovementMode::MOVE_None, FGameplayTag{});
     MovementModeGameplayTags.Add(EMovementMode::MOVE_Custom, FGameplayTag{});
     MovementModeGameplayTags.Add(EMovementMode::MOVE_MAX, FGameplayTag{});
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Walking, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Walking")));
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_NavWalking, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Walking")));
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Falling, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Falling")));
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Swimming, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Swimming")));
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Flying, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Flying")));
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Walking,    TAG_Character_States_Physics_Walking);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_NavWalking, TAG_Character_States_Physics_Walking);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Falling,    TAG_Character_States_Physics_Falling);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Swimming,   TAG_Character_States_Physics_Swimming);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Flying,     TAG_Character_States_Physics_Flying);
 }
 
 void AUR_Character::InitializeGameplayTags()
