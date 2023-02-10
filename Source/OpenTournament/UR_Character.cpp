@@ -84,10 +84,11 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     WeaponAttachPoint = FName(TEXT("GripPoint"));
 
     // Mesh third person (now using SetVisibility in CameraViewChanged)
-    GetMesh()->bOwnerNoSee = false;
+    GetMesh3P()->bOwnerNoSee = false;
+    GetMesh3P()->bCastHiddenShadow = true;
 
     // By default, do not refresh animations/bones when not rendered
-    GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+    GetMesh3P()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
     MeshFirstPerson->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
     // Third person camera
@@ -300,8 +301,8 @@ bool AUR_Character::IsThirdPersonCamera_Implementation(UCameraComponent* Camera)
 
 void AUR_Character::CameraViewChanged_Implementation()
 {
-    GetMesh()->SetVisibility(bViewingThirdPerson, true);
-    MeshFirstPerson->SetVisibility(!bViewingThirdPerson, true);
+    GetMesh3P()->SetVisibility(bViewingThirdPerson, true);
+    GetMesh1P()->SetVisibility(!bViewingThirdPerson, true);
 
     //NOTE: If visibility propagation works as expected and if the weapon is properly attached to meshes,
     // then it might not be necessary to update weapon visibility. Needs checking out.

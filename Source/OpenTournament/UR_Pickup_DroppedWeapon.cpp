@@ -36,7 +36,7 @@ void AUR_Pickup_DroppedWeapon::SetWeapon(AUR_Weapon* InWeapon)
 
         Weapon->GetMesh3P()->AttachToComponent(StaticMesh, FAttachmentTransformRules::SnapToTargetIncludingScale);
         Weapon->GetMesh3P()->SetWorldRotation(FRotator(0.f, Weapon->GetMesh3P()->GetComponentRotation().Yaw, 0.f));
-        Weapon->GetMesh3P()->SetVisibility(true, true);
+        Weapon->ToggleGeneralVisibility(true);
 
         DisplayName = FText::FromString(Weapon->WeaponName);
     }
@@ -46,7 +46,7 @@ bool AUR_Pickup_DroppedWeapon::OnPickup_Implementation(AUR_Character* PickupChar
 {
     if (Weapon && PickupCharacter && PickupCharacter->InventoryComponent)
     {
-        Weapon->GetMesh3P()->SetVisibility(false, true);
+        Weapon->ToggleGeneralVisibility(false); //re-hide until attachment functions are called
 
         if (HasAuthority())
         {

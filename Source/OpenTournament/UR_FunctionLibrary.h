@@ -415,4 +415,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Game")
     static void RefreshComponentTransforms(USceneComponent* Component);
 
+    UFUNCTION(BlueprintCallable, Category = "Game")
+    static void PropagateOwnerNoSee(USceneComponent* Component, bool bOwnerNoSee);
+
 };
