@@ -164,10 +164,6 @@
 			"Enabled": false
 		},
 		{
-			"Name": "GeometryCache",
-			"Enabled": false
-		},
-		{
 			"Name": "MeshPainting",
 			"Enabled": true
 		},
@@ -382,6 +378,26 @@
 		},
 		{
 			"Name": "ModularGameplay",
+			"Enabled": true
+		},
+		{
+			"Name": "GeometryScripting",
+			"Enabled": true
+		},
+		{
+			"Name": "ModelingToolsEditorMode",
+			"Enabled": true
+		},
+		{
+			"Name": "StaticMeshEditorModeling",
+			"Enabled": true
+		},
+		{
+			"Name": "GeometryCollectionPlugin",
+			"Enabled": true
+		},
+		{
+			"Name": "AbilitySystemGameFeatureActions",
 			"Enabled": true
 		}
 	]
