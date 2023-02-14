@@ -1,6 +1,8 @@
 # Open Tournament
 
-## Important: If you cloned this repository prior to 2-Aug-20, please make sure you have git lfs installed and re-clone to a new location 
+> Important: If you cloned this repository prior to 2-Aug-20, please make sure you have git lfs installed and re-clone to a new location 
+
+
 
 ## Overview
 
