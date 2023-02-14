@@ -8,7 +8,7 @@ The **Open Tournament Project** is a community-led effort to develop a new game 
 
 ## Legal
 
-* Code is (c) 2019-2021 Open Tournament Team. Usage is subject to our license.
+* Code is (c) 2019-2023 Open Tournament Team. Usage is subject to our license.
 * Other content may fall under different licenses and is used with permission only for Open Tournament.
 * This is a public repository with access available for contributors to Open Tournament.
 * Please do not share or redistribute in any form without approval from project leadership.
@@ -25,7 +25,7 @@ The **Open Tournament Project** is an experiment in open game development. The p
 ## Additional Links
 
 * Official Website: [www.opentournamentgame.com](https://www.opentournamentgame.com)
-* Additional discussion can be found on www.reddit.com/r/OpenTournament
+* Additional discussion can be found on [r/OpenTournament](www.reddit.com/r/OpenTournament)
 
 _______________________________________________________________________________________
 
@@ -36,7 +36,7 @@ ________________________________________________________________________________
 * GitHub Account
 * Epic Games Launcher
 * Git Client
-* Visual Studio 2019 (*C++ Developer Only*)
+* Visual Studio 2022 (*C++ Developer Only*)
 
 ### GitHub Account
 
@@ -44,9 +44,9 @@ If you're reading this there's a good chance you already have a GitHub account, 
 
 ### Epic Games Launcher
 
-The Open Tournament project is built using Unreal Engine 4.25. Please ensure that you have the correct engine version installed.
+The Open Tournament project is built using Unreal Engine 5.1. Please ensure that you have the correct engine version installed.
 
-* The correct engine version can be determined by looking at the OpenTournament.uproject from within a text editor. Find the line which says "EngineAssociation" and note the numerical value associated with it.
+* The correct engine version can always be determined by looking at the `OpenTournament.uproject` from within a text editor. Find the line which says "EngineAssociation" and note the numerical value associated with it.
 * The correct Unreal Engine version can be installed through the Epic Games Launcher. On the sidebar, select "Unreal Engine" then select the "Library" tab at the top. Select the "+" button next to Engine Versions and set it to the appropriate Engine version.
 
 ### Git Client
@@ -57,7 +57,7 @@ Git is a version control system utilized by GitHub & the Open Tournament project
 
 > NOTE: If you are not a C++ developer, you should not need Visual Studio or any other C++ IDE. Double-click OpenTournament.uproject, and report back to us any issue in Discord.
 
-* Refer to the [Unreal Engine 4 Documentation](
+* Refer to the [Unreal Engine Documentation](
 https://docs.unrealengine.com/en-US/Programming/Development/VisualStudioSetup/index.html) prior to setting up Visual Studio
 * Download and Install Visual Studio 2019
 * Within your cloned Open Tournament repository, right click on the OpenTournament.uproject
