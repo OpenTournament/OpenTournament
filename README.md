@@ -130,4 +130,4 @@ ________________________________________________________________________________
 Code and Asset style, formatting, and organization is an important task and is the responsibility of everyone contributing to the project. In order to ensure that your contributions are considered, please follow the following guidelines. If questions arise, defer to the conventions used in the OpenTournament project currently or decide upon & document new conventions.
 
 * [Code Style Guide](https://docs.unrealengine.com/en-US/Programming/Development/CodingStandard/index.html) - Please follow the Epic style guidelines for most code submissions, except where otherwise specified. 
-* [Asset Style & Naming Guide](https://github.com/Allar/ue4-style-guide/blob/master/README.md) - Please follow these guidelines for Blueprints and other asset types
+* [Asset Style & Naming Guide](https://github.com/Allar/ue5-style-guide) - Please follow these guidelines for Blueprints and other asset types
