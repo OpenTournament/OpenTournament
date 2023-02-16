@@ -28,6 +28,7 @@ The **Open Tournament Project** is an experiment in open game development. The p
 
 * Official Website: [www.opentournamentgame.com](https://www.opentournamentgame.com)
 * Additional discussion can be found on [r/OpenTournament](www.reddit.com/r/OpenTournament)
+* Twitter: [Open Tournament](www.twitter.com/open_tournament)
 
 _______________________________________________________________________________________
 
