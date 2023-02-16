@@ -132,3 +132,4 @@ Code and Asset style, formatting, and organization is an important task and is t
 
 * [Code Style Guide](https://docs.unrealengine.com/en-US/Programming/Development/CodingStandard/index.html) - Please follow the Epic style guidelines for most code submissions, except where otherwise specified. 
 * [Asset Style & Naming Guide](https://github.com/Allar/ue5-style-guide) - Please follow these guidelines for Blueprints and other asset types
+* Follow the existing naming conventions where possible, or discuss!
