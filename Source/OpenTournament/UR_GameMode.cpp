@@ -237,9 +237,9 @@ void AUR_GameMode::SetPlayerDefaults(APawn* PlayerPawn)
             SpawnParams.Instigator = URCharacter;
             for (const FStartingWeaponEntry& Entry : StartingWeapons)
             {
-                if (Entry.WeaponClass)
+                if (UClass* Class = Entry.WeaponClass.LoadSynchronous())
                 {
-                    AUR_Weapon* StartingWeapon = GetWorld()->SpawnActor<AUR_Weapon>(Entry.WeaponClass.Get(), URCharacter->GetActorLocation(), URCharacter->GetActorRotation(), SpawnParams);
+                    AUR_Weapon* StartingWeapon = GetWorld()->SpawnActor<AUR_Weapon>(Class, URCharacter->GetActorLocation(), URCharacter->GetActorRotation(), SpawnParams);
                     if (StartingWeapon)
                     {
                         StartingWeapon->GiveTo(URCharacter);
