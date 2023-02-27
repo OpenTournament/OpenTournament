@@ -22,6 +22,7 @@ class USoundBase;
 class UStaticMeshComponent;
 class UParticleSystem;
 class UParticleSystemComponent;
+class UMaterialInstanceDynamic;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
