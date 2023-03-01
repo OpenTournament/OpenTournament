@@ -346,7 +346,7 @@ void AUR_PlayerController::ClientMessage_Implementation(const FString& S, FName 
 {
     if (OnReceiveSystemMessage.IsBound())
         OnReceiveSystemMessage.Broadcast(S);
-    else
+    else if (Cast<ULocalPlayer>(Player))    //Super crashes if called during shutdown and fails CastChecked
         Super::ClientMessage_Implementation(S, Type, MsgLifeTime);
 }
 

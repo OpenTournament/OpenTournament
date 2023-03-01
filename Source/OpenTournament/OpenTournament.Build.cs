@@ -28,7 +28,8 @@ public class OpenTournament : ModuleRules
                 "Niagara",
                 "SoundFieldRendering", // Linux needs a symbold that it cannot find so we try to link this library by force.
                 "Paper2D",
-                "CinematicCamera"
+                "CinematicCamera",
+                "AIModule"
             }
         );
 

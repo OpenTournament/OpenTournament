@@ -559,6 +559,7 @@ void UUR_InventoryComponent::OwnerDied()
             DropWeapon(ActiveWeapon);
         }
     }
+    Clear();    // Character / Component is not always destroyed immediately so we clear here
 }
 
 void UUR_InventoryComponent::OnComponentDestroyed(bool bDestroyingHierarchy)

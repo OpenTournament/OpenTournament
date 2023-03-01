@@ -150,6 +150,7 @@ public:
         ClockReferencePoint = ElapsedTime;
         ForceNetUpdate();
 
+        RemainingTime = FMath::Max(0, TimeLimit);
         bTriggeredTimeUp = false;
     }
 

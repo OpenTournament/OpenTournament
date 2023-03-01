@@ -14,6 +14,7 @@ class AUR_GameState;
 class AUR_Weapon;
 class UUR_Widget_ScoreboardBase;
 class AUR_TeamInfo;
+class AUR_BotController;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -67,19 +68,20 @@ public:
     AUR_GameMode();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Classes
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-    * TeamInfo class.
-    */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Classes")
     TSubclassOf<AUR_TeamInfo> TeamInfoClass;
 
-    /**
-    * Scoreboard widget class
-    */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Classes")
     TSubclassOf<UUR_Widget_ScoreboardBase> ScoreboardClass;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Classes")
+    TSubclassOf<AUR_BotController> BotControllerClass;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Configuration
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
@@ -97,6 +99,14 @@ public:
     UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
     int32 MaxPlayers;
 
+    /**
+    * Fill match with bots (if necessary) to reach this total amount of players.
+    *  0 = disable
+    * -1 = use map minimum recommended players from map settings (TODO)
+    */
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|Bots")
+    int32 BotFill;
+
     UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|TeamGame")
     int32 NumTeams;
 
@@ -112,18 +122,50 @@ public:
     UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|TeamGame")
     float TeamDamageRetaliate;
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
     UPROPERTY(BlueprintReadOnly)
     int32 DesiredTeamSize;
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Initialization
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
     virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
     virtual void InitGameState() override;
+
+    UFUNCTION(BlueprintCallable)
+    void BroadcastSystemMessage(const FString& Msg);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // Players and bots flow
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    virtual void OnPostLogin(AController* NewPlayer) override;
+    virtual void Logout(AController* Exiting) override;
 
     virtual void GenericPlayerInitialization(AController* C) override;
 
     UFUNCTION()
     virtual void AssignDefaultTeam(AUR_PlayerState* PS);
+
+    /**
+    * Add or remove bots according to game parameters and current players.
+    * Call this whenever something changes (player join, player leave, player change team).
+    */
+    UFUNCTION(BlueprintCallable)
+    void CheckBotsDeferred();
+    virtual void CheckBots();
+
+    /**
+    * Create and initialize a new AI player using BotControllerClass.
+    */
+    UFUNCTION(BlueprintCallable)
+    virtual void AddBot();
+
+    /**
+    * Find a non-player controller with an active playerstate and destroy it.
+    */
+    UFUNCTION(BlueprintCallable)
+    virtual void RemoveBot();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Match
@@ -209,8 +251,6 @@ public:
 
     UFUNCTION()
     virtual void OnEndGameTimeUp(AUR_GameState* GS);
-
-protected:
 
     virtual void HandleMatchHasEnded() override;
 

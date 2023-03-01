@@ -129,6 +129,7 @@ UClass* AUR_Weapon::GetNextFallbackConfigWeapon(TSubclassOf<AUR_Weapon> ForClass
 void AUR_Weapon::GiveTo(AUR_Character* NewOwner)
 {
     SetOwner(NewOwner);
+    SetInstigator(NewOwner);    // Owner and Instigator both replicated... Should we use only Owner?
     URCharOwner = NewOwner;
     if (NewOwner && NewOwner->InventoryComponent)
     {
@@ -847,9 +848,10 @@ void AUR_Weapon::HitscanTrace(const FVector& TraceStart, const FVector& TraceEnd
     OutHit.bBlockingHit = false;
     OutHit.Location = TraceEnd;
     OutHit.ImpactNormal = (TraceEnd - TraceStart).GetSafeNormal();
+    FCollisionQueryParams QueryParams = FCollisionQueryParams(SCENE_QUERY_STAT(HitscanTrace), /*complex*/false, /*ignore*/GetOwner());
 
     TArray<FHitResult> Hits;
-    GetWorld()->SweepMultiByChannel(Hits, TraceStart, TraceEnd, FQuat(), TraceChannel, SweepShape);
+    GetWorld()->SweepMultiByChannel(Hits, TraceStart, TraceEnd, FQuat(), TraceChannel, SweepShape, QueryParams);
     for (const FHitResult& Hit : Hits)
     {
         if (Hit.bBlockingHit || HitscanShouldHitActor(Hit.GetActor()))

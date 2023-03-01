@@ -8,6 +8,7 @@
 #include "Engine/DamageEvents.h"
 #include "GameFramework/Controller.h"
 #include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
 
 #include "UR_Character.h"
 #include "UR_GameState.h"
@@ -19,12 +20,16 @@
 #include "UR_Ammo.h"
 #include "UR_Widget_ScoreboardBase.h"
 #include "UR_TeamInfo.h"
+#include "UR_BotController.h"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// Initialization
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameMode::AUR_GameMode()
 {
     ScoreboardClass = UUR_Widget_ScoreboardBase::StaticClass();
+    BotControllerClass = AUR_BotController::StaticClass();
 
     GoalScore = 10;
     TimeLimit = 300;
@@ -39,14 +44,31 @@ AUR_GameMode::AUR_GameMode()
     TeamDamageRetaliate = 0.f;
 }
 
-void AUR_GameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+void AUR_GameMode::InitGame(const FString& MapName, const FString& OptionsMeh, FString& ErrorMessage)
 {
+    FString Options = OptionsMeh;
+
+    if (GetWorld()->IsPlayInEditor())
+    {
+        // Custom additional game options seems broken in PIE - fix it!
+        // We also intentionally include them in NM_Standalone where it's not supposed to be supported.
+        auto Settings = FindObject<UObject>(nullptr, TEXT("/Script/UnrealEd.Default__LevelEditorPlaySettings"));
+        FProperty* Prop = Settings->GetClass()->FindPropertyByName("AdditionalServerGameOptions");
+        FString AdditionalOptions = *Prop->ContainerPtrToValuePtr<FString>(Settings);
+        if (AdditionalOptions.Len())
+        {
+            UE_LOG(LogTemp, Log, TEXT("[PIE-Fix] Add URL options: %s"), *AdditionalOptions);
+            Options.Append(AdditionalOptions);
+        }
+    }
+
     Super::InitGame(MapName, Options, ErrorMessage);
 
     GoalScore = UGameplayStatics::GetIntOption(Options, TEXT("GoalScore"), GoalScore);
     TimeLimit = UGameplayStatics::GetIntOption(Options, TEXT("TimeLimit"), TimeLimit);
     OvertimeExtraTime = UGameplayStatics::GetIntOption(Options, TEXT("OvertimeExtraTime"), OvertimeExtraTime);
     MaxPlayers = UGameplayStatics::GetIntOption(Options, TEXT("MaxPlayers"), MaxPlayers);
+    BotFill = UGameplayStatics::GetIntOption(Options, TEXT("BotFill"), BotFill);
     NumTeams = UGameplayStatics::GetIntOption(Options, TEXT("NumTeams"), NumTeams);
     TeamsFillMode = UGameplayStatics::ParseOption(Options, TEXT("TeamsFillMode"));
     SelfDamage = UUR_FunctionLibrary::GetFloatOption(Options, TEXT("SelfDamage"), SelfDamage);
@@ -81,6 +103,62 @@ void AUR_GameMode::InitGameState()
         {
             GS->AddNewTeam();
         }
+    }
+}
+
+void AUR_GameMode::BroadcastSystemMessage(const FString& Msg)
+{
+    for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+    {
+        if (It->IsValid())
+            It->Get()->ClientMessage(Msg);
+    }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// Players and bots flow
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_GameMode::OnPostLogin(AController* NewPlayer)
+{
+    Super::OnPostLogin(NewPlayer);
+
+    if (NewPlayer)
+    {
+        if (auto PS = NewPlayer->GetPlayerState<APlayerState>())
+        {
+            BroadcastSystemMessage(FString::Printf(TEXT("%s has joined."), *PS->GetPlayerName()));
+
+            if (PS->IsABot())
+            {
+                NumBots++;
+            }
+        }
+
+        if (NewPlayer->IsA<APlayerController>())
+            CheckBotsDeferred();
+    }
+}
+
+void AUR_GameMode::Logout(AController* Exiting)
+{
+    Super::Logout(Exiting);
+
+    if (Exiting)
+    {
+        if (auto PS = Exiting->GetPlayerState<APlayerState>())
+        {
+            BroadcastSystemMessage(FString::Printf(TEXT("%s has left."), *PS->GetPlayerName()));
+
+            if (PS->IsABot())
+            {
+                NumBots--;
+            }
+        }
+
+        if (Exiting->IsA<APlayerController>())
+            CheckBotsDeferred();
     }
 }
 
@@ -169,6 +247,57 @@ void AUR_GameMode::AssignDefaultTeam(AUR_PlayerState* PS)
     }
 }
 
+void AUR_GameMode::CheckBotsDeferred()
+{
+    // Combine calls, avoid re-entrancy
+    static FTimerHandle CheckBotsTimerHandle;
+    GetWorld()->GetTimerManager().SetTimer(CheckBotsTimerHandle, FTimerDelegate::CreateUObject(this, &AUR_GameMode::CheckBots), 0.1f, false);
+}
+
+void AUR_GameMode::CheckBots()
+{
+    if (!IsMatchInProgress())
+        return;
+
+    for (int32 i = NumPlayers + NumBots; i > BotFill; i--)
+    {
+        RemoveBot();
+    }
+    for (int32 i = NumPlayers + NumBots; i < BotFill; i++)
+    {
+        AddBot();
+    }
+    //TODO: Team balance
+}
+
+void AUR_GameMode::AddBot()
+{
+    if (auto BotController = GetWorld()->SpawnActor<AController>(BotControllerClass))
+    {
+        GenericPlayerInitialization(BotController);
+        DispatchPostLogin(BotController);
+        RestartPlayer(BotController);
+    }
+}
+
+void AUR_GameMode::RemoveBot()
+{
+    if (auto GS = GetGameState<AGameStateBase>())
+    {
+        APlayerState* Best = nullptr;
+        for (auto PS : GS->PlayerArray)
+        {
+            if (PS->IsABot() && PS->GetOwner<AController>() && (!Best || PS->CreationTime > Best->CreationTime))
+                Best = PS;
+        }
+        if (Best)
+        {
+            Best->GetOwner()->Destroy();
+        }
+    }
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Match
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -194,6 +323,8 @@ void AUR_GameMode::HandleMatchHasStarted()
             GS->ResetClock();
         }
     }
+
+    CheckBotsDeferred();
 }
 
 void AUR_GameMode::OnMatchTimeUp_Implementation(AUR_GameState* GS)
@@ -357,6 +488,7 @@ void AUR_GameMode::RegisterKill(AController* Victim, AController* Killer, const 
         }
     }
 }
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // End Game
