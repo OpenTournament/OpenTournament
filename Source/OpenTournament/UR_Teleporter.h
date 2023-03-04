@@ -23,6 +23,7 @@ class UStaticMeshComponent;
 class UParticleSystem;
 class UParticleSystemComponent;
 class UMaterialInstanceDynamic;
+class UNavLinkComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -80,11 +81,16 @@ private:
     */
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
     UArrowComponent* ArrowComponent;
+
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta = (AllowPrivateAccess = "true"))
+    UNavLinkComponent* NavLink;
     
     /////////////////////////////////////////////////////////////////////////////////////////////////
 public:
     
     AUR_Teleporter(const FObjectInitializer& ObjectInitializer);
+
+    virtual void OnConstruction(const FTransform& Transform) override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Teleport Behavior
