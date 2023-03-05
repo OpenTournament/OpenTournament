@@ -28,6 +28,7 @@ class UUR_InventoryComponent;
 class APlayerController;
 class IUR_ActivatableInterface;
 class UUR_DamageType;
+class UAIPerceptionSourceNativeComp;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -209,6 +210,16 @@ public:
     */
     UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
     class UCameraComponent* ThirdPersonCamera;
+
+    /**
+    * AI Perception Source
+    * NOTE: Normally pawns already act as a stimuli source by default,
+    * however when a perceived actor is destroyed it is not always automatically un-perceived by AI perception system.
+    * Then we end up with stale targets in the AI perceptions and AI goes batshit.
+    * It seems like the best practice is to always add a StimuliSource component, and call Unregister on destroy.
+    */
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
+    UAIPerceptionSourceNativeComp* AIPerceptionStimuliSource;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -504,14 +515,16 @@ public:
 
     /**
     * Dodge requested from PC Input. Dodge, if we CanDodge.
+    * Also requested by AI code.
     */
+    UFUNCTION(BlueprintCallable, Category = "Character|Dodge")
     virtual void Dodge(FVector DodgeDir, FVector DodgeCross);
 
     /**
     * Perform a Dodge. Testing purposes only.
     */
     UFUNCTION(BlueprintCallable, Category = "Character|Dodge")
-    void Dodge(const EDodgeDirection InDodgeDirection);
+    void DodgeTest(const EDodgeDirection InDodgeDirection);
 
     /** 
     * Hook for sounds / effects OnDodge

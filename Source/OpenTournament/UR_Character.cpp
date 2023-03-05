@@ -14,6 +14,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Perception/AISense_Sight.h"
 
 #include "OpenTournament.h"
 #include "Interfaces/UR_ActivatableInterface.h"
@@ -32,6 +33,7 @@
 #include "UR_UserSettings.h"
 #include "UR_DamageType.h"
 #include "UR_PaniniUtils.h"
+#include "AIPerceptionSourceNativeComp.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -107,6 +109,11 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 
     // Create the ASC
     AbilitySystemComponent = CreateDefaultSubobject<UUR_AbilitySystemComponent>("AbilitySystemComponent");
+
+    // AI Perception Source
+    AIPerceptionStimuliSource = CreateDefaultSubobject<UAIPerceptionSourceNativeComp>("AIPerceptionStimuliSource");
+    AIPerceptionStimuliSource->SetAutoRegisterAsSource(true);
+    AIPerceptionStimuliSource->SetRegisterAsSourceForSenses({ UAISense_Sight::StaticClass() });
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -709,7 +716,7 @@ void AUR_Character::Dodge(FVector DodgeDir, FVector DodgeCross)
     }
 }
 
-void AUR_Character::Dodge(const EDodgeDirection InDodgeDirection)
+void AUR_Character::DodgeTest(const EDodgeDirection InDodgeDirection)
 {
     // @! TODO Testing only...
 
@@ -970,9 +977,12 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
         AttributeSet->SetHealth(0);
     }
 
-    // Force stop firing
+    // Clear inventory
     InventoryComponent->OwnerDied();
     DesiredFireModeNum.Empty();
+
+    // Stop being a target for AIs
+    AIPerceptionStimuliSource->UnregisterFromPerceptionSystem();
 
     // Replicate
     MulticastDied(Killer, RepDamageEvent);

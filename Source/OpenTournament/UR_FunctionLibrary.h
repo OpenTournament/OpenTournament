@@ -220,10 +220,37 @@ public:
     /**
     * Random vector between 2 vectors.
     */
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Math")
+    UFUNCTION(BlueprintPure, Category = "Math")
     static FVector RandomVectorInRange(const FVector& Vector1, const FVector& Vector2)
     {
         return FVector(FMath::RandRange(Vector1.X, Vector2.X), FMath::RandRange(Vector1.Y, Vector2.Y), FMath::RandRange(Vector1.Z, Vector2.Z));
+    }
+
+    UFUNCTION(BlueprintPure, Category = "Math")
+    static FORCEINLINE FVector2D RandomUnitVector2D()
+    {
+        const float Angle = FMath::FRand() * UE_TWO_PI;
+        return FVector2D(FMath::Cos(Angle), FMath::Sin(Angle));
+    }
+
+    UFUNCTION(BlueprintPure, Category = "Math")
+    static FORCEINLINE FVector2D RandomPointInCircle(const float Radius)
+    {
+        return FMath::Sqrt(FMath::FRand()) * Radius * RandomUnitVector2D();
+    }
+
+    UFUNCTION(BlueprintPure, Category = "Math")
+    static FORCEINLINE FVector RandomPointInSphere(const float Radius)
+    {
+        return FMath::Sqrt(FMath::FRand()) * Radius * FMath::VRand();
+    }
+
+    UFUNCTION(BlueprintPure, Category = "Math")
+    static FORCEINLINE FVector RandomPointInCylinder(const float Radius, const float HalfHeight)
+    {
+        const float Angle = FMath::FRand() * UE_TWO_PI;
+        const float Rad = FMath::Sqrt(FMath::FRand()) * Radius;
+        return FVector(Rad * FMath::Cos(Angle), Rad * FMath::Sin(Angle), FMath::FRandRange(-HalfHeight, HalfHeight));
     }
 
 

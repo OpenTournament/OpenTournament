@@ -14,6 +14,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "NavLinkComponent.h"
 
 #include "OpenTournament.h"
 #include "UR_Character.h"
@@ -70,6 +71,23 @@ AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
 
     ParticleSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleSystemComponent"));
     ParticleSystemComponent->SetupAttachment(RootComponent);
+
+    NavLink = CreateDefaultSubobject<UNavLinkComponent>("NavLink");
+    NavLink->SetupAttachment(CapsuleComponent);
+    NavLink->Links[0].Left = FVector::ZeroVector;
+    NavLink->Links[0].Direction = ENavLinkDirection::LeftToRight;
+}
+
+void AUR_Teleporter::OnConstruction(const FTransform& Transform)
+{
+    if (DestinationActor)
+    {
+        NavLink->Links[0].Right = NavLink->GetComponentTransform().InverseTransformPosition(DestinationActor->GetActorLocation());
+    }
+    else
+    {
+        NavLink->Links[0].Right = NavLink->GetComponentTransform().InverseTransformPosition(GetActorLocation() + DestinationTransform.GetLocation());
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

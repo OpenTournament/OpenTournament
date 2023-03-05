@@ -333,10 +333,10 @@ public:
     UFUNCTION()
     virtual void RequestPutDown();
 
-    UFUNCTION()
+    UFUNCTION(BlueprintCallable)
     virtual void RequestStartFire(uint8 FireModeIndex);
 
-    UFUNCTION()
+    UFUNCTION(BlueprintCallable)
     virtual void RequestStopFire(uint8 FireModeIndex);
 
     UFUNCTION()
