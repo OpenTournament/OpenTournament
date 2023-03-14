@@ -33,11 +33,13 @@ class UPaperSprite;
 UENUM(BlueprintType)
 enum class EWeaponState : uint8
 {
-    /** Weapon is not in the hands */
-    Inactive,
+    /** Weapon is not possessed */
+    Dropped,
+    /** Weapon is possessed but not equipped */
+    Holstered,
     /** Weapon is currently being equipped, will be able to fire soon */
     BringUp,
-    /** Weapon can start firing anytime */
+    /** Weapon is equipped and can start firing anytime */
     Idle,
     /** Weapon is currently firing/charging/on cooldown - a FireMode is active */
     Firing,
@@ -75,7 +77,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponStateChangedSignature, AUR_W
 /**
  * Weapon Base Class
  */
-UCLASS()
+UCLASS(NotPlaceable)
 class OPENTOURNAMENT_API AUR_Weapon : public AActor
     //, public IUR_FireModeBaseInterface
     //, public IUR_FireModeBasicInterface
@@ -88,19 +90,6 @@ protected:
     AUR_Weapon(const FObjectInitializer& ObjectInitializer);
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void PostInitializeComponents() override;
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // Very, very basic support for picking up weapons on the ground.
-
-protected:
-
-    UPROPERTY(VisibleAnywhere)
-    UShapeComponent* TriggerBox;
-
-    virtual void BeginPlay() override;
-
-    UFUNCTION()
-    void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Weapon possession
@@ -151,7 +140,7 @@ public:
 
     /**
     * Map AmmoDefinition indices to the real AUR_Ammo objects contained in InventoryComponent, for simpler usage.
-    * Replicated (InitialOnly) to workaround painful race conditions (eg. weapon replicated before ammo).
+    * Replicated (OwnerOnly) to workaround painful race conditions (eg. weapon replicated before ammo).
     */
     UPROPERTY(BlueprintReadOnly, Replicated)
     TArray<AUR_Ammo*> AmmoRefs;
@@ -212,8 +201,8 @@ protected:
 
     /**
     * Verify if weapon is attached according to its current state.
-    * in state Inactive, ensure weapon is detached.
-    * in any other states, ensure weapon is attached.
+    * in state Inactive, ensure weapon is detached and fully hidden.
+    * in other states, ensure weapon is attached and visible.
     *
     * In normal situations we only need to attach on BringUp and detach after PutDown.
     * However this can also be used to support more edgy cases.
@@ -222,21 +211,27 @@ protected:
     UFUNCTION()
     void CheckWeaponAttachment();
 
+    /** Attach meshes to owner and enable general visibility */
     UFUNCTION()
     void AttachMeshToPawn();
 
+    /** Detach meshes and fully hide */
     UFUNCTION()
     void DetachMeshFromPawn();
 
 public:
 
     /**
-    * Update 1P and 3P mesh visibility according to current view mode.
-    * If local player is viewing weapon owner in 1P mode, show 1P mesh and hide 3P mesh.
-    * Or the contrary.
+    * Update visibility of 1P and 3P meshes according to current view mode, keeping the right shadows.
     */
     UFUNCTION(BlueprintCosmetic)
     void UpdateMeshVisibility();
+
+    /**
+    * Toggle general visibility of the weapon, including hidden shadows.
+    */
+    UFUNCTION(BlueprintCosmetic)
+    void ToggleGeneralVisibility(bool bVisible);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -338,10 +333,10 @@ public:
     UFUNCTION()
     virtual void RequestPutDown();
 
-    UFUNCTION()
+    UFUNCTION(BlueprintCallable)
     virtual void RequestStartFire(uint8 FireModeIndex);
 
-    UFUNCTION()
+    UFUNCTION(BlueprintCallable)
     virtual void RequestStopFire(uint8 FireModeIndex);
 
     UFUNCTION()
@@ -369,6 +364,12 @@ public:
     */
     UFUNCTION(BlueprintCallable)
     virtual void OffsetFireLoc(UPARAM(ref) FVector& FireLoc, const FRotator& FireRot, FName OffsetSocketName = NAME_None);
+
+    /**
+    * Get the corrected muzzle flash transform, taking into account panini correction in first person view.
+    */
+    UFUNCTION(BlueprintPure, BlueprintCosmetic)
+    virtual FTransform GetFireEffectStartTransform(UUR_FireModeBase* FireMode);
 
     /**
     * Safely read SimulatedInfo passed from client into validated FireLoc and FireRot.

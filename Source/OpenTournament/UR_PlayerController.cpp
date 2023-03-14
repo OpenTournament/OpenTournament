@@ -5,14 +5,7 @@
 #include "UR_PlayerController.h"
 
 #include "Components/AudioComponent.h"
-
-//UMG
-#include "SlateBasics.h"
-#include "Runtime/UMG/Public/UMG.h"
-#include "Runtime/UMG/Public/UMGStyle.h"
-#include "Runtime/UMG/Public/Slate/SObjectWidget.h"
-#include "Runtime/UMG/Public/IUMGModule.h"
-#include "Runtime/UMG/Public/Blueprint/UserWidget.h"
+#include "GameFramework/SpectatorPawn.h"
 
 #include "UR_Character.h"
 #include "UR_ChatComponent.h"
@@ -20,12 +13,11 @@
 #include "UR_LocalPlayer.h"
 #include "UR_MessageHistory.h"
 #include "UR_PCInputDodgeComponent.h"
-#include "Widgets/UR_Widget_BaseMenu.h"
 #include "UR_FunctionLibrary.h"
 #include "UR_GameMode.h"
 #include "UR_Widget_ScoreboardBase.h"
 #include "UR_PlayerState.h"
-#include "UR_Pickup.h"
+#include "UR_GameState.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -83,8 +75,6 @@ void AUR_PlayerController::SetMusicVolume(float MusicVolume)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
-#include "UR_GameState.h"
 
 void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
 {
@@ -356,7 +346,7 @@ void AUR_PlayerController::ClientMessage_Implementation(const FString& S, FName 
 {
     if (OnReceiveSystemMessage.IsBound())
         OnReceiveSystemMessage.Broadcast(S);
-    else
+    else if (Cast<ULocalPlayer>(Player))    //Super crashes if called during shutdown and fails CastChecked
         Super::ClientMessage_Implementation(S, Type, MsgLifeTime);
 }
 

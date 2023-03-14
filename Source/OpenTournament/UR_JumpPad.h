@@ -20,6 +20,7 @@ class UParticleSystemComponent;
 class USplineComponent;
 class USoundBase;
 class UStaticMeshComponent;
+class UNavLinkComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -74,6 +75,9 @@ public:
     */
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
     UParticleSystemComponent* ParticleSystemComponent;
+
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
+    UNavLinkComponent* NavLink;
 
 #if WITH_EDITOR
     /*
@@ -140,6 +144,8 @@ public:
     AUR_JumpPad(const FObjectInitializer& ObjectInitializer);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    virtual void OnConstruction(const FTransform& Transform) override;
 
     void BeginPlay() override;
 

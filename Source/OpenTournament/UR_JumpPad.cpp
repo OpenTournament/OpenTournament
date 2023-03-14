@@ -13,6 +13,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "NavLinkComponent.h"
 
 #include "OpenTournament.h"
 #include "UR_Character.h"
@@ -67,6 +68,11 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     ParticleSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleSystemComponent"));
     ParticleSystemComponent->SetupAttachment(RootComponent);
 
+    NavLink = CreateDefaultSubobject<UNavLinkComponent>("NavLink");
+    NavLink->SetupAttachment(CapsuleComponent);
+    NavLink->Links[0].Left = FVector::ZeroVector;
+    NavLink->Links[0].Direction = ENavLinkDirection::LeftToRight;
+
     Destination = GetActorTransform();
     Destination.SetLocation(Destination.GetLocation() + FVector(0, 0, 1000));
 
@@ -77,6 +83,11 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_JumpPad::OnConstruction(const FTransform& Transform)
+{
+    NavLink->Links[0].Right = Destination.GetLocation();
+}
 
 void AUR_JumpPad::BeginPlay()
 {

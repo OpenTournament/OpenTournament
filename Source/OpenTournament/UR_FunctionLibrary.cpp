@@ -135,18 +135,27 @@ bool UUR_FunctionLibrary::IsKeyMappedToAxis(const FKey& Key, FName AxisName, flo
 
 AUR_PlayerController* UUR_FunctionLibrary::GetLocalPlayerController(const UObject* WorldContextObject)
 {
+    return GetLocalPC<AUR_PlayerController>(WorldContextObject);
+}
+
+APlayerController* UUR_FunctionLibrary::GetLocalPC(const UObject* WorldContextObject)
+{
     if (const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
     {
-        return World->GetFirstPlayerController<AUR_PlayerController>();
+        ensureMsgf(!World->IsNetMode(NM_DedicatedServer), TEXT("GetLocalPC() called on DedicatedServer is recipe for disaster"));
+        return World->GetFirstPlayerController<APlayerController>();
     }
-
     return nullptr;
 }
 
 bool UUR_FunctionLibrary::IsLocallyViewed(const AActor* Other)
 {
-    AUR_PlayerController* PC = GetLocalPlayerController(Other);
-    return PC && PC->GetViewTarget() == Other;
+    if (Other && !Other->IsNetMode(NM_DedicatedServer))
+    {
+        auto PC = GetLocalPC<APlayerController>(Other);
+        return PC && PC->GetViewTarget() == Other;
+    }
+    return false;
 }
 
 bool UUR_FunctionLibrary::IsViewingFirstPerson(const AUR_Character* Other)
@@ -233,7 +242,7 @@ void UUR_FunctionLibrary::ParseFloatTextInput(FText Text, bool& bIsNumeric, floa
 {
     FString Str = Text.ToString().TrimStartAndEnd().Replace(TEXT(" "), TEXT("")).Replace(TEXT(","), TEXT("."));
     bIsNumeric = Str.IsNumeric();
-    OutValue = bIsNumeric ? UKismetStringLibrary::Conv_StringToFloat(Str) : 0.f;
+    OutValue = bIsNumeric ? FCString::Atof(*Str) : 0.f;
 }
 
 
@@ -353,7 +362,7 @@ void UUR_FunctionLibrary::GenericArray_Slice(void* SourceArray, const FArrayProp
     }
 }
 
-template<typename T> static TArray<T> UUR_FunctionLibrary::ArraySlice(const TArray<T>& InArray, int32 Start, int32 End)
+template<typename T> TArray<T> UUR_FunctionLibrary::ArraySlice(const TArray<T>& InArray, int32 Start, int32 End)
 {
     End = (End < 0) ? InArray.Num() : FMath::Min(End, InArray.Num());
     TArray<T> Result(FMath::Max(0, End - Start));
@@ -397,4 +406,40 @@ FGameplayTag UUR_FunctionLibrary::FindAnyChildTag(const FGameplayTagContainer& T
         }
     }
     return FGameplayTag();
+}
+
+void UUR_FunctionLibrary::RefreshBoneTransforms(USkeletalMeshComponent* SkelMesh)
+{
+    if (SkelMesh && SkelMesh->VisibilityBasedAnimTickOption == EVisibilityBasedAnimTickOption::AlwaysTickPose && !SkelMesh->bRecentlyRendered)
+    {
+        SkelMesh->RefreshBoneTransforms();
+    }
+}
+
+void UUR_FunctionLibrary::RefreshComponentTransforms(USceneComponent* Component)
+{
+    //NOTE: Maybe we need to refresh in reverse order (parent to child), I'm not sure about that.
+    // Don't really have a proper use case to test this for now.
+    for (USceneComponent* Comp = Component; Comp; Comp = Comp->GetAttachParent())
+    {
+        RefreshBoneTransforms(Cast<USkeletalMeshComponent>(Comp));
+    }
+}
+
+void UUR_FunctionLibrary::PropagateOwnerNoSee(USceneComponent* Component, bool bOwnerNoSee)
+{
+    TArray<USceneComponent*> Comps;
+    Component->GetChildrenComponents(true, Comps);
+    Comps.Add(Component);
+    for (USceneComponent* Comp : Comps)
+    {
+        if (auto PrimComp = Cast<UPrimitiveComponent>(Comp))
+        {
+            PrimComp->SetOwnerNoSee(bOwnerNoSee);
+        }
+        else
+        {
+            Comp->MarkRenderStateDirty();
+        }
+    }
 }

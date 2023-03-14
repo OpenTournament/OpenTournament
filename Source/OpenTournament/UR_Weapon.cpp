@@ -25,6 +25,7 @@
 #include "UR_Projectile.h"
 #include "UR_PlayerController.h"
 #include "UR_FunctionLibrary.h"
+#include "UR_PaniniUtils.h"
 #include "UR_Ammo.h"
 
 #include "UR_FireModeBasic.h"
@@ -36,18 +37,17 @@
 AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
-    TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
-    TriggerBox->SetGenerateOverlapEvents(false);
-    TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AUR_Weapon::OnTriggerEnter);
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
-    RootComponent = TriggerBox;
+    Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh3P"));
+    Mesh3P->SetupAttachment(RootComponent);
+    Mesh3P->bCastHiddenShadow = true;
 
     Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh1P"));
     Mesh1P->SetupAttachment(RootComponent);
     Mesh1P->bOnlyOwnerSee = true;
-
-    Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh3P"));
-    Mesh3P->SetupAttachment(RootComponent);
+    Mesh1P->bCastDynamicShadow = false;
+    Mesh1P->CastShadow = false;
 
     //PrimaryActorTick.bCanEverTick = true;
 
@@ -68,8 +68,7 @@ void AUR_Weapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    //NOTE: Cannot have OwnerOnly + InitialOnly :(
-    DOREPLIFETIME_CONDITION(AUR_Weapon, AmmoRefs, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(AUR_Weapon, AmmoRefs, COND_OwnerOnly);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,6 +97,12 @@ void AUR_Weapon::PostInitializeComponents()
             FireMode->SetCallbackInterface(this);
         }
     }
+
+    // Auto-enable panini on 1P mesh and children
+    UUR_PaniniUtils::TogglePaniniProjection(Mesh1P, true, true);
+
+    // Weapon fully hidden by default, until Attach functions are called
+    ToggleGeneralVisibility(false);
 }
 
 UClass* AUR_Weapon::GetNextFallbackConfigWeapon(TSubclassOf<AUR_Weapon> ForClass)
@@ -119,65 +124,64 @@ UClass* AUR_Weapon::GetNextFallbackConfigWeapon(TSubclassOf<AUR_Weapon> ForClass
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// Very, very basic support for picking up weapons on the ground.
-
-void AUR_Weapon::BeginPlay()
-{
-    Super::BeginPlay();
-
-    if (HasAuthority() && !GetOwner())
-    {
-        TriggerBox->SetGenerateOverlapEvents(true);
-    }
-}
-
-void AUR_Weapon::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor * Other, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
-{
-    if (HasAuthority())
-    {
-        if (AUR_Character* URChar = Cast<AUR_Character>(Other))
-        {
-            GiveTo(URChar);
-            UGameplayStatics::PlaySoundAtLocation(this, PickupSound, URCharOwner->GetActorLocation());
-        }
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
 // Weapon possession
 
 void AUR_Weapon::GiveTo(AUR_Character* NewOwner)
 {
-    TriggerBox->SetGenerateOverlapEvents(false);
-
-    if (GetNetMode() != NM_DedicatedServer)
-    {
-        SetActorHiddenInGame(true);
-    }
-
     SetOwner(NewOwner);
+    SetInstigator(NewOwner);    // Owner and Instigator both replicated... Should we use only Owner?
     URCharOwner = NewOwner;
     if (NewOwner && NewOwner->InventoryComponent)
     {
         NewOwner->InventoryComponent->AddWeapon(this);
+    }
+
+    if (HasAuthority())
+    {
+        OnRep_Owner();
     }
 }
 
 void AUR_Weapon::OnRep_Owner()
 {
     URCharOwner = Cast<AUR_Character>(GetOwner());
-    SetActorHiddenInGame(true);
-    CheckWeaponAttachment();
+    if (URCharOwner)
+    {
+        if (WeaponState == EWeaponState::Dropped)
+        {
+            SetWeaponState(EWeaponState::Holstered);    // this is merely a prediction, in case we receive owner before statechange
+        }
+        else
+        {
+            CheckWeaponAttachment();
+        }
+    }
+    else
+    {
+        SetWeaponState(EWeaponState::Dropped);
+    }
+
+    // always refresh 1p/3p visibility here, in case owner replicates late (after statechange)
+    UpdateMeshVisibility();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Weapon Attachment
 
+void AUR_Weapon::ToggleGeneralVisibility(bool bVisible)
+{
+    SetActorHiddenInGame(!bVisible);
+    Mesh3P->SetCastHiddenShadow(bVisible);
+    if (bVisible)
+        UpdateMeshVisibility();
+}
+
 void AUR_Weapon::CheckWeaponAttachment()
 {
     switch (WeaponState)
     {
-    case EWeaponState::Inactive:
+    case EWeaponState::Dropped:
+    case EWeaponState::Holstered:
         if (bIsAttached)
         {
             DetachMeshFromPawn();
@@ -197,15 +201,13 @@ void AUR_Weapon::AttachMeshToPawn()
 {
     if (URCharOwner)
     {
-        this->SetActorHiddenInGame(false);
-
         Mesh1P->SetRelativeTransform(Mesh1P->GetSocketTransform(FName(TEXT("Grip")), RTS_Component).Inverse());
         Mesh1P->AttachToComponent(URCharOwner->MeshFirstPerson, FAttachmentTransformRules::KeepRelativeTransform, URCharOwner->GetWeaponAttachPoint());
 
         Mesh3P->SetRelativeTransform(Mesh3P->GetSocketTransform(FName(TEXT("Grip")), RTS_Component).Inverse());
         Mesh3P->AttachToComponent(URCharOwner->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(TEXT("hand_r_Socket")));
 
-        UpdateMeshVisibility();
+        ToggleGeneralVisibility(true);
         bIsAttached = true;
     }
 }
@@ -214,25 +216,21 @@ void AUR_Weapon::UpdateMeshVisibility()
 {
     if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
     {
-        Mesh1P->SetHiddenInGame(false);
-        Mesh3P->SetHiddenInGame(true);
+        Mesh1P->SetVisibility(true, true);
+        Mesh3P->SetVisibility(false, true);
     }
     else
     {
-        Mesh1P->SetHiddenInGame(true);
-        Mesh3P->SetHiddenInGame(false);
-        Mesh3P->bOwnerNoSee = false;
+        Mesh1P->SetVisibility(false, true);
+        Mesh3P->SetVisibility(true, true);
     }
 }
 
 void AUR_Weapon::DetachMeshFromPawn()
 {
-    Mesh1P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
-    Mesh1P->SetHiddenInGame(true);
-
-    Mesh3P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
-    Mesh3P->SetHiddenInGame(true);
-
+    ToggleGeneralVisibility(false);
+    Mesh1P->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+    Mesh3P->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
     bIsAttached = false;
 }
 
@@ -249,6 +247,12 @@ USkeletalMeshComponent* AUR_Weapon::GetVisibleMesh() const
 
 void AUR_Weapon::SetWeaponState(EWeaponState NewState)
 {
+    // Prevent some invalid state changes to alleviate some replication race conditions
+    if (NewState == EWeaponState::PutDown && (WeaponState == EWeaponState::Dropped || WeaponState == EWeaponState::Holstered))
+    {
+        return;
+    }
+
     if (NewState != WeaponState)
     {
         WeaponState = NewState;
@@ -293,7 +297,8 @@ void AUR_Weapon::SetWeaponState(EWeaponState NewState)
         break;
 
     case EWeaponState::PutDown:
-    case EWeaponState::Inactive:
+    case EWeaponState::Holstered:
+    case EWeaponState::Dropped:
         Deactivate();
         break;
 
@@ -387,7 +392,7 @@ void AUR_Weapon::PutDownCallback()
 {
     if (WeaponState == EWeaponState::PutDown)
     {
-        SetWeaponState(EWeaponState::Inactive);
+        SetWeaponState(EWeaponState::Holstered);
     }
 }
 
@@ -395,7 +400,10 @@ void AUR_Weapon::Activate()
 {
     for (UUR_FireModeBase* FireMode : FireModes)
     {
-        FireMode->Activate();
+        if (FireMode)
+        {
+            FireMode->Activate();
+        }
     }
 
     // Read desired fire modes from player
@@ -415,7 +423,10 @@ void AUR_Weapon::Deactivate()
 
     for (UUR_FireModeBase* FireMode : FireModes)
     {
-        FireMode->Deactivate();
+        if (FireMode)
+        {
+            FireMode->Deactivate();
+        }
     }
 }
 
@@ -529,7 +540,8 @@ void AUR_Weapon::RequestBringUp()
     switch (WeaponState)
     {
 
-    case EWeaponState::Inactive:
+    case EWeaponState::Holstered:
+    case EWeaponState::Dropped:
         BringUp(0.f);
         break;
 
@@ -699,6 +711,22 @@ void AUR_Weapon::OffsetFireLoc(FVector& FireLoc, const FRotator& FireRot, FName 
             }
         }
     }
+    // NOTE:
+    // FIXME: This calculation could come up wrong due to how non-rendered skeletal meshes do not update their transforms in real time.
+    // At best the client should use 1P/3P muzzle location according to camera mode, while server should use 3P socket location.
+    // But this would cause a mismatch between the two, increasing risk of server not accepting client's FireLoc.
+    // Even when both are using 3P, there could still be discrepancies due to char/arms/weapon animations.
+    // Better approach probably would be to use a fixed ProjectileSpawnOffset variable adjusted for each weapon (or global).
+}
+
+FTransform AUR_Weapon::GetFireEffectStartTransform(UUR_FireModeBase* FireMode)
+{
+    FTransform Result = GetVisibleMesh()->GetSocketTransform(FireMode->MuzzleSocketName);
+    if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
+    {
+        Result.SetLocation(UUR_PaniniUtils::CalcPaniniProjection(this, Result.GetLocation()));
+    }
+    return Result;
 }
 
 void AUR_Weapon::GetValidatedFireVector(const FSimulatedShotInfo& SimulatedInfo, FVector& FireLoc, FRotator& FireRot, FName OffsetSocketName)
@@ -820,9 +848,10 @@ void AUR_Weapon::HitscanTrace(const FVector& TraceStart, const FVector& TraceEnd
     OutHit.bBlockingHit = false;
     OutHit.Location = TraceEnd;
     OutHit.ImpactNormal = (TraceEnd - TraceStart).GetSafeNormal();
+    FCollisionQueryParams QueryParams = FCollisionQueryParams(SCENE_QUERY_STAT(HitscanTrace), /*complex*/false, /*ignore*/GetOwner());
 
     TArray<FHitResult> Hits;
-    GetWorld()->SweepMultiByChannel(Hits, TraceStart, TraceEnd, FQuat(), TraceChannel, SweepShape);
+    GetWorld()->SweepMultiByChannel(Hits, TraceStart, TraceEnd, FQuat(), TraceChannel, SweepShape, QueryParams);
     for (const FHitResult& Hit : Hits)
     {
         if (Hit.bBlockingHit || HitscanShouldHitActor(Hit.GetActor()))
@@ -884,11 +913,11 @@ void AUR_Weapon::ConsumeAmmo(int32 Amount)
 
 void AUR_Weapon::CheckAutoSwap()
 {
-    if ( UUR_FunctionLibrary::IsLocallyControlled(this) && !HasAnyAmmo() && URCharOwner && URCharOwner->InventoryComponent)
+    if (UUR_FunctionLibrary::IsLocallyControlled(this) && !HasAnyAmmo() && URCharOwner && URCharOwner->InventoryComponent)
     {
         if (!URCharOwner->InventoryComponent->DesiredWeapon || URCharOwner->InventoryComponent->DesiredWeapon == this)
         {
-            URCharOwner->InventoryComponent->NextWeapon();
+            URCharOwner->InventoryComponent->SelectPreferredWeapon();
         }
     }
 }
@@ -1114,27 +1143,31 @@ void AUR_Weapon::AuthorityHitscanShot_Implementation(UUR_FireModeBasic* FireMode
 
 void AUR_Weapon::PlayFireEffects_Implementation(UUR_FireModeBasic* FireMode)
 {
+    UGameplayStatics::SpawnSoundAttached(FireMode->FireSound, GetVisibleMesh(), FireMode->MuzzleSocketName, FVector(0), EAttachLocation::SnapToTarget);
+
+    // Panini correction attempt ??? EXPERIMENTAL
+    // Potential problem = we only calculate at attachment time, when we should recalculate every attached frame...
+    // But no problem if it doesn't move much, right??
+    FTransform Transform = GetFireEffectStartTransform(FireMode);
+    Transform.SetScale3D(Transform.GetScale3D() * FireMode->MuzzleFlashScale);
+
+    UUR_FunctionLibrary::SpawnEffectAttached(FireMode->MuzzleFlashTemplate, Transform, GetVisibleMesh(), FireMode->MuzzleSocketName, EAttachLocation::KeepWorldPosition);
+
     if (UUR_FunctionLibrary::IsViewingFirstPerson(URCharOwner))
     {
-        UGameplayStatics::SpawnSoundAttached(FireMode->FireSound, Mesh1P, FireMode->MuzzleSocketName, FVector(0), EAttachLocation::SnapToTarget);
-        UUR_FunctionLibrary::SpawnEffectAttached(FireMode->MuzzleFlashTemplate, FTransform(), Mesh1P, FireMode->MuzzleSocketName, EAttachLocation::SnapToTargetIncludingScale);
         if (URCharOwner->MeshFirstPerson && URCharOwner->MeshFirstPerson->GetAnimInstance())
         {
             //TODO: fire animation should be in weapon, maybe even in firemode?
             URCharOwner->MeshFirstPerson->GetAnimInstance()->Montage_Play(URCharOwner->FireAnimation);
         }
     }
-    else
-    {
-        UGameplayStatics::SpawnSoundAttached(FireMode->FireSound, Mesh3P, FireMode->MuzzleSocketName, FVector(0), EAttachLocation::SnapToTarget);
-        UUR_FunctionLibrary::SpawnEffectAttached(FireMode->MuzzleFlashTemplate, FTransform(), Mesh3P, FireMode->MuzzleSocketName, EAttachLocation::SnapToTargetIncludingScale);
-        //TODO: play 3p anim
-    }
+
+    //TODO: make and play 3p anim (in all cases since we want 3p shadow animate)
 }
 
 void AUR_Weapon::PlayHitscanEffects_Implementation(UUR_FireModeBasic* FireMode, const FHitscanVisualInfo& HitscanInfo)
 {
-    const FVector& BeamStart = GetVisibleMesh()->GetSocketLocation(FireMode->MuzzleSocketName);
+    FVector BeamStart = GetFireEffectStartTransform(FireMode).GetLocation();
     const FVector& BeamEnd = HitscanInfo.Vectors[0];
     FVector BeamVector = BeamEnd - BeamStart;
 
@@ -1274,7 +1307,8 @@ void AUR_Weapon::StartContinuousEffects_Implementation(UUR_FireModeContinuous* F
     if (!FireMode->BeamComponent || FireMode->BeamComponent->IsBeingDestroyed())
     {
         //UKismetSystemLibrary::PrintString(this, TEXT("NEW PARTICLE"));
-        FireMode->BeamComponent = UUR_FunctionLibrary::SpawnEffectAttached(FireMode->BeamTemplate, FTransform(), GetVisibleMesh(), FireMode->MuzzleSocketName, EAttachLocation::SnapToTargetIncludingScale);
+        FTransform Transform = GetFireEffectStartTransform(FireMode);
+        FireMode->BeamComponent = UUR_FunctionLibrary::SpawnEffectAttached(FireMode->BeamTemplate, Transform, GetVisibleMesh(), FireMode->MuzzleSocketName, EAttachLocation::KeepWorldPosition);
     }
     if (FireMode->BeamComponent)
     {

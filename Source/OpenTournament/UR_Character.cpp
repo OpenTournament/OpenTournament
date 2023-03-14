@@ -7,11 +7,14 @@
 #include "Net/UnrealNetwork.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
+#include "Engine/DamageEvents.h"
 #include "GameFramework/GameState.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameplayTagsManager.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Perception/AISense_Sight.h"
 
 #include "OpenTournament.h"
 #include "Interfaces/UR_ActivatableInterface.h"
@@ -22,11 +25,15 @@
 #include "UR_GameplayAbility.h"
 #include "UR_PlayerController.h"
 #include "UR_GameMode.h"
+#include "UR_GameplayTags.h"
 #include "UR_Weapon.h"
 #include "UR_Projectile.h"
 #include "UR_PlayerState.h"
 #include "UR_InputComponent.h"
 #include "UR_UserSettings.h"
+#include "UR_DamageType.h"
+#include "UR_PaniniUtils.h"
+#include "AIPerceptionSourceNativeComp.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,7 +58,7 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 
     InventoryComponent = Cast<UUR_InventoryComponent>(CreateDefaultSubobject<UUR_InventoryComponent>(TEXT("InventoryComponent")));
 
-    // Create a CameraComponent	
+    // Create a CameraComponent
     CharacterCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     CharacterCameraComponent->SetupAttachment(GetCapsuleComponent());
     CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, BaseEyeHeight)); // Position the camera
@@ -80,7 +87,12 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     WeaponAttachPoint = FName(TEXT("GripPoint"));
 
     // Mesh third person (now using SetVisibility in CameraViewChanged)
-    GetMesh()->bOwnerNoSee = false;
+    GetMesh3P()->bOwnerNoSee = false;
+    GetMesh3P()->bCastHiddenShadow = true;
+
+    // By default, do not refresh animations/bones when not rendered
+    GetMesh3P()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+    MeshFirstPerson->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
     // Third person camera
     ThirdPersonArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonArm"));
@@ -91,12 +103,17 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 
     ThirdPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
     ThirdPersonCamera->SetupAttachment(ThirdPersonArm);
-    
+
     // Create the attribute set, this replicates by default
     AttributeSet = CreateDefaultSubobject<UUR_AttributeSet>(TEXT("AttributeSet"));
 
     // Create the ASC
     AbilitySystemComponent = CreateDefaultSubobject<UUR_AbilitySystemComponent>("AbilitySystemComponent");
+
+    // AI Perception Source
+    AIPerceptionStimuliSource = CreateDefaultSubobject<UAIPerceptionSourceNativeComp>("AIPerceptionStimuliSource");
+    AIPerceptionStimuliSource->SetAutoRegisterAsSource(true);
+    AIPerceptionStimuliSource->SetRegisterAsSourceForSenses({ UAISense_Sight::StaticClass() });
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +132,7 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 void AUR_Character::BeginPlay()
 {
     InitializeGameplayTagsManager();
-    
+
     Super::BeginPlay();
 
     AttributeSet->SetHealth(100.f);
@@ -125,6 +142,23 @@ void AUR_Character::BeginPlay()
     AttributeSet->SetShieldMax(100.f);
 
     SetupMaterials();
+
+    if (GetNetMode() == NM_DedicatedServer)
+    {
+        // Server considers being never rendered, so it will never update anims/bones when optimization settings are enabled.
+        // We have two options here :
+        //
+        // Option 1 = Always tick pose but never update transforms.
+        //            This is most likely better for performance, but means we cannot rely on transforms (location/rotation) of bones (headshot!) nor attached objects (weapons).
+        //            The issue can be solved though by calling RefreshBoneTransforms() manually before reading them.
+        //
+        // Option 2 = Always tick pose and update transforms.
+        //            This is easier to work with, but probably less performance friendly.
+        //            However here the updating of transforms should benefit from parallelism so hopefully it's not as bad.
+
+        //GetMesh3P()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPose;
+        GetMesh3P()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+    }
 }
 
 void AUR_Character::Tick(float DeltaTime)
@@ -152,10 +186,10 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
     PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
     PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
+    PlayerInputComponent->BindAction("DropWeapon", IE_Pressed, this, &AUR_Character::DropWeapon);
 
     SetupWeaponBindings();
 
-    // Throw Weapon
     // Voice
     // Ping
     // Emote
@@ -174,6 +208,8 @@ void AUR_Character::SetupMaterials_Implementation()
     */
     //NOTE: this is not required because MeshComponent::SetParameterValueOnMaterials already generates MIDs as needed.
     // Might want to remove this function altogether
+
+    UUR_PaniniUtils::TogglePaniniProjection(GetMesh1P(), true, true);
 
     UpdateTeamColor();
 }
@@ -273,8 +309,8 @@ bool AUR_Character::IsThirdPersonCamera_Implementation(UCameraComponent* Camera)
 
 void AUR_Character::CameraViewChanged_Implementation()
 {
-    GetMesh()->SetVisibility(bViewingThirdPerson, true);
-    MeshFirstPerson->SetVisibility(!bViewingThirdPerson, true);
+    GetMesh3P()->SetVisibility(bViewingThirdPerson, true);
+    GetMesh1P()->SetVisibility(!bViewingThirdPerson, true);
 
     //NOTE: If visibility propagation works as expected and if the weapon is properly attached to meshes,
     // then it might not be necessary to update weapon visibility. Needs checking out.
@@ -317,7 +353,7 @@ void AUR_Character::EndViewTarget(APlayerController* PC)
 void AUR_Character::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
     UpdateMovementPhysicsGameplayTags(PrevMovementMode);
-    
+
     Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
 }
 
@@ -454,7 +490,7 @@ void AUR_Character::RecalculateBaseEyeHeight()
     }
 
     const float DefaultHalfHeight{ GetDefaultHalfHeight() };
-    const float AbsoluteDifference = DefaultHalfHeight - ((GetCharacterMovement()->CrouchedHalfHeight / DefaultHalfHeight) * DefaultHalfHeight);
+    const float AbsoluteDifference = DefaultHalfHeight - ((GetCharacterMovement()->GetCrouchedHalfHeight() / DefaultHalfHeight) * DefaultHalfHeight);
 
     if (GetMovementComponent()->IsMovingOnGround())
     {
@@ -680,7 +716,7 @@ void AUR_Character::Dodge(FVector DodgeDir, FVector DodgeCross)
     }
 }
 
-void AUR_Character::Dodge(const EDodgeDirection InDodgeDirection)
+void AUR_Character::DodgeTest(const EDodgeDirection InDodgeDirection)
 {
     // @! TODO Testing only...
 
@@ -812,10 +848,22 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     FReplicatedDamageEvent RepDamageEvent;
     RepDamageEvent.Type = DamageEvent.GetTypeID();
     RepDamageEvent.Damage = Damage;
+    RepDamageEvent.HealthDamage = DamageToHealth;
+    RepDamageEvent.ArmorDamage = DamageToShield + DamageToArmor;
+    RepDamageEvent.DamageInstigator = EventInstigator ? EventInstigator->GetPawn() : NULL;
+    if (UKismetMathLibrary::ClassIsChildOf(DamageEvent.DamageTypeClass, UUR_DamageType::StaticClass()))
+    {
+        RepDamageEvent.DamType = GetDefault<UUR_DamageType>(DamageEvent.DamageTypeClass);
+    }
+    else
+    {
+        // Avoid null damagetype, it is annoying to handle in blueprints
+        RepDamageEvent.DamType = GetDefault<UUR_DamageType>();
+    }
 
     // NOTE: Adding impulses to CharacterMovement are just velocity changes.
     // Point or Radial doesn't make any difference.
-    // Those only matter for skeletal physics (ragdoll), which we apply on client.
+    // Those only matter for skeletal physics (ragdoll), which we may apply on client.
     FVector KnockbackDir;
 
     if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
@@ -858,14 +906,18 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     }
 
     ////////////////////////////////////////////////////////////
-    // Other
+    // Event
 
     // @! TODO Limit Pain by time, vary by damage etc.
+    /*
     if (DamageToHealth > 10.f)
     {
         //TODO: Replicate
         UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.PainSound, GetActorLocation(), GetActorRotation());
     }
+    */
+
+    MulticastDamageEvent(RepDamageEvent);
 
     ////////////////////////////////////////////////////////////
     // Death
@@ -877,6 +929,21 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     }
 
     return Damage;
+}
+
+void AUR_Character::MulticastDamageEvent_Implementation(const FReplicatedDamageEvent RepDamageEvent)
+{
+    OnDamageReceived.Broadcast(this, RepDamageEvent);
+
+    //NOTE: Using pawn as instigator is not ideal because the owner of a projectile can die during projectile flight,
+    // and then the player would not be notified about the hit.
+    // Controller is not good either because spectators cannot access spectated player's controller.
+    // PlayerState might be the way to go.
+
+    if (AUR_Character* Dealer = Cast<AUR_Character>(RepDamageEvent.DamageInstigator))
+    {
+        Dealer->OnDamageDealt.Broadcast(this, RepDamageEvent);
+    }
 }
 
 void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser, const FReplicatedDamageEvent& RepDamageEvent)
@@ -910,12 +977,12 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
         AttributeSet->SetHealth(0);
     }
 
-    // Force stop firing
-    if (InventoryComponent && InventoryComponent->ActiveWeapon)
-    {
-        InventoryComponent->ActiveWeapon->Deactivate();
-    }
+    // Clear inventory
+    InventoryComponent->OwnerDied();
     DesiredFireModeNum.Empty();
+
+    // Stop being a target for AIs
+    AIPerceptionStimuliSource->UnregisterFromPerceptionSystem();
 
     // Replicate
     MulticastDied(Killer, RepDamageEvent);
@@ -1093,6 +1160,14 @@ void AUR_Character::PrevWeapon()
     }
 }
 
+void AUR_Character::DropWeapon()
+{
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
+    {
+        InventoryComponent->ServerDropActiveWeapon();
+    }
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1186,10 +1261,10 @@ void AUR_Character::Server_SetAbilityLevel_Implementation(TSubclassOf<UUR_Gamepl
 
 void AUR_Character::InitializeMovementActionGameplayTags()
 {
-    MovementActionGameplayTags.Add(EMovementAction::Jumping, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Jumping")));
-    MovementActionGameplayTags.Add(EMovementAction::Dodging, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Dodging")));
-    MovementActionGameplayTags.Add(EMovementAction::Crouching, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Crouching")));
-    MovementActionGameplayTags.Add(EMovementAction::Running, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Running")));
+    MovementActionGameplayTags.Add(EMovementAction::Jumping,    TAG_Character_States_Movement_Jumping);
+    MovementActionGameplayTags.Add(EMovementAction::Dodging,    TAG_Character_States_Movement_Dodging);
+    MovementActionGameplayTags.Add(EMovementAction::Crouching,  TAG_Character_States_Movement_Crouching);
+    MovementActionGameplayTags.Add(EMovementAction::Running,    TAG_Character_States_Movement_Running);
 }
 
 void AUR_Character::InitializeMovementModeGameplayTags()
@@ -1197,11 +1272,11 @@ void AUR_Character::InitializeMovementModeGameplayTags()
     MovementModeGameplayTags.Add(EMovementMode::MOVE_None, FGameplayTag{});
     MovementModeGameplayTags.Add(EMovementMode::MOVE_Custom, FGameplayTag{});
     MovementModeGameplayTags.Add(EMovementMode::MOVE_MAX, FGameplayTag{});
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Walking, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Walking")));
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_NavWalking, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Walking")));
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Falling, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Falling")));
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Swimming, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Swimming")));
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Flying, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Flying")));
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Walking,    TAG_Character_States_Physics_Walking);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_NavWalking, TAG_Character_States_Physics_Walking);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Falling,    TAG_Character_States_Physics_Falling);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Swimming,   TAG_Character_States_Physics_Swimming);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Flying,     TAG_Character_States_Physics_Flying);
 }
 
 void AUR_Character::InitializeGameplayTags()
@@ -1238,7 +1313,7 @@ FGameplayTag AUR_Character::GetMovementModeGameplayTag(const EMovementMode InMov
             }
         }
     }
-    
+
     return FGameplayTag{};
 }
 
@@ -1261,7 +1336,7 @@ void AUR_Character::UpdateGameplayTags(const FGameplayTagContainer& TagsToRemove
     }
     GAME_LOG(Game, Verbose, "Pre: Character (%s) has Tags: %s", *this->GetName(), *TagsToPrint);
 #endif
-    
+
     GameplayTags.RemoveTags(TagsToRemove);
     GameplayTags.AppendTags(TagsToAdd);
 

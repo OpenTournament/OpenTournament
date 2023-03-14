@@ -28,12 +28,12 @@ class UMeshComponent;
 class UMaterialInterface;
 class UInterface;
 class AUR_Weapon;
+class UFXSystemAsset;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 /**
- * 
+ *
  */
 UCLASS()
 class OPENTOURNAMENT_API UUR_FunctionLibrary : public UBlueprintFunctionLibrary
@@ -176,6 +176,11 @@ public:
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Game", Meta = (WorldContext = "WorldContextObject", UnsafeDuringActorConstruction = "true"))
     static AUR_PlayerController* GetLocalPlayerController(const UObject* WorldContextObject);
 
+    static APlayerController* GetLocalPC(const UObject* WorldContextObject);
+    template<typename T> static T* GetLocalPC(const UObject* WorldContextObject)
+    {
+        return Cast<T>(GetLocalPC(WorldContextObject));
+    }
 
     /**
     * Returns true if actor is currently viewed by local player controller.
@@ -215,10 +220,37 @@ public:
     /**
     * Random vector between 2 vectors.
     */
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Math")
+    UFUNCTION(BlueprintPure, Category = "Math")
     static FVector RandomVectorInRange(const FVector& Vector1, const FVector& Vector2)
     {
         return FVector(FMath::RandRange(Vector1.X, Vector2.X), FMath::RandRange(Vector1.Y, Vector2.Y), FMath::RandRange(Vector1.Z, Vector2.Z));
+    }
+
+    UFUNCTION(BlueprintPure, Category = "Math")
+    static FORCEINLINE FVector2D RandomUnitVector2D()
+    {
+        const float Angle = FMath::FRand() * UE_TWO_PI;
+        return FVector2D(FMath::Cos(Angle), FMath::Sin(Angle));
+    }
+
+    UFUNCTION(BlueprintPure, Category = "Math")
+    static FORCEINLINE FVector2D RandomPointInCircle(const float Radius)
+    {
+        return FMath::Sqrt(FMath::FRand()) * Radius * RandomUnitVector2D();
+    }
+
+    UFUNCTION(BlueprintPure, Category = "Math")
+    static FORCEINLINE FVector RandomPointInSphere(const float Radius)
+    {
+        return FMath::Sqrt(FMath::FRand()) * Radius * FMath::VRand();
+    }
+
+    UFUNCTION(BlueprintPure, Category = "Math")
+    static FORCEINLINE FVector RandomPointInCylinder(const float Radius, const float HalfHeight)
+    {
+        const float Angle = FMath::FRand() * UE_TWO_PI;
+        const float Rad = FMath::Sqrt(FMath::FRand()) * Radius;
+        return FVector(Rad * FMath::Cos(Angle), Rad * FMath::Sin(Angle), FMath::FRandRange(-HalfHeight, HalfHeight));
     }
 
 
@@ -375,5 +407,42 @@ public:
     */
     UFUNCTION(BlueprintPure, Category = "GameplayTags")
     static FGameplayTag FindAnyChildTag(const FGameplayTagContainer& TagContainer, FGameplayTag TagToMatch);
+
+    UFUNCTION(BlueprintPure, Category = "Math|Vector")
+    static FORCEINLINE FVector ClampVector(const FVector& V, const FVector& Min, const FVector& Max)
+    {
+        return FVector(
+            FMath::Clamp(V.X, Min.X, Max.X),
+            FMath::Clamp(V.Y, Min.Y, Max.Y),
+            FMath::Clamp(V.Z, Min.Z, Max.Z)
+        );
+    }
+
+    UFUNCTION(BlueprintPure, Category = "Math|Vector")
+    static FORCEINLINE FVector2D ClampVector2D(const FVector2D& V, const FVector2D& Min, const FVector2D& Max)
+    {
+        return FVector2D(
+            FMath::Clamp(V.X, Min.X, Max.X),
+            FMath::Clamp(V.Y, Min.Y, Max.Y)
+        );
+    }
+
+    /**
+    * Force refresh bone transforms on a skeletal mesh.
+    * Useful when you need to read a bone/socket transform from a mesh that may not have been rendered recently.
+    * Only makes sense when VisibilityBasedAnimTickOption == AlwaysTickPose (Always Tick, but Refresh BoneTransforms only when rendered)
+    */
+    UFUNCTION(BlueprintCallable, Category = "Game")
+    static void RefreshBoneTransforms(USkeletalMeshComponent* SkelMesh);
+
+    /**
+    * Walks up the chain of parents (including self) to call RefreshBoneTransforms on SkeletalMeshes.
+    * Will not work properly if a parent has VisibilityBasedAnimTickOption below AlwaysTickPose (ie. not ticking anims at all)
+    */
+    UFUNCTION(BlueprintCallable, Category = "Game")
+    static void RefreshComponentTransforms(USceneComponent* Component);
+
+    UFUNCTION(BlueprintCallable, Category = "Game")
+    static void PropagateOwnerNoSee(USceneComponent* Component, bool bOwnerNoSee);
 
 };

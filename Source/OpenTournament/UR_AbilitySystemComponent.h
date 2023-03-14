@@ -33,4 +33,7 @@ public:
 
 	/** Version of function in AbilitySystemGlobals that returns correct type */
 	static UUR_AbilitySystemComponent* GetAbilitySystemComponentFromActor(const AActor* Actor, bool LookForComponent = false);
+
+    UFUNCTION(BlueprintPure)
+    static const class UUR_AttributeSet* GetURAttributeSetFromActor(const AActor* Actor, bool LookForComponent = false);
 };

@@ -27,6 +27,8 @@ class UUR_GameplayAbility;
 class UUR_InventoryComponent;
 class APlayerController;
 class IUR_ActivatableInterface;
+class UUR_DamageType;
+class UAIPerceptionSourceNativeComp;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -74,11 +76,24 @@ struct FReplicatedDamageEvent
     int32 Type;
 
     /**
-    * Damage value.
+    * Full damage value (includes over-damage).
     * In case of RadialDamage, this is already scaled by distance.
     */
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float Damage;
+    int32 Damage;
+
+    /**
+    * Damage applied to health.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 HealthDamage;
+
+    /**
+    * Damage applied to armor.
+    * NOTE: some compression could be applied here, but reflection/BP doesn't support int16 so it's annoying
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 ArmorDamage;
 
     /**
     * Damage location.
@@ -92,11 +107,27 @@ struct FReplicatedDamageEvent
     * Knockback.
     * In case of PointDamage, equals to KnockbackPower * ShotDirection.
     * In case of RadialDamage, equals to (unscaled KnockbackPower, Radius, 0).
+    *
+    * NOTE: For PointDamage we should make sure to always send a non-zero vector even if we have zero knockback,
+    * so clients/widgets can use it to get ShotDirection.
     */
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FVector Knockback;
 
-    FReplicatedDamageEvent() : Type(0), Damage(0), Location(0,0,0), Knockback(0,0,0) {}
+    /**
+    * Damage type class.
+    * Already casted as UR_DamageType because the core class is useless.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    const UUR_DamageType* DamType;
+
+    /**
+    * Damage instigator
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    APawn* DamageInstigator;
+
+    FReplicatedDamageEvent() : Type(0), Damage(0), HealthDamage(0), ArmorDamage(0), Location(0,0,0), Knockback(0,0,0), DamType(NULL), DamageInstigator(NULL) {}
 
     virtual bool IsOfType(int32 InID) const { return Type == InID; };
 };
@@ -104,7 +135,15 @@ struct FReplicatedDamageEvent
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+* Damage event dispatcher
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCharacterDamageEventSignature, AUR_Character*, Character, const FReplicatedDamageEvent, RepDamageEvent);
+
+/**
 * Death event dispatcher.
+* NOTE: Controllers not available on client so this is not ideal for Killer.
+* Pawn and PlayerState are possible alternatives with both pros and cons. Need to discuss this.
+* Similar debate about the Damage event.
 */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCharacterDeathSignature, AUR_Character*, Character, AController*, Killer);
 
@@ -171,6 +210,16 @@ public:
     */
     UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
     class UCameraComponent* ThirdPersonCamera;
+
+    /**
+    * AI Perception Source
+    * NOTE: Normally pawns already act as a stimuli source by default,
+    * however when a perceived actor is destroyed it is not always automatically un-perceived by AI perception system.
+    * Then we end up with stale targets in the AI perceptions and AI goes batshit.
+    * It seems like the best practice is to always add a StimuliSource component, and call Unregister on destroy.
+    */
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
+    UAIPerceptionSourceNativeComp* AIPerceptionStimuliSource;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -466,14 +515,16 @@ public:
 
     /**
     * Dodge requested from PC Input. Dodge, if we CanDodge.
+    * Also requested by AI code.
     */
+    UFUNCTION(BlueprintCallable, Category = "Character|Dodge")
     virtual void Dodge(FVector DodgeDir, FVector DodgeCross);
 
     /**
     * Perform a Dodge. Testing purposes only.
     */
     UFUNCTION(BlueprintCallable, Category = "Character|Dodge")
-    void Dodge(const EDodgeDirection InDodgeDirection);
+    void DodgeTest(const EDodgeDirection InDodgeDirection);
 
     /** 
     * Hook for sounds / effects OnDodge
@@ -639,6 +690,15 @@ public:
     */
     virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+    UFUNCTION(NetMulticast, Unreliable)
+    void MulticastDamageEvent(const FReplicatedDamageEvent RepDamageEvent);
+
+    UPROPERTY(BlueprintAssignable, Category = "Character")
+    FCharacterDamageEventSignature OnDamageReceived;
+
+    UPROPERTY(BlueprintAssignable, Category = "Character")
+    FCharacterDamageEventSignature OnDamageDealt;
+
     /**
     * Kill this player.
     * Authority only.
@@ -732,6 +792,9 @@ public:
 
     UFUNCTION(Exec, BlueprintCallable)
     virtual void PrevWeapon();
+
+    UFUNCTION(Exec, BlueprintCallable)
+    virtual void DropWeapon();
 
     /**
     * Pickup event.
