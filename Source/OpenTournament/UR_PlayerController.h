@@ -267,6 +267,17 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
+    UPROPERTY(BlueprintReadWrite)
+    bool bWantsThirdPersonCamera;
+
+    UFUNCTION(Exec)
+    virtual void BehindView(int32 Switch = -1)
+    {
+        bWantsThirdPersonCamera = (Switch == -1) ? !bWantsThirdPersonCamera : (bool)Switch;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
     //~ Begin TeamInterface
     virtual int32 GetTeamIndex_Implementation() override;
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;

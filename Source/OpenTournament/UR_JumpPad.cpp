@@ -17,6 +17,7 @@
 
 #include "OpenTournament.h"
 #include "UR_Character.h"
+#include "AI/UR_NavigationUtilities.h"
 
 #if WITH_EDITOR
 #include "Components/SplineComponent.h"
@@ -112,6 +113,7 @@ void AUR_JumpPad::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UP
 
             TargetCharacter->LaunchCharacter(CalculateJumpVelocity(TargetCharacter), !bRetainHorizontalVelocity, true);
             PlayJumpPadEffects();
+            UUR_NavigationUtilities::ForceReachedDestinationWithin(TargetCharacter, HitComp->GetNavigationBounds());
         }
     }
 }

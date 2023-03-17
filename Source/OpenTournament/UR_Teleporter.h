@@ -82,7 +82,7 @@ private:
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
     UArrowComponent* ArrowComponent;
 
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleporter", meta = (AllowPrivateAccess = "true"))
     UNavLinkComponent* NavLink;
     
     /////////////////////////////////////////////////////////////////////////////////////////////////

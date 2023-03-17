@@ -10,7 +10,7 @@
 /**
 * Native wrapper around AIPerceptionStimuliSourceComponent because its native API sucks.
 */
-UCLASS(ClassGroup = AI, HideCategories = (Activation, Collision), meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = AI, meta = (BlueprintSpawnableComponent))
 class OPENTOURNAMENT_API UAIPerceptionSourceNativeComp : public UAIPerceptionStimuliSourceComponent
 {
     GENERATED_BODY()

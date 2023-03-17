@@ -76,13 +76,13 @@ public:
     UPROPERTY(EditAnywhere, Category = "Generator")
     float DebugDuration;
 
-    UPROPERTY(VisibleAnywhere, Category = "Generator")
+    UPROPERTY(VisibleInstanceOnly, Category = "Generator")
     int32 NumContours;
 
-    UPROPERTY(EditAnywhere, Category = "Generator")
+    UPROPERTY(EditInstanceOnly, Category = "Generator")
     int32 DebugSpecificContour;
 
-    UPROPERTY(VisibleAnywhere, Category = "Generator")
+    UPROPERTY(VisibleInstanceOnly, Category = "Generator")
     int32 NumGeneratedLinks;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////

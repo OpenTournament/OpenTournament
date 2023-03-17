@@ -18,9 +18,11 @@
 #include "UR_Projectile.h"
 #include "UR_Weapon.h"
 #include "UR_Ammo.h"
-#include "UR_Widget_ScoreboardBase.h"
 #include "UR_TeamInfo.h"
-#include "UR_BotController.h"
+
+// Having to include these, only to set the default classes, makes me sad
+#include "UR_Widget_ScoreboardBase.h"
+#include "AI/UR_BotController.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Initialization
