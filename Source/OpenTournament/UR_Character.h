@@ -302,10 +302,6 @@ public:
     UPROPERTY()
     TScriptInterface<IUR_ActivatableInterface> CurrentZoomInterface;
 
-    /** Temporary - probably needs to sit in PlayerController */
-    UFUNCTION(Exec)
-    virtual void BehindView(int32 Switch = -1);
-
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Input (Keypress to Weapon, Movement/Dodge)
     /////////////////////////////////////////////////////////////////////////////////////////////////

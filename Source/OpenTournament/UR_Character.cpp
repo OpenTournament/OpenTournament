@@ -33,7 +33,7 @@
 #include "UR_UserSettings.h"
 #include "UR_DamageType.h"
 #include "UR_PaniniUtils.h"
-#include "AIPerceptionSourceNativeComp.h"
+#include "AI/AIPerceptionSourceNativeComp.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -284,10 +284,14 @@ UCameraComponent* AUR_Character::PickCamera_Implementation()
         return ThirdPersonCamera;
     }
 
+    // Player desires 3p
+    if (auto PC = UUR_FunctionLibrary::GetLocalPC<AUR_PlayerController>(this))
+    {
+        if (PC->bWantsThirdPersonCamera && ThirdPersonCamera && ThirdPersonCamera->IsActive())
+            return ThirdPersonCamera;
+    }
+
     // Alive = 1p
-    //TODO: specs should be able to switch at will.
-    // That would be a variable in PlayerController.
-    // Hopefully this is client-only, so we can get local PC to check this.
     if (IsAlive() && CharacterCameraComponent && CharacterCameraComponent->IsActive())
     {
         return CharacterCameraComponent;
@@ -378,11 +382,6 @@ void AUR_Character::RegisterZoomInterface(TScriptInterface<IUR_ActivatableInterf
     {
         IUR_ActivatableInterface::Execute_AIF_Activate(CurrentZoomInterface.GetObject(), false);
     }
-}
-
-void AUR_Character::BehindView(int32 Switch)
-{
-    CharacterCameraComponent->SetActive((Switch == -1) ? (!CharacterCameraComponent->IsActive()) : !Switch);
 }
 
 

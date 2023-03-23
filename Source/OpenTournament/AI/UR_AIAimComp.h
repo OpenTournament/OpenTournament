@@ -5,42 +5,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AIModule/Classes/AIController.h"
-#include "UR_BotController.generated.h"
+#include "Components/ActorComponent.h"
+#include "UR_AIAimComp.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+class AController;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Bot player controller class.
+ * Aim component for AI controllers.
  */
-UCLASS()
-class OPENTOURNAMENT_API AUR_BotController : public AAIController
+UCLASS(HideCategories = (Sockets, Tags, ComponentTick, ComponentReplication, Cooking, AssetUserData, Replication, Collision))
+class OPENTOURNAMENT_API UUR_AIAimComp : public UActorComponent
 {
     GENERATED_BODY()
 
-    AUR_BotController();
-
-protected:
-    virtual void PostInitializeComponents() override;
-    virtual void InitPlayerState() override;
-    virtual void OnNewPawnHandler(APawn* P);
+    UUR_AIAimComp();
 
 public:
-
-    UPROPERTY(BlueprintReadWrite)
-    FTimerHandle RespawnTimerHandle;
-
-    // Just a wrapper that calls GameMode->RestartPlayer(), can be used as delegate for SetTimer
-    UFUNCTION(BlueprintCallable)
-    void Respawn();
-
-    virtual void UpdateControlRotation(float DeltaTime, bool bUpdatePawn) override;
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Experimental : coding the aim-error directly in the focus, so when we spectate a bot, we can see his real aim.
     // Later down the line we want to delegate "where to aim" to the weapons/firemodes.
@@ -51,53 +35,58 @@ public:
 
     // Ideal aim point, recalculated whenever a new GoalAimPoint is generated (not updated every tick!)
     UPROPERTY(BlueprintReadOnly)
-    mutable FVector TrueAimTarget;
+    FVector TrueAimTarget;
 
     // Current aim point we are interpolating to
     UPROPERTY(BlueprintReadOnly)
-    mutable FVector GoalAimPoint;
+    FVector GoalAimPoint;
 
-    // Cache this to reset on change
-    mutable const AActor* LastAimActor;
+    // Cache this to detect changes
+    const AActor* LastAimActor;
 
     // Max remaining lifetime of current GoalAimPoint
-    mutable float GoalAimPointTime;
+    float GoalAimPointTime;
 
     // Current interpolating aim point (ie. current rotation but as a world space point)
     // Its initial distance is set by the distance to TrueAimTarget when a goal is generated
     UPROPERTY(BlueprintReadOnly)
-    mutable FVector CurrentAimPoint;
+    FVector CurrentAimPoint;
 
     // Whether to use time-dilated frame time or not.
     UPROPERTY(EditAnywhere, Category = "AimError")
-    bool Aim_bUseTimeDilation;
+    bool bUseTimeDilation;
     // Tolerance when checking if we have reached goal
     UPROPERTY(EditAnywhere, Category = "AimError")
-    float Aim_GoalTolerance;
+    float GoalTolerance;
     // Max cone angle error when generating goal point from current aim to true target
     UPROPERTY(EditAnywhere, Category = "AimError")
-    float Aim_AngleErrorMax;
+    float AngleErrorMax;
     // How relative projected speed affects cone angle. ErrorAngle = Lerp(0, Max, Speed/Divisor)
     UPROPERTY(EditAnywhere, Category = "AimError")
-    float Aim_AngleSpeedDivisor;
+    float AngleSpeedDivisor;
     // How relative projected speed generates distance error along cone.
     UPROPERTY(EditAnywhere, Category = "AimError")
-    float Aim_DistanceSpeedFactor;
+    float DistanceSpeedFactor;
     // Range of the goal point life time - smaller value forces regenerating points more often
     UPROPERTY(EditAnywhere, Category="AimError")
-    FVector2D Aim_PointDuration;
+    FVector2D PointDuration;
     // Interpolation speed from current aim point (current rot) to GoalAimPoint.
     // Higher value means bot flicks faster, and as a result generates points more often.
     UPROPERTY(EditAnywhere, Category = "AimError")
-    float Aim_InterpSpeed;
+    float InterpSpeed;
 
-    // This is where we return our interpolated rotation instead of simply returning Actor->Location (default implementation)
-    virtual FVector GetFocalPointOnActor(const AActor* Actor) const override;
+    // Entry point called by Controller->GetFocalPointOnActor
+    // Return value is a point in the world that the controller should aim at.
+    // We return our interpolated rotation instead of simply returning Actor->Location (default implementation)
+    // This is meant to be called once per frame
+    virtual FVector ApplyAimCorrectionForTargetActor(const AController* MyController, const AActor* TargetActor);
+
+protected:
 
     // Calculate a new GoalAimPoint by adding an error going from current rotation towards TrueAimTarget
-    virtual FVector CalculateNewGoalAimPoint(const AActor* Actor) const;
+    virtual FVector CalculateNewGoalAimPoint(const AController* MyController, const AActor* Actor);
 
     // This is where we should calculate the ideal aim point according to the weapon/firemode we are using, with no error applied.
-    virtual FVector CalculateAimTargetForActor(const AActor* Actor) const;
-    virtual FVector CalculateAimTargetForLocation(const FVector& WorldLocation) const;
+    virtual FVector CalculateAimTargetForActor(const AActor* Actor);
+    virtual FVector CalculateAimTargetForLocation(const FVector& WorldLocation);
 };

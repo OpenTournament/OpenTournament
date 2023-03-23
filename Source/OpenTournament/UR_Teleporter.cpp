@@ -19,6 +19,7 @@
 #include "OpenTournament.h"
 #include "UR_Character.h"
 #include "UR_CharacterMovementComponent.h"
+#include "AI/UR_NavigationUtilities.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
@@ -227,6 +228,8 @@ bool AUR_Teleporter::InternalTeleport(AActor* TargetActor)
         SetTargetVelocity(TargetActor, TargetCharacter, DesiredRotation, DestinationRotation);
 
         ApplyGameplayTag(TargetActor);
+
+        UUR_NavigationUtilities::ForceReachedDestinationWithin(Cast<APawn>(TargetActor), CapsuleComponent->GetNavigationBounds());
     }
 
     return bIsTeleportSuccessful;
