@@ -76,7 +76,7 @@ public:
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
     UParticleSystemComponent* ParticleSystemComponent;
 
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "JumpPad")
     UNavLinkComponent* NavLink;
 
 #if WITH_EDITOR
