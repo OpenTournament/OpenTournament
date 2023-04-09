@@ -6,6 +6,7 @@
 
 #include "GameFramework/PlayerState.h"
 #include "Interfaces/UR_TeamInterface.h"
+#include "UR_CharacterCustomization.h"
 #include "GameplayTagContainer.h"
 #include "UR_PlayerState.generated.h"
 
@@ -36,6 +37,7 @@ class OPENTOURNAMENT_API AUR_PlayerState : public APlayerState
 protected:
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    virtual void BeginPlay() override;
 
     UFUNCTION()
     virtual void OnRep_ReplicatedTeamIndex();
@@ -120,5 +122,19 @@ public:
     */
     UFUNCTION(BlueprintPure)
     bool IsAWinner();
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_CharacterCustomization)
+    FCharacterCustomization CharacterCustomization;
+
+    UFUNCTION(Server, Reliable)
+    void ServerSetCharacterCustomization(const FCharacterCustomization& InCustomization);
+
+    UFUNCTION()
+    virtual void OnRep_CharacterCustomization();
+
+    UFUNCTION()
+    virtual void InternalOnPawnSet(APlayerState* PS, APawn* NewPawn, APawn* OldPawn);
 
 };

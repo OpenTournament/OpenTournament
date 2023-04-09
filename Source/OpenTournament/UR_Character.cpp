@@ -34,6 +34,7 @@
 #include "UR_DamageType.h"
 #include "UR_PaniniUtils.h"
 #include "AI/AIPerceptionSourceNativeComp.h"
+#include "UR_CharacterCustomization.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -114,6 +115,12 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     AIPerceptionStimuliSource = CreateDefaultSubobject<UAIPerceptionSourceNativeComp>("AIPerceptionStimuliSource");
     AIPerceptionStimuliSource->SetAutoRegisterAsSource(true);
     AIPerceptionStimuliSource->SetRegisterAsSourceForSenses({ UAISense_Sight::StaticClass() });
+
+    // Hair
+    HairMesh = CreateDefaultSubobject<USkeletalMeshComponent>("HairMesh");
+    HairMesh->SetupAttachment(GetMesh3P());
+    HairMesh->SetLeaderPoseComponent(GetMesh3P());
+    HairMesh->bCastHiddenShadow = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -141,7 +148,7 @@ void AUR_Character::BeginPlay()
     AttributeSet->SetArmorMax(100.f);
     AttributeSet->SetShieldMax(100.f);
 
-    SetupMaterials();
+    UUR_PaniniUtils::TogglePaniniProjection(GetMesh1P(), true, true);
 
     if (GetNetMode() == NM_DedicatedServer)
     {
@@ -195,23 +202,40 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
     // Emote
 }
 
-void AUR_Character::SetupMaterials_Implementation()
+void AUR_Character::ApplyCustomization_Implementation(FCharacterCustomization& InCustomization)
 {
-    /*
-    for (UPrimitiveComponent* Component : { GetMesh3P(), GetMesh1P() })
+    UUR_CharacterCustomizationBackend::LoadCharacterCustomizationAssets(InCustomization);
+
+    if (GetMesh3P())
     {
-        for (int32 i = 0; i < Component->GetNumMaterials(); i++)
+        if (InCustomization.LoadedCharacter)
         {
-            Component->CreateDynamicMaterialInstance(i);
+            GetMesh3P()->SetSkeletalMeshAsset(InCustomization.LoadedCharacter);
+            // Important Note :
+            // We need to reset materials when swapping meshes, because different meshes might use different material slots...
+            // This means the correct materials have to be set in the SkeletalMesh asset directly, NOT in the Character blueprint mesh component!
+            // I'm not sure how to best handle this.
+            GetMesh3P()->EmptyOverrideMaterials();
         }
+        GetMesh3P()->SetVectorParameterValueOnMaterials("Skin tone", FVector(FLinearColor(InCustomization.SkinTone)));
     }
-    */
-    //NOTE: this is not required because MeshComponent::SetParameterValueOnMaterials already generates MIDs as needed.
-    // Might want to remove this function altogether
 
-    UUR_PaniniUtils::TogglePaniniProjection(GetMesh1P(), true, true);
+    if (GetMesh1P())
+    {
+        GetMesh1P()->SetVectorParameterValueOnMaterials("Skin tone", FVector(FLinearColor(InCustomization.SkinTone)));
+    }
 
-    UpdateTeamColor();
+    if (HairMesh)
+    {
+        if (InCustomization.LoadedHair)
+        {
+            HairMesh->SetSkeletalMeshAsset(InCustomization.LoadedHair);
+            HairMesh->EmptyOverrideMaterials();
+        }
+        HairMesh->SetVectorParameterValueOnMaterials("Hair Color", FVector(FLinearColor(InCustomization.HairColor)));
+    }
+
+    UpdateTeamColor();  //since we may have reset materials, need to update this
 }
 
 void AUR_Character::UpdateTeamColor_Implementation()
@@ -226,16 +250,6 @@ void AUR_Character::UpdateTeamColor_Implementation()
         GetMesh1P()->SetScalarParameterValueOnMaterials(FName(TEXT("TeamIndex")), IUR_TeamInterface::Execute_GetTeamIndex(this));
         // FirstPerson mesh is always considered "self" and should use AllyColor
         GetMesh1P()->SetScalarParameterValueOnMaterials(FName(TEXT("IsSelf")), 1.f);
-    }
-}
-
-void AUR_Character::OnRep_PlayerState()
-{
-    Super::OnRep_PlayerState();
-
-    if (GetNetMode() != NM_DedicatedServer)
-    {
-        UpdateTeamColor();
     }
 }
 

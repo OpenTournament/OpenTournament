@@ -211,6 +211,12 @@ public:
     UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
     class UCameraComponent* ThirdPersonCamera;
 
+    /*
+    * Hair mesh (third person).
+    */
+    UPROPERTY(VisibleDefaultsOnly, Category = "Mesh")
+    class USkeletalMeshComponent* HairMesh;
+
     /**
     * AI Perception Source
     * NOTE: Normally pawns already act as a stimuli source by default,
@@ -223,8 +229,8 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    UFUNCTION(BlueprintCosmetic, BlueprintNativeEvent)
-    void SetupMaterials();
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, BlueprintNativeEvent)
+    void ApplyCustomization(UPARAM(Ref) FCharacterCustomization& InCustomization);
 
     UFUNCTION(BlueprintCosmetic, BlueprintNativeEvent, BlueprintCallable)
     void UpdateTeamColor();
@@ -251,8 +257,6 @@ public:
 
     virtual void BecomeViewTarget(APlayerController* PC) override;
     virtual void EndViewTarget(APlayerController* PC) override;
-
-    virtual void OnRep_PlayerState() override;
 
     // Override to update Physics Movement GameplayTags
     virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;

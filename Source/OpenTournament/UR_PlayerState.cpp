@@ -14,6 +14,7 @@
 #include "UR_MPC_Global.h"
 #include "UR_FunctionLibrary.h"
 #include "UR_Character.h"
+#include "UR_UserSettings.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,6 +23,7 @@ AUR_PlayerState::AUR_PlayerState()
     TeamIndex = -1;
     ReplicatedTeamIndex = -1;
 
+    OnPawnSet.AddUniqueDynamic(this, &AUR_PlayerState::InternalOnPawnSet);
     OnTeamChanged.AddUniqueDynamic(this, &AUR_PlayerState::InternalOnTeamChanged);
 }
 
@@ -36,8 +38,33 @@ void AUR_PlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
     DOREPLIFETIME_WITH_PARAMS_FAST(AUR_PlayerState, Deaths, Params);
     DOREPLIFETIME_WITH_PARAMS_FAST(AUR_PlayerState, Suicides, Params);
 
+    DOREPLIFETIME_WITH_PARAMS_FAST(AUR_PlayerState, CharacterCustomization, Params);
+
     Params.RepNotifyCondition = REPNOTIFY_OnChanged;
     DOREPLIFETIME_WITH_PARAMS_FAST(AUR_PlayerState, ReplicatedTeamIndex, Params);
+}
+
+void AUR_PlayerState::BeginPlay()
+{
+    Super::BeginPlay();
+
+    // NOTE: Don't know if PlayerState can actually replicate before PC
+    if (auto PC = GetOwner<APlayerController>())
+    {
+        if (PC->IsLocalController())
+        {
+            // Not sure what's the best place to do client->server replication of user customization.
+            // We want to do this as early as possible.
+            // We may have to delay the first spawning of a player until we are roughly certain that PlayerState & customization has already replicated to everyone.
+            // Otherwise we'll have ugly situation where we snap-in customization onto the spawned character.
+            ServerSetCharacterCustomization(UUR_UserSettings::Get(this)->CharacterCustomization);
+        }
+    }
+    else if (HasAuthority())
+    {
+        // Bot = make random customization
+        ServerSetCharacterCustomization(UUR_CharacterCustomizationBackend::MakeRandomCharacterCustomization());
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -290,4 +317,33 @@ bool AUR_PlayerState::IsAWinner()
         }
     }
     return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_PlayerState::ServerSetCharacterCustomization_Implementation(const FCharacterCustomization& InCustomization)
+{
+    //NOTE: We can either do server validation of chosen assets, and correct the assets before replicating them to others
+    // Or just replicate directly and let clients decide if they accept those customizations.
+    CharacterCustomization = InCustomization;
+    OnRep_CharacterCustomization();
+}
+
+void AUR_PlayerState::OnRep_CharacterCustomization()
+{
+    // If customization is replicated after Character, apply it now
+    if (auto URChar = GetPawn<AUR_Character>())
+    {
+        URChar->ApplyCustomization(CharacterCustomization);
+    }
+}
+
+void AUR_PlayerState::InternalOnPawnSet(APlayerState* PS, APawn* NewPawn, APawn* OldPawn)
+{
+    // If character is replicated after customization, apply it now
+    if (auto URChar = Cast<AUR_Character>(NewPawn))
+    {
+        URChar->ApplyCustomization(CharacterCustomization);
+        //URChar->UpdateTeamColor();    // ApplyCustomization already has to call this because it needs to reset the materials when changing meshes
+    }
 }

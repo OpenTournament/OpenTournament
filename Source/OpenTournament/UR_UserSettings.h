@@ -9,6 +9,7 @@
 #include "UObject/Object.h"
 
 #include "UR_Type_WeaponGroup.h"
+#include "UR_CharacterCustomization.h"
 
 #include "UR_UserSettings.generated.h"
 
@@ -46,6 +47,9 @@ public:
 
     UPROPERTY(Config, BlueprintReadWrite)
     TArray<FWeaponGroup> WeaponGroups;
+
+    UPROPERTY(Config, BlueprintReadWrite)
+    FCharacterCustomization CharacterCustomization;
 
 public:
 
