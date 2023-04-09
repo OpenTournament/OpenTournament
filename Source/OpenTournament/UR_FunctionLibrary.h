@@ -445,4 +445,26 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Game")
     static void PropagateOwnerNoSee(USceneComponent* Component, bool bOwnerNoSee);
 
+    /**
+    * Constrain InVector into a cone defined by ConeAxis and MaxAngle.
+    * ConeAxis must be unit vector. InVector can be any length. MaxAngle should be < 90 degrees.
+    * - If InVector is already in cone, result is InVector.
+    * - If InVector is opposite to cone axis, result is zero vector.
+    * - Otherwise, result is a projection of InVector onto the cone bounds, with InVector's original size preserved.
+    */
+    UFUNCTION(BlueprintPure, Category = "Math")
+    static FVector ConstrainVectorInCone(const FVector& InVector, const FVector& ConeAxis, const float MaxAngle = 45)
+    {
+        const FVector& InDir = InVector.GetSafeNormal();
+        const float AngleRad = FMath::DegreesToRadians(MaxAngle);
+        if (InDir.Dot(ConeAxis) >= FMath::Cos(AngleRad))
+            return InVector;
+
+        const FVector& PlaneDir = FVector::VectorPlaneProject(InDir, ConeAxis).GetSafeNormal();
+        if (PlaneDir.IsZero())
+            return FVector::ZeroVector;
+
+        return (FMath::Cos(AngleRad) * ConeAxis + FMath::Sin(AngleRad) * PlaneDir) * InVector.Size();
+    }
+
 };

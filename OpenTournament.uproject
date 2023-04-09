@@ -112,14 +112,6 @@
 			"Enabled": false
 		},
 		{
-			"Name": "ChaosClothEditor",
-			"Enabled": false
-		},
-		{
-			"Name": "ChaosCloth",
-			"Enabled": false
-		},
-		{
 			"Name": "ChaosNiagara",
 			"Enabled": false
 		},
