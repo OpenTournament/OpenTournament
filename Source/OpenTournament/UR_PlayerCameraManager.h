@@ -74,15 +74,4 @@ public:
     */
     UFUNCTION(BlueprintPure)
     static AUR_PlayerCameraManager* UR_GetPlayerCameraManager(const APlayerController* InPlayerController);
-
-protected:
-    /**
-     * Does the actual work to UpdateViewTarget. This is called from UpdateViewTarget under normal
-     * circumstances (target is not a camera actor and no debug cameras are active)
-     * Provides a way for subclasses to override behavior without copy-pasting the special case code.
-     *
-     * @param	OutVT		ViewTarget to use.
-     * @param	DeltaTime	Delta Time since last camera update (in seconds).
-     */
-    virtual void UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime) override;
 };
