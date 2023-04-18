@@ -671,14 +671,9 @@ void AUR_Weapon::TryStartFire(UUR_FireModeBase* FireMode)
 
 void AUR_Weapon::GetFireVector(FVector& FireLoc, FRotator& FireRot)
 {
-    if (URCharOwner)
+    if (const auto Pawn = GetOwner<APawn>())
     {
-        // Careful, in URCharacter we are using a custom 1p camera.
-        // This means GetActorEyesViewPoint is wrong because it uses a hardcoded offest.
-        // Either access camera directly, or override GetActorEyesViewPoint.
-        FVector CameraLoc = URCharOwner->CharacterCameraComponent->GetComponentLocation();
-        FireLoc = CameraLoc;
-        FireRot = URCharOwner->GetBaseAimRotation();
+        Pawn->GetActorEyesViewPoint(FireLoc, FireRot);
     }
     else
     {

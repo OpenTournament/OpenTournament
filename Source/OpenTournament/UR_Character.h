@@ -172,14 +172,47 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //deprecated
-    bool bIsPickingUp = false;
+    /**
+    * Notes on camera management :
+    * 
+    * The final camera view of player is calculated in CameraManager->UpdateViewTargetInternal (result in OutVT.POV, and cached in CachedPOV).
+    * It is calculated via ViewTarget->CalcCamera
+    * --| CalcCamera relies on CameraComponent->GetCameraView if there is one, or falls back to GetActorEyesViewPoint
+    * ----| CameraComponent->GetCameraView updates its own component rotation (**) using GetViewRotation, and returns it
+    * ----| GetActorEyesViewPoint also relies on GetViewRotation
+    * ------| GetViewRotation relies on ControlRotation if available, or falls back to BlendedTargetViewRotation.
+    * --------| BlendedTargetViewRotation is a smoothed rotation of the current ViewTarget in PlayerController (when spectating remote pawns).
+    *
+    * (**) Warning:
+    *      CameraComponent->GetCameraView only updates its rotation when it is called by the locally controlling player (assuming bUsePawnControlRotation = true).
+    *      This means the camera doesn't update its rotation when it is being viewed through by a spectator.
+    *      Therefore, when we are spectating a remote pawn, the camera doesn't update its own rotation and only relies on its attachment rotation,
+           ie. Pawn rotation, which is choppy and has no Pitch.
+    *
+    * Spring arms (with bUsePawnControlRotation = true) work slightly differently :
+    * - They update themselves in Tick, regardless of being in use or not.
+    * - They update their rotation also using GetViewRotation, but not conditionally locked to locally controlling player, so they DO update properly for spectators.
+    *
+    * So the simplest solution to fix Pitch is to wrap Camera with a SpringArm of length zero.
+    * When viewing remote pawns, they will rely on BlendedTargetViewRotation which contains Pitch and smooths everything up.
+    *
+    * It is worth noting however that SpringArms induce additional Ticks, which are unnecessary for the most part.
+    * For optimal performance, only the currently active camera spring should be ticking.
+    * An alternative would be to make a custom CameraComponent that updates itself without the locally controlled condition.
+    *
+    * Additional note: all of this doesn't help smoothing out the up/down AimOffset in animation blueprint.
+    * The BlendedTargetViewRotation is only available for PC's ViewTarget.
+    * When looking at other pawns, we can only currently rely on RemoteViewPitch which is choppy.
+    * We'll probably have to add another smoothing mechanism for the AimOffset.
+    */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+    class USpringArmComponent* FirstPersonCamArm;
 
     /**
     * First person Camera
     */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-    class UCameraComponent* CharacterCameraComponent;
+    class UCameraComponent* FirstPersonCamera;
 
     /**
     * Character's first-person mesh (arms; seen only by self)
@@ -254,6 +287,7 @@ public:
     virtual UInputComponent* CreatePlayerInputComponent() override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual void CalcCamera(float DeltaTime, struct FMinimalViewInfo& OutResult) override;
+    virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
 
     virtual void BecomeViewTarget(APlayerController* PC) override;
     virtual void EndViewTarget(APlayerController* PC) override;

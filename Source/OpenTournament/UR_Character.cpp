@@ -59,11 +59,20 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 
     InventoryComponent = Cast<UUR_InventoryComponent>(CreateDefaultSubobject<UUR_InventoryComponent>(TEXT("InventoryComponent")));
 
+    // Create a zerolength arm for first person camera
+    FirstPersonCamArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("FirstPersonCamArm"));
+    FirstPersonCamArm->SetupAttachment(GetCapsuleComponent());
+    FirstPersonCamArm->SetRelativeLocation(FVector(-39.56f, 1.75f, BaseEyeHeight)); // Position the camera
+    FirstPersonCamArm->TargetArmLength = 0.f;
+    FirstPersonCamArm->bDoCollisionTest = false;
+    FirstPersonCamArm->bUsePawnControlRotation = true;
+
     // Create a CameraComponent
-    CharacterCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-    CharacterCameraComponent->SetupAttachment(GetCapsuleComponent());
-    CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, BaseEyeHeight)); // Position the camera
-    CharacterCameraComponent->bUsePawnControlRotation = true;
+    FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+    //CharacterCameraComponent->SetupAttachment(GetCapsuleComponent());
+    //CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, BaseEyeHeight)); // Position the camera
+    //CharacterCameraComponent->bUsePawnControlRotation = true;
+    FirstPersonCamera->SetupAttachment(FirstPersonCamArm);
 
     // FVector(-39.56f, 1.75f, BaseEyeHeight)
     DefaultCameraPosition = FVector(-0.f, 0.f, BaseEyeHeight);
@@ -79,7 +88,7 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     // Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
     MeshFirstPerson = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshFirstPerson"));
     MeshFirstPerson->SetOnlyOwnerSee(true);
-    MeshFirstPerson->SetupAttachment(CharacterCameraComponent);
+    MeshFirstPerson->SetupAttachment(FirstPersonCamera);
     MeshFirstPerson->bCastDynamicShadow = false;
     MeshFirstPerson->CastShadow = false;
     MeshFirstPerson->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
@@ -306,9 +315,9 @@ UCameraComponent* AUR_Character::PickCamera_Implementation()
     }
 
     // Alive = 1p
-    if (IsAlive() && CharacterCameraComponent && CharacterCameraComponent->IsActive())
+    if (IsAlive() && FirstPersonCamera && FirstPersonCamera->IsActive())
     {
-        return CharacterCameraComponent;
+        return FirstPersonCamera;
     }
 
     // Fallback to 3p
@@ -327,8 +336,11 @@ bool AUR_Character::IsThirdPersonCamera_Implementation(UCameraComponent* Camera)
 
 void AUR_Character::CameraViewChanged_Implementation()
 {
-    GetMesh3P()->SetVisibility(bViewingThirdPerson, true);
-    GetMesh1P()->SetVisibility(!bViewingThirdPerson, true);
+    if (GetMesh3P())
+        GetMesh3P()->SetVisibility(bViewingThirdPerson, true);
+
+    if (GetMesh1P())
+        GetMesh1P()->SetVisibility(!bViewingThirdPerson, true);
 
     //NOTE: If visibility propagation works as expected and if the weapon is properly attached to meshes,
     // then it might not be necessary to update weapon visibility. Needs checking out.
@@ -345,11 +357,18 @@ void AUR_Character::CameraViewChanged_Implementation()
     }
 }
 
+void AUR_Character::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
+{
+    // Not sure yet how we're gonna handle ThirdPerson weapon firing, but that's gonna be a handful, if we ever want to do it.
+    OutLocation = FirstPersonCamera->GetComponentLocation();
+    OutRotation = GetViewRotation();
+}
+
 void AUR_Character::BecomeViewTarget(APlayerController* PC)
 {
     Super::BecomeViewTarget(PC);
 
-    if (PC && PC->IsLocalController())
+    if (PC && PC->IsLocalPlayerController())
     {
         // Update all the things (character 1p/3p mesh, weapon 1p/3p mesh, zooming state)
         bViewingThirdPerson = IsThirdPersonCamera(PickCamera());
@@ -359,13 +378,13 @@ void AUR_Character::BecomeViewTarget(APlayerController* PC)
 
 void AUR_Character::EndViewTarget(APlayerController* PC)
 {
-    // If a zoom is active, deactivate it
-    if (CurrentZoomInterface)
-    {
-        IUR_ActivatableInterface::Execute_AIF_Deactivate(CurrentZoomInterface.GetObject(), false);
-    }
-
     Super::EndViewTarget(PC);
+
+    if (PC && PC->IsLocalPlayerController())
+    {
+        bViewingThirdPerson = true;
+        CameraViewChanged();
+    }
 }
 
 void AUR_Character::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
@@ -545,7 +564,7 @@ void AUR_Character::TickEyePosition(const float DeltaTime)
     }
 
     //GAME_LOG(Game, Log, "Ticking EyeOffset: %f, %f, %f)", EyeOffset.X, EyeOffset.Y, EyeOffset.Z);
-    CharacterCameraComponent->SetRelativeLocation(FVector(-0.f, 0.f, CrouchEyeOffsetZ) + EyeOffset, false);
+    FirstPersonCamera->SetRelativeLocation(FVector(-0.f, 0.f, CrouchEyeOffsetZ) + EyeOffset, false);
 
     // Update OldLocationZ. Order of operations is important here, this must follow our EyeOffset updates
     OldLocationZ = GetActorLocation().Z;

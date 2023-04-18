@@ -131,23 +131,3 @@ AUR_PlayerCameraManager* AUR_PlayerCameraManager::UR_GetPlayerCameraManager(cons
     }
     return NULL;
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-void AUR_PlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime)
-{
-    Super::UpdateViewTargetInternal(OutVT, DeltaTime);
-
-    // Part taken from APawn::GetBaseAimRotation
-    if (FMath::IsNearlyZero(OutVT.POV.Rotation.Pitch))
-    {
-        if (auto Pawn = Cast<APawn>(OutVT.Target))
-        {
-            if (Pawn->BlendedReplayViewPitch != 0.0f)
-                OutVT.POV.Rotation.Pitch = Pawn->BlendedReplayViewPitch;
-            else
-                OutVT.POV.Rotation.Pitch = FRotator::DecompressAxisFromByte(Pawn->RemoteViewPitch);
-        }
-    }
-    //TODO: This will need some smoothing, RemoteViewPitch is erratic af
-}
