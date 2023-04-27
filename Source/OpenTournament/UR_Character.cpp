@@ -59,10 +59,23 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 
     InventoryComponent = Cast<UUR_InventoryComponent>(CreateDefaultSubobject<UUR_InventoryComponent>(TEXT("InventoryComponent")));
 
+    // FVector(-39.56f, 1.75f, BaseEyeHeight)   <- where does this come from?
+
+    BaseEyeHeight = 64.f;
+    DefaultCameraPosition = FVector(-0.f, 0.f, BaseEyeHeight);
+    CrouchedEyeHeight = 64.f;
+
+    EyeOffset = FVector(0.f, 0.f, 0.f);
+    TargetEyeOffset = EyeOffset;
+    EyeOffsetLandingBobMaximum = BaseEyeHeight + GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+    EyeOffsetLandingBobMinimum = EyeOffsetLandingBobMaximum / 10.f;
+    EyeOffsetToTargetInterpolationRate = FVector(18.f, 10.f, 10.f);
+    TargetEyeOffsetToNeutralInterpolationRate = FVector(5.f, 5.f, 5.f);
+
     // Create a zerolength arm for first person camera
     FirstPersonCamArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("FirstPersonCamArm"));
     FirstPersonCamArm->SetupAttachment(GetCapsuleComponent());
-    FirstPersonCamArm->SetRelativeLocation(FVector(-39.56f, 1.75f, BaseEyeHeight)); // Position the camera
+    FirstPersonCamArm->SetRelativeLocation(DefaultCameraPosition); // Position the camera
     FirstPersonCamArm->TargetArmLength = 0.f;
     FirstPersonCamArm->bDoCollisionTest = false;
     FirstPersonCamArm->bUsePawnControlRotation = true;
@@ -70,20 +83,9 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     // Create a CameraComponent
     FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     //CharacterCameraComponent->SetupAttachment(GetCapsuleComponent());
-    //CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, BaseEyeHeight)); // Position the camera
+    //CharacterCameraComponent->SetRelativeLocation(DefaultCameraPosition); // Position the camera
     //CharacterCameraComponent->bUsePawnControlRotation = true;
     FirstPersonCamera->SetupAttachment(FirstPersonCamArm);
-
-    // FVector(-39.56f, 1.75f, BaseEyeHeight)
-    DefaultCameraPosition = FVector(-0.f, 0.f, BaseEyeHeight);
-    BaseEyeHeight = 64.f;
-    CrouchedEyeHeight = 64.f;
-    EyeOffset = FVector(0.f, 0.f, 0.f);
-    TargetEyeOffset = EyeOffset;
-    EyeOffsetLandingBobMaximum = BaseEyeHeight + GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-    EyeOffsetLandingBobMinimum = EyeOffsetLandingBobMaximum / 10.f;
-    EyeOffsetToTargetInterpolationRate = FVector(18.f, 10.f, 10.f);
-    TargetEyeOffsetToNeutralInterpolationRate = FVector(5.f, 5.f, 5.f);
 
     // Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
     MeshFirstPerson = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshFirstPerson"));
@@ -564,7 +566,7 @@ void AUR_Character::TickEyePosition(const float DeltaTime)
     }
 
     //GAME_LOG(Game, Log, "Ticking EyeOffset: %f, %f, %f)", EyeOffset.X, EyeOffset.Y, EyeOffset.Z);
-    FirstPersonCamera->SetRelativeLocation(FVector(-0.f, 0.f, CrouchEyeOffsetZ) + EyeOffset, false);
+    FirstPersonCamArm->SetRelativeLocation(FVector(-0.f, 0.f, CrouchEyeOffsetZ) + EyeOffset, false);
 
     // Update OldLocationZ. Order of operations is important here, this must follow our EyeOffset updates
     OldLocationZ = GetActorLocation().Z;
