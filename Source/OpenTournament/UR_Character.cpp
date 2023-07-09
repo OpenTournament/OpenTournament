@@ -12,6 +12,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameplayTagsManager.h"
 #include "Components/CapsuleComponent.h"
+#include <Components/SkeletalMeshComponent.h>
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Perception/AISense_Sight.h"

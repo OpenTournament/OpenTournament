@@ -1,6 +1,8 @@
 
 #include "UR_NavigationUtilities.h"
 
+#include <Navigation/PathFollowingComponent.h>
+
 #include "AIController.h"
 #include "NavLinkCustomComponent.h"
 
