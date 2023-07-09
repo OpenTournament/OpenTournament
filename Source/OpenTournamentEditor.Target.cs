@@ -10,6 +10,6 @@ public class OpenTournamentEditorTarget : TargetRules
         Type = TargetType.Editor;
         LinkType = TargetLinkType.Modular;
         ExtraModuleNames.Add("OpenTournament");
-        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_1;
+        IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
     }
 }

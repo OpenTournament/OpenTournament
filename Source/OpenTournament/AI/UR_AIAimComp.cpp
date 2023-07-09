@@ -7,6 +7,7 @@
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "GameFramework/Controller.h"
+#include "GameFramework/Pawn.h"
 #include "AIHelpers.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

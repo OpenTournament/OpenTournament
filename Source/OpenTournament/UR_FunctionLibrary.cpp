@@ -4,6 +4,8 @@
 
 #include "UR_FunctionLibrary.h"
 
+#include <UObject/UObjectIterator.h>
+
 #include "Engine/Engine.h"
 #include "GameFramework/GameStateBase.h"
 #include "Internationalization/Regex.h"
@@ -17,6 +19,7 @@
 #include "Components/Widget.h"
 #include "Components/PanelWidget.h"
 #include "Components/MeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 
 #include "UR_GameModeBase.h"
 #include "UR_PlayerController.h"
