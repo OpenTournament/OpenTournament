@@ -17,7 +17,7 @@ void UUR_FireModeZoom::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     //TODO: this should only replicate to spectators if possible
-    DOREPLIFETIME_CONDITION(UUR_FireModeZoom, bZooming, COND_SkipOwner);
+    DOREPLIFETIME_CONDITION(ThisClass, bZooming, COND_SkipOwner);
 }
 
 template<class T> T* UUR_FireModeZoom::GetInstigator()

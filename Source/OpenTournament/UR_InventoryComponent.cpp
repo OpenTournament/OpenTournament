@@ -27,9 +27,9 @@ void UUR_InventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(UUR_InventoryComponent, WeaponArray, COND_OwnerOnly);
-    DOREPLIFETIME_CONDITION(UUR_InventoryComponent, AmmoArray, COND_OwnerOnly);
-    DOREPLIFETIME_CONDITION(UUR_InventoryComponent, DesiredWeapon, COND_SkipOwner);
+    DOREPLIFETIME_CONDITION(ThisClass, WeaponArray, COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(ThisClass, AmmoArray, COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(ThisClass, DesiredWeapon, COND_SkipOwner);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -333,7 +333,7 @@ void UUR_InventoryComponent::SetActiveWeapon(AUR_Weapon* InWeapon)
 
     if (ActiveWeapon)
     {
-        ActiveWeapon->OnWeaponStateChanged.RemoveDynamic(this, &UUR_InventoryComponent::OnActiveWeaponStateChanged);
+        ActiveWeapon->OnWeaponStateChanged.RemoveDynamic(this, &ThisClass::OnActiveWeaponStateChanged);
 
         if (ActiveWeapon->WeaponState > EWeaponState::Holstered)
         {
@@ -348,7 +348,7 @@ void UUR_InventoryComponent::SetActiveWeapon(AUR_Weapon* InWeapon)
     {
         ActiveWeapon = InWeapon;
         ActiveWeapon->RequestBringUp();
-        ActiveWeapon->OnWeaponStateChanged.AddUniqueDynamic(this, &UUR_InventoryComponent::OnActiveWeaponStateChanged);
+        ActiveWeapon->OnWeaponStateChanged.AddUniqueDynamic(this, &ThisClass::OnActiveWeaponStateChanged);
     }
 
     OnActiveWeaponChanged.Broadcast(this, ActiveWeapon, OldActive);

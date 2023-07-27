@@ -4,6 +4,8 @@
 
 #include "UR_Pickup.h"
 
+#include <Engine/World.h>
+
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -27,7 +29,7 @@ AUR_Pickup::AUR_Pickup(const FObjectInitializer& ObjectInitializer) :
     CollisionComponent->SetCapsuleSize(20.f, 20.f, true);
     CollisionComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
     CollisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-    CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Pickup::OnOverlap);
+    CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnOverlap);
     CollisionComponent->SetGenerateOverlapEvents(true);
 
     RootComponent = CollisionComponent;
@@ -122,10 +124,10 @@ bool AUR_Pickup::IsPermittedByGameplayTags(const FGameplayTagContainer& TargetTa
 * We should also take into account that the pickups that need to be broadcasted globally are only a small fraction of them.
 * Example: When picking up ODamage, all spectators should see "X got ODamage" and we might also want an ingame announcement.
 * However when picking up vials, weapons, or ammo, nobody cares except recipient and his direct spectators.
-* 
+*
 * Therefore for standard pickups we could stick to standard multicast, that would trigger only on relevant clients.
 * It would trigger Recipient->PickupEvent (a character event, not a gamestate event), to be primarily used for UI pickup message.
-* 
+*
 * And then for specific pickups (powerups) we can add a second replication path for global pickup announcements through gamestate.
 * This other path however will not have the Pickup object available due to possible lack of relevance, so we pass the class.
 * As stated above passing the class prevents runtime customizability, but then again globally-announced pickups are sparse so it's a good compromise.

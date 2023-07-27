@@ -23,8 +23,8 @@ AUR_PlayerState::AUR_PlayerState()
     TeamIndex = -1;
     ReplicatedTeamIndex = -1;
 
-    OnPawnSet.AddUniqueDynamic(this, &AUR_PlayerState::InternalOnPawnSet);
-    OnTeamChanged.AddUniqueDynamic(this, &AUR_PlayerState::InternalOnTeamChanged);
+    OnPawnSet.AddUniqueDynamic(this, &ThisClass::InternalOnPawnSet);
+    OnTeamChanged.AddUniqueDynamic(this, &ThisClass::InternalOnTeamChanged);
 }
 
 void AUR_PlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -34,14 +34,14 @@ void AUR_PlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
     FDoRepLifetimeParams Params;
     Params.bIsPushBased = true;
 
-    DOREPLIFETIME_WITH_PARAMS_FAST(AUR_PlayerState, Kills, Params);
-    DOREPLIFETIME_WITH_PARAMS_FAST(AUR_PlayerState, Deaths, Params);
-    DOREPLIFETIME_WITH_PARAMS_FAST(AUR_PlayerState, Suicides, Params);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Kills, Params);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Deaths, Params);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Suicides, Params);
 
-    DOREPLIFETIME_WITH_PARAMS_FAST(AUR_PlayerState, CharacterCustomization, Params);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CharacterCustomization, Params);
 
     Params.RepNotifyCondition = REPNOTIFY_OnChanged;
-    DOREPLIFETIME_WITH_PARAMS_FAST(AUR_PlayerState, ReplicatedTeamIndex, Params);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ReplicatedTeamIndex, Params);
 }
 
 void AUR_PlayerState::BeginPlay()

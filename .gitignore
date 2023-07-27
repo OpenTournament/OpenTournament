@@ -79,6 +79,15 @@ Source/SK_Mannequin_A_Pose_README.txt
 Source/SK_Mannequin_T_Pose_README.txt
 Source/UE4_MocapOnline_Tech_Notes.txt
 
+# Ignore These Asset Packs
+Content/AdvancedMagicFX12
+Content/AdvancedMagicFX13
+Content/BigNiagaraBundle
+Content/CharacterBodyFX
+Content/RPGEffects
+Content/sA_MegaPack_v1
+Content/sA_PickupSet_1
+
 # Ignore Source File Formats
 *.tga
 

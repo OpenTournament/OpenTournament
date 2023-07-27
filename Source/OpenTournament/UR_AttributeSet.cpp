@@ -29,17 +29,17 @@ void UUR_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(UUR_AttributeSet, Health);
-    DOREPLIFETIME(UUR_AttributeSet, HealthMax);
-    DOREPLIFETIME(UUR_AttributeSet, OverHealth);
-    DOREPLIFETIME(UUR_AttributeSet, OverHealthMax);
-    DOREPLIFETIME(UUR_AttributeSet, Energy);
-    DOREPLIFETIME(UUR_AttributeSet, EnergyMax);
-    DOREPLIFETIME(UUR_AttributeSet, Armor);
-    DOREPLIFETIME(UUR_AttributeSet, ArmorMax);
-    DOREPLIFETIME(UUR_AttributeSet, ArmorAbsorptionPercent);
-    DOREPLIFETIME(UUR_AttributeSet, Shield);
-    DOREPLIFETIME(UUR_AttributeSet, ShieldMax);
+    DOREPLIFETIME(ThisClass, Health);
+    DOREPLIFETIME(ThisClass, HealthMax);
+    DOREPLIFETIME(ThisClass, OverHealth);
+    DOREPLIFETIME(ThisClass, OverHealthMax);
+    DOREPLIFETIME(ThisClass, Energy);
+    DOREPLIFETIME(ThisClass, EnergyMax);
+    DOREPLIFETIME(ThisClass, Armor);
+    DOREPLIFETIME(ThisClass, ArmorMax);
+    DOREPLIFETIME(ThisClass, ArmorAbsorptionPercent);
+    DOREPLIFETIME(ThisClass, Shield);
+    DOREPLIFETIME(ThisClass, ShieldMax);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

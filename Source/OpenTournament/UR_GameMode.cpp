@@ -318,7 +318,7 @@ void AUR_GameMode::HandleMatchHasStarted()
         if (TimeLimit > 0)
         {
             GS->SetTimeLimit(TimeLimit);
-            GS->OnTimeUp.AddUniqueDynamic(this, &AUR_GameMode::OnMatchTimeUp);
+            GS->OnTimeUp.AddUniqueDynamic(this, &ThisClass::OnMatchTimeUp);
         }
         else
         {
@@ -332,7 +332,7 @@ void AUR_GameMode::HandleMatchHasStarted()
 void AUR_GameMode::OnMatchTimeUp_Implementation(AUR_GameState* GS)
 {
     // Unbind match delegate
-    GS->OnTimeUp.RemoveDynamic(this, &AUR_GameMode::OnMatchTimeUp);
+    GS->OnTimeUp.RemoveDynamic(this, &ThisClass::OnMatchTimeUp);
 
     if (!CheckEndGame(nullptr))
     {
@@ -343,7 +343,7 @@ void AUR_GameMode::OnMatchTimeUp_Implementation(AUR_GameState* GS)
         if (OvertimeExtraTime > 0)
         {
             GS->SetTimeLimit(OvertimeExtraTime);
-            GS->OnTimeUp.AddUniqueDynamic(this, &AUR_GameMode::OnMatchTimeUp);
+            GS->OnTimeUp.AddUniqueDynamic(this, &ThisClass::OnMatchTimeUp);
         }
         else
         {
@@ -662,12 +662,12 @@ void AUR_GameMode::HandleMatchHasEnded()
 
     if (GS)
     {
-        GS->OnTimeUp.RemoveDynamic(this, &AUR_GameMode::OnMatchTimeUp);
+        GS->OnTimeUp.RemoveDynamic(this, &ThisClass::OnMatchTimeUp);
         //NOTE: This system is a bit dangerous, we might change state completely and forget some TimeUp handlers.
         // It might be a good thing to clear all listeners whenever GS->SetTimeLimit is called.
         // Or something like that.
         GS->SetTimeLimit(10);
-        GS->OnTimeUp.AddUniqueDynamic(this, &AUR_GameMode::OnEndGameTimeUp);
+        GS->OnTimeUp.AddUniqueDynamic(this, &ThisClass::OnEndGameTimeUp);
     }
 }
 

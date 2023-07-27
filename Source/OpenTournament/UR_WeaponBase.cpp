@@ -4,6 +4,8 @@
 
 #include "UR_WeaponBase.h"
 
+#include <Engine/World.h>
+
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 

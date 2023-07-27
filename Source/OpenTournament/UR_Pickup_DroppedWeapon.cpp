@@ -23,7 +23,7 @@ void AUR_Pickup_DroppedWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(AUR_Pickup_DroppedWeapon, Weapon, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ThisClass, Weapon, COND_InitialOnly);
 }
 
 void AUR_Pickup_DroppedWeapon::SetWeapon(AUR_Weapon* InWeapon)
@@ -34,7 +34,7 @@ void AUR_Pickup_DroppedWeapon::SetWeapon(AUR_Weapon* InWeapon)
     {
         Weapon->SetWeaponState(EWeaponState::Dropped);
 
-        Weapon->GetMesh3P()->AttachToComponent(StaticMesh, FAttachmentTransformRules::SnapToTargetIncludingScale);
+        //Weapon->GetMesh3P()->AttachToComponent(StaticMesh, FAttachmentTransformRules::SnapToTargetIncludingScale);
         Weapon->GetMesh3P()->SetWorldRotation(FRotator(0.f, Weapon->GetMesh3P()->GetComponentRotation().Yaw, 0.f));
         Weapon->ToggleGeneralVisibility(true);
 
@@ -53,7 +53,7 @@ bool AUR_Pickup_DroppedWeapon::OnPickup_Implementation(AUR_Character* PickupChar
             Weapon->GiveTo(PickupCharacter);
         }
 
-        Weapon = NULL;  // don't destroy!
+        Weapon = nullptr;  // don't destroy!
         return true;
     }
     return false;
@@ -64,7 +64,7 @@ void AUR_Pickup_DroppedWeapon::Destroyed()
     if (Weapon)
     {
         Weapon->Destroy();
-        Weapon = NULL;
+        Weapon = nullptr;
     }
 
     Super::Destroyed();

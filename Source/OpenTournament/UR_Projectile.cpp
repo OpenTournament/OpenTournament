@@ -26,8 +26,8 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
     CollisionComponent->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
     CollisionComponent->SetGenerateOverlapEvents(true);
     CollisionComponent->InitSphereRadius(15.0f);
-    CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Projectile::OnOverlap);
-    CollisionComponent->OnComponentHit.AddDynamic(this, &AUR_Projectile::OnHit);
+    CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnOverlap);
+    CollisionComponent->OnComponentHit.AddDynamic(this, &ThisClass::OnHit);
     bIgnoreInstigator = true;
     bCollideInstigatorAfterBounce = true;
 
@@ -73,7 +73,7 @@ void AUR_Projectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(AUR_Projectile, ServerExplosionInfo, COND_None);
+    DOREPLIFETIME_CONDITION(ThisClass, ServerExplosionInfo, COND_None);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +86,7 @@ void AUR_Projectile::BeginPlay()
 
     if (ProjectileMovementComponent->bShouldBounce)
     {
-        ProjectileMovementComponent->OnProjectileBounce.AddDynamic(this, &AUR_Projectile::OnBounceInternal);
+        ProjectileMovementComponent->OnProjectileBounce.AddDynamic(this, &ThisClass::OnBounceInternal);
     }
 }
 

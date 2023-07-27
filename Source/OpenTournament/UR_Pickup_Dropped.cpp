@@ -27,7 +27,7 @@ AUR_Pickup_Dropped::AUR_Pickup_Dropped(const FObjectInitializer& ObjectInitializ
     ProjectileMovementComponent->InitialSpeed = 1100.0f;
     ProjectileMovementComponent->MaxSpeed = 1100.0f;
     ProjectileMovementComponent->ProjectileGravityScale = 1.f;
-    ProjectileMovementComponent->OnProjectileStop.AddDynamic(this, &AUR_Pickup_Dropped::OnProjectileStop);
+    ProjectileMovementComponent->OnProjectileStop.AddDynamic(this, &ThisClass::OnProjectileStop);
 
     InitialLifeSpan = 10.f;
     RemainingLifeSpan = -1;
@@ -42,7 +42,7 @@ void AUR_Pickup_Dropped::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(AUR_Pickup_Dropped, RemainingLifeSpan, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ThisClass, RemainingLifeSpan, COND_InitialOnly);
 }
 
 void AUR_Pickup_Dropped::BeginPlay()
@@ -99,7 +99,7 @@ void AUR_Pickup_Dropped::Tick(float DeltaTime)
     }
 }
 
-bool AUR_Pickup_Dropped::IsPickupPermitted(const AUR_Character* PickupCharacter) const 
+bool AUR_Pickup_Dropped::IsPickupPermitted(const AUR_Character* PickupCharacter) const
 {
     // If pickup was dropped by someone, do not allow owner to pick it during a delay (must be short enough to allow juggling tho)
     if ((AActor*)PickupCharacter == GetOwner() && GetWorld()->TimeSince(CreatedAt) < 0.8f)

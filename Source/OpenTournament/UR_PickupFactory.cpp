@@ -4,6 +4,7 @@
 
 #include "UR_PickupFactory.h"
 
+#include <Engine/World.h>
 #include "Net/UnrealNetwork.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -45,10 +46,10 @@ AUR_PickupFactory::AUR_PickupFactory()
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 
     // NOTE: Cannot point to RootComponent here or it is impossible to override in BP construction script.
-    AttachComponent = NULL;
+    AttachComponent = nullptr;
 
     EditorPreview = CreateEditorOnlyDefaultSubobject<UStaticMeshComponent>(TEXT("EditorPreview"), true);
-    if (EditorPreview != NULL)
+    if (EditorPreview != nullptr)
     {
         EditorPreview->SetupAttachment(RootComponent);
         EditorPreview->SetHiddenInGame(true);
@@ -94,7 +95,7 @@ void AUR_PickupFactory::OnConstruction(const FTransform& Transform)
             }
         }
         //else
-        EditorPreview->SetStaticMesh(NULL);
+        EditorPreview->SetStaticMesh(nullptr);
         EditorPreview->OverrideMaterials.Empty();
         EditorPreview->SetRelativeScale3D(FVector(1, 1, 1));
         SetupEditorPreview(EditorPreview);
@@ -105,8 +106,8 @@ void AUR_PickupFactory::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(AUR_PickupFactory, PickupClass, COND_InitialOnly);
-    DOREPLIFETIME_CONDITION(AUR_PickupFactory, Pickup, COND_None);
+    DOREPLIFETIME_CONDITION(ThisClass, PickupClass, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ThisClass, Pickup, COND_None);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -142,7 +143,10 @@ void AUR_PickupFactory::Reset()
             Pickup->Destroy();
         }
 
-        GetWorld()->GetTimerManager().ClearTimer(RespawnTimerHandle);
+        if (auto World = GetWorld())
+        {
+            World->GetTimerManager().ClearTimer(RespawnTimerHandle);
+        }
 
         BeginRespawnTimer(InitialSpawnDelay);
     }
@@ -159,7 +163,7 @@ void AUR_PickupFactory::BeginRespawnTimer(float InRespawnTime)
         const float PreRespawnTime = InRespawnTime - PreRespawnEffectDuration;
         if (PreRespawnTime > 0.f)
         {
-            GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &AUR_PickupFactory::PreRespawnTimer, PreRespawnTime, false);
+            GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &ThisClass::PreRespawnTimer, PreRespawnTime, false);
         }
         else
         {
@@ -170,7 +174,7 @@ void AUR_PickupFactory::BeginRespawnTimer(float InRespawnTime)
     {
         // Force a frame to avoid pickup-loop problem
         GetWorld()->GetTimerManager().ClearTimer(RespawnTimerHandle);
-        RespawnTimerHandle = GetWorld()->GetTimerManager().SetTimerForNextTick(this, &AUR_PickupFactory::RespawnTimer);
+        RespawnTimerHandle = GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::RespawnTimer);
         // TODO: Might want to come up with something better, as this will spam network heavily.
         // Eg. instant respawn under player's feet but without giving it to him unless he goes out and back in.
         // But that's harder to do with pickup as a separate class.
@@ -204,8 +208,8 @@ void AUR_PickupFactory::SpawnPickup()
         return;
     }
 
-    Pickup->OnPickedUp.AddDynamic(this, &AUR_PickupFactory::OnPickupPickedUp);
-    Pickup->OnDestroyed.AddDynamic(this, &AUR_PickupFactory::OnPickupDestroyed);
+    Pickup->OnPickedUp.AddDynamic(this, &ThisClass::OnPickupPickedUp);
+    Pickup->OnDestroyed.AddDynamic(this, &ThisClass::OnPickupDestroyed);
 
     // Blueprint init properties here
     PreInitializePickup(Pickup, Transform);
@@ -253,8 +257,8 @@ void AUR_PickupFactory::OnPickupPickedUp_Implementation(AUR_Pickup* Other, APawn
 {
     if (Other == Pickup)
     {
-        Pickup->OnDestroyed.RemoveDynamic(this, &AUR_PickupFactory::OnPickupDestroyed);
-        SetPickup(NULL);
+        Pickup->OnDestroyed.RemoveDynamic(this, &ThisClass::OnPickupDestroyed);
+        SetPickup(nullptr);
         BeginRespawnTimer(RespawnTime);
     }
 }
@@ -314,7 +318,7 @@ void AUR_PickupFactory::OnPickupDestroyed(AActor* DestroyedActor)
 {
     if (DestroyedActor == Pickup)
     {
-        SetPickup(NULL);
+        SetPickup(nullptr);
     }
 }
 
