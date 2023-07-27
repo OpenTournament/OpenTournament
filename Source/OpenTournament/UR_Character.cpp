@@ -141,9 +141,9 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(AUR_Character, DodgeDirection);
-    DOREPLIFETIME(AUR_Character, InventoryComponent);
-    DOREPLIFETIME(AUR_Character, AbilitySystemComponent);
+    DOREPLIFETIME(ThisClass, DodgeDirection);
+    DOREPLIFETIME(ThisClass, InventoryComponent);
+    DOREPLIFETIME(ThisClass, AbilitySystemComponent);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

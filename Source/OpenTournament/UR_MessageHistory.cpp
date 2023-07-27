@@ -33,27 +33,27 @@ UUR_MessageHistory::UUR_MessageHistory()
 
 void UUR_MessageHistory::InitWithPlayer(AUR_PlayerController* PC)
 {
-    PC->ChatComponent->OnReceiveChatMessage.AddUniqueDynamic(this, &UUR_MessageHistory::OnReceiveChatMessage);
+    PC->ChatComponent->OnReceiveChatMessage.AddUniqueDynamic(this, &ThisClass::OnReceiveChatMessage);
 
-    PC->OnReceiveSystemMessage.AddUniqueDynamic(this, &UUR_MessageHistory::OnReceiveSystemMessage);
+    PC->OnReceiveSystemMessage.AddUniqueDynamic(this, &ThisClass::OnReceiveSystemMessage);
 
     // Listen to gamestate events
     // NOTE: there should be only one gamestate at a time so no need to unbind previous
-    GetWorld()->GameStateSetEvent.AddUObject(this, &UUR_MessageHistory::OnGameStateCreated);
+    GetWorld()->GameStateSetEvent.AddUObject(this, &ThisClass::OnGameStateCreated);
     OnGameStateCreated(GetWorld()->GetGameState());
 
     // Bind ViewTarget event so we can listen to events within the viewed character
-    PC->OnViewTargetChanged.AddUniqueDynamic(this, &UUR_MessageHistory::OnViewTargetChanged);
-    OnViewTargetChanged(PC, PC->GetViewTarget(), NULL);
+    PC->OnViewTargetChanged.AddUniqueDynamic(this, &ThisClass::OnViewTargetChanged);
+    OnViewTargetChanged(PC, PC->GetViewTarget(), nullptr);
 }
 
 void UUR_MessageHistory::OnGameStateCreated(AGameStateBase* GS)
 {
     if (AUR_GameState* URGS = Cast<AUR_GameState>(GS))
     {
-        URGS->OnMatchStateTagChanged.AddUniqueDynamic(this, &UUR_MessageHistory::OnMatchStateTagChanged);
-        URGS->FragEvent.AddUniqueDynamic(this, &UUR_MessageHistory::OnFrag);
-        URGS->PickupEvent.AddUniqueDynamic(this, &UUR_MessageHistory::OnGlobalPickup);
+        URGS->OnMatchStateTagChanged.AddUniqueDynamic(this, &ThisClass::OnMatchStateTagChanged);
+        URGS->FragEvent.AddUniqueDynamic(this, &ThisClass::OnFrag);
+        URGS->PickupEvent.AddUniqueDynamic(this, &ThisClass::OnGlobalPickup);
     }
 }
 
@@ -61,11 +61,11 @@ void UUR_MessageHistory::OnViewTargetChanged(class AUR_BasePlayerController* PC,
 {
     if (auto OldChar = Cast<AUR_Character>(OldVT))
     {
-        OldChar->PickupEvent.RemoveDynamic(this, &UUR_MessageHistory::OnCharacterPickup);
+        OldChar->PickupEvent.RemoveDynamic(this, &ThisClass::OnCharacterPickup);
     }
     if (auto NewChar = Cast<AUR_Character>(NewVT))
     {
-        NewChar->PickupEvent.AddUniqueDynamic(this, &UUR_MessageHistory::OnCharacterPickup);
+        NewChar->PickupEvent.AddUniqueDynamic(this, &ThisClass::OnCharacterPickup);
     }
 }
 

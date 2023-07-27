@@ -4,6 +4,8 @@
 
 #include "UR_JumpPad.h"
 
+#include <Engine/World.h>
+
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SceneComponent.h"
@@ -58,7 +60,7 @@ AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
     CapsuleComponent->SetGenerateOverlapEvents(true);
     CapsuleComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
     CapsuleComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-    CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_JumpPad::OnTriggerEnter);
+    CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnTriggerEnter);
 
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMeshComponent"));
     MeshComponent->SetupAttachment(RootComponent);
@@ -255,7 +257,7 @@ void AUR_JumpPad::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
         SplineProjectionDuration = JumpDuration;
         UpdateSpline();
     }
-    
+
     if (PropertyName == GET_MEMBER_NAME_CHECKED(AUR_JumpPad, Destination)
         || PropertyName == GET_MEMBER_NAME_CHECKED(AUR_JumpPad, SplineProjectionDuration))
     {

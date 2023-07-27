@@ -50,8 +50,8 @@ void AUR_TriggerZone::PostInitializeComponents()
 
     if (ShapeComponent)
     {
-        ShapeComponent->OnComponentBeginOverlap.AddUniqueDynamic(this, &AUR_TriggerZone::OnZoneEnter);
-        ShapeComponent->OnComponentEndOverlap.AddUniqueDynamic(this, &AUR_TriggerZone::OnZoneExit);
+        ShapeComponent->OnComponentBeginOverlap.AddUniqueDynamic(this, &ThisClass::OnZoneEnter);
+        ShapeComponent->OnComponentEndOverlap.AddUniqueDynamic(this, &ThisClass::OnZoneExit);
     }
 }
 
@@ -135,7 +135,7 @@ bool AUR_TriggerZone::IsTriggerActor_Implementation(const AActor* InActor) const
 
         return IsTriggerByGameplayTags(TargetTags);
     }
-    
+
     return true;
 }
 
@@ -159,13 +159,13 @@ bool AUR_TriggerZone::CanEditChange(const FProperty* InProperty) const
     const bool ParentVal = Super::CanEditChange(InProperty);
 
     // Can we edit bRequiredTagsExact?
-    if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_TriggerZone, bRequiredTagsExact))
+    if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(ThisClass, bRequiredTagsExact))
     {
         return RequiredTags.Num() > 0;
     }
 
     // Can we edit bExcludedTagsExact?
-    if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_TriggerZone, bExcludedTagsExact))
+    if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(ThisClass, bExcludedTagsExact))
     {
         return ExcludedTags.Num() > 0;
     }

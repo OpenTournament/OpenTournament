@@ -25,10 +25,10 @@ void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(AUR_GameState, TimeLimit);
-    DOREPLIFETIME(AUR_GameState, ClockReferencePoint);
-    DOREPLIFETIME(AUR_GameState, MatchStateTag);
-    DOREPLIFETIME(AUR_GameState, Winner);
+    DOREPLIFETIME(ThisClass, TimeLimit);
+    DOREPLIFETIME(ThisClass, ClockReferencePoint);
+    DOREPLIFETIME(ThisClass, MatchStateTag);
+    DOREPLIFETIME(ThisClass, Winner);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ void AUR_GameState::MulticastMatchStateTag_Implementation(const FGameplayTag& Ne
 void AUR_GameState::OnRep_MatchState()
 {
     OnMatchStateChanged.Broadcast(this);
-    
+
     Super::OnRep_MatchState();
 }
 

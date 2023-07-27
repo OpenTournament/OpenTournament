@@ -28,7 +28,7 @@ void AUR_Ammo::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetime
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(AUR_Ammo, AmmoCount, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(ThisClass, AmmoCount, COND_OwnerOnly);
 }
 
 void AUR_Ammo::StackAmmo(int32 InAmount, AUR_Weapon* FromWeapon)

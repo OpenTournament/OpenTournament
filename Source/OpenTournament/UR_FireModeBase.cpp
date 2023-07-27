@@ -11,7 +11,7 @@ void UUR_FireModeBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(UUR_FireModeBase, bIsSpinningUpRep, COND_SkipOwner);
+    DOREPLIFETIME_CONDITION(ThisClass, bIsSpinningUpRep, COND_SkipOwner);
 }
 
 void UUR_FireModeBase::SetBusy(bool bNewBusy)
