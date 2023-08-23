@@ -1,8 +1,0 @@
-{
-	"BuildId": "17155196",
-	"Modules": 
-	{
-		"UModsEditor": "UE4Editor-UModsEditor.dll",
-		"UModsRuntime": "UE4Editor-UModsRuntime.dll"
-	}
-}
