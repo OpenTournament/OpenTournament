@@ -16,6 +16,7 @@ public class OpenTournament : ModuleRules
                 "Core",
                 "CoreUObject",
                 "DataValidation",
+				        "DeveloperSettings",
                 "Engine",
                 "EngineSettings",
                 "InputCore",
@@ -35,6 +36,12 @@ public class OpenTournament : ModuleRules
             }
         );
 
+		PrivateDependencyModuleNames.AddRange(
+			new string[] {
+				"GameplayMessageRuntime"
+			}
+		);
+		
         // Reference:
         // https://docs.unrealengine.com/en-US/Programming/BuildTools/UnrealBuildTool/ModuleFiles/index.html
         PublicIncludePaths.AddRange

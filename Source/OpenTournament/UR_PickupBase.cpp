@@ -4,6 +4,8 @@
 
 #include "UR_PickupBase.h"
 
+#include <Engine/World.h>
+
 #include "Net/UnrealNetwork.h"
 #include "Components/SceneComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -56,7 +58,7 @@ AUR_PickupBase::AUR_PickupBase()
     CapsuleComponent->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
     CapsuleComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
     CapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-    CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_PickupBase::OnBeginOverlap);
+    CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnBeginOverlap);
 
     RotatingComponent = nullptr;
     RotationRate = 180;
@@ -81,7 +83,7 @@ void AUR_PickupBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(AUR_PickupBase, bRepInitialPickupAvailable, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ThisClass, bRepInitialPickupAvailable, COND_InitialOnly);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

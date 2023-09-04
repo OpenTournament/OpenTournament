@@ -22,7 +22,7 @@ UUR_Widget_KeyBindingMenu::UUR_Widget_KeyBindingMenu(const FObjectInitializer& O
     Super(ObjectInitializer),
     OwningPlayer(nullptr)
 {
-    
+
 }
 
 //Should check these again when we decide how our menu system will work
@@ -52,7 +52,7 @@ void UUR_Widget_KeyBindingMenu::NativeOnInitialized()
 
     if (CloseButton != nullptr)
     {
-        CloseButton->OnClicked.AddDynamic(this, &UUR_Widget_KeyBindingMenu::OnCloseButtonClicked);
+        CloseButton->OnClicked.AddDynamic(this, &ThisClass::OnCloseButtonClicked);
     }
     else
     {

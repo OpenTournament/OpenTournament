@@ -25,7 +25,7 @@ UUR_Widget_BaseMenu::UUR_Widget_BaseMenu(const FObjectInitializer& ObjectInitial
 	// In case we are making a dialog/popup -like thing (not full screen),
 	// make sure to at least add a full screen invisible border in the background.
 	// In these cases anyways it is good practice to cover the background with a shade at least.
-	bIsFocusable = true;
+    SetIsFocusable(true);
 }
 
 void UUR_Widget_BaseMenu::Show(UWidget* InParentMenu)

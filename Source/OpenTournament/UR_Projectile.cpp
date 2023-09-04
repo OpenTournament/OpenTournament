@@ -4,6 +4,9 @@
 
 #include "UR_Projectile.h"
 
+#include <Engine/World.h>
+#include <GameFramework/Pawn.h>
+
 #include "Components/AudioComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -23,8 +26,8 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
     CollisionComponent->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
     CollisionComponent->SetGenerateOverlapEvents(true);
     CollisionComponent->InitSphereRadius(15.0f);
-    CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Projectile::OnOverlap);
-    CollisionComponent->OnComponentHit.AddDynamic(this, &AUR_Projectile::OnHit);
+    CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnOverlap);
+    CollisionComponent->OnComponentHit.AddDynamic(this, &ThisClass::OnHit);
     bIgnoreInstigator = true;
     bCollideInstigatorAfterBounce = true;
 
@@ -70,7 +73,7 @@ void AUR_Projectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(AUR_Projectile, ServerExplosionInfo, COND_None);
+    DOREPLIFETIME_CONDITION(ThisClass, ServerExplosionInfo, COND_None);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +86,7 @@ void AUR_Projectile::BeginPlay()
 
     if (ProjectileMovementComponent->bShouldBounce)
     {
-        ProjectileMovementComponent->OnProjectileBounce.AddDynamic(this, &AUR_Projectile::OnBounceInternal);
+        ProjectileMovementComponent->OnProjectileBounce.AddDynamic(this, &ThisClass::OnBounceInternal);
     }
 }
 
@@ -106,7 +109,7 @@ void AUR_Projectile::OnOverlap_Implementation(UPrimitiveComponent* OverlappedCom
         {
             DealPointDamage(OtherActor, SweepResult);
         }
-        
+
         Explode(bFromSweep ? FVector(SweepResult.Location.X, SweepResult.Location.Y, SweepResult.Location.Z) : GetActorLocation(), SweepResult.ImpactNormal);
     }
 }
@@ -114,7 +117,7 @@ void AUR_Projectile::OnOverlap_Implementation(UPrimitiveComponent* OverlappedCom
 bool AUR_Projectile::OverlapShouldExplodeOn_Implementation(AActor* Other)
 {
     //NOTE: here we can implement team projectiles going through teammates
-    return Other && Other->CanBeDamaged() && (!bIgnoreInstigator || Other != GetInstigator());
+    return Other && Other->CanBeDamaged() && (!bIgnoreInstigator || Other != Cast<APawn>(GetInstigator()));
 }
 
 void AUR_Projectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
@@ -236,10 +239,13 @@ void AUR_Projectile::OnRep_ServerExplosionInfo()
     //UKismetSystemLibrary::PrintString(this, TEXT("OnRep_ServerExplosionInfo"));
 
     // If we received server explosion later than 200ms after exploding on client
-    if (GetWorld()->TimeSince(ClientExplosionTime) > 0.200f)
+    if (auto World = GetWorld())
     {
-        // Play explosion again
-        Explode(ServerExplosionInfo.HitLocation, ServerExplosionInfo.HitNormal);
+        if (World->TimeSince(ClientExplosionTime) > 0.200f)
+        {
+            // Play explosion again
+            Explode(ServerExplosionInfo.HitLocation, ServerExplosionInfo.HitNormal);
+        }
     }
 
     // Either way, stop simulating and wait for server destruction (client cannot destroy networked actor).

@@ -68,7 +68,7 @@ void AUR_Weapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(AUR_Weapon, AmmoRefs, COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(ThisClass, AmmoRefs, COND_OwnerOnly);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

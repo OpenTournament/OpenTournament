@@ -38,8 +38,8 @@ AUR_ControlPoint::AUR_ControlPoint(const FObjectInitializer& ObjectInitializer) 
     if (TriggerZone)
     {
         TriggerZone->TriggerActorClass = TriggerZoneActorClass;
-        TriggerZone->OnActorEnter.AddDynamic(this, &AUR_ControlPoint::ActorEnter);
-        TriggerZone->OnActorExit.AddDynamic(this, &AUR_ControlPoint::ActorExit);
+        TriggerZone->OnActorEnter.AddDynamic(this, &ThisClass::ActorEnter);
+        TriggerZone->OnActorExit.AddDynamic(this, &ThisClass::ActorExit);
     }
 }
 
@@ -54,8 +54,8 @@ void AUR_ControlPoint::PostInitializeComponents()
 
     if (TriggerZone)
     {
-        TriggerZone->OnActorEnter.AddUniqueDynamic(this, &AUR_ControlPoint::ActorEnter);
-        TriggerZone->OnActorExit.AddUniqueDynamic(this, &AUR_ControlPoint::OnActorExit);
+        TriggerZone->OnActorEnter.AddUniqueDynamic(this, &ThisClass::ActorEnter);
+        TriggerZone->OnActorExit.AddUniqueDynamic(this, &ThisClass::OnActorExit);
     }
 }
 
@@ -135,7 +135,7 @@ void AUR_ControlPoint::OnPointContested_Implementation(AActor* TargetActor)
 }
 
 void AUR_ControlPoint::OnPointUncontested_Implementation(AActor* TargetActor)
-{    
+{
     // Noop currently. Stub for mesh, audio, and SFX
 }
 

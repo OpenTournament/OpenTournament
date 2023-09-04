@@ -12,6 +12,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameplayTagsManager.h"
 #include "Components/CapsuleComponent.h"
+#include <Components/SkeletalMeshComponent.h>
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Perception/AISense_Sight.h"
@@ -140,9 +141,9 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(AUR_Character, DodgeDirection);
-    DOREPLIFETIME(AUR_Character, InventoryComponent);
-    DOREPLIFETIME(AUR_Character, AbilitySystemComponent);
+    DOREPLIFETIME(ThisClass, DodgeDirection);
+    DOREPLIFETIME(ThisClass, InventoryComponent);
+    DOREPLIFETIME(ThisClass, AbilitySystemComponent);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

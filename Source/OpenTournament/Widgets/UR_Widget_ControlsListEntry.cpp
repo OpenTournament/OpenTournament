@@ -28,8 +28,8 @@ UUR_Widget_ControlsListEntry::UUR_Widget_ControlsListEntry(const FObjectInitiali
 void UUR_Widget_ControlsListEntry::NativeConstruct()
 {
     Super::NativeConstruct();
-    EntryKeySelector->OnIsSelectingKeyChanged.AddDynamic(this, &UUR_Widget_ControlsListEntry::OnEntryKeySelectorIsSelectingKeyChanged);
-    EntryKeySelector->OnKeySelected.AddDynamic(this, &UUR_Widget_ControlsListEntry::OnEntryKeySelectorKeyChanged);
+    EntryKeySelector->OnIsSelectingKeyChanged.AddDynamic(this, &ThisClass::OnEntryKeySelectorIsSelectingKeyChanged);
+    EntryKeySelector->OnKeySelected.AddDynamic(this, &ThisClass::OnEntryKeySelectorKeyChanged);
 
     //LOCTABLE_FROMFILE_GAME("KeyBindingStringTable", "KeyBindingStringTable", "OpenTournament/StringTables/ST_KeyBindingNames.csv");
 }

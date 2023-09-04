@@ -30,11 +30,11 @@ void AUR_TeamInfo::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(AUR_TeamInfo, TeamIndex, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ThisClass, TeamIndex, COND_InitialOnly);
 
     FDoRepLifetimeParams Params;
     Params.bIsPushBased = true;
-    DOREPLIFETIME_WITH_PARAMS_FAST(AUR_TeamInfo, Score, Params);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Score, Params);
 }
 
 void AUR_TeamInfo::BeginPlay()
