@@ -2,6 +2,7 @@
 
 > Important: If you cloned this repository prior to 2-Aug-20, please make sure you have git lfs installed and re-clone to a new location 
 
+> Important: If you are cloning this repository to contribute, please ensure to utilize the `unstable` branch as the base as this is the most currently up-to-date branch
 
 
 ## Overview
