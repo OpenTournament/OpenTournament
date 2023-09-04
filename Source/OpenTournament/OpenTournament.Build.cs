@@ -15,7 +15,8 @@ public class OpenTournament : ModuleRules
             {
                 "Core",
                 "CoreUObject",
-				"DeveloperSettings",
+                "DataValidation",
+				        "DeveloperSettings",
                 "Engine",
                 "EngineSettings",
                 "InputCore",
