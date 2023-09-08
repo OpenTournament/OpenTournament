@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "NavigationSystem/Public/NavLinkCustomComponent.h"
+#include <NavLinkCustomComponent.h>
 
 #include "NavLinkCustomNativeComp.generated.h"
 

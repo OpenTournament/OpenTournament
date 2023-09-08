@@ -4,6 +4,8 @@
 
 #include "UR_FunctionLibrary.h"
 
+#include <Components/SkeletalMeshComponent.h>
+#include <Components/SkinnedMeshComponent.h>
 #include <UObject/UObjectIterator.h>
 
 #include "Engine/Engine.h"

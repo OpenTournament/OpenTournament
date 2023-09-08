@@ -69,7 +69,8 @@ public:
     template<typename TEnum>
     static FORCEINLINE FString GetEnumValueAsString(const FString& Name, TEnum Value)
     {
-        const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, *Name, true);
+        // ANY_PACKAGE
+        const UEnum* EnumPtr = FindObject<UEnum>(nullptr, *Name, true);
         if (!EnumPtr)
         {
             return FString("Invalid");

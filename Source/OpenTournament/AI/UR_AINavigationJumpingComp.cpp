@@ -4,12 +4,14 @@
 
 #include "UR_AINavigationJumpingComp.h"
 
+#include <KismetTraceUtils.h>
+
 #include "AIController.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
-#include "Engine/Private/KismetTraceUtils.h"
+#include <KismetTraceUtils.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -101,7 +103,7 @@ void UUR_AINavigationJumpingComp::CheckJump()
     const FCollisionShape Capsule = FCollisionShape::MakeCapsule(Radius, Height / 2.f);
     const FVector& TraceStart = CharMoveComp->GetActorFeetLocation() + FVector(0, 0, BottomOffset + Capsule.GetCapsuleHalfHeight());
     const FVector& Direction2D = (Dest - CharMoveComp->GetActorLocation()).GetSafeNormal2D();
-        
+
     const FVector& TraceEnd = TraceStart + TraceDistance * Direction2D;
 
     FCollisionQueryParams Params("AINavigationJumping_TraceCheck", SCENE_QUERY_STAT_ONLY(AINavigationTraces), false, MyChar);
@@ -112,15 +114,21 @@ void UUR_AINavigationJumpingComp::CheckJump()
     GetWorld()->SweepSingleByChannel(Hit, TraceStart, TraceEnd, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, Capsule, Params);
 
     if (bDebugTraces)
+    {
         DrawDebugCapsuleTraceSingle(GetWorld(), TraceStart, TraceEnd, Capsule.GetCapsuleRadius(), Capsule.GetCapsuleHalfHeight(), EDrawDebugTrace::ForDuration, Hit.bBlockingHit, Hit, FColor::Blue, FColor::Cyan, Hit.bBlockingHit ? DebugHitDuration : JumpCheckInterval);
+    }
 
     if (!Hit.bBlockingHit)
+    {
         return;
+    }
 
     // If blocking hit is further away than our destination, we don't need to jump
     //TODO: Would be better to also check the direction of the *next* destination
     if (FVector::DistSquaredXY(CharMoveComp->GetActorLocation(), Hit.Location) > FVector::DistSquaredXY(CharMoveComp->GetActorLocation(), Dest) + 2 * Radius * Radius)
+    {
         return;
+    }
 
     // Check if the hit happened below StepHeight
     const float HitHeight = Hit.ImpactPoint.Z - CharMoveComp->GetActorFeetLocation().Z;

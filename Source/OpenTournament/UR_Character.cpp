@@ -4,6 +4,9 @@
 
 #include "UR_Character.h"
 
+#include <Components/SkeletalMeshComponent.h>
+#include <Components/SkinnedMeshComponent.h>
+
 #include "Net/UnrealNetwork.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -506,7 +509,7 @@ void AUR_Character::SetupWeaponBindings()
                 const auto& Group = Settings->WeaponGroups[Index];
                 if (Group.Keybind.IsValidChord())
                 {
-                    WeaponBindings.Add(URInputComponent->BindKeyParameterized<TDelegate<void(int32)>>(Group.Keybind, IE_Pressed, this, &AUR_Character::SelectWeapon, Index));
+                    //WeaponBindings.Add(URInputComponent->BindKeyParameterized<TDelegate<void(int32)>>(Group.Keybind, IE_Pressed, this, &AUR_Character::SelectWeapon, Index));
                 }
             }
         }
