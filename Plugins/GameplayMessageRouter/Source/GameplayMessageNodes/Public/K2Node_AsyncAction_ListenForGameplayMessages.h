@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "BlueprintGraph/Classes/K2Node_AsyncAction.h"
+#include "K2Node_AsyncAction.h"
 
 #include "K2Node_AsyncAction_ListenForGameplayMessages.generated.h"
 
