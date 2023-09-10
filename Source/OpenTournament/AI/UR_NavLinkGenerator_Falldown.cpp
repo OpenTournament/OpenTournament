@@ -3,10 +3,11 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_NavLinkGenerator_Falldown.h"
+
 #include "NavigationSystem.h"
+#include <KismetTraceUtils.h>
 #include "AI/NavigationSystemHelpers.h"
 #include "NavMesh/RecastNavMesh.h"
-#include "Engine/Private/KismetTraceUtils.h"
 #include "Components/BillboardComponent.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -17,28 +18,28 @@ AUR_NavLinkGenerator_Falldown::AUR_NavLinkGenerator_Falldown()
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
 #if WITH_EDITORONLY_DATA
-    SpriteComponent = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Sprite"));
-    if (!IsRunningCommandlet() && (SpriteComponent != NULL))
-    {
-        struct FConstructorStatics
-        {
-            ConstructorHelpers::FObjectFinderOptional<UTexture2D> SpriteTexture;
-            FName ID_Decals;
-            FText NAME_Decals;
-            FConstructorStatics() : SpriteTexture(TEXT("/Engine/EditorResources/AI/S_NavLink")), ID_Decals(TEXT("Navigation")), NAME_Decals(NSLOCTEXT("SpriteCategory", "Navigation", "Navigation")) {}
-        };
-        static FConstructorStatics ConstructorStatics;
-        SpriteComponent->Sprite = ConstructorStatics.SpriteTexture.Get();
-        SpriteComponent->SetRelativeLocation(FVector(0, 0, 200));
-        SpriteComponent->SetRelativeScale3D(FVector(2.f));
-        SpriteComponent->bHiddenInGame = true;
-        SpriteComponent->SetVisibleFlag(true);
-        SpriteComponent->SpriteInfo.Category = ConstructorStatics.ID_Decals;
-        SpriteComponent->SpriteInfo.DisplayName = ConstructorStatics.NAME_Decals;
-        SpriteComponent->SetupAttachment(RootComponent);
-        SpriteComponent->SetAbsolute(false, false, false);
-        SpriteComponent->bIsScreenSizeScaled = true;
-    }
+    // SpriteComponent = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Sprite"));
+    // if (!IsRunningCommandlet() && (SpriteComponent != NULL))
+    // {
+    //     struct FConstructorStatics
+    //     {
+    //         ConstructorHelpers::FObjectFinderOptional<UTexture2D> SpriteTexture;
+    //         FName ID_Decals;
+    //         FText NAME_Decals;
+    //         FConstructorStatics() : SpriteTexture(TEXT("/Engine/EditorResources/AI/S_NavLink")), ID_Decals(TEXT("Navigation")), NAME_Decals(NSLOCTEXT("SpriteCategory", "Navigation", "Navigation")) {}
+    //     };
+    //     static FConstructorStatics ConstructorStatics;
+    //     SpriteComponent->Sprite = ConstructorStatics.SpriteTexture.Get();
+    //     SpriteComponent->SetRelativeLocation(FVector(0, 0, 200));
+    //     SpriteComponent->SetRelativeScale3D(FVector(2.f));
+    //     SpriteComponent->bHiddenInGame = true;
+    //     SpriteComponent->SetVisibleFlag(true);
+    //     SpriteComponent->SpriteInfo.Category = ConstructorStatics.ID_Decals;
+    //     SpriteComponent->SpriteInfo.DisplayName = ConstructorStatics.NAME_Decals;
+    //     SpriteComponent->SetupAttachment(RootComponent);
+    //     SpriteComponent->SetAbsolute(false, false, false);
+    //     SpriteComponent->bIsScreenSizeScaled = true;
+    // }
 #endif // WITH_EDITORONLY_DATA
 
     SetHidden(true);
@@ -94,11 +95,11 @@ void AUR_NavLinkGenerator_Falldown::Regenerate()
 
     // Retrieve some relevant properties
     AgentHeight = NavMesh->AgentHeight;
-    AgentMaxStepHeight = NavMesh->AgentMaxStepHeight;
+    AgentMaxStepHeight = NavMesh->GetAgentMaxStepHeight(ENavigationDataResolution::Default);
     AgentRadius = NavMesh->AgentRadius;
 
     FRecastDebugGeometry Geometry;
-    Geometry.bGatherNavMeshEdges = true;
+    Geometry.bGatherNavMeshEdges = 0;
     NavMesh->BeginBatchQuery();
     NavMesh->GetDebugGeometryForTile(Geometry, -1);
     NavMesh->FinishBatchQuery();
@@ -171,7 +172,7 @@ void AUR_NavLinkGenerator_Falldown::InternalRebuild(FRecastDebugGeometry& Geomet
 
     // Z offset should account for potential diagonal 45° slope while walking outside NavMesh, so Radius*Sqrt(2).
     // But the value here will also impose minimum ceiling height. Need a compromise.
-    const float CapsuleZOffset = AgentRadius;   
+    const float CapsuleZOffset = AgentRadius;
 
     const FCollisionShape& Capsule = FCollisionShape::MakeCapsule(AgentRadius, AgentHeight / 2.f);
     const FCollisionShape& Sphere = FCollisionShape::MakeSphere(AgentRadius);
@@ -433,7 +434,7 @@ bool AUR_NavLinkGenerator_Falldown::SweepTraceHelper(FHitResult& Hit, const FVec
 *
 * This approach will however generate many unuseable links, and also makes it less obvious how to
 * potentially generate multiple destinations per source.
-* 
+*
 * The Processor only does a simple line trace without shape, so it could result in false positives
 * if it goes down a slit not large enough to fit a character.
 */

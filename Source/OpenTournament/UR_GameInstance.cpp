@@ -4,7 +4,9 @@
 
 #include "UR_GameInstance.h"
 
-#include "MoviePlayer/Public/MoviePlayer.h"
+#include <MoviePlayer.h>
+#include <Misc/Paths.h>
+
 #include "Slate/SUR_LoadingScreenWidget.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

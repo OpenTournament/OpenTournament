@@ -11,23 +11,23 @@
 	"Version": 
 	{
 		"MajorVersion": 5,
-		"MinorVersion": 2,
-		"PatchVersion": 1,
-		"Changelist": 26001984,
-		"CompatibleChangelist": 25360045,
+		"MinorVersion": 3,
+		"PatchVersion": 0,
+		"Changelist": 27405482,
+		"CompatibleChangelist": 0,
 		"IsLicenseeVersion": 0,
 		"IsPromotedBuild": 0,
-		"BranchName": "++UE5+Release-5.2",
-		"BuildId": "25360045"
+		"BranchName": "++UE5+Release-5.3",
+		"BuildId": "27405482"
 	},
 	"BuildProducts": [
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/AgentInterface.dll",
-			"Type": "RequiredResource"
+			"Type": "DynamicLibrary"
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/AgentInterface.pdb",
-			"Type": "RequiredResource"
+			"Type": "SymbolFile"
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/Android/UnrealEditor-AndroidDeviceDetection.dll",
@@ -50,8 +50,12 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(EngineDir)/Binaries/Win64/OpenColorIO_2_2.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
 			"Path": "$(EngineDir)/Binaries/Win64/OpenImageDenoise.dll",
-			"Type": "RequiredResource"
+			"Type": "DynamicLibrary"
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-AIGraph.dll",
@@ -182,6 +186,10 @@
 			"Type": "DynamicLibrary"
 		},
 		{
+			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-AudioCaptureWasapi.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-AudioCodecEngine.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -239,10 +247,6 @@
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-AudioSettingsEditor.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-AugmentedReality.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
@@ -403,6 +407,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-ContentBrowserData.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-CookMetadata.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
@@ -570,11 +578,19 @@
 			"Type": "DynamicLibrary"
 		},
 		{
+			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-EventLoop.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-ExternalImagePicker.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-EyeTracker.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-FieldNotification.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
@@ -678,6 +694,10 @@
 			"Type": "DynamicLibrary"
 		},
 		{
+			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-Horde.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-HotReload.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -735,6 +755,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-InternationalizationSettings.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-IoStoreOnDemand.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
@@ -974,10 +998,6 @@
 			"Type": "DynamicLibrary"
 		},
 		{
-			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-NaniteTools.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-NaniteUtilities.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -1027,6 +1047,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-NullNetworkReplayStreaming.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-OpenColorIOWrapper.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
@@ -1106,10 +1130,6 @@
 			"Type": "DynamicLibrary"
 		},
 		{
-			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-PluginWarden.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-PortalMessages.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -1131,10 +1151,6 @@
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-ProfileVisualizer.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-Profiler.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
@@ -1214,11 +1230,7 @@
 			"Type": "DynamicLibrary"
 		},
 		{
-			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-RigVM.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-RigVMDeveloper.dll",
+			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-S3Client.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
@@ -1247,6 +1259,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-ScriptDisassembler.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-ScriptableEditorWidgets.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
@@ -1446,6 +1462,10 @@
 			"Type": "DynamicLibrary"
 		},
 		{
+			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-TelemetryUtils.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-TextureBuild.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -1598,6 +1618,10 @@
 			"Type": "DynamicLibrary"
 		},
 		{
+			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-VirtualFileCache.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-VirtualTexturingEditor.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -1635,6 +1659,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-WidgetCarousel.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-WidgetRegistration.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
@@ -1682,24 +1710,32 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(EngineDir)/Binaries/Win64/oo2tex_win64_2.9.10.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
 			"Path": "$(EngineDir)/Binaries/Win64/oo2tex_win64_2.9.5.dll",
-			"Type": "RequiredResource"
+			"Type": "DynamicLibrary"
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/oo2tex_win64_2.9.6.dll",
-			"Type": "RequiredResource"
+			"Type": "DynamicLibrary"
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/oo2tex_win64_2.9.7.dll",
-			"Type": "RequiredResource"
+			"Type": "DynamicLibrary"
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/oo2tex_win64_2.9.8.dll",
-			"Type": "RequiredResource"
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Binaries/Win64/oo2tex_win64_2.9.9.dll",
+			"Type": "DynamicLibrary"
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/tbb12.dll",
-			"Type": "RequiredResource"
+			"Type": "DynamicLibrary"
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/2D/Paper2D/Binaries/Win64/UnrealEditor-Paper2D.dll",
@@ -1739,6 +1775,18 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/AI/EnvironmentQueryEditor/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Animation/ACLPlugin/Binaries/Win64/UnrealEditor-ACLPlugin.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Animation/ACLPlugin/Binaries/Win64/UnrealEditor-ACLPluginEditor.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Animation/ACLPlugin/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -1847,6 +1895,14 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Developer/GitSourceControl/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Developer/N10XSourceCodeAccess/Binaries/Win64/UnrealEditor-N10XSourceCodeAccess.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Developer/N10XSourceCodeAccess/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -2010,18 +2066,6 @@
 			"Type": "RequiredResource"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Editor/GLTFImporter/Binaries/Win64/UnrealEditor-GLTFCore.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Editor/GLTFImporter/Binaries/Win64/UnrealEditor-GLTFImporter.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Editor/GLTFImporter/Binaries/Win64/UnrealEditor.modules",
-			"Type": "RequiredResource"
-		},
-		{
 			"Path": "$(EngineDir)/Plugins/Editor/GameplayTagsEditor/Binaries/Win64/UnrealEditor-GameplayTagsEditor.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -2043,6 +2087,14 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Editor/GeometryMode/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Editor/Localization/PortableObjectFileDataSource/Binaries/Win64/UnrealEditor-PortableObjectFileDataSource.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Editor/Localization/PortableObjectFileDataSource/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -2094,11 +2146,19 @@
 			"Type": "RequiredResource"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Editor/StylusInput/Binaries/Win64/UnrealEditor-StylusInput.dll",
+			"Path": "$(EngineDir)/Plugins/Editor/UVEditor/Binaries/Win64/UnrealEditor-UVEditor.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Editor/StylusInput/Binaries/Win64/UnrealEditor.modules",
+			"Path": "$(EngineDir)/Plugins/Editor/UVEditor/Binaries/Win64/UnrealEditor-UVEditorTools.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Editor/UVEditor/Binaries/Win64/UnrealEditor-UVEditorToolsEditorOnly.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Editor/UVEditor/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -2226,22 +2286,6 @@
 			"Type": "RequiredResource"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Experimental/CommonUI/Binaries/Win64/UnrealEditor-CommonInput.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Experimental/CommonUI/Binaries/Win64/UnrealEditor-CommonUI.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Experimental/CommonUI/Binaries/Win64/UnrealEditor-CommonUIEditor.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Experimental/CommonUI/Binaries/Win64/UnrealEditor.modules",
-			"Type": "RequiredResource"
-		},
-		{
 			"Path": "$(EngineDir)/Plugins/Experimental/Dataflow/Binaries/Win64/UnrealEditor-DataflowEditor.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -2346,6 +2390,18 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Experimental/LocalizableMessage/Binaries/Win64/UnrealEditor-LocalizableMessage.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/LocalizableMessage/Binaries/Win64/UnrealEditor-LocalizableMessageBlueprint.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/LocalizableMessage/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Experimental/MeshLODToolset/Binaries/Win64/UnrealEditor-MeshLODToolset.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -2367,6 +2423,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Experimental/MeshModelingToolsetExp/Binaries/Win64/UnrealEditor-ModelingEditorUI.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/MeshModelingToolsetExp/Binaries/Win64/UnrealEditor-SkeletalMeshModifiers.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
@@ -2426,27 +2486,39 @@
 			"Type": "RequiredResource"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Experimental/ToolPresets/Binaries/Win64/UnrealEditor-PresetAsset.dll",
+			"Path": "$(EngineDir)/Plugins/Experimental/StructUtils/Binaries/Win64/UnrealEditor-StructUtils.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/StructUtils/Binaries/Win64/UnrealEditor-StructUtilsEditor.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/StructUtils/Binaries/Win64/UnrealEditor-StructUtilsEngine.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/StructUtils/Binaries/Win64/UnrealEditor-StructUtilsNodes.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/StructUtils/Binaries/Win64/UnrealEditor-StructUtilsTestSuite.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/StructUtils/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/ToolPresets/Binaries/Win64/UnrealEditor-ToolPresetAsset.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/ToolPresets/Binaries/Win64/UnrealEditor-ToolPresetEditor.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Experimental/ToolPresets/Binaries/Win64/UnrealEditor.modules",
-			"Type": "RequiredResource"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Experimental/UVEditor/Binaries/Win64/UnrealEditor-UVEditor.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Experimental/UVEditor/Binaries/Win64/UnrealEditor-UVEditorTools.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Experimental/UVEditor/Binaries/Win64/UnrealEditor-UVEditorToolsEditorOnly.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Experimental/UVEditor/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -2502,12 +2574,12 @@
 			"Type": "DynamicLibrary"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Interchange/Editor/Binaries/Win64/UnrealEditor-InterchangeResultsBrowser.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
 			"Path": "$(EngineDir)/Plugins/Interchange/Editor/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Interchange/Runtime/Binaries/Win64/UnrealEditor-GLTFCore.dll",
+			"Type": "DynamicLibrary"
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Interchange/Runtime/Binaries/Win64/UnrealEditor-InterchangeCommonParser.dll",
@@ -2810,6 +2882,22 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Runtime/CommonUI/Binaries/Win64/UnrealEditor-CommonInput.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/CommonUI/Binaries/Win64/UnrealEditor-CommonUI.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/CommonUI/Binaries/Win64/UnrealEditor-CommonUIEditor.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/CommonUI/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Runtime/CustomMeshComponent/Binaries/Win64/UnrealEditor-CustomMeshComponent.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -2958,6 +3046,14 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Runtime/MsQuic/Binaries/Win64/UnrealEditor-MsQuicRuntime.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/MsQuic/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Runtime/ProceduralMeshComponent/Binaries/Win64/UnrealEditor-ProceduralMeshComponent.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -2987,6 +3083,22 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Runtime/ResonanceAudio/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/RigVM/Binaries/Win64/UnrealEditor-RigVM.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/RigVM/Binaries/Win64/UnrealEditor-RigVMDeveloper.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/RigVM/Binaries/Win64/UnrealEditor-RigVMEditor.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/RigVM/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -3154,6 +3266,18 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(ProjectDir)/Plugins/BUIValidator/Binaries/Win64/UnrealEditor-BUIValidator.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/BUIValidator/Binaries/Win64/UnrealEditor-BUIValidator.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/BUIValidator/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(ProjectDir)/Plugins/CommonGame/Binaries/Win64/UnrealEditor-CommonGame.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -3258,6 +3382,18 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(ProjectDir)/Plugins/GameSettings/Binaries/Win64/UnrealEditor-GameSettings.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/GameSettings/Binaries/Win64/UnrealEditor-GameSettings.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/GameSettings/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(ProjectDir)/Plugins/GameplayMessageRouter/Binaries/Win64/UnrealEditor-GameplayMessageNodes.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -3292,19 +3428,15 @@
 	],
 	"RuntimeDependencies": [
 		{
-			"Path": "$(EngineDir)/Binaries/ThirdParty/ARM/Win64/astcenc-sse2.exe",
-			"Type": "NonUFS"
-		},
-		{
-			"Path": "$(EngineDir)/Binaries/ThirdParty/ARM/Win64/astcenc-sse4.1.exe",
-			"Type": "NonUFS"
-		},
-		{
 			"Path": "$(EngineDir)/Binaries/ThirdParty/DbgHelp/dbghelp.dll",
 			"Type": "NonUFS"
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/ThirdParty/FreeImage/Win64/FreeImage.dll",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Binaries/ThirdParty/MsQuic/v220/win64/msquic.dll",
 			"Type": "NonUFS"
 		},
 		{
@@ -20060,7 +20192,15 @@
 			"Type": "NonUFS"
 		},
 		{
+			"Path": "$(EngineDir)/Binaries/Win64/OpenColorIO_2_2.dll",
+			"Type": "NonUFS"
+		},
+		{
 			"Path": "$(EngineDir)/Binaries/Win64/OpenImageDenoise.dll",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Binaries/Win64/oo2tex_win64_2.9.10.dll",
 			"Type": "NonUFS"
 		},
 		{
@@ -20077,6 +20217,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/oo2tex_win64_2.9.8.dll",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Binaries/Win64/oo2tex_win64_2.9.9.dll",
 			"Type": "NonUFS"
 		},
 		{
@@ -20742,6 +20886,10 @@
 		{
 			"Path": "$(EngineDir)/Content/Slate/CrashTracker/Record.png",
 			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Content/Slate/Cursor/invisible.cur",
+			"Type": "NonUFS"
 		},
 		{
 			"Path": "$(EngineDir)/Content/Slate/Docking/AppTabContentArea.png",
@@ -21748,6 +21896,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/AutomationTools.svg",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Content/Slate/Starship/Common/CPP.svg",
 			"Type": "UFS"
 		},
@@ -21773,6 +21925,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Content/Slate/Starship/Common/Delete.svg",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/Developer.svg",
 			"Type": "UFS"
 		},
 		{
@@ -21804,6 +21960,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/Group_20.svg",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Content/Slate/Starship/Common/Info.svg",
 			"Type": "UFS"
 		},
@@ -21824,6 +21984,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/Monitor.svg",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Content/Slate/Starship/Common/OutputLog.svg",
 			"Type": "UFS"
 		},
@@ -21833,6 +21997,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Content/Slate/Starship/Common/Paste.svg",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/PlayerController.svg",
 			"Type": "UFS"
 		},
 		{
@@ -21872,19 +22040,11 @@
 			"Type": "UFS"
 		},
 		{
-			"Path": "$(EngineDir)/Content/Slate/Starship/Common/SCC_Cloud_AtLatest.svg",
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/Search_20.svg",
 			"Type": "UFS"
 		},
 		{
-			"Path": "$(EngineDir)/Content/Slate/Starship/Common/SCC_Cloud_HasLocalChanges.svg",
-			"Type": "UFS"
-		},
-		{
-			"Path": "$(EngineDir)/Content/Slate/Starship/Common/SCC_Cloud_NoLocalChanges.svg",
-			"Type": "UFS"
-		},
-		{
-			"Path": "$(EngineDir)/Content/Slate/Starship/Common/SCC_Cloud_NotAtLatest.svg",
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/SessionFrontend.svg",
 			"Type": "UFS"
 		},
 		{
@@ -21896,7 +22056,15 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/Test.svg",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Content/Slate/Starship/Common/UELogo.png",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/UELogo.svg",
 			"Type": "UFS"
 		},
 		{
@@ -21929,6 +22097,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Content/Slate/Starship/Common/alert-circle.svg",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/alert-triangle-64.svg",
 			"Type": "UFS"
 		},
 		{
@@ -22040,6 +22212,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/curve-editor-append-key-20.svg",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Content/Slate/Starship/Common/cylinder.svg",
 			"Type": "UFS"
 		},
@@ -22065,6 +22241,14 @@
 		},
 		{
 			"Path": "$(EngineDir)/Content/Slate/Starship/Common/export_20.svg",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/fieldnotify_off.svg",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/fieldnotify_on.svg",
 			"Type": "UFS"
 		},
 		{
@@ -22148,6 +22332,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/play.svg",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Content/Slate/Starship/Common/plus-circle.svg",
 			"Type": "UFS"
 		},
@@ -22217,6 +22405,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Content/Slate/Starship/Common/world.svg",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/Common/x-circle.svg",
 			"Type": "UFS"
 		},
 		{
@@ -22548,6 +22740,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/Insights/UTrace.svg",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Content/Slate/Starship/Insights/UnrealInsights.svg",
 			"Type": "UFS"
 		},
@@ -22604,7 +22800,27 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/SourceControl/RC_ModifiedLocally.svg",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Content/Slate/Starship/SourceControl/RC_NewerVersion.svg",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/SourceControl/RC_StatusLocalUpToDate.svg",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/SourceControl/RC_StatusLocalUpload.svg",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/SourceControl/RC_StatusRemoteDownload.svg",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Content/Slate/Starship/SourceControl/RC_StatusRemoteUpToDate.svg",
 			"Type": "UFS"
 		},
 		{
@@ -22768,6 +22984,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Animation/ACLPlugin/ACLPlugin.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Animation/AnimationData/AnimationData.uplugin",
 			"Type": "UFS"
 		},
@@ -22805,6 +23025,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Developer/GitSourceControl/GitSourceControl.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Developer/N10XSourceCodeAccess/N10XSourceCodeAccess.uplugin",
 			"Type": "UFS"
 		},
 		{
@@ -22888,15 +23112,15 @@
 			"Type": "UFS"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Editor/GLTFImporter/GLTFImporter.uplugin",
-			"Type": "UFS"
-		},
-		{
 			"Path": "$(EngineDir)/Plugins/Editor/GameplayTagsEditor/GameplayTagsEditor.uplugin",
 			"Type": "UFS"
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Editor/GeometryMode/GeometryMode.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Editor/Localization/PortableObjectFileDataSource/PortableObjectFileDataSource.uplugin",
 			"Type": "UFS"
 		},
 		{
@@ -22924,7 +23148,7 @@
 			"Type": "UFS"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Editor/StylusInput/StylusInput.uplugin",
+			"Path": "$(EngineDir)/Plugins/Editor/UVEditor/UVEditor.uplugin",
 			"Type": "UFS"
 		},
 		{
@@ -22980,10 +23204,6 @@
 			"Type": "UFS"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Experimental/CommonUI/CommonUI.uplugin",
-			"Type": "UFS"
-		},
-		{
 			"Path": "$(EngineDir)/Plugins/Experimental/Dataflow/Dataflow.uplugin",
 			"Type": "UFS"
 		},
@@ -23013,6 +23233,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Experimental/GeometryScripting/GeometryScripting.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/LocalizableMessage/LocalizableMessage.uplugin",
 			"Type": "UFS"
 		},
 		{
@@ -23048,11 +23272,11 @@
 			"Type": "UFS"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Experimental/ToolPresets/ToolPresets.uplugin",
+			"Path": "$(EngineDir)/Plugins/Experimental/StructUtils/StructUtils.uplugin",
 			"Type": "UFS"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Experimental/UVEditor/UVEditor.uplugin",
+			"Path": "$(EngineDir)/Plugins/Experimental/ToolPresets/ToolPresets.uplugin",
 			"Type": "UFS"
 		},
 		{
@@ -23152,6 +23376,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Runtime/CommonUI/CommonUI.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Runtime/CustomMeshComponent/CustomMeshComponent.uplugin",
 			"Type": "UFS"
 		},
@@ -23188,6 +23416,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Runtime/MsQuic/MsQuic.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Runtime/ProceduralMeshComponent/ProceduralMeshComponent.uplugin",
 			"Type": "UFS"
 		},
@@ -23197,6 +23429,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Runtime/ResonanceAudio/ResonanceAudio.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/RigVM/RigVM.uplugin",
 			"Type": "UFS"
 		},
 		{
@@ -23256,6 +23492,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(ProjectDir)/Plugins/BUIValidator/BUIValidator.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(ProjectDir)/Plugins/CommonGame/CommonGame.uplugin",
 			"Type": "UFS"
 		},
@@ -23269,6 +23509,10 @@
 		},
 		{
 			"Path": "$(ProjectDir)/Plugins/Developer/RiderLink/RiderLink.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/GameSettings/GameSettings.uplugin",
 			"Type": "UFS"
 		},
 		{

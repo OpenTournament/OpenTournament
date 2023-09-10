@@ -1,0 +1,25 @@
+{
+	"FileVersion" : 3,
+	"Version" : 1,
+	"VersionName" : "1.0",
+	"FriendlyName" : "Game Subtitles",
+	"Description" : "Game support for playing subtitles attached to media player assets.",
+	"Category" : "UI",
+	"CreatedBy" : "Epic Games, Inc.",
+	"CreatedByURL" : "http://epicgames.com",
+	"DocsURL" : "",
+	"MarketplaceURL" : "",
+	"SupportURL" : "",
+	"EnabledByDefault" : false,
+	"CanContainContent" : false,
+	"IsBetaVersion" : false,
+	"Installed" : false,
+	"Modules" : 
+	[
+		{
+			"Name": "GameSubtitles",
+			"Type": "Runtime",
+			"LoadingPhase" : "Default"
+		}
+	]
+}

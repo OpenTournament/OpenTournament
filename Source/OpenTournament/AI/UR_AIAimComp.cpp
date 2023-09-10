@@ -4,6 +4,8 @@
 
 #include "UR_AIAimComp.h"
 
+#include <GameFramework/Pawn.h>
+
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "GameFramework/Controller.h"

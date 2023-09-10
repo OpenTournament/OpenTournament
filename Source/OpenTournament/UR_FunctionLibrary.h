@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <Engine/Engine.h>
+
 #include "CoreMinimal.h"
 #include "InputCoreTypes.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
@@ -67,14 +69,18 @@ public:
      * Utility to retrieve the String value of a given Enum
      */
     template<typename TEnum>
-    static FORCEINLINE FString GetEnumValueAsString(const FString& Name, TEnum Value)
+    static FORCEINLINE FString GetEnumValueAsString(const UObject* WorldContextObject, const FString& Name, TEnum Value)
     {
-        const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, *Name, true);
-        if (!EnumPtr)
+        if (const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
         {
-            return FString("Invalid");
+            // ANY_PACKAGE
+            const UEnum* EnumPtr = FindObject<UEnum>(World->GetOuter(), *Name, true);
+            if (!EnumPtr)
+            {
+                return FString("Invalid");
+            }
+            return EnumPtr->GetNameByValue(static_cast<int64>(Value)).ToString();
         }
-        return EnumPtr->GetNameByValue(static_cast<int64>(Value)).ToString();
     }
 
 
