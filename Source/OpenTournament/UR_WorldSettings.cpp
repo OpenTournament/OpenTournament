@@ -4,8 +4,11 @@
 
 #include "UR_WorldSettings.h"
 
-#include "Components/AudioComponent.h"
-#include "AssetRegistry/IAssetRegistry.h"
+#include <AssetRegistry/IAssetRegistry.h>
+#include <Components/AudioComponent.h>
+#include <Engine/AssetManager.h>
+#include <Engine/StreamableManager.h>
+#include <Sound/SoundBase.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -36,13 +39,22 @@ void AUR_WorldSettings::BeginPlay()
 
     if (MusicComponent && !IsNetMode(NM_DedicatedServer))
     {
-        //TODO: this is definitely an appropriate case to ASYNC load
-        if (auto LoadedMusic = Music.LoadSynchronous())
+        if (const UAssetManager* Manager = UAssetManager::GetIfInitialized())
         {
-            MusicComponent->SetSound(LoadedMusic);
-            MusicComponent->Play();
+            auto& StreamableManager = Manager->GetStreamableManager();
+            const FStreamableDelegate CallbackDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnMusicLoaded);
+
+            StreamableManager.RequestAsyncLoad(Music.ToSoftObjectPath(), CallbackDelegate);
         }
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_WorldSettings::OnMusicLoaded()
+{
+    MusicComponent->SetSound(Music.Get());
+    MusicComponent->Play();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -134,7 +146,7 @@ void AUR_WorldSettings::GetAssetRegistryTags(TArray<FAssetRegistryTag>& OutTags)
 /*
  * Previous approach = automatically create and maintain reference to a MapInfo object in an external package with _MapInfo suffix
  * It works, but the AssetRegistry approach is much simpler
- * 
+ *
 
 #include "UObject/ObjectSaveContext.h"
 #include "UnrealEd/Public/FileHelpers.h"

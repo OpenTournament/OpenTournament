@@ -65,6 +65,9 @@ public:
     UPROPERTY()
     UAudioComponent* MusicComponent;
 
+    UFUNCTION()
+    void OnMusicLoaded();
+
     UFUNCTION(BlueprintPure, Meta = (WorldContext = "WorldContext"))
     static AUR_WorldSettings* GetWorldSettings(UObject* WorldContext);
 
