@@ -187,4 +187,6 @@ bool FOpenTournamentTriggerZoneTest::RunTest(const FString& Parameters)
     return true;
 }
 
+#undef LOCTEXT_NAMESPACE
+
 #endif // WITH_DEV_AUTOMATION_TESTS
