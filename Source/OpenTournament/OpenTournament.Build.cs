@@ -16,7 +16,7 @@ public class OpenTournament : ModuleRules
                 "Core",
                 "CoreUObject",
                 "DataValidation",
-				        "DeveloperSettings",
+                "DeveloperSettings",
                 "Engine",
                 "EngineSettings",
                 "InputCore",
@@ -36,12 +36,17 @@ public class OpenTournament : ModuleRules
             }
         );
 
-		PrivateDependencyModuleNames.AddRange(
-			new string[] {
-				"GameplayMessageRuntime"
-			}
-		);
-		
+        PrivateDependencyModuleNames.AddRange(
+            new string[]
+            {
+                "GameplayMessageRuntime",
+                "ModularGameplay",
+                "CommonLoadingScreen",
+                "ModularGameplayActors",
+                "GameFeatures"
+            }
+        );
+
         // Reference:
         // https://docs.unrealengine.com/en-US/Programming/BuildTools/UnrealBuildTool/ModuleFiles/index.html
         PublicIncludePaths.AddRange
