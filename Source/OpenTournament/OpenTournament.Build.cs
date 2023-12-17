@@ -39,12 +39,16 @@ public class OpenTournament : ModuleRules
         PrivateDependencyModuleNames.AddRange(
             new string[]
             {
+                "AudioModulation",
+                "CommonInput",
+                "CommonLoadingScreen",
+                "CommonUI",
                 "CommonUser",
+                "EnhancedInput",
+                "GameFeatures",
                 "GameplayMessageRuntime",
                 "ModularGameplay",
-                "CommonLoadingScreen",
                 "ModularGameplayActors",
-                "GameFeatures",
             }
         );
 
