@@ -11,6 +11,7 @@ class UObject;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 DECLARE_LOG_CATEGORY_EXTERN(LogGame, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogGameExperience, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogGameUI, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogNetOT, Log, All);
 
