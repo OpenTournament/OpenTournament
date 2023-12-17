@@ -20,9 +20,12 @@ UUR_RichTextBlock::UUR_RichTextBlock(const FObjectInitializer& ObjectInitializer
         bOverrideDefaultStyle = true;
 
         UTextBlock* DefaultTextBlock = UTextBlock::StaticClass()->GetDefaultObject<UTextBlock>();
-        DefaultTextStyleOverride.Font = DefaultTextBlock->GetFont();
-        DefaultTextStyleOverride.ColorAndOpacity = DefaultTextBlock->GetColorAndOpacity();
-        DefaultTextStyleOverride.ShadowOffset = DefaultTextBlock->GetShadowOffset();
-        DefaultTextStyleOverride.ShadowColorAndOpacity = DefaultTextBlock->GetShadowColorAndOpacity();
+
+        auto Style = GetDefaultTextStyle();
+        Style.Font = DefaultTextBlock->GetFont();
+        Style.ColorAndOpacity = DefaultTextBlock->GetColorAndOpacity();
+        Style.ShadowOffset = DefaultTextBlock->GetShadowOffset();
+        Style.ShadowColorAndOpacity = DefaultTextBlock->GetShadowColorAndOpacity();
+        SetDefaultTextStyle(Style);
     }
 }
