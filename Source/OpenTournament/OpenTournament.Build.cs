@@ -39,11 +39,12 @@ public class OpenTournament : ModuleRules
         PrivateDependencyModuleNames.AddRange(
             new string[]
             {
+                "CommonUser",
                 "GameplayMessageRuntime",
                 "ModularGameplay",
                 "CommonLoadingScreen",
                 "ModularGameplayActors",
-                "GameFeatures"
+                "GameFeatures",
             }
         );
 
