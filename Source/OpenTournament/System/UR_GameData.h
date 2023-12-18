@@ -20,7 +20,7 @@ class UObject;
  *
  *	Non-mutable data asset that contains global game data.
  */
-UCLASS(BlueprintType, Const, Meta = (DisplayName = "OT Game Data", ShortTooltip = "Data asset containing global game data."))
+UCLASS(BlueprintType, Const, Meta = (DisplayName = "UR Game Data", ShortTooltip = "Data asset containing global game data."))
 class UUR_GameData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
