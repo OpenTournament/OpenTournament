@@ -1,5 +1,7 @@
 // Copyright (c) Open Tournament Project, All Rights Reserved.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 #pragma once
 
 #include "Engine/DeveloperSettingsBackedByCVars.h"
@@ -7,6 +9,8 @@
 #include "UObject/SoftObjectPath.h"
 
 #include "UR_DeveloperSettings.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct FPropertyChangedEvent;
 
@@ -33,6 +37,8 @@ struct FUR_CheatToRun
 	UPROPERTY(EditAnywhere)
 	FString Cheat;
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Developer settings / editor cheats
@@ -70,7 +76,7 @@ public:
 
 	/**
 	* Should force feedback effects be played, even if the last input device was not a gamepad?
-	* The default behavior in Lyra is to only play force feedback if the most recent input device was a gamepad.
+	* The default behavior is to only play force feedback if the most recent input device was a gamepad.
 	*/
 	UPROPERTY(config, EditAnywhere, Category = OpenTournament, meta = (ConsoleVariable = "OTPC.ShouldAlwaysPlayForceFeedback") )
 	bool bShouldAlwaysPlayForceFeedback = false;

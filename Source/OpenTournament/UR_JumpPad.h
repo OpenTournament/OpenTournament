@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -63,7 +63,7 @@ public:
     */
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
     UCapsuleComponent* CapsuleComponent;
-    
+
     /*
     * Audio Component
     */
@@ -156,9 +156,9 @@ public:
     */
     UFUNCTION()
     void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-    
+
     /**
-    * Is this actor permitted to jump? 
+    * Is this actor permitted to jump?
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintPure, BlueprintCallable, Category = "JumpPad")
     bool IsPermittedToJump(const AActor* TargetActor) const;

@@ -27,6 +27,7 @@ public class OpenTournament : ModuleRules
                 "GameplayTags",
                 "GameplayTasks",
                 "MoviePlayer",
+                "NetCore",
                 "Niagara",
                 "SoundFieldRendering", // Linux needs a symbold that it cannot find so we try to link this library by force.
                 "Paper2D",
@@ -39,11 +40,16 @@ public class OpenTournament : ModuleRules
         PrivateDependencyModuleNames.AddRange(
             new string[]
             {
+                "AudioModulation",
+                "CommonInput",
+                "CommonLoadingScreen",
+                "CommonUI",
+                "CommonUser",
+                "EnhancedInput",
+                "GameFeatures",
                 "GameplayMessageRuntime",
                 "ModularGameplay",
-                "CommonLoadingScreen",
                 "ModularGameplayActors",
-                "GameFeatures"
             }
         );
 
