@@ -66,7 +66,8 @@ protected:
 		}
 
 		// Does a blocking load if needed
-		return *CastChecked<const GameDataClass>(LoadGameDataOfClass(GameDataClass::StaticClass(), DataPath, GameDataClass::StaticClass()->GetFName()));
+	    UPrimaryDataAsset* Result = LoadGameDataOfClass(GameDataClass::StaticClass(), DataPath, GameDataClass::StaticClass()->GetFName());
+		return *CastChecked<const GameDataClass>(Result);
 	}
 
 
