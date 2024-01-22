@@ -36,7 +36,7 @@ void UUR_CheatManager::Cheat_Loaded()
     {
         if (UUR_InventoryComponent* Inventory = URCharacter->FindComponentByClass<UUR_InventoryComponent>())
         {
-            for (const auto WeaponClass : LoadedWeaponClasses)
+            for (const auto& WeaponClass : LoadedWeaponClasses)
             {
                 if (WeaponClass)
                 {
