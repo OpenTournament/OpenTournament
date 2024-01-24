@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 using UnrealBuildTool;
 
@@ -15,7 +15,6 @@ public class OpenTournament : ModuleRules
             {
                 "Core",
                 "CoreUObject",
-                "DataValidation",
                 "DeveloperSettings",
                 "Engine",
                 "EngineSettings",
@@ -36,6 +35,17 @@ public class OpenTournament : ModuleRules
                 "NavigationSystem"
             }
         );
+
+		if (Target.bBuildEditor)
+		{
+            PublicDependencyModuleNames.AddRange(
+				new string[]
+				{
+					"UnrealEd",
+					"DataValidation"
+				}
+			);
+		}
 
         PrivateDependencyModuleNames.AddRange(
             new string[]
