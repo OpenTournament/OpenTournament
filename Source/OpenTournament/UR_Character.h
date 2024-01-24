@@ -129,7 +129,7 @@ struct FReplicatedDamageEvent
 
     FReplicatedDamageEvent() : Type(0), Damage(0), HealthDamage(0), ArmorDamage(0), Location(0,0,0), Knockback(0,0,0), DamType(NULL), DamageInstigator(NULL) {}
 
-    virtual bool IsOfType(int32 InID) const { return Type == InID; };
+    bool IsOfType(int32 InID) const { return Type == InID; };
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
