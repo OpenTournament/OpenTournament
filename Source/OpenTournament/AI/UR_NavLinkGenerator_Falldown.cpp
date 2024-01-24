@@ -411,6 +411,7 @@ bool AUR_NavLinkGenerator_Falldown::SweepTraceHelper(FHitResult& Hit, const FVec
 
     bool bHit = GetWorld()->SweepSingleByChannel(Hit, Start, End, FQuat::Identity, ECC_Pawn, Shape, Params);
 
+#if ENABLE_DRAW_DEBUG
     if (bDebug)
     {
         if (Shape.IsCapsule())
@@ -418,6 +419,7 @@ bool AUR_NavLinkGenerator_Falldown::SweepTraceHelper(FHitResult& Hit, const FVec
         else if (Shape.IsSphere())
             DrawDebugSphereTraceSingle(GetWorld(), Start, End, Shape.GetSphereRadius(), EDrawDebugTrace::ForDuration, bHit, Hit, FColor::Green, FColor::Red, DebugDuration);
     }
+#endif
 
     return bHit;
 }

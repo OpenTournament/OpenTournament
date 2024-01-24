@@ -113,10 +113,12 @@ void UUR_AINavigationJumpingComp::CheckJump()
     //NOTE: Not sure about CollisionChannel, using WorldStatic for now to ensure we can land onto the thing
     GetWorld()->SweepSingleByChannel(Hit, TraceStart, TraceEnd, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, Capsule, Params);
 
+#if ENABLE_DRAW_DEBUG
     if (bDebugTraces)
     {
         DrawDebugCapsuleTraceSingle(GetWorld(), TraceStart, TraceEnd, Capsule.GetCapsuleRadius(), Capsule.GetCapsuleHalfHeight(), EDrawDebugTrace::ForDuration, Hit.bBlockingHit, Hit, FColor::Blue, FColor::Cyan, Hit.bBlockingHit ? DebugHitDuration : JumpCheckInterval);
     }
+#endif
 
     if (!Hit.bBlockingHit)
     {
