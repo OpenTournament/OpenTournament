@@ -6,6 +6,7 @@ public class OpenTournamentClientTarget : TargetRules
 {
     public OpenTournamentClientTarget(TargetInfo Target) : base(Target)
     {
+	    IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
         DefaultBuildSettings = BuildSettingsVersion.Latest;
         Type = TargetType.Client;
         LinkType = TargetLinkType.Modular;
