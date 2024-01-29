@@ -14,10 +14,12 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "NavLinkComponent.h"
 
 #include "OpenTournament.h"
 #include "UR_Character.h"
 #include "UR_CharacterMovementComponent.h"
+#include "AI/UR_NavigationUtilities.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
@@ -56,8 +58,8 @@ AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
     CapsuleComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
     CapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
     CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-    CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Teleporter::OnTriggerEnter);
-    CapsuleComponent->OnComponentEndOverlap.AddDynamic(this, &AUR_Teleporter::OnTriggerExit);
+    CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnTriggerEnter);
+    CapsuleComponent->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnTriggerExit);
 
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMeshComponent"));
     MeshComponent->SetupAttachment(RootComponent);
@@ -70,6 +72,23 @@ AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
 
     ParticleSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleSystemComponent"));
     ParticleSystemComponent->SetupAttachment(RootComponent);
+
+    NavLink = CreateDefaultSubobject<UNavLinkComponent>("NavLink");
+    NavLink->SetupAttachment(CapsuleComponent);
+    NavLink->Links[0].Left = FVector::ZeroVector;
+    NavLink->Links[0].Direction = ENavLinkDirection::LeftToRight;
+}
+
+void AUR_Teleporter::OnConstruction(const FTransform& Transform)
+{
+    if (DestinationActor)
+    {
+        NavLink->Links[0].Right = NavLink->GetComponentTransform().InverseTransformPosition(DestinationActor->GetActorLocation());
+    }
+    else
+    {
+        NavLink->Links[0].Right = NavLink->GetComponentTransform().InverseTransformPosition(GetActorLocation() + DestinationTransform.GetLocation());
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +130,7 @@ void AUR_Teleporter::Teleport(AActor* Other)
         IgnoredActors.Remove(Other);
         return;
     }
-    
+
     if (IsPermittedToTeleport(Other))
     {
         GAME_LOG(Game, Verbose, "Teleporter (%s) Triggered", *GetName());
@@ -190,25 +209,27 @@ bool AUR_Teleporter::InternalTeleport(AActor* TargetActor)
     {
         DestinationTeleporter->AddIgnoredActor(TargetActor);
     }
-    
+
     // Try to Perform Our Teleport
     const bool bIsTeleportSuccessful{ TargetActor->TeleportTo(DestinationLocation, DestinationRotation) };
-    
+
     if (bIsTeleportSuccessful)
     {
         // Play effects associated with teleportation
         PlayTeleportEffects();
-        
+
         // If we successfully teleported, notify our actor.
         // We need to do this to update CharacterMovementComponent.bJustTeleported property
         // Which is used to update EyePosition
         // (Otherwise our EyePosition interpolates through the world)
         TargetActor->TeleportSucceeded(false);
-    
+
         // Rotate velocity vector relative to the destination teleporter exit heading
         SetTargetVelocity(TargetActor, TargetCharacter, DesiredRotation, DestinationRotation);
 
         ApplyGameplayTag(TargetActor);
+
+        UUR_NavigationUtilities::ForceReachedDestinationWithin(Cast<APawn>(TargetActor), CapsuleComponent->GetNavigationBounds());
     }
 
     return bIsTeleportSuccessful;
@@ -273,7 +294,8 @@ void AUR_Teleporter::SetTargetVelocity(AActor* TargetActor, ACharacter* TargetCh
                 auto NewTargetVelocity = DestinationRotation.RotateVector(FVector::ForwardVector * CharacterMovement->Velocity.Size2D());
                 NewTargetVelocity.Z = CharacterMovement->Velocity.Z;
                 CharacterMovement->Velocity = NewTargetVelocity;
-                TargetCharacter->GetController()->SetControlRotation(DestinationRotation);
+                if (TargetCharacter->GetController())
+                    TargetCharacter->GetController()->SetControlRotation(DestinationRotation);
             }
             else
             {
@@ -337,9 +359,9 @@ void AUR_Teleporter::SetTeleporterState(const bool bInEnabled)
 
 void AUR_Teleporter::Enable()
 {
-    CapsuleComponent->UpdateOverlaps();    
+    CapsuleComponent->UpdateOverlaps();
     bIsEnabled = true;
-    
+
     TArray<AActor*> OverlappingActors;
     CapsuleComponent->GetOverlappingActors(OverlappingActors, TeleportActorClass);
     for (auto& OverlappingActor : OverlappingActors)
@@ -357,7 +379,7 @@ void AUR_Teleporter::Enable()
     {
         UGameplayStatics::SpawnEmitterAttached(TeleporterEnabledParticleSystemClass, RootComponent);
     }
-    
+
     OnEnabled();
 }
 
@@ -375,7 +397,7 @@ void AUR_Teleporter::OnEnabled_Implementation()
 void AUR_Teleporter::Disable()
 {
     bIsEnabled = false;
-    
+
     if (TeleporterDisabledSound)
     {
         UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleporterDisabledSound, GetActorLocation());
@@ -385,7 +407,7 @@ void AUR_Teleporter::Disable()
     {
         UGameplayStatics::SpawnEmitterAttached(TeleporterDisabledParticleSystemClass, RootComponent);
     }
-    
+
     OnDisabled();
 }
 
@@ -443,19 +465,19 @@ bool AUR_Teleporter::CanEditChange(const FProperty* InProperty) const
     const bool ParentVal = Super::CanEditChange(InProperty);
 
     // Can we edit bRequiredTagsExact?
-    if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_Teleporter, bRequiredTagsExact))
+    if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(ThisClass, bRequiredTagsExact))
     {
         return RequiredTags.Num() > 0;
     }
 
     // Can we edit bExcludedTagsExact?
-    if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_Teleporter, bExcludedTagsExact))
+    if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(ThisClass, bExcludedTagsExact))
     {
         return ExcludedTags.Num() > 0;
     }
 
     // Can we edit DestinationTransform?
-    if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(AUR_Teleporter, DestinationTransform))
+    if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(ThisClass, DestinationTransform))
     {
         return DestinationActor == nullptr;
     }

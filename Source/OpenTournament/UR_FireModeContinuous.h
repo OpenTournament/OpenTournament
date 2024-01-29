@@ -58,6 +58,8 @@ struct FStoredTargetHitCount
 
     UPROPERTY()
     uint8 HitCount;
+
+    FStoredTargetHitCount() : Target(NULL), HitCount(0) {}
 };
 
 /**

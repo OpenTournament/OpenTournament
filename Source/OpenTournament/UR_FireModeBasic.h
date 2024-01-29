@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "UR_FireModeBase.h"
+
+#include "GameFramework/DamageType.h"
+
 #include "UR_FunctionLibrary.h"
 #include "UR_FireModeBasic.generated.h"
 
@@ -33,6 +36,8 @@ struct FSimulatedShotInfo
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 Seed;
+
+    FSimulatedShotInfo() : Seed(0) {}
 };
 
 /**
@@ -52,11 +57,13 @@ struct FHitscanVisualInfo
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 Seed;
+
+    FHitscanVisualInfo() : Seed(0) {}
 };
 
 
 /**
- * 
+ *
  */
 UCLASS(ClassGroup = (FireMode), Meta = (BlueprintSpawnableComponent))
 class OPENTOURNAMENT_API UUR_FireModeBasic : public UUR_FireModeBase

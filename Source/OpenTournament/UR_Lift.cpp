@@ -30,8 +30,8 @@ AUR_Lift::AUR_Lift(const FObjectInitializer& ObjectInitializer) :
     BoxComponent->SetBoxExtent(FVector(50, 50, 30));
     SetRootComponent(BoxComponent);
     BoxComponent->SetGenerateOverlapEvents(true);
-    BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &AUR_Lift::OnTriggerEnter);
-    BoxComponent->OnComponentEndOverlap.AddDynamic(this, &AUR_Lift::OnTriggerExit);
+    BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnTriggerEnter);
+    BoxComponent->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnTriggerExit);
 
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMeshComponent"));
     MeshComponent->SetupAttachment(RootComponent);

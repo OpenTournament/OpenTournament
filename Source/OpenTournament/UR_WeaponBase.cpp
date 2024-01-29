@@ -4,6 +4,8 @@
 
 #include "UR_WeaponBase.h"
 
+#include <Engine/World.h>
+
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 
@@ -83,7 +85,7 @@ USkeletalMesh* AUR_WeaponBase::GetMeshForWeapon(const TSubclassOf<AUR_Weapon> In
     {
         if (USkeletalMeshComponent* MeshComp = InWeaponClass->GetDefaultObject<AUR_Weapon>()->GetMesh3P())
         {
-            return MeshComp->SkeletalMesh;
+            return MeshComp->GetSkeletalMeshAsset();
         }
     }
     return nullptr;

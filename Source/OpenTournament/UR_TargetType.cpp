@@ -31,6 +31,6 @@ void UUR_TargetType_UseEventData::GetTargets_Implementation(AUR_Character* Targe
 	}
 	else if (EventData.Target)
 	{
-		OutActors.Add(const_cast<AActor*>(EventData.Target));
+		OutActors.Add(const_cast<AActor*>(EventData.Target.Get()));
 	}
 }

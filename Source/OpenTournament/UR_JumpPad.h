@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -20,6 +20,7 @@ class UParticleSystemComponent;
 class USplineComponent;
 class USoundBase;
 class UStaticMeshComponent;
+class UNavLinkComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -62,7 +63,7 @@ public:
     */
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
     UCapsuleComponent* CapsuleComponent;
-    
+
     /*
     * Audio Component
     */
@@ -74,6 +75,9 @@ public:
     */
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "JumpPad")
     UParticleSystemComponent* ParticleSystemComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "JumpPad")
+    UNavLinkComponent* NavLink;
 
 #if WITH_EDITOR
     /*
@@ -141,6 +145,8 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
+    virtual void OnConstruction(const FTransform& Transform) override;
+
     void BeginPlay() override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -150,9 +156,9 @@ public:
     */
     UFUNCTION()
     void OnTriggerEnter(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-    
+
     /**
-    * Is this actor permitted to jump? 
+    * Is this actor permitted to jump?
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintPure, BlueprintCallable, Category = "JumpPad")
     bool IsPermittedToJump(const AActor* TargetActor) const;

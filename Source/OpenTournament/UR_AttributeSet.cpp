@@ -29,17 +29,17 @@ void UUR_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(UUR_AttributeSet, Health);
-    DOREPLIFETIME(UUR_AttributeSet, HealthMax);
-    DOREPLIFETIME(UUR_AttributeSet, OverHealth);
-    DOREPLIFETIME(UUR_AttributeSet, OverHealthMax);
-    DOREPLIFETIME(UUR_AttributeSet, Energy);
-    DOREPLIFETIME(UUR_AttributeSet, EnergyMax);
-    DOREPLIFETIME(UUR_AttributeSet, Armor);
-    DOREPLIFETIME(UUR_AttributeSet, ArmorMax);
-    DOREPLIFETIME(UUR_AttributeSet, ArmorAbsorptionPercent);
-    DOREPLIFETIME(UUR_AttributeSet, Shield);
-    DOREPLIFETIME(UUR_AttributeSet, ShieldMax);
+    DOREPLIFETIME(ThisClass, Health);
+    DOREPLIFETIME(ThisClass, HealthMax);
+    DOREPLIFETIME(ThisClass, OverHealth);
+    DOREPLIFETIME(ThisClass, OverHealthMax);
+    DOREPLIFETIME(ThisClass, Energy);
+    DOREPLIFETIME(ThisClass, EnergyMax);
+    DOREPLIFETIME(ThisClass, Armor);
+    DOREPLIFETIME(ThisClass, ArmorMax);
+    DOREPLIFETIME(ThisClass, ArmorAbsorptionPercent);
+    DOREPLIFETIME(ThisClass, Shield);
+    DOREPLIFETIME(ThisClass, ShieldMax);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,4 +159,17 @@ void UUR_AttributeSet::OnRep_Shield(const FGameplayAttributeData& OldShield)
 void UUR_AttributeSet::OnRep_ShieldMax(const FGameplayAttributeData& OldShieldMax)
 {
     GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, ShieldMax, OldShieldMax);
+}
+
+
+float UUR_AttributeSet::GetEffectiveHealth()
+{
+    const float TotalHealth = GetHealth() + GetOverHealth();
+
+    if (GetArmorAbsorptionPercent() < 1)
+    {
+        return GetShield() + FMath::Min(TotalHealth + GetArmor(), TotalHealth / (1.f - GetArmorAbsorptionPercent()));
+    }
+
+    return GetShield() + GetArmor() + TotalHealth;
 }

@@ -4,14 +4,21 @@
 
 #include "UR_Character.h"
 
+#include <Components/SkeletalMeshComponent.h>
+#include <Components/SkinnedMeshComponent.h>
+
 #include "Net/UnrealNetwork.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
+#include "Engine/DamageEvents.h"
 #include "GameFramework/GameState.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameplayTagsManager.h"
 #include "Components/CapsuleComponent.h"
+#include <Components/SkeletalMeshComponent.h>
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Perception/AISense_Sight.h"
 
 #include "OpenTournament.h"
 #include "Interfaces/UR_ActivatableInterface.h"
@@ -22,11 +29,16 @@
 #include "UR_GameplayAbility.h"
 #include "UR_PlayerController.h"
 #include "UR_GameMode.h"
+#include "UR_GameplayTags.h"
 #include "UR_Weapon.h"
 #include "UR_Projectile.h"
 #include "UR_PlayerState.h"
 #include "UR_InputComponent.h"
 #include "UR_UserSettings.h"
+#include "UR_DamageType.h"
+#include "UR_PaniniUtils.h"
+#include "AI/AIPerceptionSourceNativeComp.h"
+#include "UR_CharacterCustomization.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,16 +63,12 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 
     InventoryComponent = Cast<UUR_InventoryComponent>(CreateDefaultSubobject<UUR_InventoryComponent>(TEXT("InventoryComponent")));
 
-    // Create a CameraComponent	
-    CharacterCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-    CharacterCameraComponent->SetupAttachment(GetCapsuleComponent());
-    CharacterCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, BaseEyeHeight)); // Position the camera
-    CharacterCameraComponent->bUsePawnControlRotation = true;
+    // FVector(-39.56f, 1.75f, BaseEyeHeight)   <- where does this come from?
 
-    // FVector(-39.56f, 1.75f, BaseEyeHeight)
-    DefaultCameraPosition = FVector(-0.f, 0.f, BaseEyeHeight);
     BaseEyeHeight = 64.f;
+    DefaultCameraPosition = FVector(-0.f, 0.f, BaseEyeHeight);
     CrouchedEyeHeight = 64.f;
+
     EyeOffset = FVector(0.f, 0.f, 0.f);
     TargetEyeOffset = EyeOffset;
     EyeOffsetLandingBobMaximum = BaseEyeHeight + GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
@@ -68,10 +76,25 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     EyeOffsetToTargetInterpolationRate = FVector(18.f, 10.f, 10.f);
     TargetEyeOffsetToNeutralInterpolationRate = FVector(5.f, 5.f, 5.f);
 
+    // Create a zerolength arm for first person camera
+    FirstPersonCamArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("FirstPersonCamArm"));
+    FirstPersonCamArm->SetupAttachment(GetCapsuleComponent());
+    FirstPersonCamArm->SetRelativeLocation(DefaultCameraPosition); // Position the camera
+    FirstPersonCamArm->TargetArmLength = 0.f;
+    FirstPersonCamArm->bDoCollisionTest = false;
+    FirstPersonCamArm->bUsePawnControlRotation = true;
+
+    // Create a CameraComponent
+    FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+    //CharacterCameraComponent->SetupAttachment(GetCapsuleComponent());
+    //CharacterCameraComponent->SetRelativeLocation(DefaultCameraPosition); // Position the camera
+    //CharacterCameraComponent->bUsePawnControlRotation = true;
+    FirstPersonCamera->SetupAttachment(FirstPersonCamArm);
+
     // Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
     MeshFirstPerson = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshFirstPerson"));
     MeshFirstPerson->SetOnlyOwnerSee(true);
-    MeshFirstPerson->SetupAttachment(CharacterCameraComponent);
+    MeshFirstPerson->SetupAttachment(FirstPersonCamera);
     MeshFirstPerson->bCastDynamicShadow = false;
     MeshFirstPerson->CastShadow = false;
     MeshFirstPerson->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
@@ -80,7 +103,12 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     WeaponAttachPoint = FName(TEXT("GripPoint"));
 
     // Mesh third person (now using SetVisibility in CameraViewChanged)
-    GetMesh()->bOwnerNoSee = false;
+    GetMesh3P()->bOwnerNoSee = false;
+    GetMesh3P()->bCastHiddenShadow = true;
+
+    // By default, do not refresh animations/bones when not rendered
+    GetMesh3P()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+    MeshFirstPerson->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
     // Third person camera
     ThirdPersonArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonArm"));
@@ -91,12 +119,23 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 
     ThirdPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
     ThirdPersonCamera->SetupAttachment(ThirdPersonArm);
-    
+
     // Create the attribute set, this replicates by default
     AttributeSet = CreateDefaultSubobject<UUR_AttributeSet>(TEXT("AttributeSet"));
 
     // Create the ASC
     AbilitySystemComponent = CreateDefaultSubobject<UUR_AbilitySystemComponent>("AbilitySystemComponent");
+
+    // AI Perception Source
+    AIPerceptionStimuliSource = CreateDefaultSubobject<UAIPerceptionSourceNativeComp>("AIPerceptionStimuliSource");
+    AIPerceptionStimuliSource->SetAutoRegisterAsSource(true);
+    AIPerceptionStimuliSource->SetRegisterAsSourceForSenses({ UAISense_Sight::StaticClass() });
+
+    // Hair
+    HairMesh = CreateDefaultSubobject<USkeletalMeshComponent>("HairMesh");
+    HairMesh->SetupAttachment(GetMesh3P());
+    HairMesh->SetLeaderPoseComponent(GetMesh3P());
+    HairMesh->bCastHiddenShadow = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,9 +144,9 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(AUR_Character, DodgeDirection);
-    DOREPLIFETIME(AUR_Character, InventoryComponent);
-    DOREPLIFETIME(AUR_Character, AbilitySystemComponent);
+    DOREPLIFETIME(ThisClass, DodgeDirection);
+    DOREPLIFETIME(ThisClass, InventoryComponent);
+    DOREPLIFETIME(ThisClass, AbilitySystemComponent);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +154,7 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 void AUR_Character::BeginPlay()
 {
     InitializeGameplayTagsManager();
-    
+
     Super::BeginPlay();
 
     AttributeSet->SetHealth(100.f);
@@ -124,7 +163,24 @@ void AUR_Character::BeginPlay()
     AttributeSet->SetArmorMax(100.f);
     AttributeSet->SetShieldMax(100.f);
 
-    SetupMaterials();
+    UUR_PaniniUtils::TogglePaniniProjection(GetMesh1P(), true, true);
+
+    if (GetNetMode() == NM_DedicatedServer)
+    {
+        // Server considers being never rendered, so it will never update anims/bones when optimization settings are enabled.
+        // We have two options here :
+        //
+        // Option 1 = Always tick pose but never update transforms.
+        //            This is most likely better for performance, but means we cannot rely on transforms (location/rotation) of bones (headshot!) nor attached objects (weapons).
+        //            The issue can be solved though by calling RefreshBoneTransforms() manually before reading them.
+        //
+        // Option 2 = Always tick pose and update transforms.
+        //            This is easier to work with, but probably less performance friendly.
+        //            However here the updating of transforms should benefit from parallelism so hopefully it's not as bad.
+
+        //GetMesh3P()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPose;
+        GetMesh3P()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+    }
 }
 
 void AUR_Character::Tick(float DeltaTime)
@@ -152,30 +208,49 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
     PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
     PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
+    PlayerInputComponent->BindAction("DropWeapon", IE_Pressed, this, &AUR_Character::DropWeapon);
 
     SetupWeaponBindings();
 
-    // Throw Weapon
     // Voice
     // Ping
     // Emote
 }
 
-void AUR_Character::SetupMaterials_Implementation()
+void AUR_Character::ApplyCustomization_Implementation(FCharacterCustomization& InCustomization)
 {
-    /*
-    for (UPrimitiveComponent* Component : { GetMesh3P(), GetMesh1P() })
-    {
-        for (int32 i = 0; i < Component->GetNumMaterials(); i++)
-        {
-            Component->CreateDynamicMaterialInstance(i);
-        }
-    }
-    */
-    //NOTE: this is not required because MeshComponent::SetParameterValueOnMaterials already generates MIDs as needed.
-    // Might want to remove this function altogether
+    UUR_CharacterCustomizationBackend::LoadCharacterCustomizationAssets(InCustomization);
 
-    UpdateTeamColor();
+    if (GetMesh3P())
+    {
+        if (InCustomization.LoadedCharacter)
+        {
+            GetMesh3P()->SetSkeletalMeshAsset(InCustomization.LoadedCharacter);
+            // Important Note :
+            // We need to reset materials when swapping meshes, because different meshes might use different material slots...
+            // This means the correct materials have to be set in the SkeletalMesh asset directly, NOT in the Character blueprint mesh component!
+            // I'm not sure how to best handle this.
+            GetMesh3P()->EmptyOverrideMaterials();
+        }
+        GetMesh3P()->SetVectorParameterValueOnMaterials("Skin tone", FVector(FLinearColor(InCustomization.SkinTone)));
+    }
+
+    if (GetMesh1P())
+    {
+        GetMesh1P()->SetVectorParameterValueOnMaterials("Skin tone", FVector(FLinearColor(InCustomization.SkinTone)));
+    }
+
+    if (HairMesh)
+    {
+        if (InCustomization.LoadedHair)
+        {
+            HairMesh->SetSkeletalMeshAsset(InCustomization.LoadedHair);
+            HairMesh->EmptyOverrideMaterials();
+        }
+        HairMesh->SetVectorParameterValueOnMaterials("Hair Color", FVector(FLinearColor(InCustomization.HairColor)));
+    }
+
+    UpdateTeamColor();  //since we may have reset materials, need to update this
 }
 
 void AUR_Character::UpdateTeamColor_Implementation()
@@ -193,14 +268,16 @@ void AUR_Character::UpdateTeamColor_Implementation()
     }
 }
 
-void AUR_Character::OnRep_PlayerState()
+void AUR_Character::UnPossessed()
 {
-    Super::OnRep_PlayerState();
+    Super::UnPossessed();
 
-    if (GetNetMode() != NM_DedicatedServer)
+    // Force stop firing
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
     {
-        UpdateTeamColor();
+        InventoryComponent->ActiveWeapon->Deactivate();
     }
+    DesiredFireModeNum.Empty();
 }
 
 
@@ -236,13 +313,17 @@ UCameraComponent* AUR_Character::PickCamera_Implementation()
         return ThirdPersonCamera;
     }
 
-    // Alive = 1p
-    //TODO: specs should be able to switch at will.
-    // That would be a variable in PlayerController.
-    // Hopefully this is client-only, so we can get local PC to check this.
-    if (IsAlive() && CharacterCameraComponent && CharacterCameraComponent->IsActive())
+    // Player desires 3p
+    if (auto PC = UUR_FunctionLibrary::GetLocalPC<AUR_PlayerController>(this))
     {
-        return CharacterCameraComponent;
+        if (PC->bWantsThirdPersonCamera && ThirdPersonCamera && ThirdPersonCamera->IsActive())
+            return ThirdPersonCamera;
+    }
+
+    // Alive = 1p
+    if (IsAlive() && FirstPersonCamera && FirstPersonCamera->IsActive())
+    {
+        return FirstPersonCamera;
     }
 
     // Fallback to 3p
@@ -261,8 +342,11 @@ bool AUR_Character::IsThirdPersonCamera_Implementation(UCameraComponent* Camera)
 
 void AUR_Character::CameraViewChanged_Implementation()
 {
-    GetMesh()->SetVisibility(bViewingThirdPerson, true);
-    MeshFirstPerson->SetVisibility(!bViewingThirdPerson, true);
+    if (GetMesh3P())
+        GetMesh3P()->SetVisibility(bViewingThirdPerson, true);
+
+    if (GetMesh1P())
+        GetMesh1P()->SetVisibility(!bViewingThirdPerson, true);
 
     //NOTE: If visibility propagation works as expected and if the weapon is properly attached to meshes,
     // then it might not be necessary to update weapon visibility. Needs checking out.
@@ -279,11 +363,18 @@ void AUR_Character::CameraViewChanged_Implementation()
     }
 }
 
+void AUR_Character::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
+{
+    // Not sure yet how we're gonna handle ThirdPerson weapon firing, but that's gonna be a handful, if we ever want to do it.
+    OutLocation = FirstPersonCamera->GetComponentLocation();
+    OutRotation = GetViewRotation();
+}
+
 void AUR_Character::BecomeViewTarget(APlayerController* PC)
 {
     Super::BecomeViewTarget(PC);
 
-    if (PC && PC->IsLocalController())
+    if (PC && PC->IsLocalPlayerController())
     {
         // Update all the things (character 1p/3p mesh, weapon 1p/3p mesh, zooming state)
         bViewingThirdPerson = IsThirdPersonCamera(PickCamera());
@@ -293,19 +384,19 @@ void AUR_Character::BecomeViewTarget(APlayerController* PC)
 
 void AUR_Character::EndViewTarget(APlayerController* PC)
 {
-    // If a zoom is active, deactivate it
-    if (CurrentZoomInterface)
-    {
-        IUR_ActivatableInterface::Execute_AIF_Deactivate(CurrentZoomInterface.GetObject(), false);
-    }
-
     Super::EndViewTarget(PC);
+
+    if (PC && PC->IsLocalPlayerController())
+    {
+        bViewingThirdPerson = true;
+        CameraViewChanged();
+    }
 }
 
 void AUR_Character::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
     UpdateMovementPhysicsGameplayTags(PrevMovementMode);
-    
+
     Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
 }
 
@@ -330,11 +421,6 @@ void AUR_Character::RegisterZoomInterface(TScriptInterface<IUR_ActivatableInterf
     {
         IUR_ActivatableInterface::Execute_AIF_Activate(CurrentZoomInterface.GetObject(), false);
     }
-}
-
-void AUR_Character::BehindView(int32 Switch)
-{
-    CharacterCameraComponent->SetActive((Switch == -1) ? (!CharacterCameraComponent->IsActive()) : !Switch);
 }
 
 
@@ -423,7 +509,7 @@ void AUR_Character::SetupWeaponBindings()
                 const auto& Group = Settings->WeaponGroups[Index];
                 if (Group.Keybind.IsValidChord())
                 {
-                    WeaponBindings.Add(URInputComponent->BindKeyParameterized<TBaseDelegate<void, int32>>(Group.Keybind, IE_Pressed, this, &AUR_Character::SelectWeapon, Index));
+                    //WeaponBindings.Add(URInputComponent->BindKeyParameterized<TDelegate<void(int32)>>(Group.Keybind, IE_Pressed, this, &AUR_Character::SelectWeapon, Index));
                 }
             }
         }
@@ -442,7 +528,7 @@ void AUR_Character::RecalculateBaseEyeHeight()
     }
 
     const float DefaultHalfHeight{ GetDefaultHalfHeight() };
-    const float AbsoluteDifference = DefaultHalfHeight - ((GetCharacterMovement()->CrouchedHalfHeight / DefaultHalfHeight) * DefaultHalfHeight);
+    const float AbsoluteDifference = DefaultHalfHeight - ((GetCharacterMovement()->GetCrouchedHalfHeight() / DefaultHalfHeight) * DefaultHalfHeight);
 
     if (GetMovementComponent()->IsMovingOnGround())
     {
@@ -484,7 +570,7 @@ void AUR_Character::TickEyePosition(const float DeltaTime)
     }
 
     //GAME_LOG(Game, Log, "Ticking EyeOffset: %f, %f, %f)", EyeOffset.X, EyeOffset.Y, EyeOffset.Z);
-    CharacterCameraComponent->SetRelativeLocation(FVector(-0.f, 0.f, CrouchEyeOffsetZ) + EyeOffset, false);
+    FirstPersonCamArm->SetRelativeLocation(FVector(-0.f, 0.f, CrouchEyeOffsetZ) + EyeOffset, false);
 
     // Update OldLocationZ. Order of operations is important here, this must follow our EyeOffset updates
     OldLocationZ = GetActorLocation().Z;
@@ -668,7 +754,7 @@ void AUR_Character::Dodge(FVector DodgeDir, FVector DodgeCross)
     }
 }
 
-void AUR_Character::Dodge(const EDodgeDirection InDodgeDirection)
+void AUR_Character::DodgeTest(const EDodgeDirection InDodgeDirection)
 {
     // @! TODO Testing only...
 
@@ -795,46 +881,81 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     GAME_LOG(Game, Log, "Damage repartition: Shield(%f), Armor(%f), Health(%f), Extra(%f)", DamageToShield, DamageToArmor, DamageToHealth, DamageRemaining);
 
     ////////////////////////////////////////////////////////////
-    // Apply Knockback
+    // Knockback & replicated info
 
-    // Avoid very small knockbacks
-    if (KnockbackPower / GetCharacterMovement()->Mass >= 100.f)
+    FReplicatedDamageEvent RepDamageEvent;
+    RepDamageEvent.Type = DamageEvent.GetTypeID();
+    RepDamageEvent.Damage = Damage;
+    RepDamageEvent.HealthDamage = DamageToHealth;
+    RepDamageEvent.ArmorDamage = DamageToShield + DamageToArmor;
+    RepDamageEvent.DamageInstigator = EventInstigator ? EventInstigator->GetPawn() : NULL;
+    if (UKismetMathLibrary::ClassIsChildOf(DamageEvent.DamageTypeClass, UUR_DamageType::StaticClass()))
     {
-        FVector KnockbackDir;
-        if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
-        {
-            FPointDamageEvent* PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
+        RepDamageEvent.DamType = GetDefault<UUR_DamageType>(DamageEvent.DamageTypeClass);
+    }
+    else
+    {
+        // Avoid null damagetype, it is annoying to handle in blueprints
+        RepDamageEvent.DamType = GetDefault<UUR_DamageType>();
+    }
 
-            // Always use shot direction for knockback
-            KnockbackDir = PointDamageEvent->ShotDirection;
-            // Bias towards +Z
-            KnockbackDir = 0.75*KnockbackDir + FVector(0, 0, 0.25);
+    // NOTE: Adding impulses to CharacterMovement are just velocity changes.
+    // Point or Radial doesn't make any difference.
+    // Those only matter for skeletal physics (ragdoll), which we may apply on client.
+    FVector KnockbackDir;
 
-            GetCharacterMovement()->AddImpulse(KnockbackPower*KnockbackDir);
-        }
-        else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
-        {
-            FRadialDamageEvent* RadialDamageEvent = (FRadialDamageEvent*)&DamageEvent;
+    if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+    {
+        FPointDamageEvent* PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
 
-            // Use no falloff (constant) because we already scaled KnockbackPower
-            GetCharacterMovement()->AddRadialImpulse(RadialDamageEvent->Origin, RadialDamageEvent->Params.GetMaxRadius(), KnockbackPower, ERadialImpulseFalloff::RIF_Constant, false);
-            //TODO: Want to bias towards +Z as well, but dunno how to deal with Radial
-        }
-        else
-        {
-            // This is most likely a code-generated FDamageEvent() with no real source.
-        }
+        KnockbackDir = PointDamageEvent->ShotDirection;
+
+        RepDamageEvent.Location = PointDamageEvent->HitInfo.ImpactPoint;
+        RepDamageEvent.Knockback = KnockbackPower * PointDamageEvent->ShotDirection;
+    }
+    else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+    {
+        FRadialDamageEvent* RadialDamageEvent = (FRadialDamageEvent*)&DamageEvent;
+
+        KnockbackDir = (GetActorLocation() - RadialDamageEvent->Origin).GetSafeNormal();
+
+        RepDamageEvent.Location = RadialDamageEvent->Origin;
+        RepDamageEvent.Knockback = FVector(KnockbackPower / Falloff, RadialDamageEvent->Params.GetMaxRadius(), 0);
+    }
+    else
+    {
+        // This is most likely a code-generated FDamageEvent() with no real source.
+        KnockbackDir = FVector::ZeroVector;
+        RepDamageEvent.Location = GetActorLocation();
+        RepDamageEvent.Knockback = FVector::ZeroVector;
+    }
+
+    // When character is on ground, bias knockback towards +Z to lift him
+    if (GetCharacterMovement()->IsMovingOnGround() && KnockbackDir.Z < 0.1f)
+    {
+        KnockbackDir = FVector(KnockbackDir.X, KnockbackDir.Y, FMath::Max(0.1, KnockbackDir.Z + 0.33));
+        KnockbackDir.Normalize();
+    }
+
+    FVector FinalKnockback = KnockbackPower * KnockbackDir;
+    if (FinalKnockback.Size() > 100.f)
+    {
+        GetCharacterMovement()->AddImpulse(FinalKnockback);
     }
 
     ////////////////////////////////////////////////////////////
-    // Other
+    // Event
 
     // @! TODO Limit Pain by time, vary by damage etc.
+    /*
     if (DamageToHealth > 10.f)
     {
         //TODO: Replicate
         UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.PainSound, GetActorLocation(), GetActorRotation());
     }
+    */
+
+    MulticastDamageEvent(RepDamageEvent);
 
     ////////////////////////////////////////////////////////////
     // Death
@@ -842,13 +963,28 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     if (AttributeSet && AttributeSet->Health.GetCurrentValue() <= 0)
     {
         // Can use DamageRemaining here to GIB
-        Die(EventInstigator, DamageEvent, DamageCauser);
+        Die(EventInstigator, DamageEvent, DamageCauser, RepDamageEvent);
     }
 
     return Damage;
 }
 
-void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser)
+void AUR_Character::MulticastDamageEvent_Implementation(const FReplicatedDamageEvent RepDamageEvent)
+{
+    OnDamageReceived.Broadcast(this, RepDamageEvent);
+
+    //NOTE: Using pawn as instigator is not ideal because the owner of a projectile can die during projectile flight,
+    // and then the player would not be notified about the hit.
+    // Controller is not good either because spectators cannot access spectated player's controller.
+    // PlayerState might be the way to go.
+
+    if (AUR_Character* Dealer = Cast<AUR_Character>(RepDamageEvent.DamageInstigator))
+    {
+        Dealer->OnDamageDealt.Broadcast(this, RepDamageEvent);
+    }
+}
+
+void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser, const FReplicatedDamageEvent& RepDamageEvent)
 {
     // Already killed (might happen when multiple damage sources in 1 frame)
     if (GetTearOff() || IsPendingKillPending())
@@ -872,7 +1008,6 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
         }
 
         URGameMode->PlayerKilled(Killed, Killer, DamageEvent, DamageCauser);
-        OnDied(Killer, DamageEvent, DamageCauser);
     }
 
     if (AttributeSet)
@@ -880,30 +1015,36 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
         AttributeSet->SetHealth(0);
     }
 
-    // Force stop firing
-    if (InventoryComponent && InventoryComponent->ActiveWeapon)
-    {
-        InventoryComponent->ActiveWeapon->Deactivate();
-    }
+    // Clear inventory
+    InventoryComponent->OwnerDied();
     DesiredFireModeNum.Empty();
+
+    // Stop being a target for AIs
+    AIPerceptionStimuliSource->UnregisterFromPerceptionSystem();
+
+    // Replicate
+    MulticastDied(Killer, RepDamageEvent);
 
     // Cut the replication link
     TearOff();
 
-    if (GetNetMode() == NM_DedicatedServer)
+    if (IsNetMode(NM_DedicatedServer))
     {
         //Destroy();
-        SetLifeSpan(0.200f);	// give it time to replicate the tear off ?
+        // On dedicated server, we could theoretically destroy right away, but need to give it a bit of slack to replicate PlayDeath & TearOff.
+        SetLifeSpan(0.200f);
         SetActorEnableCollision(false);
-    }
-    else
-    {
-        PlayDeath();
+
+        // Event on server
+        OnDeath.Broadcast(this, Killer);
     }
 }
 
-void AUR_Character::PlayDeath()
+void AUR_Character::PlayDeath_Implementation(AController* Killer, const FReplicatedDamageEvent& RepDamageEvent)
 {
+    if (IsNetMode(NM_DedicatedServer))
+        return;
+
     APlayerController* OldController = nullptr;
     if (Controller && Controller->GetPawn() == this)
         OldController = Cast<APlayerController>(Controller);
@@ -921,7 +1062,7 @@ void AUR_Character::PlayDeath()
     ThirdPersonArm->bEnableCameraLag = true;
     ThirdPersonArm->bEnableCameraRotationLag = true;
 
-    GetCharacterMovement()->StopActiveMovement();
+    GetCharacterMovement()->DisableMovement();
 
     // Disable capsule
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -936,7 +1077,30 @@ void AUR_Character::PlayDeath()
     // Attach capsule back to mesh
     GetCapsuleComponent()->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
 
+    // Apply knockback to ragdoll
+    if (RepDamageEvent.IsOfType(FPointDamageEvent::ClassID))
+    {
+        GetMesh()->AddImpulseAtLocation(RepDamageEvent.Knockback, RepDamageEvent.Location);
+    }
+    else if (RepDamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+    {
+        GetMesh()->AddRadialImpulse(RepDamageEvent.Location, RepDamageEvent.Knockback.Y, RepDamageEvent.Knockback.X, ERadialImpulseFalloff::RIF_Linear, false);
+    }
+
+    // NOTE: we can only set lifespan after receiving TornOff(), otherwise it is locked by Authority.
+    // I am not sure if we can guarantee the order of the two calls here, so handle both.
+    bPlayingDeath = true;
     SetLifeSpan(5.0f);
+
+    // Event on clients
+    OnDeath.Broadcast(this, Killer);
+}
+
+void AUR_Character::TornOff()
+{
+    Super::TornOff();
+
+    SetLifeSpan(bPlayingDeath ? 5.0f : 0.200f);
 }
 
 bool AUR_Character::IsAlive() const
@@ -951,7 +1115,7 @@ bool AUR_Character::IsAlive() const
 
 void AUR_Character::ServerSuicide_Implementation()
 {
-    Die(nullptr, FDamageEvent(), nullptr);
+    Die(nullptr, FDamageEvent(), nullptr, FReplicatedDamageEvent());
 }
 
 
@@ -1031,6 +1195,14 @@ void AUR_Character::PrevWeapon()
     if (InventoryComponent)
     {
         InventoryComponent->PrevWeapon();
+    }
+}
+
+void AUR_Character::DropWeapon()
+{
+    if (InventoryComponent && InventoryComponent->ActiveWeapon)
+    {
+        InventoryComponent->ServerDropActiveWeapon();
     }
 }
 
@@ -1127,10 +1299,10 @@ void AUR_Character::Server_SetAbilityLevel_Implementation(TSubclassOf<UUR_Gamepl
 
 void AUR_Character::InitializeMovementActionGameplayTags()
 {
-    MovementActionGameplayTags.Add(EMovementAction::Jumping, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Jumping")));
-    MovementActionGameplayTags.Add(EMovementAction::Dodging, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Dodging")));
-    MovementActionGameplayTags.Add(EMovementAction::Crouching, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Crouching")));
-    MovementActionGameplayTags.Add(EMovementAction::Running, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Movement.Running")));
+    MovementActionGameplayTags.Add(EMovementAction::Jumping,    URGameplayTags::TAG_Character_States_Movement_Jumping);
+    MovementActionGameplayTags.Add(EMovementAction::Dodging,    URGameplayTags::TAG_Character_States_Movement_Dodging);
+    MovementActionGameplayTags.Add(EMovementAction::Crouching,  URGameplayTags::TAG_Character_States_Movement_Crouching);
+    MovementActionGameplayTags.Add(EMovementAction::Running,    URGameplayTags::TAG_Character_States_Movement_Running);
 }
 
 void AUR_Character::InitializeMovementModeGameplayTags()
@@ -1138,11 +1310,11 @@ void AUR_Character::InitializeMovementModeGameplayTags()
     MovementModeGameplayTags.Add(EMovementMode::MOVE_None, FGameplayTag{});
     MovementModeGameplayTags.Add(EMovementMode::MOVE_Custom, FGameplayTag{});
     MovementModeGameplayTags.Add(EMovementMode::MOVE_MAX, FGameplayTag{});
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Walking, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Walking")));
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_NavWalking, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Walking")));
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Falling, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Falling")));
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Swimming, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Swimming")));
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Flying, GameplayTagsManager->RequestGameplayTag( TEXT("Character.States.Physics.Flying")));
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Walking,    URGameplayTags::TAG_Character_States_Physics_Walking);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_NavWalking, URGameplayTags::TAG_Character_States_Physics_Walking);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Falling,    URGameplayTags::TAG_Character_States_Physics_Falling);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Swimming,   URGameplayTags::TAG_Character_States_Physics_Swimming);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Flying,     URGameplayTags::TAG_Character_States_Physics_Flying);
 }
 
 void AUR_Character::InitializeGameplayTags()
@@ -1179,7 +1351,7 @@ FGameplayTag AUR_Character::GetMovementModeGameplayTag(const EMovementMode InMov
             }
         }
     }
-    
+
     return FGameplayTag{};
 }
 
@@ -1202,7 +1374,7 @@ void AUR_Character::UpdateGameplayTags(const FGameplayTagContainer& TagsToRemove
     }
     GAME_LOG(Game, Verbose, "Pre: Character (%s) has Tags: %s", *this->GetName(), *TagsToPrint);
 #endif
-    
+
     GameplayTags.RemoveTags(TagsToRemove);
     GameplayTags.AppendTags(TagsToAdd);
 

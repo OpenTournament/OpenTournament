@@ -27,6 +27,8 @@ class UUR_GameplayAbility;
 class UUR_InventoryComponent;
 class APlayerController;
 class IUR_ActivatableInterface;
+class UUR_DamageType;
+class UAIPerceptionSourceNativeComp;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -49,9 +51,106 @@ struct FCharacterVoice
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
     USoundBase* PainSound;
+
+    FCharacterVoice() : FootstepSound(NULL), LandingSound(NULL), JumpSound(NULL), DodgeSound(NULL), PainSound(NULL) {}
+};
+
+/**
+* Replicatable damage event.
+* Builtin damage events are not replicatable due to struct inheritance & missing reflection.
+* This shall be used for replicating damage numbers, hitsounds, physics impulses, incoming damage on HUD...
+*
+* NOTE: For something like shotgun/flak, we'll need to group up events before replicating.
+*/
+USTRUCT(BlueprintType)
+struct FReplicatedDamageEvent
+{
+    GENERATED_BODY()
+
+    /**
+    * Matches builtin DamageEvent.ClassID
+    * 1 = PointDamage
+    * 2 = RadialDamage
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 Type;
+
+    /**
+    * Full damage value (includes over-damage).
+    * In case of RadialDamage, this is already scaled by distance.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 Damage;
+
+    /**
+    * Damage applied to health.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 HealthDamage;
+
+    /**
+    * Damage applied to armor.
+    * NOTE: some compression could be applied here, but reflection/BP doesn't support int16 so it's annoying
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 ArmorDamage;
+
+    /**
+    * Damage location.
+    * In case of PointDamage, matches HitLocation.
+    * In case of RadialDamage, matches Origin.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FVector Location;
+
+    /**
+    * Knockback.
+    * In case of PointDamage, equals to KnockbackPower * ShotDirection.
+    * In case of RadialDamage, equals to (unscaled KnockbackPower, Radius, 0).
+    *
+    * NOTE: For PointDamage we should make sure to always send a non-zero vector even if we have zero knockback,
+    * so clients/widgets can use it to get ShotDirection.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FVector Knockback;
+
+    /**
+    * Damage type class.
+    * Already casted as UR_DamageType because the core class is useless.
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    const UUR_DamageType* DamType;
+
+    /**
+    * Damage instigator
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    APawn* DamageInstigator;
+
+    FReplicatedDamageEvent() : Type(0), Damage(0), HealthDamage(0), ArmorDamage(0), Location(0,0,0), Knockback(0,0,0), DamType(NULL), DamageInstigator(NULL) {}
+
+    bool IsOfType(int32 InID) const { return Type == InID; };
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+* Damage event dispatcher
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCharacterDamageEventSignature, AUR_Character*, Character, const FReplicatedDamageEvent, RepDamageEvent);
+
+/**
+* Death event dispatcher.
+* NOTE: Controllers not available on client so this is not ideal for Killer.
+* Pawn and PlayerState are possible alternatives with both pros and cons. Need to discuss this.
+* Similar debate about the Damage event.
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCharacterDeathSignature, AUR_Character*, Character, AController*, Killer);
+
+/**
+* Pickup event dispatcher.
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPickupEventSignature, AUR_Pickup*, Pickup);
 
 
 /**
@@ -73,14 +172,47 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //deprecated
-    bool bIsPickingUp = false;
+    /**
+    * Notes on camera management :
+    * 
+    * The final camera view of player is calculated in CameraManager->UpdateViewTargetInternal (result in OutVT.POV, and cached in CachedPOV).
+    * It is calculated via ViewTarget->CalcCamera
+    * --| CalcCamera relies on CameraComponent->GetCameraView if there is one, or falls back to GetActorEyesViewPoint
+    * ----| CameraComponent->GetCameraView updates its own component rotation (**) using GetViewRotation, and returns it
+    * ----| GetActorEyesViewPoint also relies on GetViewRotation
+    * ------| GetViewRotation relies on ControlRotation if available, or falls back to BlendedTargetViewRotation.
+    * --------| BlendedTargetViewRotation is a smoothed rotation of the current ViewTarget in PlayerController (when spectating remote pawns).
+    *
+    * (**) Warning:
+    *      CameraComponent->GetCameraView only updates its rotation when it is called by the locally controlling player (assuming bUsePawnControlRotation = true).
+    *      This means the camera doesn't update its rotation when it is being viewed through by a spectator.
+    *      Therefore, when we are spectating a remote pawn, the camera doesn't update its own rotation and only relies on its attachment rotation,
+           ie. Pawn rotation, which is choppy and has no Pitch.
+    *
+    * Spring arms (with bUsePawnControlRotation = true) work slightly differently :
+    * - They update themselves in Tick, regardless of being in use or not.
+    * - They update their rotation also using GetViewRotation, but not conditionally locked to locally controlling player, so they DO update properly for spectators.
+    *
+    * So the simplest solution to fix Pitch is to wrap Camera with a SpringArm of length zero.
+    * When viewing remote pawns, they will rely on BlendedTargetViewRotation which contains Pitch and smooths everything up.
+    *
+    * It is worth noting however that SpringArms induce additional Ticks, which are unnecessary for the most part.
+    * For optimal performance, only the currently active camera spring should be ticking.
+    * An alternative would be to make a custom CameraComponent that updates itself without the locally controlled condition.
+    *
+    * Additional note: all of this doesn't help smoothing out the up/down AimOffset in animation blueprint.
+    * The BlendedTargetViewRotation is only available for PC's ViewTarget.
+    * When looking at other pawns, we can only currently rely on RemoteViewPitch which is choppy.
+    * We'll probably have to add another smoothing mechanism for the AimOffset.
+    */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+    class USpringArmComponent* FirstPersonCamArm;
 
     /**
     * First person Camera
     */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-    class UCameraComponent* CharacterCameraComponent;
+    class UCameraComponent* FirstPersonCamera;
 
     /**
     * Character's first-person mesh (arms; seen only by self)
@@ -112,10 +244,26 @@ public:
     UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
     class UCameraComponent* ThirdPersonCamera;
 
+    /*
+    * Hair mesh (third person).
+    */
+    UPROPERTY(VisibleDefaultsOnly, Category = "Mesh")
+    class USkeletalMeshComponent* HairMesh;
+
+    /**
+    * AI Perception Source
+    * NOTE: Normally pawns already act as a stimuli source by default,
+    * however when a perceived actor is destroyed it is not always automatically un-perceived by AI perception system.
+    * Then we end up with stale targets in the AI perceptions and AI goes batshit.
+    * It seems like the best practice is to always add a StimuliSource component, and call Unregister on destroy.
+    */
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
+    UAIPerceptionSourceNativeComp* AIPerceptionStimuliSource;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    UFUNCTION(BlueprintCosmetic, BlueprintNativeEvent)
-    void SetupMaterials();
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, BlueprintNativeEvent)
+    void ApplyCustomization(UPARAM(Ref) FCharacterCustomization& InCustomization);
 
     UFUNCTION(BlueprintCosmetic, BlueprintNativeEvent, BlueprintCallable)
     void UpdateTeamColor();
@@ -139,14 +287,15 @@ public:
     virtual UInputComponent* CreatePlayerInputComponent() override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual void CalcCamera(float DeltaTime, struct FMinimalViewInfo& OutResult) override;
+    virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
 
     virtual void BecomeViewTarget(APlayerController* PC) override;
     virtual void EndViewTarget(APlayerController* PC) override;
 
-    virtual void OnRep_PlayerState() override;
-
     // Override to update Physics Movement GameplayTags
     virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
+
+    virtual void UnPossessed() override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Camera Management
@@ -190,10 +339,6 @@ public:
 
     UPROPERTY()
     TScriptInterface<IUR_ActivatableInterface> CurrentZoomInterface;
-
-    /** Temporary - probably needs to sit in PlayerController */
-    UFUNCTION(Exec)
-    virtual void BehindView(int32 Switch = -1);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Input (Keypress to Weapon, Movement/Dodge)
@@ -404,14 +549,16 @@ public:
 
     /**
     * Dodge requested from PC Input. Dodge, if we CanDodge.
+    * Also requested by AI code.
     */
+    UFUNCTION(BlueprintCallable, Category = "Character|Dodge")
     virtual void Dodge(FVector DodgeDir, FVector DodgeCross);
 
     /**
     * Perform a Dodge. Testing purposes only.
     */
     UFUNCTION(BlueprintCallable, Category = "Character|Dodge")
-    void Dodge(const EDodgeDirection InDodgeDirection);
+    void DodgeTest(const EDodgeDirection InDodgeDirection);
 
     /** 
     * Hook for sounds / effects OnDodge
@@ -577,33 +724,53 @@ public:
     */
     virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+    UFUNCTION(NetMulticast, Unreliable)
+    void MulticastDamageEvent(const FReplicatedDamageEvent RepDamageEvent);
+
+    UPROPERTY(BlueprintAssignable, Category = "Character")
+    FCharacterDamageEventSignature OnDamageReceived;
+
+    UPROPERTY(BlueprintAssignable, Category = "Character")
+    FCharacterDamageEventSignature OnDamageDealt;
+
     /**
     * Kill this player.
     * Authority only.
     */
     UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
-    virtual void Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser);
+    virtual void Die(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser, const FReplicatedDamageEvent& RepDamageEvent);
 
-    /**
-    * Event Called on Character Death
-    */
-    UFUNCTION(BlueprintImplementableEvent, Category = "Character")
-    void OnDied(AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser);
-
-    /**
-    * Play dying effect (animation, ragdoll, sound, blood, gib).
-    * Client only.
-    */
-    UFUNCTION(BlueprintCosmetic)
-    virtual void PlayDeath();
-
-    /**
-    * Called on network client when replication channel is cut (ie. death).
-    */
-    virtual void TornOff() override
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastDied(AController* Killer, const FReplicatedDamageEvent RepDamageEvent);
+    virtual void MulticastDied_Implementation(AController* Killer, const FReplicatedDamageEvent RepDamageEvent)
     {
-        PlayDeath();
+        PlayDeath(Killer, RepDamageEvent);
     }
+
+    /**
+    * Play dying state on client (animation, ragdoll, sound, blood, gib, camera).
+    */
+    UFUNCTION(BlueprintCosmetic, BlueprintNativeEvent)
+    void PlayDeath(AController* Killer, const FReplicatedDamageEvent& RepDamageEvent);
+
+    /**
+    * Set to true after PlayDeath() is received on clients.
+    * Used in TornOff() to adjust life span accordingly.
+    */
+    UPROPERTY(BlueprintReadWrite)
+    bool bPlayingDeath;
+
+    /**
+    * Event Called on Character Death.
+    * Server & Client.
+    */
+    UPROPERTY(BlueprintAssignable, Category = "Character")
+    FCharacterDeathSignature OnDeath;
+
+    /**
+    * Called on network clients when replication channel is cut (ie. death).
+    */
+    virtual void TornOff() override;
 
     UFUNCTION(BlueprintCallable, BlueprintPure)
     bool IsAlive() const;
@@ -659,6 +826,15 @@ public:
 
     UFUNCTION(Exec, BlueprintCallable)
     virtual void PrevWeapon();
+
+    UFUNCTION(Exec, BlueprintCallable)
+    virtual void DropWeapon();
+
+    /**
+    * Pickup event.
+    */
+    UPROPERTY(BlueprintAssignable)
+    FPickupEventSignature PickupEvent;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 

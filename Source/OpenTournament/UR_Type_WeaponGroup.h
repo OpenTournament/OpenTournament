@@ -34,7 +34,7 @@ struct FWeaponGroup
     GENERATED_BODY()
 
     UPROPERTY(Config, EditAnywhere, BlueprintReadWrite)
-    TArray<TSubclassOf<AUR_Weapon>> WeaponClasses;
+    TArray<TSoftClassPtr<AUR_Weapon>> WeaponClasses;
 
     UPROPERTY(Config, EditAnywhere, BlueprintReadWrite)
     EWeaponGroupVisibility Visibility;
@@ -44,4 +44,6 @@ struct FWeaponGroup
 
     UPROPERTY(Transient, BlueprintReadOnly)
     TArray<AUR_Weapon*> Weapons;
+
+    FWeaponGroup() : Visibility(EWeaponGroupVisibility::Always) {}
 };

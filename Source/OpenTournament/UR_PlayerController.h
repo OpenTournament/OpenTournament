@@ -14,6 +14,8 @@
 class UAudioComponent;
 
 class AUR_Character;
+class AUR_PlayerState;
+class AUR_Pickup;
 class UUR_PCInputDodgeComponent;
 class UUR_Widget_BaseMenu;
 
@@ -187,6 +189,16 @@ public:
     */
     virtual void ReleasedAltFire();
 
+    /**
+    * Function bound to "AltFire" ActionMapping Input.
+    */
+    virtual void PressedThirdFire();
+
+    /**
+    * Function bound to "AltFire" ActionMapping Input.
+    */
+    virtual void ReleasedThirdFire();
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -251,6 +263,17 @@ public:
     virtual void ToggleScoreboard()
     {
         ScoreboardWidget ? HideScoreboard() : ShowScoreboard();
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    UPROPERTY(BlueprintReadWrite)
+    bool bWantsThirdPersonCamera;
+
+    UFUNCTION(Exec)
+    virtual void BehindView(int32 Switch = -1)
+    {
+        bWantsThirdPersonCamera = (Switch == -1) ? !bWantsThirdPersonCamera : (bool)Switch;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////

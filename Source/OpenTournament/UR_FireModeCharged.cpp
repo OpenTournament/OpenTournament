@@ -10,8 +10,8 @@ void UUR_FireModeCharged::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(UUR_FireModeCharged, ChargeLevel, COND_InitialOnly);
-    DOREPLIFETIME_CONDITION(UUR_FireModeCharged, ChargePausedAt, COND_None);
+    DOREPLIFETIME_CONDITION(ThisClass, ChargeLevel, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ThisClass, ChargePausedAt, COND_None);
 }
 
 

@@ -5,7 +5,7 @@
 #include "UR_PlayerState.h"
 
 #include "Net/UnrealNetwork.h"
-#include "Net/Core/PushModel/PushModel.h"
+//#include "Net/Core/PushModel/PushModel.h"
 #include "Engine/World.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -14,6 +14,7 @@
 #include "UR_MPC_Global.h"
 #include "UR_FunctionLibrary.h"
 #include "UR_Character.h"
+#include "UR_UserSettings.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,7 +23,8 @@ AUR_PlayerState::AUR_PlayerState()
     TeamIndex = -1;
     ReplicatedTeamIndex = -1;
 
-    OnTeamChanged.AddUniqueDynamic(this, &AUR_PlayerState::InternalOnTeamChanged);
+    OnPawnSet.AddUniqueDynamic(this, &ThisClass::InternalOnPawnSet);
+    OnTeamChanged.AddUniqueDynamic(this, &ThisClass::InternalOnTeamChanged);
 }
 
 void AUR_PlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -32,38 +34,123 @@ void AUR_PlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
     FDoRepLifetimeParams Params;
     Params.bIsPushBased = true;
 
-    DOREPLIFETIME_WITH_PARAMS_FAST(AUR_PlayerState, Kills, Params);
-    DOREPLIFETIME_WITH_PARAMS_FAST(AUR_PlayerState, Deaths, Params);
-    DOREPLIFETIME_WITH_PARAMS_FAST(AUR_PlayerState, Suicides, Params);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Kills, Params);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Deaths, Params);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Suicides, Params);
+
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CharacterCustomization, Params);
 
     Params.RepNotifyCondition = REPNOTIFY_OnChanged;
-    DOREPLIFETIME_WITH_PARAMS_FAST(AUR_PlayerState, ReplicatedTeamIndex, Params);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ReplicatedTeamIndex, Params);
+}
+
+void AUR_PlayerState::BeginPlay()
+{
+    Super::BeginPlay();
+
+    // NOTE: Don't know if PlayerState can actually replicate before PC
+    if (auto PC = GetOwner<APlayerController>())
+    {
+        if (PC->IsLocalController())
+        {
+            // Not sure what's the best place to do client->server replication of user customization.
+            // We want to do this as early as possible.
+            // We may have to delay the first spawning of a player until we are roughly certain that PlayerState & customization has already replicated to everyone.
+            // Otherwise we'll have ugly situation where we snap-in customization onto the spawned character.
+            ServerSetCharacterCustomization(UUR_UserSettings::Get(this)->CharacterCustomization);
+        }
+    }
+    else if (HasAuthority())
+    {
+        // Bot = make random customization
+        ServerSetCharacterCustomization(UUR_CharacterCustomizationBackend::MakeRandomCharacterCustomization());
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AUR_PlayerState::AddKill(AController* Victim)
+void AUR_PlayerState::RegisterKill(AController* Victim, FGameplayTagContainer& OutTags)
 {
-    Kills++;
-    MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Kills, this);
+    // TODO: might want to check teams here.
+    // Although including teamkills in multikills & sprees might not be a bad thing.
 
-    //TODO: count multi kills here
-    //TODO: count sprees here
-    //NOTE: can do "revenge" here
+    Kills++;
+    //MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Kills, this);
+
+    if (GetWorld()->TimeSince(LastKillTime) < 3.f)
+    {
+        MultiKillCount++;
+    }
+    else
+    {
+        MultiKillCount = 1;
+    }
+    LastKillTime = GetWorld()->TimeSeconds;
+
+    AUR_GameState* GS = GetWorld()->GetGameState<AUR_GameState>();
+
+    if (MultiKillCount > 1)
+    {
+        static TArray<FGameplayTag> MultiKillTags = {
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Double"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Triple"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Mega"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Ultra"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Monster"))),
+        };
+        OutTags.AddTag(MultiKillTags[FMath::Min(MultiKillCount - 2, MultiKillTags.Num() - 1)]);
+    }
+
+    SpreeCount++;
+    if ((SpreeCount % 5) == 0)
+    {
+        SpreeLevel = SpreeCount / 5;
+
+        static TArray<FGameplayTag> SpreeTags = {
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.KillingSpree"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.Rampage"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.Unstoppable"))),
+            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.Godlike"))),
+        };
+        OutTags.AddTag(SpreeTags[FMath::Min(SpreeLevel - 1, SpreeTags.Num() - 1)]);
+    }
+
+    if (LastKiller && Victim && Victim->GetPawn() == LastKiller)
+    {
+        OutTags.AddTag(FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Kill.Revenge"))));
+    }
+
+    ForceNetUpdate();
 }
 
-void AUR_PlayerState::AddDeath(AController* Killer)
+void AUR_PlayerState::RegisterDeath(AController* Killer, FGameplayTagContainer& OutTags)
 {
     Deaths++;
-    MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Deaths, this);
+    //MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Deaths, this);
 
-    //TODO: spree ended by killer here
+    if (SpreeLevel > 0)
+    {
+        OutTags.AddTag(FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Death.EndSpree"))));
+    }
+
+    SpreeLevel = 0;
+    SpreeCount = 0;
+    MultiKillCount = 0;
+    LastKillTime = -10;
+
+    if (Killer)
+    {
+        LastKiller = Killer->GetPawn();
+    }
+
+    ForceNetUpdate();
 }
 
-void AUR_PlayerState::AddSuicide()
+void AUR_PlayerState::RegisterSuicide(FGameplayTagContainer& OutExtras)
 {
     Suicides++;
-    MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Suicides, this);
+    //MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, Suicides, this);
+    ForceNetUpdate();
 }
 
 void AUR_PlayerState::AddScore(const int32 Value)
@@ -98,7 +185,8 @@ void AUR_PlayerState::SetTeamIndex_Implementation(int32 NewTeamIndex)
         if (HasAuthority())
         {
             ReplicatedTeamIndex = TeamIndex;
-            MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, ReplicatedTeamIndex, this);
+            //MARK_PROPERTY_DIRTY_FROM_NAME(AUR_PlayerState, ReplicatedTeamIndex, this);
+            ForceNetUpdate();
         }
 
         Team = AUR_TeamInfo::GetTeamFromIndex(this, TeamIndex);
@@ -204,4 +292,58 @@ FLinearColor AUR_PlayerState::GetColor()
         }
     }
     return UUR_MPC_Global::GetVector(this, Params->P_EnemyColor);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool AUR_PlayerState::IsAWinner()
+{
+    if (AUR_GameState* GS = GetWorld()->GetGameState<AUR_GameState>())
+    {
+        if (GS->Winner)
+        {
+            if (GS->Winner->IsA(APlayerState::StaticClass()))
+            {
+                return GS->Winner == this;
+            }
+            if (GS->Winner->IsA(APawn::StaticClass()))
+            {
+                return GS->Winner == GetPawn();
+            }
+            if (GS->Winner->IsA(AUR_TeamInfo::StaticClass()))
+            {
+                return IUR_TeamInterface::Execute_IsAlly(GS->Winner, this);
+            }
+        }
+    }
+    return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_PlayerState::ServerSetCharacterCustomization_Implementation(const FCharacterCustomization& InCustomization)
+{
+    //NOTE: We can either do server validation of chosen assets, and correct the assets before replicating them to others
+    // Or just replicate directly and let clients decide if they accept those customizations.
+    CharacterCustomization = InCustomization;
+    OnRep_CharacterCustomization();
+}
+
+void AUR_PlayerState::OnRep_CharacterCustomization()
+{
+    // If customization is replicated after Character, apply it now
+    if (auto URChar = GetPawn<AUR_Character>())
+    {
+        URChar->ApplyCustomization(CharacterCustomization);
+    }
+}
+
+void AUR_PlayerState::InternalOnPawnSet(APlayerState* PS, APawn* NewPawn, APawn* OldPawn)
+{
+    // If character is replicated after customization, apply it now
+    if (auto URChar = Cast<AUR_Character>(NewPawn))
+    {
+        URChar->ApplyCustomization(CharacterCustomization);
+        //URChar->UpdateTeamColor();    // ApplyCustomization already has to call this because it needs to reset the materials when changing meshes
+    }
 }

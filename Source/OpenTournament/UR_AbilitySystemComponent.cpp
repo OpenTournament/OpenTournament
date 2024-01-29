@@ -8,6 +8,7 @@
 
 #include "UR_Character.h"
 #include "UR_GameplayAbility.h"
+#include "UR_AttributeSet.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -37,7 +38,7 @@ void UUR_AbilitySystemComponent::GetActiveAbilitiesWithTags(const FGameplayTagCo
 
 int32 UUR_AbilitySystemComponent::GetDefaultAbilityLevel() const
 {
-    AUR_Character* OwningCharacter = Cast<AUR_Character>(OwnerActor);
+    AUR_Character* OwningCharacter = Cast<AUR_Character>(GetOwnerActor());
 
     if (OwningCharacter)
     {
@@ -49,4 +50,13 @@ int32 UUR_AbilitySystemComponent::GetDefaultAbilityLevel() const
 UUR_AbilitySystemComponent* UUR_AbilitySystemComponent::GetAbilitySystemComponentFromActor(const AActor* Actor, bool LookForComponent)
 {
     return Cast<UUR_AbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Actor, LookForComponent));
+}
+
+const UUR_AttributeSet* UUR_AbilitySystemComponent::GetURAttributeSetFromActor(const AActor* Actor, bool LookForComponent)
+{
+    if (auto ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Actor, LookForComponent))
+    {
+        return ASC->GetSet<UUR_AttributeSet>();
+    }
+    return NULL;
 }

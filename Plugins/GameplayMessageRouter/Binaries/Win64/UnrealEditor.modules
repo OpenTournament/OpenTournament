@@ -1,0 +1,8 @@
+{
+	"BuildId": "27405482",
+	"Modules": 
+	{
+		"GameplayMessageNodes": "UnrealEditor-GameplayMessageNodes.dll",
+		"GameplayMessageRuntime": "UnrealEditor-GameplayMessageRuntime.dll"
+	}
+}

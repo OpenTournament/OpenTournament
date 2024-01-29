@@ -5,14 +5,7 @@
 #include "UR_PlayerController.h"
 
 #include "Components/AudioComponent.h"
-
-//UMG
-#include "SlateBasics.h"
-#include "Runtime/UMG/Public/UMG.h"
-#include "Runtime/UMG/Public/UMGStyle.h"
-#include "Runtime/UMG/Public/Slate/SObjectWidget.h"
-#include "Runtime/UMG/Public/IUMGModule.h"
-#include "Runtime/UMG/Public/Blueprint/UserWidget.h"
+#include "GameFramework/SpectatorPawn.h"
 
 #include "UR_Character.h"
 #include "UR_ChatComponent.h"
@@ -20,11 +13,24 @@
 #include "UR_LocalPlayer.h"
 #include "UR_MessageHistory.h"
 #include "UR_PCInputDodgeComponent.h"
-#include "Widgets/UR_Widget_BaseMenu.h"
 #include "UR_FunctionLibrary.h"
 #include "UR_GameMode.h"
 #include "UR_Widget_ScoreboardBase.h"
 #include "UR_PlayerState.h"
+#include "UR_GameState.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace OpenTournament
+{
+    namespace Input
+    {
+        static int32 ShouldAlwaysPlayForceFeedback = 0;
+        static FAutoConsoleVariableRef CVarShouldAlwaysPlayForceFeedback(TEXT("OTPC.ShouldAlwaysPlayForceFeedback"),
+            ShouldAlwaysPlayForceFeedback,
+            TEXT("Should force feedback effects be played, even if the last input device was not a gamepad?"));
+    }
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -90,11 +96,7 @@ void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
     UUR_LocalPlayer* LocalPlayer = Cast<UUR_LocalPlayer>(GetLocalPlayer());
     if (LocalPlayer && LocalPlayer->MessageHistory)
     {
-        // bind chat dispatcher to MessageHistory handler
-        ChatComponent->OnReceiveChatMessage.AddUniqueDynamic(LocalPlayer->MessageHistory, &UUR_MessageHistory::OnReceiveChatMessage);
-
-        // bind system message dispatcher to MessageHistory handler
-        OnReceiveSystemMessage.AddUniqueDynamic(LocalPlayer->MessageHistory, &UUR_MessageHistory::OnReceiveSystemMessage);
+        LocalPlayer->MessageHistory->InitWithPlayer(this);
     }
     else
     {
@@ -143,6 +145,9 @@ void AUR_PlayerController::SetupInputComponent()
 
     InputComponent->BindAction("AltFire", IE_Pressed, this, &AUR_PlayerController::PressedAltFire);
     InputComponent->BindAction("AltFire", IE_Released, this, &AUR_PlayerController::ReleasedAltFire);
+
+    InputComponent->BindAction("ThirdFire", IE_Pressed, this, &AUR_PlayerController::PressedThirdFire);
+    InputComponent->BindAction("ThirdFire", IE_Released, this, &AUR_PlayerController::ReleasedThirdFire);
 
     InputComponent->BindAction("ToggleScoreboard", IE_Pressed, this, &AUR_PlayerController::ToggleScoreboard);
     InputComponent->BindAction("HoldScoreboard", IE_Pressed, this, &AUR_PlayerController::ShowScoreboard);
@@ -323,6 +328,19 @@ void AUR_PlayerController::ReleasedAltFire()
     }
 }
 
+void AUR_PlayerController::PressedThirdFire()
+{
+    StartFire(2);
+}
+
+void AUR_PlayerController::ReleasedThirdFire()
+{
+    if (URCharacter)
+    {
+        URCharacter->PawnStopFire(2);
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_PlayerController::Say(const FString& Message)
@@ -341,7 +359,7 @@ void AUR_PlayerController::ClientMessage_Implementation(const FString& S, FName 
 {
     if (OnReceiveSystemMessage.IsBound())
         OnReceiveSystemMessage.Broadcast(S);
-    else
+    else if (Cast<ULocalPlayer>(Player))    //Super crashes if called during shutdown and fails CastChecked
         Super::ClientMessage_Implementation(S, Type, MsgLifeTime);
 }
 

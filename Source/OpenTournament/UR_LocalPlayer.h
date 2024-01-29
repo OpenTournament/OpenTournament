@@ -30,4 +30,12 @@ public:
 	*/
 	UPROPERTY(BlueprintReadOnly)
 	UUR_MessageHistory* MessageHistory;
+
+    UPROPERTY(Config, BlueprintReadOnly)
+    FString PlayerName;
+
+    virtual FString GetNickname() const override;
+
+    UFUNCTION(BlueprintCallable)
+    void SavePlayerName(const FString& NewName) { PlayerName = NewName; SaveConfig(); }
 };

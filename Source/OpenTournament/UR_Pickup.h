@@ -74,7 +74,7 @@ public:
     /**
     * Is this Character permitted to pickup?
     */
-    bool IsPickupPermitted(const AUR_Character* PickupCharacter) const;
+    virtual bool IsPickupPermitted(const AUR_Character* PickupCharacter) const;
 
     /**
     * Is this actor permitted to pickup given its associated GameplayTags?
@@ -113,27 +113,26 @@ public:
     /**
     * Sound played on Pickup
     */
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Pickup")
+    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Pickup")
     USoundBase* PickupSound;
 
     /**
     * Effect played on Pickup
     */
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Pickup")
+    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Pickup")
     UFXSystemAsset* PickupEffect;
 
     /**
-    * Sound played on Respawn
-    */
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Pickup")
-    USoundBase* RespawnSound;
-
-    // @! TODO : FText for Localization?
-    /**
     * Display Name of Pickup
     */
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Pickup")
-    FString DisplayName;
+    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Pickup")
+    FText DisplayName;
+
+    /**
+    * Whether to broadcast GameState->PickupEvent on pickup.
+    */
+    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Pickup")
+    bool bBroadcastPickupEvent;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Gameplay Tags

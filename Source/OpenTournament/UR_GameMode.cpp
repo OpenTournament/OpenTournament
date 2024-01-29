@@ -5,27 +5,33 @@
 #include "UR_GameMode.h"
 
 #include "EngineUtils.h"    // for TActorIterator<>
+#include "Engine/DamageEvents.h"
+#include "GameFramework/Controller.h"
 #include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
 
 #include "UR_Character.h"
 #include "UR_GameState.h"
 #include "UR_InventoryComponent.h"
-#include "UR_LocalMessage.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 #include "UR_Projectile.h"
 #include "UR_Weapon.h"
 #include "UR_Ammo.h"
-#include "UR_Widget_ScoreboardBase.h"
 #include "UR_TeamInfo.h"
-#include "GameFramework/Controller.h"
 
+// Having to include these, only to set the default classes, makes me sad
+#include "UR_Widget_ScoreboardBase.h"
+#include "AI/UR_BotController.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// Initialization
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameMode::AUR_GameMode()
 {
     ScoreboardClass = UUR_Widget_ScoreboardBase::StaticClass();
-    DeathMessageClass = UUR_LocalMessage::StaticClass();
+    BotControllerClass = AUR_BotController::StaticClass();
 
     GoalScore = 10;
     TimeLimit = 300;
@@ -40,14 +46,31 @@ AUR_GameMode::AUR_GameMode()
     TeamDamageRetaliate = 0.f;
 }
 
-void AUR_GameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+void AUR_GameMode::InitGame(const FString& MapName, const FString& OptionsMeh, FString& ErrorMessage)
 {
+    FString Options = OptionsMeh;
+
+    if (GetWorld()->IsPlayInEditor())
+    {
+        // Custom additional game options seems broken in PIE - fix it!
+        // We also intentionally include them in NM_Standalone where it's not supposed to be supported.
+        auto Settings = FindObject<UObject>(nullptr, TEXT("/Script/UnrealEd.Default__LevelEditorPlaySettings"));
+        FProperty* Prop = Settings->GetClass()->FindPropertyByName("AdditionalServerGameOptions");
+        FString AdditionalOptions = *Prop->ContainerPtrToValuePtr<FString>(Settings);
+        if (AdditionalOptions.Len())
+        {
+            UE_LOG(LogTemp, Log, TEXT("[PIE-Fix] Add URL options: %s"), *AdditionalOptions);
+            Options.Append(AdditionalOptions);
+        }
+    }
+
     Super::InitGame(MapName, Options, ErrorMessage);
 
     GoalScore = UGameplayStatics::GetIntOption(Options, TEXT("GoalScore"), GoalScore);
     TimeLimit = UGameplayStatics::GetIntOption(Options, TEXT("TimeLimit"), TimeLimit);
     OvertimeExtraTime = UGameplayStatics::GetIntOption(Options, TEXT("OvertimeExtraTime"), OvertimeExtraTime);
     MaxPlayers = UGameplayStatics::GetIntOption(Options, TEXT("MaxPlayers"), MaxPlayers);
+    BotFill = UGameplayStatics::GetIntOption(Options, TEXT("BotFill"), BotFill);
     NumTeams = UGameplayStatics::GetIntOption(Options, TEXT("NumTeams"), NumTeams);
     TeamsFillMode = UGameplayStatics::ParseOption(Options, TEXT("TeamsFillMode"));
     SelfDamage = UUR_FunctionLibrary::GetFloatOption(Options, TEXT("SelfDamage"), SelfDamage);
@@ -82,6 +105,62 @@ void AUR_GameMode::InitGameState()
         {
             GS->AddNewTeam();
         }
+    }
+}
+
+void AUR_GameMode::BroadcastSystemMessage(const FString& Msg)
+{
+    for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+    {
+        if (It->IsValid())
+            It->Get()->ClientMessage(Msg);
+    }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// Players and bots flow
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_GameMode::OnPostLogin(AController* NewPlayer)
+{
+    Super::OnPostLogin(NewPlayer);
+
+    if (NewPlayer)
+    {
+        if (auto PS = NewPlayer->GetPlayerState<APlayerState>())
+        {
+            BroadcastSystemMessage(FString::Printf(TEXT("%s has joined."), *PS->GetPlayerName()));
+
+            if (PS->IsABot())
+            {
+                NumBots++;
+            }
+        }
+
+        if (NewPlayer->IsA<APlayerController>())
+            CheckBotsDeferred();
+    }
+}
+
+void AUR_GameMode::Logout(AController* Exiting)
+{
+    Super::Logout(Exiting);
+
+    if (Exiting)
+    {
+        if (auto PS = Exiting->GetPlayerState<APlayerState>())
+        {
+            BroadcastSystemMessage(FString::Printf(TEXT("%s has left."), *PS->GetPlayerName()));
+
+            if (PS->IsABot())
+            {
+                NumBots--;
+            }
+        }
+
+        if (Exiting->IsA<APlayerController>())
+            CheckBotsDeferred();
     }
 }
 
@@ -170,45 +249,101 @@ void AUR_GameMode::AssignDefaultTeam(AUR_PlayerState* PS)
     }
 }
 
+void AUR_GameMode::CheckBotsDeferred()
+{
+    // Combine calls, avoid re-entrancy
+    static FTimerHandle CheckBotsTimerHandle;
+    GetWorld()->GetTimerManager().SetTimer(CheckBotsTimerHandle, FTimerDelegate::CreateUObject(this, &AUR_GameMode::CheckBots), 0.1f, false);
+}
+
+void AUR_GameMode::CheckBots()
+{
+    if (!IsMatchInProgress())
+        return;
+
+    for (int32 i = NumPlayers + NumBots; i > BotFill; i--)
+    {
+        RemoveBot();
+    }
+    for (int32 i = NumPlayers + NumBots; i < BotFill; i++)
+    {
+        AddBot();
+    }
+    //TODO: Team balance
+}
+
+void AUR_GameMode::AddBot()
+{
+    if (auto BotController = GetWorld()->SpawnActor<AController>(BotControllerClass))
+    {
+        GenericPlayerInitialization(BotController);
+        DispatchPostLogin(BotController);
+        RestartPlayer(BotController);
+    }
+}
+
+void AUR_GameMode::RemoveBot()
+{
+    if (auto GS = GetGameState<AGameStateBase>())
+    {
+        APlayerState* Best = nullptr;
+        for (auto PS : GS->PlayerArray)
+        {
+            if (PS->IsABot() && PS->GetOwner<AController>() && (!Best || PS->CreationTime > Best->CreationTime))
+                Best = PS;
+        }
+        if (Best)
+        {
+            Best->GetOwner()->Destroy();
+        }
+    }
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Match
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_GameMode::HandleMatchHasStarted()
 {
+    // WARNING: Parent starts recording replay here. We don't want that when we have Warmup first.
     Super::HandleMatchHasStarted();
 
     AUR_GameState* GS = GetGameState<AUR_GameState>();
     if (GS)
     {
+        // TODO: Here we would do Warmup first
+        GS->SetMatchStateTag(FGameplayTag::RequestGameplayTag(FName(TEXT("MatchState.InProgress.Match"))));
+
         if (TimeLimit > 0)
         {
             GS->SetTimeLimit(TimeLimit);
-            GS->OnTimeUp.AddUniqueDynamic(this, &AUR_GameMode::OnMatchTimeUp);
+            GS->OnTimeUp.AddUniqueDynamic(this, &ThisClass::OnMatchTimeUp);
         }
         else
         {
             GS->ResetClock();
         }
     }
+
+    CheckBotsDeferred();
 }
 
 void AUR_GameMode::OnMatchTimeUp_Implementation(AUR_GameState* GS)
 {
     // Unbind match delegate
-    GS->OnTimeUp.RemoveDynamic(this, &AUR_GameMode::OnMatchTimeUp);
+    GS->OnTimeUp.RemoveDynamic(this, &ThisClass::OnMatchTimeUp);
 
     if (!CheckEndGame(nullptr))
     {
         // Overtime
 
-        //TODO: msg class
-        BroadcastLocalized(this, UUR_LocalMessage::StaticClass(), 0, nullptr, nullptr, GS);
+        GS->SetMatchStateTag(FGameplayTag::RequestGameplayTag(FName(TEXT("MatchState.InProgress.Overtime"))));
 
         if (OvertimeExtraTime > 0)
         {
             GS->SetTimeLimit(OvertimeExtraTime);
-            GS->OnTimeUp.AddUniqueDynamic(this, &AUR_GameMode::OnMatchTimeUp);
+            GS->OnTimeUp.AddUniqueDynamic(this, &ThisClass::OnMatchTimeUp);
         }
         else
         {
@@ -235,14 +370,17 @@ void AUR_GameMode::SetPlayerDefaults(APawn* PlayerPawn)
             SpawnParams.Instigator = URCharacter;
             for (const FStartingWeaponEntry& Entry : StartingWeapons)
             {
-                AUR_Weapon* StartingWeapon = GetWorld()->SpawnActor<AUR_Weapon>(Entry.WeaponClass, URCharacter->GetActorLocation(), URCharacter->GetActorRotation(), SpawnParams);
-                if (StartingWeapon)
+                if (UClass* Class = Entry.WeaponClass.LoadSynchronous())
                 {
-                    StartingWeapon->GiveTo(URCharacter);
-                    //TODO: Weapons with multiple ammo classes
-                    if (StartingWeapon->AmmoRefs.Num() > 0 && StartingWeapon->AmmoRefs[0])
+                    AUR_Weapon* StartingWeapon = GetWorld()->SpawnActor<AUR_Weapon>(Class, URCharacter->GetActorLocation(), URCharacter->GetActorRotation(), SpawnParams);
+                    if (StartingWeapon)
                     {
-                        StartingWeapon->AmmoRefs[0]->SetAmmoCount(Entry.Ammo);
+                        StartingWeapon->GiveTo(URCharacter);
+                        //TODO: Weapons with multiple ammo classes
+                        if (StartingWeapon->AmmoRefs.Num() > 0 && StartingWeapon->AmmoRefs[0])
+                        {
+                            StartingWeapon->AmmoRefs[0]->SetAmmoCount(Entry.Ammo);
+                        }
                     }
                 }
             }
@@ -305,7 +443,7 @@ bool AUR_GameMode::PreventDeath_Implementation(AController* Killed, AController*
 *
 * - update score based on kill ? this is heavily gamemode-dependent
 * - check end game ? again gamemode-dependent.
-* 
+*
 * In case of DM, Score = Kills-Suicides.
 * In case of CTF, Score = Caps.
 * Also need to update TeamScores somehow.
@@ -325,31 +463,34 @@ void AUR_GameMode::RegisterKill(AController* Victim, AController* Killer, const 
     if (Victim)
     {
         AUR_PlayerState* VictimPS = Victim->GetPlayerState<AUR_PlayerState>();
+        AUR_PlayerState* KillerPS = NULL;
+        FGameplayTagContainer EventTags;
 
         if (VictimPS)
         {
-            VictimPS->AddDeath(Killer);
+            VictimPS->RegisterDeath(Killer, EventTags);
         }
 
         if (Killer && Killer != Victim)
         {
-            AUR_PlayerState* KillerPS = Killer->GetPlayerState<AUR_PlayerState>();
+            KillerPS = Killer->GetPlayerState<AUR_PlayerState>();
             if (KillerPS)
             {
-                KillerPS->AddKill(Victim);
+                KillerPS->RegisterKill(Victim, EventTags);
             }
-            BroadcastLocalized(Killer, DeathMessageClass, 0, Victim->GetPlayerState<APlayerState>(), Killer->GetPlayerState<APlayerState>(), DamageEvent.DamageTypeClass);
         }
-        else
+        else if (VictimPS)
         {
-            if (VictimPS)
-            {
-                VictimPS->AddSuicide();
-            }
-            BroadcastLocalized(Killer, DeathMessageClass, 1, Victim->GetPlayerState<APlayerState>(), nullptr, DamageEvent.DamageTypeClass);
+            VictimPS->RegisterSuicide(EventTags);
+        }
+
+        if (VictimPS || KillerPS)
+        {
+            GetGameState<AUR_GameState>()->MulticastFragEvent(VictimPS, KillerPS, DamageEvent.DamageTypeClass, EventTags);
         }
     }
 }
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // End Game
@@ -471,8 +612,20 @@ void AUR_GameMode::TriggerEndMatch_Implementation(AActor* Winner, AActor* Focus)
 {
     if (AUR_GameState* GS = GetGameState<AUR_GameState>())
     {
-        GS->Winner = Winner;
+        // Winner needs to be replicated. Should never be a controller!
+        if (AController* C = Cast<AController>(Winner))
+        {
+            if (IsValid(C->PlayerState))
+                GS->Winner = C->PlayerState;
+            else
+                GS->Winner = C->GetPawn();
+        }
+        else
+        {
+            GS->Winner = Winner;
+        }
         GS->EndGameFocus = Focus;
+        GS->OnRep_Winner(); // trigger events on server side
     }
     SetMatchState(MatchState::WaitingPostMatch);
 }
@@ -509,12 +662,12 @@ void AUR_GameMode::HandleMatchHasEnded()
 
     if (GS)
     {
-        GS->OnTimeUp.RemoveDynamic(this, &AUR_GameMode::OnMatchTimeUp);
+        GS->OnTimeUp.RemoveDynamic(this, &ThisClass::OnMatchTimeUp);
         //NOTE: This system is a bit dangerous, we might change state completely and forget some TimeUp handlers.
         // It might be a good thing to clear all listeners whenever GS->SetTimeLimit is called.
         // Or something like that.
         GS->SetTimeLimit(10);
-        GS->OnTimeUp.AddUniqueDynamic(this, &AUR_GameMode::OnEndGameTimeUp);
+        GS->OnTimeUp.AddUniqueDynamic(this, &ThisClass::OnEndGameTimeUp);
     }
 }
 
@@ -533,9 +686,6 @@ void AUR_GameMode::AnnounceWinner_Implementation(AActor* Winner)
     {
         WinnerPS = C->GetPlayerState<APlayerState>();
     }
-
-    //TODO: msg class
-    BroadcastLocalized(Winner, UUR_LocalMessage::StaticClass(), 0, WinnerPS, nullptr, Winner);
 }
 
 void AUR_GameMode::OnEndGameTimeUp(AUR_GameState* GS)
