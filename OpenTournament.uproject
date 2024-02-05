@@ -404,6 +404,10 @@
 		{
 			"Name": "GameplayMessageRouter",
 			"Enabled": true
+		},
+		{
+			"Name": "AssetSearch",
+			"Enabled": true
 		}
 	]
 }
