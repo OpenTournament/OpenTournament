@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -9,10 +9,19 @@
 #include <Engine/AssetManager.h>
 #include <Engine/StreamableManager.h>
 #include <Sound/SoundBase.h>
+#include "EngineUtils.h"
+#include "GameFramework/PlayerStart.h"
+#include "Logging/MessageLog.h"
+#include "Misc/UObjectToken.h"
+
+#include "UR_LogChannels.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_WorldSettings)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_WorldSettings::AUR_WorldSettings()
+AUR_WorldSettings::AUR_WorldSettings(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
@@ -32,6 +41,50 @@ AUR_WorldSettings::AUR_WorldSettings()
     FWorldDelegates::GetAssetTags.AddStatic(&AUR_WorldSettings::AddMapInfoTags);
 #endif
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+FPrimaryAssetId AUR_WorldSettings::GetDefaultGameplayExperience() const
+{
+	FPrimaryAssetId Result;
+	if (!DefaultGameplayExperience.IsNull())
+	{
+		Result = UAssetManager::Get().GetPrimaryAssetIdForPath(DefaultGameplayExperience.ToSoftObjectPath());
+
+		if (!Result.IsValid())
+		{
+			UE_LOG(Game, Error, TEXT("%s.DefaultGameplayExperience is %s but that failed to resolve into an asset ID (you might need to add a path to the Asset Rules in your game feature plugin or project settings"),
+				*GetPathNameSafe(this), *DefaultGameplayExperience.ToString());
+		}
+	}
+	return Result;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if WITH_EDITOR
+void AUR_WorldSettings::CheckForErrors()
+{
+	Super::CheckForErrors();
+
+	FMessageLog MapCheck("MapCheck");
+
+	for (TActorIterator<APlayerStart> PlayerStartIt(GetWorld()); PlayerStartIt; ++PlayerStartIt)
+	{
+		APlayerStart* PlayerStart = *PlayerStartIt;
+		if (IsValid(PlayerStart) && PlayerStart->GetClass() == APlayerStart::StaticClass())
+		{
+			MapCheck.Warning()
+				->AddToken(FUObjectToken::Create(PlayerStart))
+				->AddToken(FTextToken::Create(FText::FromString("is a normal APlayerStart, replace with ALyraPlayerStart.")));
+		}
+	}
+
+	//@TODO: Make sure the soft object path is something that can actually be turned into a primary asset ID (e.g., is not pointing to an experience in an unscanned directory)
+}
+#endif
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_WorldSettings::BeginPlay()
 {
@@ -142,65 +195,5 @@ void AUR_WorldSettings::GetAssetRegistryTags(TArray<FAssetRegistryTag>& OutTags)
     // skip AActor
     UObject::GetAssetRegistryTags(OutTags);
 }
-
-/*
- * Previous approach = automatically create and maintain reference to a MapInfo object in an external package with _MapInfo suffix
- * It works, but the AssetRegistry approach is much simpler
- *
-
-#include "UObject/ObjectSaveContext.h"
-#include "UnrealEd/Public/FileHelpers.h"
-
-void AUR_WorldSettings::PreSave(FObjectPreSaveContext SaveContext)
-{
-    Super::PreSave(SaveContext);
-
-    if (GetPackage()->HasAnyPackageFlags(PKG_PlayInEditor))
-        return;
-
-    if (SaveContext.IsCooking())
-        return;
-
-    const FString MapInfoPackagePath = GetPackage()->GetPathName() + "_MapInfo";
-    const FString MapInfoName = FPaths::GetCleanFilename(MapInfoPackagePath);
-
-    // Find or create external package for MapInfo
-    UPackage* MapInfoPackage = CreatePackage(*MapInfoPackagePath);
-    if (!MapInfoPackage)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to load/create package: %s"), *MapInfoPackagePath);
-        return;
-    }
-
-    // Find possible existing object
-    UUR_MapInfo* ExternalMapInfo = FindObject<UUR_MapInfo>(MapInfoPackage, *MapInfoName);
-
-    // Create if not exists
-    if (!ExternalMapInfo)
-    {
-        ExternalMapInfo = NewObject<UUR_MapInfo>(MapInfoPackage, *MapInfoName, RF_Public | RF_Standalone | RF_Transactional, MapInfo);
-        if (!ExternalMapInfo)
-        {
-            UE_LOG(LogTemp, Error, TEXT("Failed to create new MapInfo object: %s.%s"), *MapInfoPackagePath, *MapInfoName);
-            return;
-        }
-        MapInfoPackage->SetIsExternallyReferenceable(true);
-        MapInfoPackage->MarkPackageDirty();
-    }
-
-    if (ExternalMapInfo && MapInfo != ExternalMapInfo)
-    {
-        // If old mapinfo was inside map package, garbage it
-        if (MapInfo && MapInfo->GetPackage() == GetPackage())
-            MapInfo->MarkAsGarbage();
-
-        // Point to external asset
-        MapInfo = ExternalMapInfo;
-    }
-
-    // Save MapInfo package along with the map (kinda like _BuiltData)
-    UEditorLoadingAndSavingUtils::SavePackages({ MapInfoPackage }, true);
-}
-*/
 
 #endif
