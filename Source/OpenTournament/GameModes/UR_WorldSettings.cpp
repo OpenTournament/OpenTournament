@@ -76,7 +76,7 @@ void AUR_WorldSettings::CheckForErrors()
 		{
 			MapCheck.Warning()
 				->AddToken(FUObjectToken::Create(PlayerStart))
-				->AddToken(FTextToken::Create(FText::FromString("is a normal APlayerStart, replace with ALyraPlayerStart.")));
+				->AddToken(FTextToken::Create(FText::FromString("is a normal APlayerStart, replace with AUR_PlayerStart.")));
 		}
 	}
 
