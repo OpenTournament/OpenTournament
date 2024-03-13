@@ -31,69 +31,66 @@ struct FGameplayEffectModCallbackData;
 UCLASS(BlueprintType)
 class UUR_HealthSet : public UUR_AttributeSet
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
+    UUR_HealthSet();
 
-	UUR_HealthSet();
+    ATTRIBUTE_ACCESSORS(UUR_HealthSet, Health);
+    ATTRIBUTE_ACCESSORS(UUR_HealthSet, MaxHealth);
+    ATTRIBUTE_ACCESSORS(UUR_HealthSet, Healing);
+    ATTRIBUTE_ACCESSORS(UUR_HealthSet, Damage);
 
-	ATTRIBUTE_ACCESSORS(UUR_HealthSet, Health);
-	ATTRIBUTE_ACCESSORS(UUR_HealthSet, MaxHealth);
-	ATTRIBUTE_ACCESSORS(UUR_HealthSet, Healing);
-	ATTRIBUTE_ACCESSORS(UUR_HealthSet, Damage);
+    // Delegate when health changes due to damage/healing, some information may be missing on the client
+    mutable FUR_AttributeEvent OnHealthChanged;
 
-	// Delegate when health changes due to damage/healing, some information may be missing on the client
-	mutable FUR_AttributeEvent OnHealthChanged;
+    // Delegate when max health changes
+    mutable FUR_AttributeEvent OnMaxHealthChanged;
 
-	// Delegate when max health changes
-	mutable FUR_AttributeEvent OnMaxHealthChanged;
-
-	// Delegate to broadcast when the health attribute reaches zero
-	mutable FUR_AttributeEvent OnOutOfHealth;
+    // Delegate to broadcast when the health attribute reaches zero
+    mutable FUR_AttributeEvent OnOutOfHealth;
 
 protected:
+    UFUNCTION()
+    void OnRep_Health(const FGameplayAttributeData& OldValue);
 
-	UFUNCTION()
-	void OnRep_Health(const FGameplayAttributeData& OldValue);
+    UFUNCTION()
+    void OnRep_MaxHealth(const FGameplayAttributeData& OldValue);
 
-	UFUNCTION()
-	void OnRep_MaxHealth(const FGameplayAttributeData& OldValue);
+    virtual bool PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data) override;
+    virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 
-	virtual bool PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data) override;
-	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+    virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
+    virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+    virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
-	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
-	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
-	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
-
-	void ClampAttribute(const FGameplayAttribute& Attribute, float& NewValue) const;
+    void ClampAttribute(const FGameplayAttribute& Attribute, float& NewValue) const;
 
 private:
+    // The current health attribute.  The health will be capped by the max health attribute.  Health is hidden from modifiers so only executions can modify it.
+    UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health, Category = "Game|Health", Meta = (HideFromModifiers, AllowPrivateAccess = true))
+    FGameplayAttributeData Health;
 
-	// The current health attribute.  The health will be capped by the max health attribute.  Health is hidden from modifiers so only executions can modify it.
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health, Category = "Game|Health", Meta = (HideFromModifiers, AllowPrivateAccess = true))
-	FGameplayAttributeData Health;
+    // The current max health attribute.  Max health is an attribute since gameplay effects can modify it.
+    UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxHealth, Category = "Game|Health", Meta = (AllowPrivateAccess = true))
+    FGameplayAttributeData MaxHealth;
 
-	// The current max health attribute.  Max health is an attribute since gameplay effects can modify it.
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxHealth, Category = "Game|Health", Meta = (AllowPrivateAccess = true))
-	FGameplayAttributeData MaxHealth;
+    // Used to track when the health reaches 0.
+    bool bOutOfHealth;
 
-	// Used to track when the health reaches 0.
-	bool bOutOfHealth;
+    // Store the health before any changes
+    float MaxHealthBeforeAttributeChange;
+    float HealthBeforeAttributeChange;
 
-	// Store the health before any changes
-	float MaxHealthBeforeAttributeChange;
-	float HealthBeforeAttributeChange;
+    // -------------------------------------------------------------------
+    //	Meta Attribute (please keep attributes that aren't 'stateful' below
+    // -------------------------------------------------------------------
 
-	// -------------------------------------------------------------------
-	//	Meta Attribute (please keep attributes that aren't 'stateful' below
-	// -------------------------------------------------------------------
+    // Incoming healing. This is mapped directly to +Health
+    UPROPERTY(BlueprintReadOnly, Category="Game|Health", Meta=(AllowPrivateAccess=true))
+    FGameplayAttributeData Healing;
 
-	// Incoming healing. This is mapped directly to +Health
-	UPROPERTY(BlueprintReadOnly, Category="Game|Health", Meta=(AllowPrivateAccess=true))
-	FGameplayAttributeData Healing;
-
-	// Incoming damage. This is mapped directly to -Health
-	UPROPERTY(BlueprintReadOnly, Category="Game|Health", Meta=(HideFromModifiers, AllowPrivateAccess=true))
-	FGameplayAttributeData Damage;
+    // Incoming damage. This is mapped directly to -Health
+    UPROPERTY(BlueprintReadOnly, Category="Game|Health", Meta=(HideFromModifiers, AllowPrivateAccess=true))
+    FGameplayAttributeData Damage;
 };
