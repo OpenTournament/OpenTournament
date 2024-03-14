@@ -1,23 +1,21 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_AINavigationJumpingComp.h"
 
+#include <AIController.h>
 #include <KismetTraceUtils.h>
-
-#include "AIController.h"
-#include "GameFramework/Character.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "Engine/World.h"
-#include "TimerManager.h"
-#include <KismetTraceUtils.h>
+#include <TimerManager.h>
+#include <Engine/World.h>
+#include <GameFramework/Character.h>
+#include <GameFramework/CharacterMovementComponent.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_AINavigationJumpingComp::UUR_AINavigationJumpingComp()
 {
-    SetAutoActivate(true);
+    bAutoActivate = true;
     PrimaryComponentTick.bCanEverTick = true;
 
     JumpCheckInterval = 0.250f;
