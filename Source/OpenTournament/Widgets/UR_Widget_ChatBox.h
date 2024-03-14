@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -16,23 +16,22 @@
 UCLASS()
 class OPENTOURNAMENT_API UUR_Widget_ChatBox : public UUserWidget
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	virtual void NativeOnInitialized() override;
+    virtual void NativeOnInitialized() override;
 
 public:
+    /**
+    * Function bound to "BeginSay" ActionMapping input.
+    * Blueprint implementable.
+    */
+    UFUNCTION(BlueprintImplementableEvent)
+    void OnBeginSay();
 
-	/**
-	* Function bound to "BeginSay" ActionMapping input.
-	* Blueprint implementable.
-	*/
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnBeginSay();
-
-	/**
-	* Function bound to "BeginTeamSay" ActionMapping input.
-	* Blueprint implementable.
-	*/
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnBeginTeamSay();
+    /**
+    * Function bound to "BeginTeamSay" ActionMapping input.
+    * Blueprint implementable.
+    */
+    UFUNCTION(BlueprintImplementableEvent)
+    void OnBeginTeamSay();
 };
