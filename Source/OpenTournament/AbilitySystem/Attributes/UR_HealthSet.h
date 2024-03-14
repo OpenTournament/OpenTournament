@@ -10,8 +10,7 @@
 
 #include "UR_HealthSet.generated.h"
 
-class UObject;
-struct FFrame;
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Gameplay_Damage);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Gameplay_DamageImmunity);
@@ -19,8 +18,13 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Gameplay_DamageSelfDestruct);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Gameplay_FellOutOfWorld);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Game_Damage_Message);
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+class UObject;
+struct FFrame;
 struct FGameplayEffectModCallbackData;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * UUR_HealthSet

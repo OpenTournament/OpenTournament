@@ -3,14 +3,16 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_HealthSet.h"
+
+#include "GameplayEffectExtension.h"
+#include "Engine/World.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
+#include "Net/UnrealNetwork.h"
+
+#include "UR_AbilitySystemComponent.h"
 #include "UR_AttributeSet.h"
 #include "UR_GameplayTags.h"
-#include "Net/UnrealNetwork.h"
-#include "UR_AbilitySystemComponent.h"
-#include "Engine/World.h"
-#include "GameplayEffectExtension.h"
 #include "Messages/GameVerbMessage.h"
-#include "GameFramework/GameplayMessageSubsystem.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_HealthSet)
 
