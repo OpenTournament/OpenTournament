@@ -1,25 +1,27 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_AttributeSet.h"
 
+#include "UR_AbilitySystemComponent.h"
+#include "UR_LogChannels.h"
 #include "Net/UnrealNetwork.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_AttributeSet::UUR_AttributeSet()
-  : Health(100.f)
-  , HealthMax(100.f)
-  , OverHealth(0.f)
-  , OverHealthMax(99.f)
-  , Armor(0.0f)
-  , ArmorMax(100.0f)
-  , ArmorAbsorptionPercent(0.66f)
-  , Shield(0.0f)
-  , ShieldMax(100.0f)
-  , Energy(0.f)
-  , EnergyMax(100.f)
+    : Health_D(100.f)
+    , HealthMax_D(100.f)
+    , OverHealth(0.f)
+    , OverHealthMax(99.f)
+    , Armor(0.0f)
+    , ArmorMax(100.0f)
+    , ArmorAbsorptionPercent(0.66f)
+    , Shield(0.0f)
+    , ShieldMax(100.0f)
+    , Energy(0.f)
+    , EnergyMax(100.f)
 {
 }
 
@@ -29,8 +31,8 @@ void UUR_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(ThisClass, Health);
-    DOREPLIFETIME(ThisClass, HealthMax);
+    DOREPLIFETIME(ThisClass, Health_D);
+    DOREPLIFETIME(ThisClass, HealthMax_D);
     DOREPLIFETIME(ThisClass, OverHealth);
     DOREPLIFETIME(ThisClass, OverHealthMax);
     DOREPLIFETIME(ThisClass, Energy);
@@ -49,15 +51,15 @@ void UUR_AttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, f
     // This is called whenever attributes change, so for max health (etc) we want to scale the current totals to match
     Super::PreAttributeChange(Attribute, NewValue);
 
-    if (Attribute == GetHealthAttribute())
+    if (Attribute == GetHealth_DAttribute())
     {
-        GAME_LOG(Game, Log, "Health - PreAttributeChange - New Value (%f)", NewValue);
+        GAME_LOG(LogGame, Log, "Health - PreAttributeChange - New Value (%f)", NewValue);
 
-        Health.SetCurrentValue(FMath::Clamp(NewValue, 0.f, HealthMax.GetCurrentValue()));
+        Health_D.SetCurrentValue(FMath::Clamp(NewValue, 0.f, HealthMax_D.GetCurrentValue()));
 
-        if (NewValue > GetHealthMax())
+        if (NewValue > GetHealthMax_D())
         {
-            const float OverflowValue = FMath::Clamp(NewValue - HealthMax.GetCurrentValue(), 0.f, OverHealthMax.GetCurrentValue());
+            const float OverflowValue = FMath::Clamp(NewValue - HealthMax_D.GetCurrentValue(), 0.f, OverHealthMax.GetCurrentValue());
             OverHealth.SetCurrentValue(OverHealth.GetCurrentValue() + OverflowValue);
         }
     }
@@ -77,9 +79,9 @@ void UUR_AttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, f
     {
         Energy.SetCurrentValue(FMath::Clamp(NewValue, 0.f, EnergyMax.GetCurrentValue()));
     }
-    else if (Attribute == GetHealthMaxAttribute())
+    else if (Attribute == GetHealthMax_DAttribute())
     {
-        AdjustAttributeForMaxChange(Health, HealthMax, NewValue, GetHealthAttribute());
+        AdjustAttributeForMaxChange(Health_D, HealthMax_D, NewValue, GetHealth_DAttribute());
     }
     else if (Attribute == GetEnergyMaxAttribute())
     {
@@ -106,14 +108,14 @@ void UUR_AttributeSet::AdjustAttributeForMaxChange(FGameplayAttributeData& Affec
     }
 }
 
-void UUR_AttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
+void UUR_AttributeSet::OnRep_HealthD(const FGameplayAttributeData& OldHealth)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, Health, OldHealth);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, Health_D, OldHealth);
 }
 
-void UUR_AttributeSet::OnRep_HealthMax(const FGameplayAttributeData& OldHealthMax)
+void UUR_AttributeSet::OnRep_HealthMaxD(const FGameplayAttributeData& OldHealthMax)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, HealthMax, OldHealthMax);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, HealthMax_D, OldHealthMax);
 }
 
 void UUR_AttributeSet::OnRep_OverHealth(const FGameplayAttributeData& OldOverHealth)
@@ -161,10 +163,9 @@ void UUR_AttributeSet::OnRep_ShieldMax(const FGameplayAttributeData& OldShieldMa
     GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_AttributeSet, ShieldMax, OldShieldMax);
 }
 
-
 float UUR_AttributeSet::GetEffectiveHealth()
 {
-    const float TotalHealth = GetHealth() + GetOverHealth();
+    const float TotalHealth = GetHealth_D() + GetOverHealth();
 
     if (GetArmorAbsorptionPercent() < 1)
     {
@@ -172,4 +173,9 @@ float UUR_AttributeSet::GetEffectiveHealth()
     }
 
     return GetShield() + GetArmor() + TotalHealth;
+}
+
+UUR_AbilitySystemComponent* UUR_AttributeSet::GetGameAbilitySystemComponent() const
+{
+    return Cast<UUR_AbilitySystemComponent>(GetOwningAbilitySystemComponent());
 }
