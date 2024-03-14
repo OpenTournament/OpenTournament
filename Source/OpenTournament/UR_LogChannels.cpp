@@ -12,6 +12,8 @@ DEFINE_LOG_CATEGORY(LogGame);
 DEFINE_LOG_CATEGORY(LogGameExperience);
 DEFINE_LOG_CATEGORY(LogGameUI);
 DEFINE_LOG_CATEGORY(LogNetOT);
+DEFINE_LOG_CATEGORY(LogWeapon);
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
