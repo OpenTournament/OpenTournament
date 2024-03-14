@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +43,6 @@ class OPENTOURNAMENT_API UUR_FunctionLibrary : public UBlueprintFunctionLibrary
     GENERATED_BODY()
 
 public:
-
     /**
      * Utility for retrieving GameMode CDO
      */
@@ -52,7 +51,7 @@ public:
     /**
      * Utility for retrieving GameMode CDO
      */
-    template<class T>
+    template <class T>
     static FORCEINLINE T* GetGameModeDefaultObject(const UObject* WorldContextObject)
     {
         return Cast<T>(GetGameModeBaseDefaultObject(WorldContextObject));
@@ -68,7 +67,7 @@ public:
     /**
      * Utility to retrieve the String value of a given Enum
      */
-    template<typename TEnum>
+    template <typename TEnum>
     static FORCEINLINE FString GetEnumValueAsString(const UObject* WorldContextObject, const FString& Name, TEnum Value)
     {
         if (const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
@@ -101,7 +100,10 @@ public:
     * Use to keep consistency around interfaces.
     */
     UFUNCTION(BlueprintPure)
-    static FColor GetSpectatorDisplayTextColor() { return FColor(255, 200, 0, 255); }
+    static FColor GetSpectatorDisplayTextColor()
+    {
+        return FColor(255, 200, 0, 255);
+    }
 
 
     /**
@@ -114,9 +116,9 @@ public:
     {
         // see RichTextMarkupProcessing.cpp
         return InText.Replace(TEXT("&"), TEXT("&amp;"))
-            .Replace(TEXT("\""), TEXT("&quot;"))
-            .Replace(TEXT("<"), TEXT("&lt;"))
-            .Replace(TEXT(">"), TEXT("&gt;"));
+                     .Replace(TEXT("\""), TEXT("&quot;"))
+                     .Replace(TEXT("<"), TEXT("&lt;"))
+                     .Replace(TEXT(">"), TEXT("&gt;"));
     }
 
 
@@ -127,9 +129,9 @@ public:
     static FString UnescapeRichText(const FString& InText)
     {
         return InText.Replace(TEXT("&gt;"), TEXT(">"))
-            .Replace(TEXT("&lt;"), TEXT("<"))
-            .Replace(TEXT("&quot;"), TEXT("\""))
-            .Replace(TEXT("&amp;"), TEXT("&"));
+                     .Replace(TEXT("&lt;"), TEXT("<"))
+                     .Replace(TEXT("&quot;"), TEXT("\""))
+                     .Replace(TEXT("&amp;"), TEXT("&"));
     }
 
 
@@ -183,7 +185,9 @@ public:
     static AUR_PlayerController* GetLocalPlayerController(const UObject* WorldContextObject);
 
     static APlayerController* GetLocalPC(const UObject* WorldContextObject);
-    template<typename T> static T* GetLocalPC(const UObject* WorldContextObject)
+
+    template <typename T>
+    static T* GetLocalPC(const UObject* WorldContextObject)
     {
         return Cast<T>(GetLocalPC(WorldContextObject));
     }
@@ -270,13 +274,15 @@ public:
     * Spawn effect attached - niagara/particle independent.
     */
     UFUNCTION(BlueprintCallable, Category = "Effects")
-    static UFXSystemComponent* SpawnEffectAttached(UFXSystemAsset* Template, const FTransform& Transform, USceneComponent* AttachToComponent, FName AttachPointName = NAME_None, EAttachLocation::Type LocationType = EAttachLocation::KeepRelativeOffset, bool bAutoDestroy = true, bool bAutoActivate = true);
+    static UFXSystemComponent* SpawnEffectAttached(UFXSystemAsset* Template, const FTransform& Transform, USceneComponent* AttachToComponent, FName AttachPointName = NAME_None,
+                                                   EAttachLocation::Type LocationType = EAttachLocation::KeepRelativeOffset, bool bAutoDestroy = true, bool bAutoActivate = true);
 
 
     /**
     * C++ utility to cast (checked) a TScriptInterface<IBase> to a TScriptInterface<IDerived>
     */
-    template<class IBase, class IDerived> static void CastScriptInterface(const TScriptInterface<IBase>& Base, TScriptInterface<IDerived>& OutDerived)
+    template <class IBase, class IDerived>
+    static void CastScriptInterface(const TScriptInterface<IBase>& Base, TScriptInterface<IDerived>& OutDerived)
     {
         UObject* Object = Base.GetObject();
         IDerived* Casted = Cast<IDerived>(Object);
@@ -371,12 +377,13 @@ public:
         P_GET_PROPERTY(FIntProperty, End);
         P_FINISH;
         P_NATIVE_BEGIN;
-        GenericArray_Slice(SourceArrayAddr, SourceArrayProp, ResultArrayAddr, ResultArrayProp, Start, End);
+            GenericArray_Slice(SourceArrayAddr, SourceArrayProp, ResultArrayAddr, ResultArrayProp, Start, End);
         P_NATIVE_END;
     }
 
     // c++ version
-    template<typename T> static TArray<T> ArraySlice(const TArray<T>& InArray, int32 Start, int32 End = -1);
+    template <typename T>
+    static TArray<T> ArraySlice(const TArray<T>& InArray, int32 Start, int32 End = -1);
 
     UFUNCTION(BlueprintPure, Category = "Utilities")
     static bool ClassImplementsInterface(UClass* TestClass, TSubclassOf<UInterface> Interface);
@@ -472,5 +479,4 @@ public:
 
         return (FMath::Cos(AngleRad) * ConeAxis + FMath::Sin(AngleRad) * PlaneDir) * InVector.Size();
     }
-
 };
