@@ -111,3 +111,5 @@ Plugins/*/Binaries/Win64/*-[0-9][0-9][0-9][0-9].dll
 !Plugins/*/Binaries/Win64/UE4Editor.modules
 !Plugins/*/Binaries/Win64/UnrealEditor.modules
 Plugins/*/Binaries/*/*DebugGame.dll
+
+OpenTournament.uproject.DotSettings.user
