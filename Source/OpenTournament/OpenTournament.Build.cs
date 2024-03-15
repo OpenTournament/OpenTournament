@@ -32,7 +32,8 @@ public class OpenTournament : ModuleRules
                 "Paper2D",
                 "CinematicCamera",
                 "AIModule",
-                "NavigationSystem"
+                "NavigationSystem",
+                "UIExtension"
             }
         );
 
@@ -51,6 +52,7 @@ public class OpenTournament : ModuleRules
             new string[]
             {
                 "AudioModulation",
+                "CommonGame",
                 "CommonInput",
                 "CommonLoadingScreen",
                 "CommonUI",
@@ -59,7 +61,7 @@ public class OpenTournament : ModuleRules
                 "GameFeatures",
                 "GameplayMessageRuntime",
                 "ModularGameplay",
-                "ModularGameplayActors",
+                "ModularGameplayActors"
             }
         );
 
