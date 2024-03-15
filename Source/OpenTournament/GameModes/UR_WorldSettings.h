@@ -53,22 +53,20 @@ struct FMapInfo
 UCLASS()
 class OPENTOURNAMENT_API AUR_WorldSettings : public AWorldSettings
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-
-	AUR_WorldSettings(const FObjectInitializer& ObjectInitializer);
+    AUR_WorldSettings(const FObjectInitializer& ObjectInitializer);
 
 #if WITH_EDITOR
-	virtual void CheckForErrors() override;
+    virtual void CheckForErrors() override;
 #endif
 
 public:
-
     virtual void BeginPlay() override;
 
-	// Returns the default experience to use when a server opens this map if it is not overridden by the user-facing experience
-	FPrimaryAssetId GetDefaultGameplayExperience() const;
+    // Returns the default experience to use when a server opens this map if it is not overridden by the user-facing experience
+    FPrimaryAssetId GetDefaultGameplayExperience() const;
 
     /**
     * UI properties stored in map header so they can be easily extracted
@@ -101,21 +99,20 @@ public:
     static void DebugDumpPackageTags(FString Path);
 
 protected:
-	// The default experience to use when a server opens this map if it is not overridden by the user-facing experience
-	UPROPERTY(EditDefaultsOnly, Category=GameMode)
-	TSoftClassPtr<UUR_ExperienceDefinition> DefaultGameplayExperience;
+    // The default experience to use when a server opens this map if it is not overridden by the user-facing experience
+    UPROPERTY(EditDefaultsOnly, Category=GameMode)
+    TSoftClassPtr<UUR_ExperienceDefinition> DefaultGameplayExperience;
 
 public:
-
 #if WITH_EDITORONLY_DATA
 
     static void AddMapInfoTags(const UWorld* World, TArray<FAssetRegistryTag>& OutTags);
     virtual void GetAssetRegistryTags(TArray<FAssetRegistryTag>& OutTags) const override;
 
-	// Is this level part of a front-end or other standalone experience?
-	// When set, the net mode will be forced to Standalone when you hit Play in the editor
-	UPROPERTY(EditDefaultsOnly, Category=PIE)
-	bool ForceStandaloneNetMode = false;
+    // Is this level part of a front-end or other standalone experience?
+    // When set, the net mode will be forced to Standalone when you hit Play in the editor
+    UPROPERTY(EditDefaultsOnly, Category=PIE)
+    bool ForceStandaloneNetMode = false;
 
 #endif
 };

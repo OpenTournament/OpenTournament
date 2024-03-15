@@ -21,7 +21,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_WorldSettings::AUR_WorldSettings(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+    : Super(ObjectInitializer)
 {
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
@@ -46,18 +46,21 @@ AUR_WorldSettings::AUR_WorldSettings(const FObjectInitializer& ObjectInitializer
 
 FPrimaryAssetId AUR_WorldSettings::GetDefaultGameplayExperience() const
 {
-	FPrimaryAssetId Result;
-	if (!DefaultGameplayExperience.IsNull())
-	{
-		Result = UAssetManager::Get().GetPrimaryAssetIdForPath(DefaultGameplayExperience.ToSoftObjectPath());
+    FPrimaryAssetId Result;
+    if (!DefaultGameplayExperience.IsNull())
+    {
+        Result = UAssetManager::Get().GetPrimaryAssetIdForPath(DefaultGameplayExperience.ToSoftObjectPath());
 
-		if (!Result.IsValid())
-		{
-			UE_LOG(Game, Error, TEXT("%s.DefaultGameplayExperience is %s but that failed to resolve into an asset ID (you might need to add a path to the Asset Rules in your game feature plugin or project settings"),
-				*GetPathNameSafe(this), *DefaultGameplayExperience.ToString());
-		}
-	}
-	return Result;
+        if (!Result.IsValid())
+        {
+            UE_LOG(LogGame,
+                Error,
+                TEXT("%s.DefaultGameplayExperience is %s but that failed to resolve into an asset ID (you might need to add a path to the Asset Rules in your game feature plugin or project settings"),
+                *GetPathNameSafe(this),
+                *DefaultGameplayExperience.ToString());
+        }
+    }
+    return Result;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,22 +68,22 @@ FPrimaryAssetId AUR_WorldSettings::GetDefaultGameplayExperience() const
 #if WITH_EDITOR
 void AUR_WorldSettings::CheckForErrors()
 {
-	Super::CheckForErrors();
+    Super::CheckForErrors();
 
-	FMessageLog MapCheck("MapCheck");
+    FMessageLog MapCheck("MapCheck");
 
-	for (TActorIterator<APlayerStart> PlayerStartIt(GetWorld()); PlayerStartIt; ++PlayerStartIt)
-	{
-		APlayerStart* PlayerStart = *PlayerStartIt;
-		if (IsValid(PlayerStart) && PlayerStart->GetClass() == APlayerStart::StaticClass())
-		{
-			MapCheck.Warning()
-				->AddToken(FUObjectToken::Create(PlayerStart))
-				->AddToken(FTextToken::Create(FText::FromString("is a normal APlayerStart, replace with AUR_PlayerStart.")));
-		}
-	}
+    for (TActorIterator<APlayerStart> PlayerStartIt(GetWorld()); PlayerStartIt; ++PlayerStartIt)
+    {
+        APlayerStart* PlayerStart = *PlayerStartIt;
+        if (IsValid(PlayerStart) && PlayerStart->GetClass() == APlayerStart::StaticClass())
+        {
+            MapCheck.Warning()
+                    ->AddToken(FUObjectToken::Create(PlayerStart))
+                    ->AddToken(FTextToken::Create(FText::FromString("is a normal APlayerStart, replace with AUR_PlayerStart.")));
+        }
+    }
 
-	//@TODO: Make sure the soft object path is something that can actually be turned into a primary asset ID (e.g., is not pointing to an experience in an unscanned directory)
+    //@TODO: Make sure the soft object path is something that can actually be turned into a primary asset ID (e.g., is not pointing to an experience in an unscanned directory)
 }
 #endif
 
@@ -126,7 +129,15 @@ AUR_WorldSettings* AUR_WorldSettings::GetWorldSettings(UObject* WorldContext)
 static void LexFromString(FMapInfo& MapInfo, const TCHAR* String)
 {
     UScriptStruct* ScriptStruct = FMapInfo::StaticStruct();
-    ScriptStruct->ImportText(String, &MapInfo, nullptr, PPF_UseDeprecatedProperties, (FOutputDevice*)GWarn, []() { return FString("FMapInfo"); });
+    ScriptStruct->ImportText(String,
+        &MapInfo,
+        nullptr,
+        PPF_UseDeprecatedProperties,
+        (FOutputDevice*)GWarn,
+        []()
+        {
+            return FString("FMapInfo");
+        });
 }
 
 void AUR_WorldSettings::GetAllMaps(TArray<FMapInfo>& OutMaps)
@@ -155,7 +166,8 @@ void AUR_WorldSettings::DebugDumpAssetTags(const FAssetData& AssetData)
 {
     if (AssetData.IsValid())
     {
-        AssetData.EnumerateTags([](const TPair<FName, FAssetTagValueRef>& Pair) {
+        AssetData.EnumerateTags([](const TPair<FName, FAssetTagValueRef>& Pair)
+        {
             if (Pair.Key != "FiBData")  //fuck this tag in particular
                 UE_LOG(LogTemp, Log, TEXT("[DumpTags] %s = %s"), *Pair.Key.ToString(), *Pair.Value.AsString());
         });
