@@ -39,7 +39,7 @@ void UUR_NavigationUtilities::ForceReachedDestinationWithin(APawn* Pawn, const F
                     const bool bContainsTarget = bSphereBounds ? Bounds.SpheresIntersect(Bounds, TargetBounds) : Bounds.BoxesIntersect(Bounds, TargetBounds);
                     if (bContainsTarget)
                     {
-                        static_cast<UPathFollowingComponentAccessHack*>(PathFollowing)->ForceFinishCurrentSegment();
+                        ((UPathFollowingComponentAccessHack*)PathFollowing)->ForceFinishCurrentSegment();
                     }
                 }
             }
