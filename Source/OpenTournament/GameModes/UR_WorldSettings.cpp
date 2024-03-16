@@ -53,11 +53,7 @@ FPrimaryAssetId AUR_WorldSettings::GetDefaultGameplayExperience() const
 
         if (!Result.IsValid())
         {
-            UE_LOG(LogGame,
-                Error,
-                TEXT("%s.DefaultGameplayExperience is %s but that failed to resolve into an asset ID (you might need to add a path to the Asset Rules in your game feature plugin or project settings"),
-                *GetPathNameSafe(this),
-                *DefaultGameplayExperience.ToString());
+            UE_LOG(LogGame, Error, TEXT("%s.DefaultGameplayExperience is %s but that failed to resolve into an asset ID (you might need to add a path to the Asset Rules in your game feature plugin or project settings"), *GetPathNameSafe(this), *DefaultGameplayExperience.ToString());
         }
     }
     return Result;

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -24,18 +24,17 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTeamChangedSignature, AUR_Player
 
 
 /**
- * 
+ *
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_PlayerState : public APlayerState
-    , public IUR_TeamInterface
+                                           , public IUR_TeamInterface
 {
     GENERATED_BODY()
-    
+
     AUR_PlayerState();
 
 protected:
-
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void BeginPlay() override;
 
@@ -43,7 +42,6 @@ protected:
     virtual void OnRep_ReplicatedTeamIndex();
 
 public:
-
     UPROPERTY(Replicated, BlueprintReadOnly)
     int32 Kills;
 
@@ -86,7 +84,6 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     UPROPERTY()
     int32 TeamIndex;
 
@@ -136,5 +133,4 @@ public:
 
     UFUNCTION()
     virtual void InternalOnPawnSet(APlayerState* PS, APawn* NewPawn, APawn* OldPawn);
-
 };

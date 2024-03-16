@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -61,7 +61,7 @@ void AUR_PlayerController::BeginPlay()
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AUR_PlayerController::PlayMusic(USoundBase * Music, float FadeInDuration)
+void AUR_PlayerController::PlayMusic(USoundBase* Music, float FadeInDuration)
 {
     if (MusicComponent)
     {

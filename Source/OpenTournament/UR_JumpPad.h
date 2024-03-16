@@ -5,8 +5,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
 #include "GameplayTagAssetInterface.h"
+#include "GameFramework/Actor.h"
 
 #include "UR_JumpPad.generated.h"
 
@@ -39,13 +39,12 @@ class UNavLinkComponent;
 */
 UCLASS(Blueprintable, Abstract, HideCategories = (Actor, Rendering, Replication, Collision, Input, LOD, Cooking))
 class OPENTOURNAMENT_API AUR_JumpPad : public AActor,
-    public IGameplayTagAssetInterface
+                                       public IGameplayTagAssetInterface
 {
     GENERATED_BODY()
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 public:
-
     /**
     * Root Component
     */
@@ -140,7 +139,6 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     AUR_JumpPad(const FObjectInitializer& ObjectInitializer);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +194,11 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Gameplay Tags
 
-    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
+    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override
+    {
+        TagContainer = GameplayTags;
+        return;
+    }
 
     /**
     * Gameplay Tags for this Actor
