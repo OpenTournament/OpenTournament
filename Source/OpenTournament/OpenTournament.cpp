@@ -7,7 +7,18 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, OpenTournament, "OpenTournament" );
+class FOpenTournamentGameModule : public FDefaultGameModuleImpl
+{
+	virtual void StartupModule() override
+	{
+	}
+
+	virtual void ShutdownModule() override
+	{
+	}
+};
+
+IMPLEMENT_PRIMARY_GAME_MODULE( FOpenTournamentGameModule, OpenTournament, "OpenTournament" );
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
