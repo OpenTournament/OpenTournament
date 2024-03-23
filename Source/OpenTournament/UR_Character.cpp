@@ -167,9 +167,6 @@ void AUR_Character::BeginPlay()
 
     Super::BeginPlay();
 
-    // @! TODO HealthComponent
-    //AttributeSet->SetHealth(100.f);
-    //AttributeSet->SetHealthMax(100.f);
     AttributeSet->SetArmor(100.f);
     AttributeSet->SetArmorMax(100.f);
     AttributeSet->SetShieldMax(100.f);
@@ -1184,8 +1181,11 @@ bool AUR_Character::IsAlive() const
         return false;	// server link has been cut, health might not replicate anymore
     }
 
-    return true;
-    //return AttributeSet->GetHealth() > 0; // @! TODO HealthComponentFix
+    if (IsValid(HealthComponent))
+    {
+        return !HealthComponent->IsDeadOrDying();
+    }
+    return false;
 }
 
 void AUR_Character::ServerSuicide_Implementation()
