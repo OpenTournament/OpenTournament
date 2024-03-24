@@ -1,12 +1,14 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_CharacterCustomization.h"
-#include "Engine/SkeletalMesh.h"
+#include <Engine/SkeletalMesh.h>
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Helper
-template<typename T, typename StructType>
+template <typename T, typename StructType>
 T* TryLoadUserAsset(const TSoftObjectPtr<T>& InUserPath, const TArray<StructType>& AssetMap)
 {
     if (auto EntryPtr = AssetMap.FindByKey(InUserPath))
@@ -47,7 +49,7 @@ FCharacterCustomization UUR_CharacterCustomizationBackend::MakeRandomCharacterCu
         const uint8 Saturation = 128 + 127 * (255 - Brightness) / (255 - 10);
         Result.SkinTone = FLinearColor::MakeFromHSV8(Hue, Saturation, Brightness).ToFColor(true);
     }
-    
+
     Result.HairColor = FColor(FMath::RandRange(0, 255), FMath::RandRange(0, 255), FMath::RandRange(0, 255));
 
     return Result;
