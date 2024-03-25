@@ -81,8 +81,8 @@ Source/UE4_MocapOnline_Tech_Notes.txt
 
 # Ignore These Asset Packs
 Content/*
-!Content/OpenTournament/*
-!Content/StarterContent/*
+!Content/OpenTournament
+!Content/StarterContent
 
 
 # Ignore Source File Formats
