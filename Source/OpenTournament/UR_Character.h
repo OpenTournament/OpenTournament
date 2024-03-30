@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -19,6 +19,8 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_HealthComponent;
+class UUR_HealthSet;
 class UAnimationMontage;
 class UGameplayTagsManager;
 class UUR_AbilitySystemComponent;
@@ -174,7 +176,7 @@ public:
 
     /**
     * Notes on camera management :
-    * 
+    *
     * The final camera view of player is calculated in CameraManager->UpdateViewTargetInternal (result in OutVT.POV, and cached in CachedPOV).
     * It is calculated via ViewTarget->CalcCamera
     * --| CalcCamera relies on CameraComponent->GetCameraView if there is one, or falls back to GetActorEyesViewPoint
@@ -379,7 +381,7 @@ public:
 
     /**
     * Play effects for footsteps
-    * @param WalkingSpeedPercentage current movement speed 
+    * @param WalkingSpeedPercentage current movement speed
     */
     void PlayFootstepEffects(float WalkingSpeedPercentage) const;
 
@@ -390,7 +392,7 @@ public:
     float FootstepTimestamp;
 
     /**
-    * Footstep Time Interval 
+    * Footstep Time Interval
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Walk")
     float FootstepTimeIntervalBase;
@@ -560,7 +562,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Character|Dodge")
     void DodgeTest(const EDodgeDirection InDodgeDirection);
 
-    /** 
+    /**
     * Hook for sounds / effects OnDodge
     */
     UFUNCTION(BlueprintNativeEvent)
@@ -613,7 +615,7 @@ public:
     * Initialize the GameplayTagsManager reference
     */
     void InitializeGameplayTagsManager();
-    
+
     /**
     * Character's GameplayTags
     */
@@ -667,7 +669,7 @@ public:
     * Get the GameplayTag associated with given MovementAction
     */
     FGameplayTag GetMovementActionGameplayTag(const EMovementAction InMovementAction);
-    
+
     /**
     * Get the GameplayTag associated with given EMovementMode
     */
@@ -678,6 +680,8 @@ public:
 
     // Implement IAbilitySystemInterface
     UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+    virtual UUR_AbilitySystemComponent* GetGameAbilitySystemComponent() const;
 
     /** Grant a GameplayAbility */
     UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Character")
@@ -706,6 +710,10 @@ public:
     */
     UPROPERTY()
     UUR_AttributeSet* AttributeSet;
+
+    // Health attribute set used by this actor.
+    UPROPERTY()
+    TObjectPtr<const UUR_HealthSet> HealthSet;
 
     /** Abilities to grant to this character on creation. These will be activated by tag or event and are not bound to specific inputs */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Abilities")
@@ -753,6 +761,22 @@ public:
     UFUNCTION(BlueprintCosmetic, BlueprintNativeEvent)
     void PlayDeath(AController* Killer, const FReplicatedDamageEvent& RepDamageEvent);
 
+    // Begins the death sequence for the character (disables collision, disables movement, etc...)
+    UFUNCTION()
+    virtual void OnDeathStarted(AActor* OwningActor);
+
+    // Ends the death sequence for the character (detaches controller, destroys pawn, etc...)
+    UFUNCTION()
+    virtual void OnDeathFinished(AActor* OwningActor);
+
+    void DisableMovementAndCollision();
+    void DestroyDueToDeath();
+    void UninitAndDestroy();
+
+    // Called when the death sequence for the character has completed
+    UFUNCTION(BlueprintImplementableEvent, meta=(DisplayName="OnDeathFinished"))
+    void K2_OnDeathFinished();
+
     /**
     * Set to true after PlayDeath() is received on clients.
     * Used in TornOff() to adjust life span accordingly.
@@ -783,6 +807,9 @@ public:
 
     UFUNCTION(Server, Reliable)
     void ServerSuicide();
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game|Character", Meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UUR_HealthComponent> HealthComponent;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Inventory
@@ -842,5 +869,5 @@ public:
     virtual int32 GetTeamIndex_Implementation() override;
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
     //~ End TeamInterface
-   
+
 };

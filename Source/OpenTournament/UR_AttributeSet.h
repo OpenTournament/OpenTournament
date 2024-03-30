@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -6,6 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
+
 #include "AbilitySystemComponent.h"
 
 #include "OpenTournament.h"
@@ -21,6 +22,26 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_AbilitySystemComponent;
+/**
+ * Delegate used to broadcast attribute events, some of these parameters may be null on clients:
+ * @param EffectInstigator	The original instigating actor for this event
+ * @param EffectCauser		The physical actor that caused the change
+ * @param EffectSpec		The full effect spec for this change
+ * @param EffectMagnitude	The raw magnitude, this is before clamping
+ * @param OldValue			The value of the attribute before it was changed
+ * @param NewValue			The value after it was changed
+*/
+DECLARE_MULTICAST_DELEGATE_SixParams(FUR_AttributeEvent,
+    AActor* /*EffectInstigator*/,
+    AActor* /*EffectCauser*/,
+    const FGameplayEffectSpec* /*EffectSpec*/,
+    float /*EffectMagnitude*/,
+    float /*OldValue*/,
+    float /*NewValue*/);
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
 * Character - Primary Attribute Set
 */
@@ -30,7 +51,6 @@ class OPENTOURNAMENT_API UUR_AttributeSet : public UAttributeSet
     GENERATED_BODY()
 
 public:
-
     UUR_AttributeSet();
     virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
     virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
@@ -38,16 +58,16 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    UPROPERTY(ReplicatedUsing=OnRep_Health, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
-    FGameplayAttributeData Health;
-    ATTRIBUTE_ACCESSORS(UUR_AttributeSet, Health)
+    UPROPERTY(ReplicatedUsing=OnRep_HealthD, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
+    FGameplayAttributeData Health_D;
+    ATTRIBUTE_ACCESSORS(UUR_AttributeSet, Health_D)
 
-    UPROPERTY(ReplicatedUsing=OnRep_HealthMax, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
-    FGameplayAttributeData HealthMax;
-    ATTRIBUTE_ACCESSORS(UUR_AttributeSet, HealthMax)
+    UPROPERTY(ReplicatedUsing=OnRep_HealthMaxD, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
+    FGameplayAttributeData HealthMax_D;
+    ATTRIBUTE_ACCESSORS(UUR_AttributeSet, HealthMax_D)
 
     UPROPERTY(ReplicatedUsing=OnRep_OverHealth, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
-        FGameplayAttributeData OverHealth;
+    FGameplayAttributeData OverHealth;
     ATTRIBUTE_ACCESSORS(UUR_AttributeSet, OverHealth)
 
     UPROPERTY(ReplicatedUsing=OnRep_OverHealthMax, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
@@ -65,7 +85,7 @@ public:
     ATTRIBUTE_ACCESSORS(UUR_AttributeSet, ArmorMax)
 
     UPROPERTY(ReplicatedUsing=OnRep_ArmorAbsorptionPercent, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
-        FGameplayAttributeData ArmorAbsorptionPercent;
+    FGameplayAttributeData ArmorAbsorptionPercent;
     ATTRIBUTE_ACCESSORS(UUR_AttributeSet, ArmorAbsorptionPercent)
 
     ////////========////////
@@ -130,7 +150,6 @@ public:
     virtual float GetEffectiveHealth();
 
 protected:
-
     /**
     * Helper function to proportionally adjust the value of an attribute when it's associated max attribute changes.
     * (i.e. When MaxHealth increases, Health increases by an amount that maintains the same percentage as before)
@@ -139,10 +158,10 @@ protected:
 
     // These OnRep functions exist to make sure that the ability system internal representations are synchronized properly during replication
     UFUNCTION()
-    virtual void OnRep_Health(const FGameplayAttributeData& OldHealth);
+    virtual void OnRep_HealthD(const FGameplayAttributeData& OldHealth);
 
     UFUNCTION()
-    virtual void OnRep_HealthMax(const FGameplayAttributeData& OldHealthMax);
+    virtual void OnRep_HealthMaxD(const FGameplayAttributeData& OldHealthMax);
 
     UFUNCTION()
     virtual void OnRep_OverHealth(const FGameplayAttributeData& OldOverHealth);
@@ -170,4 +189,6 @@ protected:
 
     UFUNCTION()
     virtual void OnRep_ShieldMax(const FGameplayAttributeData& OldShieldMax);
+
+    UUR_AbilitySystemComponent* GetGameAbilitySystemComponent() const;
 };

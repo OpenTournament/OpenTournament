@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -12,19 +12,20 @@
 #include "TimerManager.h"
 
 #include "OpenTournament.h"
+#include "UR_LogChannels.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_Lift::AUR_Lift(const FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer),
-    TravelDuration(1.f),
-    StoppedAtEndPosition(2.f),
-    EndRelativeLocation(FVector(0.f, 0.f, 100.f)),
-    EaseIn(true),
-    EaseOut(true),
-    LiftStartSound(nullptr),
-    LiftMovingSound(nullptr),
-    LiftEndSound(nullptr)
+AUR_Lift::AUR_Lift(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+    , TravelDuration(1.f)
+    , StoppedAtEndPosition(2.f)
+    , EndRelativeLocation(FVector(0.f, 0.f, 100.f))
+    , EaseIn(true)
+    , EaseOut(true)
+    , LiftStartSound(nullptr)
+    , LiftMovingSound(nullptr)
+    , LiftEndSound(nullptr)
 {
     BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
     BoxComponent->SetBoxExtent(FVector(50, 50, 30));
@@ -63,7 +64,7 @@ void AUR_Lift::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UPrim
     bIsTriggered = true;
     ActorsOnTrigger.AddUnique(Other);
 
-    GAME_LOG(Game, Log, "Entered Lift (%s) Trigger Region", *GetName());
+    GAME_LOG(LogGame, Log, "Entered Lift (%s) Trigger Region", *GetName());
 }
 
 void AUR_Lift::OnTriggerExit(UPrimitiveComponent* HitComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -71,11 +72,11 @@ void AUR_Lift::OnTriggerExit(UPrimitiveComponent* HitComp, AActor* Other, UPrimi
     ActorsOnTrigger.Remove(Other);
     bIsTriggered = ActorsOnTrigger.Num() > 0;
 
-    GAME_LOG(Game, Log, "Exited Lift (%s) Trigger Region", *GetName());
+    GAME_LOG(LogGame, Log, "Exited Lift (%s) Trigger Region", *GetName());
 
     if (bIsTriggered)
     {
-        GAME_LOG(Game, Log, "Exited Lift (%s) is not Empty", *GetName());
+        GAME_LOG(LogGame, Log, "Exited Lift (%s) is not Empty", *GetName());
     }
 }
 

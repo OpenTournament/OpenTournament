@@ -1,14 +1,15 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
 #include "GameplayTagAssetInterface.h"
+#include "GameFramework/Actor.h"
 
 #include "Enums/UR_PickupState.h"
+
 #include "UR_Pickup.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -30,14 +31,13 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPickedUpSignature, AUR_Pickup*, 
  */
 UCLASS(Abstract, Blueprintable)
 class OPENTOURNAMENT_API AUR_Pickup : public AActor,
-    public IGameplayTagAssetInterface
+                                      public IGameplayTagAssetInterface
 {
     GENERATED_BODY()
-    
-public:	
 
+public:
     AUR_Pickup(const FObjectInitializer& ObjectInitializer);
-   
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -137,7 +137,10 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Gameplay Tags
 
-    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; }
+    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override
+    {
+        TagContainer = GameplayTags;
+    }
 
     /**
     * Gameplay Tags for this Actor

@@ -1,14 +1,19 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "UObject/ObjectMacros.h"
+#include <CoreMinimal.h>
+#include <UObject/ObjectMacros.h>
+
 #include "UR_CharacterCustomization.generated.h"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 class USkeletalMesh;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * User-configurable character customization.
@@ -69,8 +74,15 @@ struct FNamedSkeletalMeshReference
     UPROPERTY(Config, BlueprintReadOnly)
     TSoftObjectPtr<USkeletalMesh> Ref;
 
-    bool operator==(const FName& OtherName) const { return OtherName == Name; }
-    bool operator==(const TSoftObjectPtr<USkeletalMesh>& OtherRef) const { return OtherRef == Ref; }
+    bool operator==(const FName& OtherName) const
+    {
+        return OtherName == Name;
+    }
+
+    bool operator==(const TSoftObjectPtr<USkeletalMesh>& OtherRef) const
+    {
+        return OtherRef == Ref;
+    }
 };
 
 /**
@@ -82,7 +94,6 @@ class OPENTOURNAMENT_API UUR_CharacterCustomizationBackend : public UObject
     GENERATED_BODY()
 
 public:
-
     UPROPERTY(Config, BlueprintReadOnly)
     TArray<FNamedSkeletalMeshReference> CharacterMeshes;
 

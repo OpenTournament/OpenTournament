@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -20,11 +20,11 @@ class UCharacterMovementComponent;
  * This component handles making the AI character automatically jump when necessary during navigation.
  *
  * The technique we are using here consists in two parts that go together :
- * 
+ *
  * 1. Use jump height as step height in the NavMesh settings.
  *    By doing that, the NavMesh generates seamlessly over everything within jump height range, as if being a free-roaming flat surface.
  *    However with that alone, the bot will get stuck because it doesn't know when/how to jump.
- * 
+ *
  * 2. Add a bit of tracing code to the AI, to figure out when to jump.
  *    This can be kept efficient as tracing doesn't need to happen every frame, and doesn't need to go very far.
 

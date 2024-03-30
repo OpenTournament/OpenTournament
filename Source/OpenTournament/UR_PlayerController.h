@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -32,10 +32,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FReceiveSystemMessageSignature, cons
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * 
+ *
  */
 UCLASS(Config = Game)
-class OPENTOURNAMENT_API AUR_PlayerController : public AUR_BasePlayerController
+class OPENTOURNAMENT_API AUR_PlayerController
+    : public AUR_BasePlayerController
     , public IUR_TeamInterface
 {
     GENERATED_BODY()
@@ -46,7 +47,6 @@ class OPENTOURNAMENT_API AUR_PlayerController : public AUR_BasePlayerController
     AUR_Character* URCharacter;
 
 public:
-
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     virtual void BeginPlay() override;
@@ -236,7 +236,10 @@ public:
     * Blueprint hook for ClientMessage.
     */
     UFUNCTION(BlueprintCallable, Exec, Meta = (DisplayName = "Client Message"))
-    void K2_ClientMessage(const FString& Message) { ClientMessage(Message); }
+    void K2_ClientMessage(const FString& Message)
+    {
+        ClientMessage(Message);
+    }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -282,5 +285,4 @@ public:
     virtual int32 GetTeamIndex_Implementation() override;
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
     //~ End TeamInterface
-
 };
