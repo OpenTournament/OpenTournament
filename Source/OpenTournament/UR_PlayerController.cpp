@@ -94,13 +94,20 @@ void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
     Super::SetPlayer(InPlayer);
 
     UUR_LocalPlayer* LocalPlayer = Cast<UUR_LocalPlayer>(GetLocalPlayer());
-    if (LocalPlayer && LocalPlayer->MessageHistory)
+    if (IsValid(LocalPlayer))
     {
-        LocalPlayer->MessageHistory->InitWithPlayer(this);
+        if (IsValid(LocalPlayer->MessageHistory))
+        {
+            LocalPlayer->MessageHistory->InitWithPlayer(this);
+        }
+        else
+        {
+            UE_LOG(LogPlayerController, Warning, TEXT("No MessageHistory for Controller ?! %s"), *GetDebugName(this));
+        }
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("URPlayerController created but no URLocalPlayer available ?! %s"), *GetDebugName(this));
+        UE_LOG(LogPlayerController, Warning, TEXT("URPlayerController created but no URLocalPlayer available ?! %s"), *GetDebugName(this));
     }
 }
 
