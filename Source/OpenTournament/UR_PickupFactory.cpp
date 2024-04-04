@@ -1,18 +1,25 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_PickupFactory.h"
 
+#include <TimerManager.h>
+#include <Components/SceneComponent.h>
+#include <Components/StaticMeshComponent.h>
 #include <Engine/World.h>
-#include "Net/UnrealNetwork.h"
-#include "Components/SceneComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "TimerManager.h"
-#include "Kismet/GameplayStatics.h"
+#include <Kismet/GameplayStatics.h>
+#include <Net/UnrealNetwork.h>
 
 #include "UR_FunctionLibrary.h"
 #include "UR_Pickup.h"
+
+#if WITH_EDITOR
+#include <Logging/MessageLog.h>
+#include <Misc/UObjectToken.h>
+#endif
+
+#define LOCTEXT_NAMESPACE "UR_PickupFactory"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -65,6 +72,26 @@ AUR_PickupFactory::AUR_PickupFactory()
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+#if WITH_EDITOR
+
+void AUR_PickupFactory::CheckForErrors()
+{
+    Super::CheckForErrors();
+
+    if (!HasAnyFlags(RF_ClassDefaultObject) && !PickupClass_Soft)
+    {
+        const auto ErrorText = FText::Format(LOCTEXT("Missing PickupClass Soft Reference", "Null entry at for PickupClass in UR_PickupFactory ({Name})"), FText::FromString(GetNameSafe(this)));
+
+        FMessageLog("MapCheck").Warning()
+                               ->AddToken(FUObjectToken::Create(this))
+                               ->AddToken(FTextToken::Create(ErrorText));
+    }
+}
+
+#endif
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 void AUR_PickupFactory::OnConstruction(const FTransform& Transform)
 {
     // This is called just after construction script.
@@ -76,13 +103,14 @@ void AUR_PickupFactory::OnConstruction(const FTransform& Transform)
         AttachComponent = RootComponent;
     }
 
+#if WITH_EDITORONLY_DATA
     if (EditorPreview)
     {
         EditorPreview->AttachToComponent(AttachComponent, FAttachmentTransformRules::SnapToTargetIncludingScale);
 
-        if (PickupClass)
+        if (PickupClass_Internal)
         {
-            if (auto CDO = PickupClass->GetDefaultObject<AUR_Pickup>())
+            if (const auto CDO = PickupClass_Internal->GetDefaultObject<AUR_Pickup>())
             {
                 if (CDO->StaticMesh)
                 {
@@ -100,13 +128,15 @@ void AUR_PickupFactory::OnConstruction(const FTransform& Transform)
         EditorPreview->SetRelativeScale3D(FVector(1, 1, 1));
         SetupEditorPreview(EditorPreview);
     }
+#endif
 }
 
 void AUR_PickupFactory::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION(ThisClass, PickupClass, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ThisClass, PickupClass_Internal, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ThisClass, PickupClass_Soft, COND_InitialOnly);
     DOREPLIFETIME_CONDITION(ThisClass, Pickup, COND_None);
 }
 
@@ -245,6 +275,11 @@ void AUR_PickupFactory::OnRep_PickupClass()
     ShowPickupAvailable(Pickup ? true : false);
 }
 
+void AUR_PickupFactory::OnRep_PickupClass_Soft()
+{
+    // Do something here
+}
+
 void AUR_PickupFactory::OnRep_Pickup()
 {
     if (!IsNetMode(NM_DedicatedServer))
@@ -380,3 +415,5 @@ bool AUR_PickupFactory::ShouldSkipTick()
     // No children were recently rendered, safely skip the update.
     return true;
 }
+
+#undef LOCTEXT_NAMESPACE
