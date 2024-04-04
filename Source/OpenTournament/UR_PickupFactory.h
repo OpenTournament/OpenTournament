@@ -56,6 +56,7 @@ public:
     */
     UPROPERTY(Transient, BlueprintReadOnly)
     UStaticMeshComponent* EditorPreview;
+#endif
 
     /**
     * Rotates AttachComponent at a fixed rate.
