@@ -56,6 +56,7 @@ public:
     */
     UPROPERTY(Transient, BlueprintReadOnly)
     UStaticMeshComponent* EditorPreview;
+#endif
 
     /**
     * Rotates AttachComponent at a fixed rate.
@@ -68,7 +69,6 @@ public:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
     float BobbingSpeed;
-#endif
 
     /**
     * Saved initial relative location of AttachComponent.
