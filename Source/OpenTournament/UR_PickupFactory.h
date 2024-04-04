@@ -37,7 +37,6 @@ public:
     virtual void CheckForErrors() override;
 #endif
 
-
     /**
     * Spawned pickup will be attached to this component.
     * By default this points to the root component of the factory.
