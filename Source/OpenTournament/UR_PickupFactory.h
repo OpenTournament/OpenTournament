@@ -143,15 +143,12 @@ protected:
 
 public:
 
-#if WITH_EDITORONLY_DATA
     /**
     * Override this to alter the EditorPreview static mesh component.
     * This is called in editor after every construction / property update.
     */
     UFUNCTION(BlueprintNativeEvent)
     void SetupEditorPreview(UStaticMeshComponent* PreviewComp);
-    virtual void SetupEditorPreview_Implementation(UStaticMeshComponent* PreviewComp) {}
-#endif
 
     /**
     * Factor method for setting up respawn timer or initial spawn delay,

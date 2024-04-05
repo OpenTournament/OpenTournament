@@ -290,6 +290,11 @@ void AUR_PickupFactory::OnRep_Pickup()
     }
 }
 
+void AUR_PickupFactory::SetupEditorPreview_Implementation(UStaticMeshComponent* PreviewComp)
+{
+    // Noop, override in BP
+}
+
 void AUR_PickupFactory::OnPickupPickedUp_Implementation(AUR_Pickup* Other, APawn* Recipient)
 {
     if (Other == Pickup)
