@@ -55,12 +55,14 @@ AUR_PickupFactory::AUR_PickupFactory()
     // NOTE: Cannot point to RootComponent here or it is impossible to override in BP construction script.
     AttachComponent = nullptr;
 
+#if WITH_EDITORONLY_DATA
     EditorPreview = CreateEditorOnlyDefaultSubobject<UStaticMeshComponent>(TEXT("EditorPreview"), true);
     if (EditorPreview != nullptr)
     {
         EditorPreview->SetupAttachment(RootComponent);
         EditorPreview->SetHiddenInGame(true);
     }
+#endif
 
     RotationRate = 180;
     BobbingHeight = 0;
