@@ -51,6 +51,7 @@ Saved
 # =========================
 
 .idea
+OpenTournament.uproject.DotSettings.user
 Plugins/Developer/RiderLink/
 
 # =========================
@@ -112,4 +113,3 @@ Plugins/*/Binaries/Win64/*-[0-9][0-9][0-9][0-9].dll
 !Plugins/*/Binaries/Win64/UnrealEditor.modules
 Plugins/*/Binaries/*/*DebugGame.dll
 
-OpenTournament.uproject.DotSettings.user
