@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -29,7 +29,10 @@ struct FStartingWeaponEntry
     UPROPERTY(EditAnywhere)
     int32 Ammo;
 
-    FStartingWeaponEntry() : Ammo(0) {}
+    FStartingWeaponEntry()
+        : Ammo(0)
+    {
+    }
 };
 
 namespace ETeamsFillMode
@@ -64,7 +67,6 @@ class OPENTOURNAMENT_API AUR_GameMode : public AUR_GameModeBase
     GENERATED_BODY()
 
 public:
-
     AUR_GameMode();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,6 +132,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+
     virtual void InitGameState() override;
 
     UFUNCTION(BlueprintCallable)
@@ -140,6 +143,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     virtual void OnPostLogin(AController* NewPlayer) override;
+
     virtual void Logout(AController* Exiting) override;
 
     virtual void GenericPlayerInitialization(AController* C) override;
@@ -153,6 +157,7 @@ public:
     */
     UFUNCTION(BlueprintCallable)
     void CheckBotsDeferred();
+
     virtual void CheckBots();
 
     /**
@@ -253,5 +258,4 @@ public:
     virtual void OnEndGameTimeUp(AUR_GameState* GS);
 
     virtual void HandleMatchHasEnded() override;
-
 };

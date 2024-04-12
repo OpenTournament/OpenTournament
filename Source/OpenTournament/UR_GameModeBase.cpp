@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -6,15 +6,22 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_GameModeBase::AUR_GameModeBase(){}
-
-void AUR_GameModeBase::RegisterChatComponent(UUR_ChatComponent* Comp)
+AUR_GameModeBase::AUR_GameModeBase()
 {
-	if (Comp)
-		ChatComponents.AddUnique(Comp);
 }
 
-void AUR_GameModeBase::UnregisterChatComponent(UUR_ChatComponent* Comp)
+void AUR_GameModeBase::RegisterChatComponent(UUR_ChatComponent* InComponent)
 {
-	ChatComponents.Remove(Comp);
+    if (InComponent)
+    {
+        ChatComponents.AddUnique(InComponent);
+    }
+}
+
+void AUR_GameModeBase::UnregisterChatComponent(UUR_ChatComponent* InComponent)
+{
+    if (ChatComponents.Num() > 0)
+    {
+        ChatComponents.Remove(InComponent);
+    }
 }
