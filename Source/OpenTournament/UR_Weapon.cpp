@@ -1,8 +1,10 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Weapon.h"
+
+#include <GameFramework/GameplayMessageSubsystem.h>
 
 #include "Animation/AnimMontage.h"
 #include "Animation/AnimInstance.h"
@@ -31,6 +33,9 @@
 #include "UR_FireModeBasic.h"
 #include "UR_FireModeCharged.h"
 #include "UR_FireModeContinuous.h"
+#include "UR_GameplayTags.h"
+#include "UR_LogChannels.h"
+#include "Messages/CrosshairVerbMessage.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -414,6 +419,16 @@ void AUR_Weapon::Activate()
         {
             RequestStartFire(URCharOwner->DesiredFireModeNum[i]);
         }
+    }
+
+    if (IsValid(CrosshairData))
+    {
+        UGameplayMessageSubsystem& MessageSubsystem = UGameplayMessageSubsystem::Get(this);
+        FCrosshairVerbMessage Message;
+        Message.Verb = URGameplayTags::Crosshair_Enable;
+        Message.Instigator = GetOwner();
+        Message.CrosshairData = CrosshairData;
+        MessageSubsystem.BroadcastMessage(URGameplayTags::Crosshair_Enable, Message);
     }
 }
 

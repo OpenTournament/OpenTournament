@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -17,6 +17,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Forward Declarations
 
+class UUR_CrosshairData;
 class AUR_Character;
 class AUR_Projectile;
 class AUR_Ammo;
@@ -86,7 +87,7 @@ class OPENTOURNAMENT_API AUR_Weapon : public AActor
 {
     GENERATED_BODY()
 
-protected:	
+protected:
     AUR_Weapon(const FObjectInitializer& ObjectInitializer);
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void PostInitializeComponents() override;
@@ -151,7 +152,7 @@ public:
     *
     * User settings should include weaponbar, grouping, keybindings, and crosshairs (to start with).
     * Might add per-weapon sensitivity, fov, and firemode remapping in the future as well.
-    * 
+    *
     * If unspecified, the game will fallback to parent weapon by default.
     * Specify this only if you want to target a different weapon for good reason.
     */
@@ -163,6 +164,12 @@ public:
     */
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     UPaperSprite* WeaponSprite;
+
+    /**
+    * Default Crosshair Data
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    UUR_CrosshairData* CrosshairData;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Some getters

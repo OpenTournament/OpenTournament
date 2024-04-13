@@ -1,11 +1,15 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_HUD.h"
 
 //UMG
+#include <GameFramework/GameplayMessageSubsystem.h>
+
 #include "SlateBasics.h"
+#include "UR_GameplayTags.h"
+#include "Messages/CrosshairVerbMessage.h"
 #include "Runtime/UMG/Public/UMG.h"
 #include "Runtime/UMG/Public/UMGStyle.h"
 #include "Runtime/UMG/Public/Slate/SObjectWidget.h"
@@ -17,6 +21,34 @@
 AUR_HUD::AUR_HUD()
     : CrosshairTex(nullptr)
 {
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AUR_HUD::BeginPlay()
+{
+    Super::BeginPlay();
+
+    UGameplayMessageSubsystem& MessageSubsystem = UGameplayMessageSubsystem::Get(this);
+    if (!HasAnyFlags(RF_ClassDefaultObject)  && MessageSubsystem.IsValidLowLevel())
+    {
+        MessageSubsystem.RegisterListener(URGameplayTags::Crosshair_Enable, this, &ThisClass::OnMessage_CrosshairEnable);
+        MessageSubsystem.RegisterListener(URGameplayTags::Crosshair_Disable, this, &ThisClass::OnMessage_CrosshairDisable);
+        MessageSubsystem.RegisterListener(URGameplayTags::Crosshair_HitRegister, this, &ThisClass::OnMessage_CrosshairHitRegister);
+    }
+}
+
+void AUR_HUD::BeginDestroy()
+{
+    // UGameplayMessageSubsystem& MessageSubsystem = UGameplayMessageSubsystem::Get(this);
+    // if (!HasAnyFlags(RF_ClassDefaultObject) && MessageSubsystem.IsValidLowLevel())
+    // {
+    //     MessageSubsystem.UnregisterListener(Handle_CrosshairEnable);
+    //     MessageSubsystem.UnregisterListener(Handle_CrosshairDisable);
+    //     MessageSubsystem.UnregisterListener(Handle_CrosshairHitRegister);
+    // }
+
+    Super::BeginDestroy();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,6 +78,40 @@ void AUR_HUD::DrawCrosshair()
     FCanvasTileItem TileItem(CrosshairDrawPosition, CrosshairTex->GetResource(), FLinearColor::White);
     TileItem.BlendMode = SE_BLEND_Translucent;
     Canvas->DrawItem(TileItem);
+}
+
+void AUR_HUD::OnMessage_CrosshairEnable(FGameplayTag InTag, const FCrosshairVerbMessage& InMessage)
+{
+    const FGameplayTag& RelevantTag = URGameplayTags::Crosshair_Enable;
+
+    if (InTag.MatchesTag(RelevantTag)
+        && InMessage.Verb.MatchesTag(RelevantTag)
+        && IsValid(PlayerOwner))
+    {
+        if (auto Character = PlayerOwner->GetCharacter())
+        {
+            if (IsValid(InMessage.CrosshairData))
+            {
+                //CrosshairTex = InMessage.CrosshairData.Get()->Texture;
+            }
+        }
+    }
+}
+
+void AUR_HUD::OnMessage_CrosshairDisable(FGameplayTag InTag, const FCrosshairVerbMessage& InMessage)
+{
+    const FGameplayTag& RelevantTag = URGameplayTags::Crosshair_Disable;
+
+    if (InTag.MatchesTag(RelevantTag)
+    && InMessage.Verb.MatchesTag(RelevantTag)
+    && InMessage.Instigator == GetOwner())
+    {
+        //CrosshairTex = nullptr;
+    }
+}
+
+void AUR_HUD::OnMessage_CrosshairHitRegister(FGameplayTag InTag, const FCrosshairVerbMessage& InMessage)
+{
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
