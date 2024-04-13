@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -12,6 +12,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Forward declarations
 
+struct FCrosshairVerbMessage;
+struct FGameplayTag;
 class UUserWidget;
 class UTexture2D;
 
@@ -29,10 +31,12 @@ class OPENTOURNAMENT_API AUR_HUD : public AHUD
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     AUR_HUD();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    virtual void BeginPlay() override;
+    virtual void BeginDestroy() override;
 
     /**
     * Primary draw call for the HUD
@@ -61,6 +65,15 @@ public:
 
 protected:
     void DrawCrosshair();
+
+
+#pragma region MessageSubsystem
+
+    void OnMessage_CrosshairEnable(FGameplayTag InTag, const FCrosshairVerbMessage& InMessage);
+    void OnMessage_CrosshairDisable(FGameplayTag InTag, const FCrosshairVerbMessage& InMessage);
+    void OnMessage_CrosshairHitRegister(FGameplayTag InTag, const FCrosshairVerbMessage& InMessage);
+
+#pragma endregion MessageSubsystem
 
     UPROPERTY()
     TArray<UUserWidget*> HUDWidgets;

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -58,16 +58,24 @@ struct FKeyTapTime
     UPROPERTY(BluePrintReadOnly, Category = "Dodging")
     float LastTapDownTime;
 
-    FKeyTapTime() : LastTapLeftTime(0), LastTapRightTime(0), LastTapForwardTime(0), LastTapBackTime(0), LastTapUpTime(0), LastTapDownTime(0) {}
+    FKeyTapTime()
+        : LastTapLeftTime(0)
+        , LastTapRightTime(0)
+        , LastTapForwardTime(0)
+        , LastTapBackTime(0)
+        , LastTapUpTime(0)
+        , LastTapDownTime(0)
+    {
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 /**
- * 
+ *
  */
-UCLASS(Config = Game, Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(Config = Game, Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class OPENTOURNAMENT_API UUR_PCInputDodgeComponent : public UActorComponent
 {
     GENERATED_BODY()
@@ -75,7 +83,6 @@ class OPENTOURNAMENT_API UUR_PCInputDodgeComponent : public UActorComponent
     UUR_PCInputDodgeComponent();
 
 public:
-
     /**
     * Setup bindings for ActionMappings to functions
     */
@@ -89,7 +96,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-    * Current movement axis deflecton forward/back (back is negative)   
+    * Current movement axis deflecton forward/back (back is negative)
     */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement)
     float MovementForwardAxis;
@@ -162,13 +169,15 @@ public:
 
 
     void OnTapLeftRelease();
+
     void OnTapRightRelease();
+
     void OnTapForwardRelease();
+
     void OnTapBackRelease();
 
     /**
      * Process Taps and set the Dodge direction.
      */
-    void SetTapDodgeInputDirection(const float LastTapTime, const float MaxClickTime,
-                                const EDodgeDirection DodgeDirection) const;
+    void SetTapDodgeInputDirection(const float LastTapTime, const float MaxClickTime, const EDodgeDirection DodgeDirection) const;
 };

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -10,12 +10,12 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-UUR_PCInputDodgeComponent::UUR_PCInputDodgeComponent() :
-    MovementForwardAxis(0.0f),
-    MovementStrafeAxis(0.0f),
-    bRequestedKeyDodge(false),
-    MaxDodgeClickThresholdTime(0.25f),
-    KeyTapTime(FKeyTapTime())
+UUR_PCInputDodgeComponent::UUR_PCInputDodgeComponent()
+    : MovementForwardAxis(0.0f)
+    , MovementStrafeAxis(0.0f)
+    , bRequestedKeyDodge(false)
+    , MaxDodgeClickThresholdTime(0.25f)
+    , KeyTapTime(FKeyTapTime())
 {
     KeyTapTime.LastTapLeftTime = -10.f;
     KeyTapTime.LastTapRightTime = -10.f;
@@ -176,21 +176,18 @@ void UUR_PCInputDodgeComponent::OnTapForwardRelease()
 
 void UUR_PCInputDodgeComponent::OnTapBackRelease()
 {
-
 }
 
 void UUR_PCInputDodgeComponent::OnTapLeftRelease()
 {
-
 }
 
 void UUR_PCInputDodgeComponent::OnTapRightRelease()
 {
-
 }
 
 void UUR_PCInputDodgeComponent::SetTapDodgeInputDirection(const float LastTapTime, const float MaxClickTime,
-                                                       const EDodgeDirection DodgeDirection) const
+                                                          const EDodgeDirection DodgeDirection) const
 {
     if (const auto OwningPC = Cast<AUR_PlayerController>(GetOwner()))
     {
