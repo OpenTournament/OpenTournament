@@ -22,6 +22,10 @@ UUR_CrosshairData::UUR_CrosshairData()
 
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if WITH_EDITOR
 EDataValidationResult UUR_CrosshairData::IsDataValid(FDataValidationContext& Context) const
 {
     EDataValidationResult Result = CombineDataValidationResults(Super::IsDataValid(Context), EDataValidationResult::Valid);
@@ -36,5 +40,6 @@ EDataValidationResult UUR_CrosshairData::IsDataValid(FDataValidationContext& Con
 
     return Super::IsDataValid(Context);
 }
+#endif WITH_EDITOR
 
 #undef LOCTEXT_NAMESPACE
