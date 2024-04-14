@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include <Engine/DataAsset.h>
 
 #include "GameplayTagContainer.h"
 #include "Sound/SoundBase.h"
@@ -22,7 +22,8 @@
 * Handles playing Game Announcements for Local Player
 */
 UCLASS(Blueprintable, BlueprintType)
-class OPENTOURNAMENT_API UUR_AnnouncementVoice : public UObject
+class OPENTOURNAMENT_API UUR_AnnouncementVoice
+    : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
@@ -32,8 +33,17 @@ class OPENTOURNAMENT_API UUR_AnnouncementVoice : public UObject
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
+#if WITH_EDITOR
+    virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
+#endif WITH_EDITOR
 
 	public:
+
+    /**
+     * UniqueID of the Announcer
+     */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayTags")
+    FName AnnouncerID;
 
 	/**
 	* Get the Sound associated with this GameplayTag
