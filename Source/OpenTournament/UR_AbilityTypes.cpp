@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -13,26 +13,26 @@
 
 bool FUR_GameplayEffectContainerSpec::HasValidEffects() const
 {
-	return TargetGameplayEffectSpecs.Num() > 0;
+    return TargetGameplayEffectSpecs.Num() > 0;
 }
 
 bool FUR_GameplayEffectContainerSpec::HasValidTargets() const
 {
-	return TargetData.Num() > 0;
+    return TargetData.Num() > 0;
 }
 
 void FUR_GameplayEffectContainerSpec::AddTargets(const TArray<FHitResult>& HitResults, const TArray<AActor*>& TargetActors)
 {
-	for (const FHitResult& HitResult : HitResults)
-	{
-		FGameplayAbilityTargetData_SingleTargetHit* NewData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
-		TargetData.Add(NewData);
-	}
+    for (const FHitResult& HitResult : HitResults)
+    {
+        FGameplayAbilityTargetData_SingleTargetHit* NewData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
+        TargetData.Add(NewData);
+    }
 
-	if (TargetActors.Num() > 0)
-	{
-		FGameplayAbilityTargetData_ActorArray* NewData = new FGameplayAbilityTargetData_ActorArray();
-		NewData->TargetActorArray.Append(TargetActors);
-		TargetData.Add(NewData);
-	}
+    if (TargetActors.Num() > 0)
+    {
+        FGameplayAbilityTargetData_ActorArray* NewData = new FGameplayAbilityTargetData_ActorArray();
+        NewData->TargetActorArray.Append(TargetActors);
+        TargetData.Add(NewData);
+    }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -32,7 +32,9 @@ struct FUR_GameplayEffectContainer
     GENERATED_BODY()
 
 public:
-    FUR_GameplayEffectContainer() {}
+    FUR_GameplayEffectContainer()
+    {
+    }
 
     /** Sets the way that targeting happens */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GameplayEffectContainer)
@@ -52,7 +54,9 @@ struct FUR_GameplayEffectContainerSpec
     GENERATED_BODY()
 
 public:
-    FUR_GameplayEffectContainerSpec() {}
+    FUR_GameplayEffectContainerSpec()
+    {
+    }
 
     /** Computed target data */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GameplayEffectContainer)
