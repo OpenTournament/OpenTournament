@@ -9,10 +9,10 @@
 #include "GameplayTagAssetInterface.h"
 #include "Interfaces/UR_TeamInterface.h"
 #include "Components/InputComponent.h"  //struct FInputKeyBinding
-
 #include "GameplayAbilitySpec.h"
 #include "GameplayEffect.h"
-#include "UR_Type_DodgeDirection.h"
+
+#include "Enums/UR_Type_DodgeDirection.h"
 #include "Enums/UR_MovementAction.h"
 
 #include "UR_Character.generated.h"

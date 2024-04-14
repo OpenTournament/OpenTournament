@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -45,5 +45,8 @@ struct FWeaponGroup
     UPROPERTY(Transient, BlueprintReadOnly)
     TArray<AUR_Weapon*> Weapons;
 
-    FWeaponGroup() : Visibility(EWeaponGroupVisibility::Always) {}
+    FWeaponGroup()
+        : Visibility(EWeaponGroupVisibility::Always)
+    {
+    }
 };

@@ -8,41 +8,41 @@
 #include <Components/SkeletalMeshComponent.h>
 #include <Components/SkinnedMeshComponent.h>
 
-#include "Net/UnrealNetwork.h"
+#include <Components/SkeletalMeshComponent.h>
+#include "GameplayTagsManager.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Engine/DamageEvents.h"
 #include "GameFramework/GameState.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "GameplayTagsManager.h"
-#include "Components/CapsuleComponent.h"
-#include <Components/SkeletalMeshComponent.h>
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Net/UnrealNetwork.h"
 #include "Perception/AISense_Sight.h"
 
 #include "OpenTournament.h"
-#include "UR_Logging.h"
-#include "Interfaces/UR_ActivatableInterface.h"
-#include "UR_InventoryComponent.h"
-#include "UR_CharacterMovementComponent.h"
-#include "UR_AttributeSet.h"
 #include "UR_AbilitySystemComponent.h"
-#include "UR_GameplayAbility.h"
-#include "UR_PlayerController.h"
-#include "UR_GameMode.h"
-#include "UR_GameplayTags.h"
-#include "UR_Weapon.h"
-#include "UR_Projectile.h"
-#include "UR_PlayerState.h"
-#include "UR_InputComponent.h"
-#include "UR_UserSettings.h"
+#include "UR_AttributeSet.h"
 #include "UR_DamageType.h"
-#include "UR_PaniniUtils.h"
-#include "AI/AIPerceptionSourceNativeComp.h"
-#include "UR_CharacterCustomization.h"
+#include "UR_GameMode.h"
+#include "UR_GameplayAbility.h"
+#include "UR_GameplayTags.h"
+#include "UR_InputComponent.h"
+#include "UR_InventoryComponent.h"
 #include "UR_LogChannels.h"
+#include "UR_Logging.h"
+#include "UR_PaniniUtils.h"
+#include "UR_PlayerController.h"
+#include "UR_PlayerState.h"
+#include "UR_Projectile.h"
+#include "UR_UserSettings.h"
+#include "UR_Weapon.h"
 #include "AbilitySystem/Attributes/UR_HealthSet.h"
+#include "AI/AIPerceptionSourceNativeComp.h"
+#include "Character/UR_CharacterCustomization.h"
+#include "Character/UR_CharacterMovementComponent.h"
 #include "Character/UR_HealthComponent.h"
+#include "Interfaces/UR_ActivatableInterface.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -219,6 +219,7 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+    //@! TODO EnhancedInput
     PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
     PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
     PlayerInputComponent->BindAction("DropWeapon", IE_Pressed, this, &AUR_Character::DropWeapon);
@@ -522,6 +523,7 @@ void AUR_Character::SetupWeaponBindings()
                 const auto& Group = Settings->WeaponGroups[Index];
                 if (Group.Keybind.IsValidChord())
                 {
+                    //@! TODO EnhancedInput
                     //WeaponBindings.Add(URInputComponent->BindKeyParameterized<TDelegate<void(int32)>>(Group.Keybind, IE_Pressed, this, &AUR_Character::SelectWeapon, Index));
                 }
             }

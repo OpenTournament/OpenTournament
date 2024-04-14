@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -25,12 +25,12 @@ enum class EWallDodgeBehavior : uint8
 * Character Movement Component
 */
 UCLASS()
-class OPENTOURNAMENT_API UUR_CharacterMovementComponent : public UCharacterMovementComponent
+class OPENTOURNAMENT_API UUR_CharacterMovementComponent
+    : public UCharacterMovementComponent
 {
     GENERATED_BODY()
 
 public:
-
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     UUR_CharacterMovementComponent(const class FObjectInitializer& ObjectInitializer);
@@ -144,7 +144,7 @@ public:
     * Flag. Are we jumping?
     */
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Dodging")
-    uint8 bIsJumping:1;
+    uint8 bIsJumping : 1;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Dodge
@@ -195,7 +195,7 @@ public:
     * Flag. Are we dodging?
     */
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Dodging")
-    uint8 bIsDodging:1;
+    uint8 bIsDodging : 1;
 
     /**
     * Timestamp of next time a character may dodge
@@ -261,7 +261,7 @@ public:
     float SlopeSlideRadiusScale;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-    // Wall Dodging 
+    // Wall Dodging
 
     /**
     * Can we WallDodge?
@@ -312,13 +312,13 @@ public:
     bool bCanBoostDodge;
 
     /**
-    * Speed at which performing a WallDodge will inherit, rather than reset, our current VelocityZ 
+    * Speed at which performing a WallDodge will inherit, rather than reset, our current VelocityZ
     */
     UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dodging|WallDodge")
     float WallDodgeVelocityZPreservationThreshold;
 
     /**
-    * Velocity 
+    * Velocity
     */
     UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dodging|WallDodge")
     float WallDodgeFallingVelocityCancellationThreshold;

@@ -1,11 +1,11 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_CharacterMovementComponent.h"
 
-#include "Engine/World.h"
-#include "Components/CapsuleComponent.h"
+#include <Engine/World.h>
+#include <Components/CapsuleComponent.h>
 
 #include "OpenTournament.h"
 #include "Enums/UR_MovementAction.h"
