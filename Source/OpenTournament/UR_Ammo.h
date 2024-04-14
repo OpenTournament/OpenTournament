@@ -11,6 +11,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class AUR_Weapon;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +55,7 @@ public:
 
 public:
     UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
-    virtual void StackAmmo(int32 InAmount, AUR_Weapon* FromWeapon = NULL);
+    virtual void StackAmmo(int32 InAmount, AUR_Weapon* FromWeapon = nullptr);
 
     UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
     virtual void ConsumeAmmo(int32 Amount = 1);
