@@ -1,15 +1,14 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "AIController.h"
+
 #include "UR_BotController.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18,7 +17,8 @@
  * Bot player controller class.
  */
 UCLASS()
-class OPENTOURNAMENT_API AUR_BotController : public AAIController
+class OPENTOURNAMENT_API AUR_BotController
+    : public AAIController
 {
     GENERATED_BODY()
 
@@ -26,12 +26,14 @@ class OPENTOURNAMENT_API AUR_BotController : public AAIController
 
 protected:
     virtual void InitPlayerState() override;
+
     virtual void OnNewPawnHandler(APawn* P);
+
     virtual void UpdateControlRotation(float DeltaTime, bool bUpdatePawn) override;
+
     virtual FVector GetFocalPointOnActor(const AActor* Actor) const override;
 
 public:
-
     UPROPERTY(VisibleAnywhere)
     class UUR_AIAimComp* AimComponent;
 
@@ -44,6 +46,4 @@ public:
     // Just a wrapper that calls GameMode->RestartPlayer(), can be used as delegate for SetTimer
     UFUNCTION(BlueprintCallable)
     void Respawn();
-
-    
 };
