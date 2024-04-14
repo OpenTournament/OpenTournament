@@ -1,4 +1,6 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -16,7 +18,7 @@ class AUR_TeamInfo;
 UINTERFACE(MinimalAPI, Blueprintable)
 class UUR_TeamInterface : public UInterface
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,16 +28,16 @@ class UUR_TeamInterface : public UInterface
  */
 class OPENTOURNAMENT_API IUR_TeamInterface
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-
     /**
     * Function to implement
     * Resolve team index.
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     int32 GetTeamIndex();
+
     virtual int32 GetTeamIndex_Implementation();
 
     /**
@@ -44,6 +46,7 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     void SetTeamIndex(int32 NewTeamIndex);
+
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex);
 
     /**
@@ -52,6 +55,7 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     AUR_TeamInfo* GetTeam();
+
     virtual AUR_TeamInfo* GetTeam_Implementation();
 
     /**
@@ -60,6 +64,7 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     void SetTeam(AUR_TeamInfo* NewTeam);
+
     virtual void SetTeam_Implementation(AUR_TeamInfo* NewTeam);
 
     /**
@@ -68,6 +73,7 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     bool IsAlly(UObject* Other);
+
     virtual bool IsAlly_Implementation(UObject* Other);
 
     /**
@@ -77,5 +83,6 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     bool IsEnemy(UObject* Other);
+
     virtual bool IsEnemy_Implementation(UObject* Other);
 };
