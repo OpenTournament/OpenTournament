@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -32,7 +32,9 @@ class OPENTOURNAMENT_API UUR_TargetType : public UObject
 
 public:
     // Constructor and overrides
-    UUR_TargetType() {}
+    UUR_TargetType()
+    {
+    }
 
     /** Called to determine targets to apply gameplay effects to */
     UFUNCTION(BlueprintNativeEvent)
@@ -51,7 +53,9 @@ class OPENTOURNAMENT_API UUR_TargetType_UseOwner : public UUR_TargetType
 
 public:
     // Constructor and overrides
-    UUR_TargetType_UseOwner() {}
+    UUR_TargetType_UseOwner()
+    {
+    }
 
     /** Uses the passed in event data */
     virtual void GetTargets_Implementation(AUR_Character* TargetingCharacter, AActor* TargetingActor, FGameplayEventData EventData, TArray<FHitResult>& OutHitResults, TArray<AActor*>& OutActors) const override;
@@ -69,7 +73,9 @@ class OPENTOURNAMENT_API UUR_TargetType_UseEventData : public UUR_TargetType
 
 public:
     // Constructor and overrides
-    UUR_TargetType_UseEventData() {}
+    UUR_TargetType_UseEventData()
+    {
+    }
 
     /** Uses the passed in event data */
     virtual void GetTargets_Implementation(AUR_Character* TargetingCharacter, AActor* TargetingActor, FGameplayEventData EventData, TArray<FHitResult>& OutHitResults, TArray<AActor*>& OutActors) const override;

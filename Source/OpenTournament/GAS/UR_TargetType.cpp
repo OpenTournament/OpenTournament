@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -10,27 +10,27 @@
 
 void UUR_TargetType::GetTargets_Implementation(AUR_Character* TargetingCharacter, AActor* TargetingActor, FGameplayEventData EventData, TArray<FHitResult>& OutHitResults, TArray<AActor*>& OutActors) const
 {
-	return;
+    return;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_TargetType_UseOwner::GetTargets_Implementation(AUR_Character* TargetingCharacter, AActor* TargetingActor, FGameplayEventData EventData, TArray<FHitResult>& OutHitResults, TArray<AActor*>& OutActors) const
 {
-	OutActors.Add(TargetingCharacter);
+    OutActors.Add(TargetingCharacter);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_TargetType_UseEventData::GetTargets_Implementation(AUR_Character* TargetingCharacter, AActor* TargetingActor, FGameplayEventData EventData, TArray<FHitResult>& OutHitResults, TArray<AActor*>& OutActors) const
 {
-	const FHitResult* FoundHitResult = EventData.ContextHandle.GetHitResult();
-	if (FoundHitResult)
-	{
-		OutHitResults.Add(*FoundHitResult);
-	}
-	else if (EventData.Target)
-	{
-		OutActors.Add(const_cast<AActor*>(EventData.Target.Get()));
-	}
+    const FHitResult* FoundHitResult = EventData.ContextHandle.GetHitResult();
+    if (FoundHitResult)
+    {
+        OutHitResults.Add(*FoundHitResult);
+    }
+    else if (EventData.Target)
+    {
+        OutActors.Add(const_cast<AActor*>(EventData.Target.Get()));
+    }
 }
