@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <GameFramework/WorldSettings.h>
 #include <AssetRegistry/AssetData.h>
+#include <GameFramework/WorldSettings.h>
 
 #include "UR_WorldSettings.generated.h"
 
@@ -107,6 +107,7 @@ public:
 #if WITH_EDITORONLY_DATA
 
     static void AddMapInfoTags(const UWorld* World, TArray<FAssetRegistryTag>& OutTags);
+
     virtual void GetAssetRegistryTags(TArray<FAssetRegistryTag>& OutTags) const override;
 
     // Is this level part of a front-end or other standalone experience?
