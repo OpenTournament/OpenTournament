@@ -34,6 +34,11 @@ void UUR_InventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+AUR_Weapon* UUR_InventoryComponent::GetActiveWeapon() const
+{
+    return ActiveWeapon;
+}
+
 bool UUR_InventoryComponent::IsLocallyControlled() const
 {
     APawn* P = Cast<APawn>(GetOwner());
@@ -259,7 +264,7 @@ void UUR_InventoryComponent::SelectPreferredWeapon()
             return;
         }
     }
-    SetDesiredWeapon(NULL);
+    SetDesiredWeapon(nullptr);
 }
 
 void UUR_InventoryComponent::SetDesiredWeapon(AUR_Weapon* InWeapon)

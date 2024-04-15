@@ -73,6 +73,9 @@ public:
     UPROPERTY(BlueprintReadOnly, Category = "InventoryComponent")
     AUR_Weapon* ActiveWeapon;
 
+    UFUNCTION(BlueprintPure, BlueprintCallable)
+    AUR_Weapon* GetActiveWeapon() const;
+
     /**
     * User current desired weapon.
     * It will become ActiveWeapon after the current weapon PutDown procedure is finished.
