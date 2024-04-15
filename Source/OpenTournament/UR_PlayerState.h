@@ -4,10 +4,15 @@
 
 #pragma once
 
+#include <ModularPlayerState.h>
+
 #include "GameFramework/PlayerState.h"
 #include "Interfaces/UR_TeamInterface.h"
-#include "UR_CharacterCustomization.h"
+
 #include "GameplayTagContainer.h"
+
+#include "Character/UR_CharacterCustomization.h"
+
 #include "UR_PlayerState.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,8 +32,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTeamChangedSignature, AUR_Player
  *
  */
 UCLASS()
-class OPENTOURNAMENT_API AUR_PlayerState : public APlayerState
-                                           , public IUR_TeamInterface
+class OPENTOURNAMENT_API AUR_PlayerState
+    : public AModularPlayerState
+    , public IUR_TeamInterface
 {
     GENERATED_BODY()
 
@@ -36,6 +42,7 @@ class OPENTOURNAMENT_API AUR_PlayerState : public APlayerState
 
 protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
     virtual void BeginPlay() override;
 
     UFUNCTION()
@@ -99,7 +106,9 @@ public:
 
     //~ Begin TeamInterface
     virtual int32 GetTeamIndex_Implementation() override;
+
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
+
     //~ End TeamInterface
 
     UPROPERTY(BlueprintAssignable)

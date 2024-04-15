@@ -1,12 +1,14 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
+#include <ModularGameState.h>
+
 #include "CoreMinimal.h"
-#include "GameFramework/GameState.h"
 #include "GameplayTagContainer.h"
+#include "GameFramework/GameState.h"
 
 #include "UR_GameState.generated.h"
 
@@ -32,15 +34,15 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWinnerAssignedSignature, AUR_GameSt
 
 
 /**
- * 
+ *
  */
 UCLASS()
-class OPENTOURNAMENT_API AUR_GameState : public AGameState
+class OPENTOURNAMENT_API AUR_GameState
+    : public AModularGameState
 {
     GENERATED_BODY()
 
 protected:
-
     AUR_GameState();
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -50,7 +52,6 @@ protected:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     UPROPERTY(BlueprintAssignable)
     FMatchStateChanged OnMatchStateChanged;
 
@@ -58,13 +59,15 @@ public:
     FMatchStateChanged OnMatchStateTagChanged;
 
     UFUNCTION(BlueprintPure)
-    FGameplayTag GetMatchStateTag() const { return MatchStateTag; }
+    FGameplayTag GetMatchStateTag() const
+    {
+        return MatchStateTag;
+    }
 
     UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
     void SetMatchStateTag(const FGameplayTag& NewTag);
 
 protected:
-
     virtual void OnRep_MatchState() override;
 
     /**
@@ -102,13 +105,13 @@ protected:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 protected:
-
     /**
     * Engine framework provides ElapsedTime, with replication InitialOnly.
     * We need to sync up the clock every now and then, otherwise it will derive.
     */
     UFUNCTION(NetMulticast, Reliable)
     void MulticastElapsedTime(float ServerElapsedTime);
+
     virtual void MulticastElapsedTime_Implementation(float ServerElapsedTime)
     {
         ElapsedTime = ServerElapsedTime;
@@ -120,7 +123,6 @@ protected:
     */
 
 public:
-
     /**
     * Current match/round/stage time limit.
     * Use 0 for no time limit.
@@ -194,7 +196,6 @@ public:
     FTimeUpSignature OnTimeUp;
 
 protected:
-
     UFUNCTION()
     virtual void OnRep_ClockReferencePoint()
     {
@@ -206,7 +207,6 @@ protected:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     /** Array of TeamInfos, maintained on both server and clients (TeamInfos are always relevant) */
     UPROPERTY(BlueprintReadOnly)
     TArray<AUR_TeamInfo*> Teams;
@@ -234,12 +234,12 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     UPROPERTY(BlueprintAssignable)
     FFragEventSignature FragEvent;
 
     UFUNCTION(NetMulticast, Reliable)
     void MulticastFragEvent(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DamType, const FGameplayTagContainer& EventTags);
+
     virtual void MulticastFragEvent_Implementation(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DamType, const FGameplayTagContainer& EventTags)
     {
         FragEvent.Broadcast(Victim, Killer, DamType, EventTags);
@@ -254,6 +254,7 @@ public:
 
     UFUNCTION(NetMulticast, Reliable)
     void MulticastPickupEvent(TSubclassOf<AUR_Pickup> PickupClass, AUR_PlayerState* Recipient);
+
     virtual void MulticastPickupEvent_Implementation(TSubclassOf<AUR_Pickup> PickupClass, AUR_PlayerState* Recipient)
     {
         PickupEvent.Broadcast(PickupClass, Recipient);
@@ -264,7 +265,6 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     UPROPERTY(ReplicatedUsing = OnRep_Winner, BlueprintReadOnly)
     AActor* Winner;
 

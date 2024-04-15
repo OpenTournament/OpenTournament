@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -29,7 +29,7 @@ class OPENTOURNAMENT_API UUR_DelegatesLibrary : public UBlueprintFunctionLibrary
 protected:
     UUR_DelegatesLibrary();
 
-    void InternalOnViewportResized(FViewport* Viewport, uint32 Param);
+    void InternalOnViewportResized(FViewport* Viewport, uint32 Param) const;
 
 public:
 

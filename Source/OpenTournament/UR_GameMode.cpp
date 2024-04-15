@@ -463,7 +463,7 @@ void AUR_GameMode::RegisterKill(AController* Victim, AController* Killer, const 
     if (Victim)
     {
         AUR_PlayerState* VictimPS = Victim->GetPlayerState<AUR_PlayerState>();
-        AUR_PlayerState* KillerPS = NULL;
+        AUR_PlayerState* KillerPS = nullptr;
         FGameplayTagContainer EventTags;
 
         if (VictimPS)

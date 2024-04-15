@@ -18,7 +18,7 @@
 
 #include "OpenTournament.h"
 #include "UR_Character.h"
-#include "UR_CharacterMovementComponent.h"
+#include "Character/UR_CharacterMovementComponent.h"
 #include "UR_LogChannels.h"
 #include "UR_Logging.h"
 #include "AI/UR_NavigationUtilities.h"

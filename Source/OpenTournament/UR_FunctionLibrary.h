@@ -7,9 +7,9 @@
 #include <Engine/Engine.h>
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "InputCoreTypes.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "GameplayTagContainer.h"
 
 #include "UR_FunctionLibrary.generated.h"
 
@@ -349,7 +349,9 @@ public:
 
     UFUNCTION(BlueprintPure, CustomThunk, Category = "Utilities|Array", Meta = (ArrayParm = "Source", ArrayTypeDependentParams = "Result"))
     static void Array_Slice(const TArray<int32>& Source, TArray<int32>& Result, int32 Start, int32 End = -1);
+
     static void GenericArray_Slice(void* SourceArray, const FArrayProperty* SourceArrayProp, void* ResultArray, const FArrayProperty* ResultArrayProp, int32 Start, int32 End);
+
     DECLARE_FUNCTION(execArray_Slice)
     {
         // Retrieve the target array

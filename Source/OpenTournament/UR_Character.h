@@ -4,16 +4,17 @@
 
 #pragma once
 
-#include "GameFramework/Character.h"
-#include "AbilitySystemInterface.h"
-#include "GameplayTagAssetInterface.h"
-#include "Interfaces/UR_TeamInterface.h"
-#include "Components/InputComponent.h"  //struct FInputKeyBinding
+#include <ModularCharacter.h>
 
+#include "AbilitySystemInterface.h"
 #include "GameplayAbilitySpec.h"
 #include "GameplayEffect.h"
-#include "UR_Type_DodgeDirection.h"
+#include "GameplayTagAssetInterface.h"
+#include "Components/InputComponent.h"  //struct FInputKeyBinding
+#include "Interfaces/UR_TeamInterface.h"
+
 #include "Enums/UR_MovementAction.h"
+#include "Enums/UR_Type_DodgeDirection.h"
 
 #include "UR_Character.generated.h"
 
@@ -54,7 +55,14 @@ struct FCharacterVoice
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
     USoundBase* PainSound;
 
-    FCharacterVoice() : FootstepSound(NULL), LandingSound(NULL), JumpSound(NULL), DodgeSound(NULL), PainSound(NULL) {}
+    FCharacterVoice()
+        : FootstepSound(NULL)
+        , LandingSound(NULL)
+        , JumpSound(NULL)
+        , DodgeSound(NULL)
+        , PainSound(NULL)
+    {
+    }
 };
 
 /**
@@ -129,9 +137,22 @@ struct FReplicatedDamageEvent
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     APawn* DamageInstigator;
 
-    FReplicatedDamageEvent() : Type(0), Damage(0), HealthDamage(0), ArmorDamage(0), Location(0,0,0), Knockback(0,0,0), DamType(NULL), DamageInstigator(NULL) {}
+    FReplicatedDamageEvent()
+        : Type(0)
+        , Damage(0)
+        , HealthDamage(0)
+        , ArmorDamage(0)
+        , Location(0, 0, 0)
+        , Knockback(0, 0, 0)
+        , DamType(NULL)
+        , DamageInstigator(NULL)
+    {
+    }
 
-    bool IsOfType(int32 InID) const { return Type == InID; };
+    bool IsOfType(int32 InID) const
+    {
+        return Type == InID;
+    };
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,15 +180,15 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPickupEventSignature, AUR_Pickup*, 
  *
  */
 UCLASS()
-class OPENTOURNAMENT_API AUR_Character : public ACharacter
-    , public IAbilitySystemInterface
-    , public IGameplayTagAssetInterface
-    , public IUR_TeamInterface
+class OPENTOURNAMENT_API AUR_Character
+    : public AModularCharacter
+      , public IAbilitySystemInterface
+      , public IGameplayTagAssetInterface
+      , public IUR_TeamInterface
 {
     GENERATED_BODY()
 
 public:
-
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     AUR_Character(const FObjectInitializer& ObjectInitializer);
@@ -276,22 +297,35 @@ public:
     USkeletalMeshComponent* GetPawnMesh() const;
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
-    FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return MeshFirstPerson; }
+    FORCEINLINE USkeletalMeshComponent* GetMesh1P() const
+    {
+        return MeshFirstPerson;
+    }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
-    FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
+    FORCEINLINE USkeletalMeshComponent* GetMesh3P() const
+    {
+        return GetMesh();
+    }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
     virtual void BeginPlay() override;
+
     virtual void Tick(float DeltaTime) override;
+
     virtual UInputComponent* CreatePlayerInputComponent() override;
+
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
     virtual void CalcCamera(float DeltaTime, struct FMinimalViewInfo& OutResult) override;
+
     virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
 
     virtual void BecomeViewTarget(APlayerController* PC) override;
+
     virtual void EndViewTarget(APlayerController* PC) override;
 
     // Override to update Physics Movement GameplayTags
@@ -591,8 +625,10 @@ public:
         DodgeDirection = InDodgeDirection;
         ServerSetDodgeDirection(DodgeDirection);
     }
+
     UFUNCTION(Server, Reliable)
     void ServerSetDodgeDirection(const EDodgeDirection InDodgeDirection);
+
     virtual void ServerSetDodgeDirection_Implementation(const EDodgeDirection InDodgeDirection)
     {
         DodgeDirection = InDodgeDirection;
@@ -625,7 +661,10 @@ public:
     /**
     * Get Character's GameplayTags
     */
-    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; }
+    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override
+    {
+        TagContainer = GameplayTags;
+    }
 
     /**
     * Update Movement GameplayTags pertaining to Physics
@@ -750,6 +789,7 @@ public:
 
     UFUNCTION(NetMulticast, Reliable)
     void MulticastDied(AController* Killer, const FReplicatedDamageEvent RepDamageEvent);
+
     virtual void MulticastDied_Implementation(AController* Killer, const FReplicatedDamageEvent RepDamageEvent)
     {
         PlayDeath(Killer, RepDamageEvent);
@@ -770,7 +810,9 @@ public:
     virtual void OnDeathFinished(AActor* OwningActor);
 
     void DisableMovementAndCollision();
+
     void DestroyDueToDeath();
+
     void UninitAndDestroy();
 
     // Called when the death sequence for the character has completed
@@ -821,6 +863,9 @@ public:
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
     UUR_InventoryComponent* InventoryComponent;
 
+    UFUNCTION(BlueprintPure, BlueprintCallable)
+    UUR_InventoryComponent* GetInventoryComponent();
+
     //deprecated
     bool bIsFiring = false;
 
@@ -831,6 +876,7 @@ public:
     TArray<uint8> DesiredFireModeNum;
 
     virtual void PawnStartFire(uint8 FireModeNum = 0) override;
+
     virtual void PawnStopFire(uint8 FireModeNum = 0);
 
     /** get weapon attach point */
@@ -867,7 +913,8 @@ public:
 
     //~ Begin TeamInterface
     virtual int32 GetTeamIndex_Implementation() override;
-    virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
-    //~ End TeamInterface
 
+    virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
+
+    //~ End TeamInterface
 };

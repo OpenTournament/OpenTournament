@@ -1,11 +1,13 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "GameFramework/Actor.h"
+
 #include "Interfaces/UR_TeamInterface.h"
+
 #include "UR_TeamInfo.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -24,20 +26,20 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPlayerLeftTeamSignature, AUR_TeamI
 */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPlayerJoinedTeamSignature, AUR_TeamInfo*, Team, AUR_PlayerState*, PS);
 
-
+// @! TODO : Maybe deprecate per GameStateComponent for Team-Based Game
 /**
- * 
+ *
  */
 UCLASS()
-class OPENTOURNAMENT_API AUR_TeamInfo : public AActor
+class OPENTOURNAMENT_API AUR_TeamInfo
+    : public AActor
     , public IUR_TeamInterface
 {
     GENERATED_BODY()
-    
+
     AUR_TeamInfo();
 
 protected:
-
     UPROPERTY(Replicated)
     int32 TeamIndex;
 
@@ -49,7 +51,6 @@ protected:
     virtual void BeginPlay() override;
 
 public:
-
     /** Array of PlayerStates, maintained on both server and clients (PlayerStates are always relevant) */
     UPROPERTY(BlueprintReadOnly)
     TArray<AUR_PlayerState*> Players;
@@ -61,14 +62,19 @@ public:
     virtual void AddPlayer(AUR_PlayerState* Player);
 
     UFUNCTION(BlueprintPure)
-    FORCEINLINE int32 GetScore() const { return Score; }
+    FORCEINLINE int32 GetScore() const
+    {
+        return Score;
+    }
 
     UFUNCTION(BlueprintAuthorityOnly, BlueprintCallable)
     virtual void AddScore(int32 Value);
 
     //~ Begin TeamInterface
     virtual int32 GetTeamIndex_Implementation() override;
+
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
+
     //~ End TeamInterface
 
     /**
@@ -82,5 +88,4 @@ public:
 
     UPROPERTY(BlueprintAssignable)
     FPlayerJoinedTeamSignature OnPlayerJoinedTeam;
-
 };

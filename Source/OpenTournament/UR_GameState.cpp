@@ -1,19 +1,19 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_GameState.h"
 
-#include "Net/UnrealNetwork.h"
-#include "Engine/World.h"
 #include "TimerManager.h"
+#include "Engine/World.h"
+#include "Net/UnrealNetwork.h"
 
 #include "UR_GameMode.h"
-#include "UR_TeamInfo.h"
 #include "UR_LocalPlayer.h"
 #include "UR_MessageHistory.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
+#include "UR_TeamInfo.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -76,7 +76,7 @@ void AUR_GameState::DefaultTimer()
 
     //NOTE: Super only counts elapsed time during match in progress.
     // We want to count during other states as well, so we can benefit from clock in warmup and endgame.
-    if ( !IsMatchInProgress() )
+    if (!IsMatchInProgress())
     {
         ++ElapsedTime;
         if (GetNetMode() != NM_DedicatedServer)
