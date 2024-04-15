@@ -8,7 +8,6 @@
 #include <Components/SkeletalMeshComponent.h>
 #include <Components/SkinnedMeshComponent.h>
 
-#include <Components/SkeletalMeshComponent.h>
 #include "GameplayTagsManager.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -46,13 +45,13 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer.SetDefaultSubobjectClass<UUR_CharacterMovementComponent>(ACharacter::CharacterMovementComponentName)),
-    FootstepTimestamp(0.f),
-    FootstepTimeIntervalBase(0.300f),
-    FallDamageScalar(0.15f),
-    FallDamageSpeedThreshold(2675.f),
-    CrouchTransitionSpeed(12.f)
+AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer.SetDefaultSubobjectClass<UUR_CharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
+    , FootstepTimestamp(0.f)
+    , FootstepTimeIntervalBase(0.300f)
+    , FallDamageScalar(0.15f)
+    , FallDamageSpeedThreshold(2675.f)
+    , CrouchTransitionSpeed(12.f)
 {
     // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
@@ -565,7 +564,7 @@ void AUR_Character::TickEyePosition(const float DeltaTime)
 
     // Crouch Stuff
     const float StandingBonus{ bIsCrouched ? CrouchTransitionSpeed : 0.f };
-    CrouchEyeOffsetZ =  FMath::FInterpTo(CrouchEyeOffsetZ, BaseEyeHeight, DeltaTime, CrouchTransitionSpeed + StandingBonus);
+    CrouchEyeOffsetZ = FMath::FInterpTo(CrouchEyeOffsetZ, BaseEyeHeight, DeltaTime, CrouchTransitionSpeed + StandingBonus);
 
     EyeOffset.X = FMath::FInterpTo(EyeOffset.X, TargetEyeOffset.X, DeltaTime, EyeOffsetToTargetInterpolationRate.X);
     EyeOffset.Y = FMath::FInterpTo(EyeOffset.Y, TargetEyeOffset.Y, DeltaTime, EyeOffsetToTargetInterpolationRate.Y);
@@ -671,7 +670,7 @@ void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
 
     if (FallingSpeed * -1.f > FallDamageSpeedThreshold)
     {
-        const float FallingDamage =  (-1.f * FallDamageScalar) * (FallDamageSpeedThreshold + FallingSpeed);
+        const float FallingDamage = (-1.f * FallDamageScalar) * (FallDamageSpeedThreshold + FallingSpeed);
         GAME_LOG(LogGame, Log, "Character received Fall Damage (%f)!", FallingDamage);
 
         if (FallingDamage >= 1.0f)
@@ -694,7 +693,7 @@ void AUR_Character::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeight
 
     OldLocationZ = GetActorLocation().Z;
 
-    UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ GetMovementActionGameplayTag(EMovementAction::Crouching) });
+    UpdateGameplayTags(FGameplayTagContainer{ }, FGameplayTagContainer{ GetMovementActionGameplayTag(EMovementAction::Crouching) });
 
     // Anims, sounds
 }
@@ -709,7 +708,7 @@ void AUR_Character::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAd
 
     OldLocationZ = GetActorLocation().Z;
 
-    UpdateGameplayTags(FGameplayTagContainer{ GetMovementActionGameplayTag(EMovementAction::Crouching) }, FGameplayTagContainer{});
+    UpdateGameplayTags(FGameplayTagContainer{ GetMovementActionGameplayTag(EMovementAction::Crouching) }, FGameplayTagContainer{ });
 
     // Anims, sounds
 }
@@ -1286,7 +1285,11 @@ void AUR_Character::DropWeapon()
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool AUR_Character::Server_GiveAbility_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel) { return true; }
+bool AUR_Character::Server_GiveAbility_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel)
+{
+    return true;
+}
+
 void AUR_Character::Server_GiveAbility_Implementation(TSubclassOf<UUR_GameplayAbility> InAbility, const int32 InAbilityLevel)
 {
     if (InAbility == nullptr)
@@ -1307,7 +1310,11 @@ void AUR_Character::Server_GiveAbility_Implementation(TSubclassOf<UUR_GameplayAb
     }
 }
 
-bool AUR_Character::Server_RemoveAbility_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass) { return true; }
+bool AUR_Character::Server_RemoveAbility_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass)
+{
+    return true;
+}
+
 void AUR_Character::Server_RemoveAbility_Implementation(TSubclassOf<UUR_GameplayAbility> InAbilityClass) const
 {
     if (InAbilityClass == nullptr)
@@ -1354,7 +1361,11 @@ int32 AUR_Character::GetAbilityLevel(TSubclassOf<UUR_GameplayAbility> InAbilityC
     return OutLevel;
 }
 
-bool AUR_Character::Server_SetAbilityLevel_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel) { return true; }
+bool AUR_Character::Server_SetAbilityLevel_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel)
+{
+    return true;
+}
+
 void AUR_Character::Server_SetAbilityLevel_Implementation(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel)
 {
     if (AbilitySystemComponent)
@@ -1376,22 +1387,22 @@ void AUR_Character::Server_SetAbilityLevel_Implementation(TSubclassOf<UUR_Gamepl
 
 void AUR_Character::InitializeMovementActionGameplayTags()
 {
-    MovementActionGameplayTags.Add(EMovementAction::Jumping,    URGameplayTags::TAG_Character_States_Movement_Jumping);
-    MovementActionGameplayTags.Add(EMovementAction::Dodging,    URGameplayTags::TAG_Character_States_Movement_Dodging);
-    MovementActionGameplayTags.Add(EMovementAction::Crouching,  URGameplayTags::TAG_Character_States_Movement_Crouching);
-    MovementActionGameplayTags.Add(EMovementAction::Running,    URGameplayTags::TAG_Character_States_Movement_Running);
+    MovementActionGameplayTags.Add(EMovementAction::Jumping, URGameplayTags::TAG_Character_States_Movement_Jumping);
+    MovementActionGameplayTags.Add(EMovementAction::Dodging, URGameplayTags::TAG_Character_States_Movement_Dodging);
+    MovementActionGameplayTags.Add(EMovementAction::Crouching, URGameplayTags::TAG_Character_States_Movement_Crouching);
+    MovementActionGameplayTags.Add(EMovementAction::Running, URGameplayTags::TAG_Character_States_Movement_Running);
 }
 
 void AUR_Character::InitializeMovementModeGameplayTags()
 {
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_None, FGameplayTag{});
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Custom, FGameplayTag{});
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_MAX, FGameplayTag{});
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Walking,    URGameplayTags::TAG_Character_States_Physics_Walking);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_None, FGameplayTag{ });
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Custom, FGameplayTag{ });
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_MAX, FGameplayTag{ });
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Walking, URGameplayTags::TAG_Character_States_Physics_Walking);
     MovementModeGameplayTags.Add(EMovementMode::MOVE_NavWalking, URGameplayTags::TAG_Character_States_Physics_Walking);
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Falling,    URGameplayTags::TAG_Character_States_Physics_Falling);
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Swimming,   URGameplayTags::TAG_Character_States_Physics_Swimming);
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Flying,     URGameplayTags::TAG_Character_States_Physics_Flying);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Falling, URGameplayTags::TAG_Character_States_Physics_Falling);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Swimming, URGameplayTags::TAG_Character_States_Physics_Swimming);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Flying, URGameplayTags::TAG_Character_States_Physics_Flying);
 }
 
 void AUR_Character::InitializeGameplayTags()
@@ -1418,9 +1429,9 @@ FGameplayTag AUR_Character::GetMovementActionGameplayTag(const EMovementAction I
 
 FGameplayTag AUR_Character::GetMovementModeGameplayTag(const EMovementMode InMovementMode)
 {
-    if (const UWorld* World{GetWorld()})
+    if (const UWorld* World{ GetWorld() })
     {
-        if (const AGameStateBase* GameState{World->GetGameState()})
+        if (const AGameStateBase* GameState{ World->GetGameState() })
         {
             if (GameState->HasMatchStarted())
             {
@@ -1429,7 +1440,7 @@ FGameplayTag AUR_Character::GetMovementModeGameplayTag(const EMovementMode InMov
         }
     }
 
-    return FGameplayTag{};
+    return FGameplayTag{ };
 }
 
 void AUR_Character::UpdateMovementPhysicsGameplayTags(const EMovementMode PreviousMovementMode)
@@ -1444,7 +1455,7 @@ void AUR_Character::UpdateMovementPhysicsGameplayTags(const EMovementMode Previo
 void AUR_Character::UpdateGameplayTags(const FGameplayTagContainer& TagsToRemove, const FGameplayTagContainer& TagsToAdd)
 {
 #if WITH_EDITOR
-    FString TagsToPrint{};
+    FString TagsToPrint{ };
     for (const FGameplayTag& Tag : GameplayTags)
     {
         TagsToPrint.Append(Tag.ToString() + ", ");
