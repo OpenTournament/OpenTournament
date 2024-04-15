@@ -67,7 +67,8 @@ void UUR_PlayerInput::SetupUserSettings()
     {
         if (AxisShouldGenerateTapAction(AxisMapping.AxisName, TapActionName))
         {
-            UserActionMappings.RemoveAll([TapActionName](const FInputActionKeyMapping& Other) {
+            UserActionMappings.RemoveAll([TapActionName](const FInputActionKeyMapping& Other)
+            {
                 return Other.ActionName.IsEqual(TapActionName);
             });
         }
@@ -103,7 +104,8 @@ void UUR_PlayerInput::RegenerateInternalBindings()
     {
         if (AxisShouldGenerateTapAction(AxisMapping.AxisName, TapActionName))
         {
-            ActionMappings.RemoveAll([TapActionName](const FInputActionKeyMapping& Other) {
+            ActionMappings.RemoveAll([TapActionName](const FInputActionKeyMapping& Other)
+            {
                 return Other.ActionName.IsEqual(TapActionName);
             });
         }

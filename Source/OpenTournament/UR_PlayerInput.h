@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "GameFramework/PlayerInput.h"
+#include <EnhancedPlayerInput.h>
+
 #include "UR_PlayerInput.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,7 +19,7 @@ class UInputSettings;
  */
 UCLASS(BlueprintType, Config = Input)
 class OPENTOURNAMENT_API UUR_PlayerInput
-    : public UPlayerInput
+    : public UEnhancedPlayerInput
 {
     GENERATED_BODY()
 
