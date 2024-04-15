@@ -1,12 +1,12 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_LocalMessage.h"
 
-#include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerState.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

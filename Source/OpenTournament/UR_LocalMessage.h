@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -39,7 +39,14 @@ struct FLocalMessageData
     UPROPERTY(BlueprintReadOnly)
     UObject* OptionalObject;
 
-    FLocalMessageData() : LocalPC(NULL), Switch(0), RelatedPlayer1(NULL), RelatedPlayer2(NULL), OptionalObject(NULL) {}
+    FLocalMessageData()
+        : LocalPC(nullptr)
+        , Switch(0)
+        , RelatedPlayer1(nullptr)
+        , RelatedPlayer2(nullptr)
+        , OptionalObject(nullptr)
+    {
+    }
 };
 
 /**
@@ -73,8 +80,9 @@ struct FLocalMessageData
 * Then it is the widgets that decide how to format and display those messages.
 */
 
+// @! TODO Probably deprecate this class and prefer GameplayMessageSubsystem
 /**
- * 
+ *
  */
 UCLASS(Blueprintable)
 class OPENTOURNAMENT_API UUR_LocalMessage : public ULocalMessage
@@ -93,7 +101,6 @@ class OPENTOURNAMENT_API UUR_LocalMessage : public ULocalMessage
     }
 
 public:
-
     UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic)
     void K2_ClientReceive(APlayerController* LocalPC, int32 Switch, APlayerState* RelatedPlayer1, APlayerState* RelatedPlayer2, UObject* OptionalObject) const;
 };
