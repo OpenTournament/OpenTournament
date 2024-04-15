@@ -1207,6 +1207,11 @@ USkeletalMeshComponent* AUR_Character::GetPawnMesh() const
     return MeshFirstPerson;
 }
 
+UUR_InventoryComponent* AUR_Character::GetInventoryComponent()
+{
+    return InventoryComponent;
+}
+
 void AUR_Character::PawnStartFire(uint8 FireModeNum)
 {
     /*

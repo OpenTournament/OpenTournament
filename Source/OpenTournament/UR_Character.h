@@ -863,6 +863,9 @@ public:
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
     UUR_InventoryComponent* InventoryComponent;
 
+    UFUNCTION(BlueprintPure, BlueprintCallable)
+    UUR_InventoryComponent* GetInventoryComponent();
+
     //deprecated
     bool bIsFiring = false;
 

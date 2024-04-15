@@ -4,6 +4,8 @@
 
 #include "UR_Pickup_DroppedWeapon.h"
 
+#include <UR_Type_WeaponState.h>
+
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Net/UnrealNetwork.h"

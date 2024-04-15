@@ -8,6 +8,7 @@
 
 #include "UR_Character.h"
 #include "UR_InventoryComponent.h"
+#include "UR_Weapon.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -86,14 +87,20 @@ void AUR_Ammo::OnRep_AmmoCount(int32 OldAmmoCount)
 {
     if (AmmoCount != OldAmmoCount)
     {
-        auto Char = Cast<AUR_Character>(GetOwner());
-        if (Char && Char->InventoryComponent)
+        if (auto Char = Cast<AUR_Character>(GetOwner()); IsValid(Char))
         {
-            Char->InventoryComponent->OnAmmoUpdated.Broadcast(Char->InventoryComponent, this);
-
-            if (Char->InventoryComponent->ActiveWeapon && Char->InventoryComponent->ActiveWeapon->AmmoRefs.Contains(this))
+            if (auto InventoryComponent = Char->GetInventoryComponent(); IsValid(InventoryComponent))
             {
-                Char->InventoryComponent->ActiveWeapon->NotifyAmmoUpdated(this);
+                InventoryComponent->OnAmmoUpdated.Broadcast(Char->InventoryComponent, this);
+
+                if (auto ActiveWeapon = InventoryComponent->GetActiveWeapon(); IsValid(ActiveWeapon))
+                {
+                    if (ActiveWeapon->AmmoRefs.Contains(this))
+                    {
+                        Char->InventoryComponent->ActiveWeapon->NotifyAmmoUpdated(this);
+                    }
+                }
+
             }
         }
     }
