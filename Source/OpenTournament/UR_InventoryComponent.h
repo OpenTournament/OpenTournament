@@ -9,7 +9,6 @@
 
 #include "UR_Type_WeaponGroup.h"
 #include "UR_Type_WeaponState.h"
-//#include "UR_Weapon.h"
 
 #include "UR_InventoryComponent.generated.h"
 
