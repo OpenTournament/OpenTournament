@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <ModularPlayerState.h>
+
 #include "GameFramework/PlayerState.h"
 #include "Interfaces/UR_TeamInterface.h"
 
@@ -31,7 +33,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTeamChangedSignature, AUR_Player
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_PlayerState
-    : public APlayerState
+    : public AModularPlayerState
     , public IUR_TeamInterface
 {
     GENERATED_BODY()
