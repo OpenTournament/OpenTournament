@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -11,7 +11,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * 
+ *
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_PlayerCameraManager : public APlayerCameraManager
@@ -46,9 +46,9 @@ public:
     *
     * NOTE: Do not mistake the camera component with the manager view point.
     *       The camera component updates like all other components, but the manager updates its own view point at end of frame.
-    * 
+    *
     * NOTE: In practice, in first person mode, the manager's view point simply follows the camera component (via the CalcCamera function).
-    * 
+    *
     * Therefore, we're gonna provide GetCameraViewPoint_Direct() which will fetch the camera transform directly, shorting the manager cache.
     * This should fix our specific use-case as the vector will remain consistent whether it is 1-frame old or up to date.
     * This might NOT fix other possible use cases (unknown yet) where 1-frame lag would be an issue.
