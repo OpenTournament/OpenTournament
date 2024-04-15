@@ -1,14 +1,16 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_MPC_Global.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
-#include "Engine/Engine.h"
 #include "Materials/MaterialParameterCollection.h"
 
 #include "UR_BasePlayerController.h"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_MPC_Global* UUR_MPC_Global::Get(UObject* WorldContext, bool bFallbackToCDO)
 {
@@ -20,6 +22,7 @@ UUR_MPC_Global* UUR_MPC_Global::Get(UObject* WorldContext, bool bFallbackToCDO)
     {
         PC = Cast<AUR_BasePlayerController>(UGameplayStatics::GetPlayerController(WorldContext, 0));
     }
+
     if (PC)
     {
         if (!PC->UR_MPC_Global_Ref && PC->IsLocalPlayerController())
@@ -62,7 +65,7 @@ void UUR_MPC_Global::SetVector(UObject* WorldContext, FName Param, const FLinear
     // Cascade update to mapped parameters
     TSet<FName> MappedParams;
     GetMappedParameters(WorldContext, Param, MappedParams);
-    for (FName& Target : MappedParams)
+    for (const FName& Target : MappedParams)
     {
         SetVector(WorldContext, Target, Value);
     }
@@ -88,7 +91,7 @@ FPaniniMaterialParameters UUR_MPC_Global::GetPaniniParameters(UObject* WorldCont
         NewParams.bInitialized = false;
         Params = &NewParams;
     }
-    if (!Params->bInitialized)
+    if (Params && !Params->bInitialized)
     {
         auto Collection = GetCollection(WorldContext);
         Params->DistanceBias = UKismetMaterialLibrary::GetScalarParameterValue(WorldContext, Collection, FName(TEXT("Panini.DistanceBias")));
@@ -119,7 +122,7 @@ bool UUR_MPC_Global::MapParameter(UObject* WorldContext, FName TargetParam, FNam
     for (int32 i = 0; (CurrentSet.Num() > 0) && (i < 100); i++)
     {
         TSet<FName> NewSet;
-        for (FName& Target : CurrentSet)
+        for (const FName& Target : CurrentSet)
         {
             GetMappedParameters(WorldContext, Target, NewSet);
         }
@@ -223,5 +226,6 @@ UMaterialParameterCollection* UUR_MPC_Global::GetCollection(const UObject* World
         return PC->MPC_GlobalGame;
     }
     UE_LOG(LogTemp, Warning, TEXT("MPCGlobal: GetCollection() return NULL"));
-    return NULL;
+
+    return nullptr;
 }

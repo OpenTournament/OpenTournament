@@ -1,12 +1,12 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "UObject/ObjectMacros.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "UObject/ObjectMacros.h"
+
 #include "UR_MPC_Global.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +41,18 @@ struct FPaniniMaterialParameters
     // Lerp between MF_FovCorrection(0) or MF_PaniniProjection(1)
     float Projection;
 
-    FPaniniMaterialParameters() : bInitialized(false) {}
+    FPaniniMaterialParameters()
+        : bInitialized(false)
+        , DistanceBias(0)
+        , DistanceNormalize(0)
+        , PushMin(0)
+        , PushMax(0)
+        , Scale(0)
+        , Depth(0)
+        , Skew(0)
+        , Projection(0)
+    {
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,7 +72,6 @@ class OPENTOURNAMENT_API UUR_MPC_Global : public UBlueprintFunctionLibrary
     GENERATED_BODY()
 
 public:
-
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -184,7 +194,6 @@ public:
     static FPaniniMaterialParameters GetPaniniParameters(UObject* WorldContext);
 
 protected:
-
     // Cache
     UPROPERTY()
     FPaniniMaterialParameters PaniniValues;
@@ -194,7 +203,6 @@ protected:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Meta = (DisplayName = "MPC_Global_MapParameter", WorldContext = "WorldContext"))
     static bool MapParameter(UObject* WorldContext, FName TargetParam, FName SourceParam);
 
@@ -214,7 +222,6 @@ public:
     static FName GetMapping(UObject* WorldContext, FName TargetParam);
 
 protected:
-
     /**
     * Mapping of parameters to other parameters.
     * Keys are TARGET parameters (followers). A target can only be mapped to one source.
@@ -222,5 +229,4 @@ protected:
     */
     UPROPERTY()
     TMap<FName, FName> Mappings;
-
 };
