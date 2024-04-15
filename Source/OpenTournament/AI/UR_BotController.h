@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "AIController.h"
+#include <ModularAIController.h>
 
 #include "UR_BotController.generated.h"
 
@@ -18,7 +18,7 @@
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_BotController
-    : public AAIController
+    : public AModularAIController
 {
     GENERATED_BODY()
 
