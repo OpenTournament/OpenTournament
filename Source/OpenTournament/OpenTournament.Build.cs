@@ -73,12 +73,22 @@ public class OpenTournament : ModuleRules
             {
                 "OpenTournament",
                 "OpenTournament/AnnouncementSystem",
+                "OpenTournament/AI",
+                "OpenTournament/Character",
                 "OpenTournament/Data",
                 "OpenTournament/Enums",
+                "OpenTournament/GameFeatures",
+                "OpenTournament/GameModes",
                 "OpenTournament/GAS",
                 "OpenTournament/Interfaces",
+                "OpenTournament/Messages",
+                "OpenTournament/Player",
+                "OpenTournament/Settings",
                 "OpenTournament/Slate",
+                "OpenTournament/System",
+                "OpenTournament/UI",
                 "OpenTournament/Utilities",
+                "OpenTournament/Weapons",
                 "OpenTournament/Widgets"
             }
         );
