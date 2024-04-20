@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -27,13 +27,13 @@ class ULocalMessage;
  *
  * This class is pending deletion, as soon as all subclasses have been migrated.
  */
-UCLASS()
+UCLASS(meta=(Deprecated))
 class OPENTOURNAMENT_API AUR_PickupBase : public AActor
 {
     GENERATED_BODY()
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-public:	
+public:
     AUR_PickupBase();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
