@@ -1,10 +1,11 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "Engine/LocalPlayer.h"
+
 #include "UR_LocalPlayer.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -14,22 +15,21 @@ class UUR_MessageHistory;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * 
+ *
  */
 UCLASS(BlueprintType)
 class OPENTOURNAMENT_API UUR_LocalPlayer : public ULocalPlayer
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	UUR_LocalPlayer(const FObjectInitializer& ObjectInitializer);
+    UUR_LocalPlayer(const FObjectInitializer& ObjectInitializer);
 
 public:
-
-	/**
-	* Reference to message history subobject.
-	*/
-	UPROPERTY(BlueprintReadOnly)
-	UUR_MessageHistory* MessageHistory;
+    /**
+    * Reference to message history subobject.
+    */
+    UPROPERTY(BlueprintReadOnly)
+    UUR_MessageHistory* MessageHistory;
 
     UPROPERTY(Config, BlueprintReadOnly)
     FString PlayerName;
@@ -37,5 +37,9 @@ public:
     virtual FString GetNickname() const override;
 
     UFUNCTION(BlueprintCallable)
-    void SavePlayerName(const FString& NewName) { PlayerName = NewName; SaveConfig(); }
+    void SavePlayerName(const FString& NewName)
+    {
+        PlayerName = NewName;
+        SaveConfig();
+    }
 };
