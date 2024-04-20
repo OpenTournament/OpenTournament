@@ -30,8 +30,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPickedUpSignature, AUR_Pickup*, 
  *                     for respawning, etc.
  */
 UCLASS(Abstract, Blueprintable)
-class OPENTOURNAMENT_API AUR_Pickup : public AActor,
-                                      public IGameplayTagAssetInterface
+class OPENTOURNAMENT_API AUR_Pickup
+    : public AActor,
+      public IGameplayTagAssetInterface
 {
     GENERATED_BODY()
 
