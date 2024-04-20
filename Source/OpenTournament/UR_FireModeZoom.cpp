@@ -1,16 +1,20 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_FireModeZoom.h"
 
-#include "Net/UnrealNetwork.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
-#include "Kismet/GameplayStatics.h"
-#include "Components/SkeletalMeshComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
-#include "UR_FunctionLibrary.h"
 #include "UR_Character.h"
+#include "UR_FunctionLibrary.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_FireModeZoom::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -26,7 +30,7 @@ template<class T> T* UUR_FireModeZoom::GetInstigator()
     {
         return GetOwner()->GetInstigator<T>();
     }
-    return NULL;
+    return nullptr;
 }
 
 void UUR_FireModeZoom::RequestStartFire_Implementation()
