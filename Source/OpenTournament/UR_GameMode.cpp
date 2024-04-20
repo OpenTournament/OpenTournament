@@ -532,7 +532,7 @@ AActor* AUR_GameMode::IsThereAWinner_Implementation()
     {
         if (GS->Teams.Num() > 1)
         {
-            AUR_TeamInfo* BestTeam = NULL;
+            AUR_TeamInfo* BestTeam = nullptr;
             bool bTie = false;
             for (AUR_TeamInfo* Team : GS->Teams)
             {
@@ -553,7 +553,7 @@ AActor* AUR_GameMode::IsThereAWinner_Implementation()
         }
         else
         {
-            APlayerState* BestPlayer = NULL;
+            APlayerState* BestPlayer = nullptr;
             bool bTie = false;
             for (APlayerState* PS : GS->PlayerArray)
             {
@@ -592,7 +592,7 @@ AActor* AUR_GameMode::ResolveEndGameFocus_Implementation(AActor* Winner)
     }
     if (AUR_TeamInfo* Team = Cast<AUR_TeamInfo>(Winner))
     {
-        AUR_PlayerState* Top = NULL;
+        AUR_PlayerState* Top = nullptr;
         for (AUR_PlayerState* PS : Team->Players)
         {
             if (PS && PS->GetPawn() && (!Top || PS->GetScore() > Top->GetScore()))
