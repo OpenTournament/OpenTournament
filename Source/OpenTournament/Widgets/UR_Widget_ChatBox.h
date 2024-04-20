@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include <Blueprint/UserWidget.h>
+
 #include "UR_Widget_ChatBox.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
