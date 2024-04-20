@@ -116,7 +116,7 @@ UClass* AUR_Weapon::GetNextFallbackConfigWeapon(TSubclassOf<AUR_Weapon> ForClass
     {
         if (auto ModDefined = ForClass->GetDefaultObject<AUR_Weapon>()->ModFallbackToWeaponConfig)
         {
-            return (ModDefined != ForClass) ? ModDefined : NULL;
+            return (ModDefined != ForClass) ? ModDefined : nullptr;
         }
 
         UClass* ParentClass = ForClass->GetSuperClass();
@@ -125,7 +125,7 @@ UClass* AUR_Weapon::GetNextFallbackConfigWeapon(TSubclassOf<AUR_Weapon> ForClass
             return ParentClass;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -178,7 +178,9 @@ void AUR_Weapon::ToggleGeneralVisibility(bool bVisible)
     SetActorHiddenInGame(!bVisible);
     Mesh3P->SetCastHiddenShadow(bVisible);
     if (bVisible)
+    {
         UpdateMeshVisibility();
+    }
 }
 
 void AUR_Weapon::CheckWeaponAttachment()
@@ -187,18 +189,21 @@ void AUR_Weapon::CheckWeaponAttachment()
     {
         case EWeaponState::Dropped:
         case EWeaponState::Holstered:
+        {
             if (bIsAttached)
             {
                 DetachMeshFromPawn();
             }
             break;
-
+        }
         default:
+        {
             if (!bIsAttached)
             {
                 AttachMeshToPawn();
             }
             break;
+        }
     }
 }
 
@@ -271,10 +276,12 @@ void AUR_Weapon::SetWeaponState(EWeaponState NewState)
     switch (WeaponState)
     {
         case EWeaponState::BringUp:
+        {
             Activate();
             break;
-
+        }
         case EWeaponState::Idle:
+        {
             if (GetWorld()->GetTimerManager().IsTimerActive(PutDownDelayTimerHandle))
             {
                 // if cooldown delays putdown by 100%, the timer can be slightly late.
@@ -299,12 +306,14 @@ void AUR_Weapon::SetWeaponState(EWeaponState NewState)
                 }
             }
             break;
-
+        }
         case EWeaponState::PutDown:
         case EWeaponState::Holstered:
         case EWeaponState::Dropped:
+        {
             Deactivate();
             break;
+        }
     }
 }
 
@@ -554,12 +563,20 @@ void AUR_Weapon::RequestBringUp()
     {
         case EWeaponState::Holstered:
         case EWeaponState::Dropped:
+        {
             BringUp(0.f);
             break;
-
+        }
         case EWeaponState::PutDown:
+        {
             BringUp(GetWorld()->GetTimerManager().GetTimerRemaining(SwapAnimTimerHandle) / PutDownTime);
             break;
+        }
+        default:
+        {
+            GAME_LOG(LogGame, Log, "Unhandled case! This is probably an error.");
+            break;
+        }
     }
 }
 
@@ -568,13 +585,15 @@ void AUR_Weapon::RequestPutDown()
     switch (WeaponState)
     {
         case EWeaponState::BringUp:
+        {
             PutDown(1.f - GetWorld()->GetTimerManager().GetTimerRemaining(SwapAnimTimerHandle) / BringUpTime);
             return;
-
+        }
         case EWeaponState::Idle:
+        {
             PutDown(1.f);
             return;
-
+        }
         case EWeaponState::Firing:
         {
             // Request firemode to go idle whenever it sees opportunity.
@@ -616,11 +635,17 @@ void AUR_Weapon::RequestPutDown()
             }
             break;
         }
-
         case EWeaponState::Busy:
+        {
             // Stub. Just wait. SetWeaponState(Idle) will notice and cancel the loop, and call this back.
             GetWorld()->GetTimerManager().SetTimer(PutDownDelayTimerHandle, this, &AUR_Weapon::RequestPutDown, 1.f, false);
             break;
+        }
+        default:
+        {
+            GAME_LOG(LogGame, Log, "Unhandled case! This is probably an error.");
+            break;
+        }
     }
 }
 
@@ -966,9 +991,10 @@ float AUR_Weapon::TimeUntilReadyToFire_Implementation(UUR_FireModeBase* FireMode
     switch (WeaponState)
     {
         case EWeaponState::BringUp:
+        {
             Delay = GetWorld()->GetTimerManager().GetTimerRemaining(SwapAnimTimerHandle);
             break;
-
+        }
         case EWeaponState::PutDown:
         {
             // delay to check if we're late in a very quick putdown-bringup-idle scenario
@@ -977,12 +1003,13 @@ float AUR_Weapon::TimeUntilReadyToFire_Implementation(UUR_FireModeBase* FireMode
             Delay = FMath::Max(0.001f, (1.f - BringUpPct) * BringUpTime);
             break;
         }
-
         case EWeaponState::Idle:
+        {
             Delay = 0.f;
             break;
-
+        }
         case EWeaponState::Firing:
+        {
             if (FireMode == CurrentFireMode && FireMode->SpinUpTime > 0.f)
             {
                 Delay = 0.f;    // we can resume spinning up at any point during spindown
@@ -992,9 +1019,11 @@ float AUR_Weapon::TimeUntilReadyToFire_Implementation(UUR_FireModeBase* FireMode
                 Delay = CurrentFireMode->GetTimeUntilIdle();
             }
             break;
-
+        }
         default:
+        {
             return TIMEUNTILFIRE_NEVER;
+        }
     }
 
     if (Delay <= 0.f && !HasEnoughAmmoFor(FireMode))
