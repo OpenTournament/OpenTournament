@@ -50,10 +50,15 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     virtual void BeginPlay() override;
+
     virtual void SetPlayer(UPlayer* InPlayer) override;
+
     virtual void InitInputSystem() override;
+
     virtual void SetupInputComponent() override;
+
     virtual void ProcessPlayerInput(const float DeltaTime, const bool bGamePaused) override;
+
     virtual void SetPawn(APawn* InPawn) override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -283,6 +288,8 @@ public:
 
     //~ Begin TeamInterface
     virtual int32 GetTeamIndex_Implementation() override;
+
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
+
     //~ End TeamInterface
 };
