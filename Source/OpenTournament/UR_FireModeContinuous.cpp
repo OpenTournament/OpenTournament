@@ -1,4 +1,6 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_FireModeContinuous.h"
 
@@ -6,6 +8,8 @@
 #include "TimerManager.h"
 
 #include "UR_FunctionLibrary.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
 * NOTE:
@@ -92,7 +96,7 @@ void UUR_FireModeContinuous::TickComponent(float DeltaTime, enum ELevelTick Tick
         DeltaTimeAccumulator += DeltaTime;
 
         //NOTE: allow a minor negative margin to improve the accuracy of intervals
-        if (DeltaTimeAccumulator >= HitCheckInterval - 0.2f*DeltaTime)
+        if (DeltaTimeAccumulator >= HitCheckInterval - 0.2f * DeltaTime)
         {
             if (ContinuousInterface)
             {

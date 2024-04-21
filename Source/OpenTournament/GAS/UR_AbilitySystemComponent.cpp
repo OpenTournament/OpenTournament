@@ -54,9 +54,9 @@ UUR_AbilitySystemComponent* UUR_AbilitySystemComponent::GetAbilitySystemComponen
 
 const UUR_AttributeSet* UUR_AbilitySystemComponent::GetURAttributeSetFromActor(const AActor* Actor, bool LookForComponent)
 {
-    if (auto ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Actor, LookForComponent))
+    if (const auto ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Actor, LookForComponent))
     {
         return ASC->GetSet<UUR_AttributeSet>();
     }
-    return NULL;
+    return nullptr;
 }

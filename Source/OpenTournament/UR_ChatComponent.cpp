@@ -1,15 +1,18 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_ChatComponent.h"
 
 #include "GameFramework/Controller.h"
 #include "GameFramework/PlayerState.h"
-#include "UR_GameModeBase.h"
 
-#include "UR_GameState.h"
 #include "UR_Character.h"
 #include "UR_FunctionLibrary.h"
+#include "UR_GameModeBase.h"
+#include "UR_GameState.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
 * NOTE: It would kind of make sense to have a BaseChatComponent base class,
@@ -29,6 +32,8 @@ UUR_ChatComponent::UUR_ChatComponent()
 {
     SetIsReplicatedByDefault(true);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_ChatComponent::BeginPlay()
 {
@@ -94,18 +99,18 @@ FString UUR_ChatComponent::Validate_Implementation(const FString& Message, bool 
     // crop message length
     if (ValidatedMessage.Len() > MaxMessageLength)
     {
-        ValidatedMessage = ValidatedMessage.Left(MaxMessageLength-3).Append(TEXT("..."));	// TEXT('�') not supported by font atm
+        ValidatedMessage = ValidatedMessage.Left(MaxMessageLength - 3).Append(TEXT("..."));	// TEXT('�') not supported by font atm
     }
 
     return ValidatedMessage;
 }
 
-void UUR_ChatComponent::Broadcast(const FString& Message, int32 TeamIndex)
+void UUR_ChatComponent::Broadcast(const FString& Message, const int32 TeamIndex)
 {
     AUR_GameModeBase* GM = GetWorld()->GetAuthGameMode<AUR_GameModeBase>();
     if (GM)
     {
-        for (auto Recipient : GM->ChatComponents)
+        for (const auto& Recipient : GM->ChatComponents)
         {
             if (Recipient->ShouldReceive(this, TeamIndex))
             {
@@ -147,7 +152,7 @@ void UUR_ChatComponent::Receive_Implementation(UUR_ChatComponent* Sender, const 
     ClientReceive(SenderName, Message, TeamIndex, SenderPS);
 
     // ClientReceive triggers dispatcher on client side. Avoid triggering twice in standalone.
-    if ( GetNetMode() != NM_Standalone )
+    if (GetNetMode() != NM_Standalone)
     {
         OnReceiveChatMessage.Broadcast(SenderName, Message, TeamIndex, SenderPS);
     }
@@ -155,9 +160,20 @@ void UUR_ChatComponent::Receive_Implementation(UUR_ChatComponent* Sender, const 
 
 int32 UUR_ChatComponent::GetTeamIndex_Implementation()
 {
-    APlayerState* PS = GetPlayerState();
-    //TODO: return actual team index
-    return PS ? (PS->IsOnlyASpectator() ? CHAT_INDEX_SPEC : 0) : CHAT_INDEX_GLOBAL;
+    if (APlayerState* PS = GetPlayerState())
+    {
+        if (PS->IsOnlyASpectator())
+        {
+            CHAT_INDEX_SPEC;
+        }
+        else
+        {
+            // @! TODO Return Team
+            return 0;
+        }
+    }
+
+    return CHAT_INDEX_GLOBAL;
 }
 
 FString UUR_ChatComponent::GetOwnerName_Implementation()

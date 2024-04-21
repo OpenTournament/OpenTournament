@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -24,9 +24,8 @@ UCLASS()
 class OPENTOURNAMENT_API UUR_Widget_KeyBindingMenu : public UUR_Widget_BaseMenu
 {
     GENERATED_BODY()
-    
-public:
 
+public:
     UUR_Widget_KeyBindingMenu(const FObjectInitializer& ObjectInitializer);
 
     void NativeOnInitialized() override;
@@ -44,8 +43,8 @@ public:
     void OpenMenu();
 
 private:
-
     void CreateKeyBindObject(FName Name, FKey Key);
+
     void PopulateKeyBindingList();
 
     UPROPERTY(EditDefaultsOnly)

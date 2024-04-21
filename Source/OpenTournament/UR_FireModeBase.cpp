@@ -1,4 +1,6 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_FireModeBase.h"
 
@@ -6,6 +8,9 @@
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "UR_FunctionLibrary.h"
+#include "UR_LogChannels.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_FireModeBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -13,6 +18,8 @@ void UUR_FireModeBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
     DOREPLIFETIME_CONDITION(ThisClass, bIsSpinningUpRep, COND_SkipOwner);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_FireModeBase::SetBusy(bool bNewBusy)
 {
@@ -239,6 +246,26 @@ void UUR_FireModeBase::OnRep_IsSpinningUp()
 //============================================================
 // Utilities
 //============================================================
+
+UUR_FireModeBase::UUR_FireModeBase()
+    : Index(0)
+    , SpinUpTime(0.f)
+    , SpinDownTime(0.f)
+    , IdleAtSpinPercent(1.f)
+{
+    //UActorComponent::SetAutoActivate(false);
+    bAutoActivate = false;
+    bWasActive = false;
+
+    PrimaryComponentTick.bStartWithTickEnabled = false;
+    bAutoActivateTick = false;
+
+    SetIsReplicatedByDefault(true);
+
+    InitialAmmoCost = 1;
+    MuzzleSocketName = FName(TEXT("Muzzle"));
+    MuzzleFlashScale = 1.f;
+}
 
 float UUR_FireModeBase::GetCurrentSpinUpValue()
 {

@@ -258,7 +258,7 @@ UAnimMontage* UUR_FunctionLibrary::GetCurrentActiveMontageInSlot(UAnimInstance* 
     }
     bIsValid = false;
     Weight = 0.f;
-    return NULL;
+    return nullptr;
 }
 
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -11,7 +11,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_LocalPlayer::UUR_LocalPlayer(const class FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+    : Super(ObjectInitializer)
 {
     // no need to create a history for the CDO
     if (!HasAnyFlags(RF_ClassDefaultObject))
@@ -26,25 +26,39 @@ UUR_LocalPlayer::UUR_LocalPlayer(const class FObjectInitializer& ObjectInitializ
 
 FString UUR_LocalPlayer::GetNickname() const
 {
+#if WITH_EDITOR
     if (GetWorld() && GetWorld()->IsPlayInEditor())
     {
         switch (GetWorld()->GetNetMode())
         {
             case NM_DedicatedServer:
             case NM_ListenServer:
+            {
                 return "Server";
-
+            }
             case NM_Client:
             {
                 if (GPlayInEditorID == 1)
+                {
                     return PlayerName;
+                }
                 else
-                    return FString::Printf(TEXT("Client %d"), GPlayInEditorID);
+                {
+                    return FString::Printf(TEXT("Client %d"), static_cast<int>(GPlayInEditorID));
+                }
             }
-            
+
             case NM_Standalone:
+            {
                 return PlayerName;
+            }
+            default:
+            {
+                return PlayerName;
+            }
         }
     }
+#endif WITH_EDITOR
+
     return PlayerName;
 }

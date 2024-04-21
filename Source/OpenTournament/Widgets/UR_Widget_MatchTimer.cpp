@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -6,9 +6,9 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-UUR_Widget_MatchTimer::UUR_Widget_MatchTimer(const FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer),
-    RemainingTime(-1)
+UUR_Widget_MatchTimer::UUR_Widget_MatchTimer(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+    , RemainingTime(-1)
 {
 }
 

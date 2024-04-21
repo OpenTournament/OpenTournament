@@ -5,6 +5,7 @@
 #include "UR_UserSettings.h"
 
 #include "Kismet/GameplayStatics.h"
+
 #include "UR_BasePlayerController.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,5 +20,5 @@ UUR_UserSettings* UUR_UserSettings::Get(const UObject* WorldContext, int32 Playe
 	{
 		return PC->GetUserSettings();
 	}
-	return NULL;
+	return nullptr;
 }

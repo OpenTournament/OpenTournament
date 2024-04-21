@@ -1,31 +1,34 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Widgets/SCompoundWidget.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
+#include "Widgets/SCompoundWidget.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * 
+ *
  */
 class OPENTOURNAMENT_API SUR_LoadingScreenWidget : public SCompoundWidget
 {
 public:
-	SLATE_BEGIN_ARGS(SUR_LoadingScreenWidget)
-	{}
-	SLATE_ARGUMENT(FString, MapName)
-	SLATE_END_ARGS()
+    SLATE_BEGIN_ARGS(SUR_LoadingScreenWidget)
+        {
+        }
 
-	/** Constructs this widget with InArgs */
-	void Construct(const FArguments& InArgs);
+        SLATE_ARGUMENT(FString, MapName)
 
-	static TSharedRef<SWidget> Create(const FString& MapName)
-	{
-		return SNew(SUR_LoadingScreenWidget).MapName(MapName);
-	}
+    SLATE_END_ARGS()
+
+    /** Constructs this widget with InArgs */
+    void Construct(const FArguments& InArgs);
+
+    static TSharedRef<SWidget> Create(const FString& MapName)
+    {
+        return SNew(SUR_LoadingScreenWidget).MapName(MapName);
+    }
 };

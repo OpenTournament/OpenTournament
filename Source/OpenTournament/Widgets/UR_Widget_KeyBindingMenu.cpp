@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,11 +18,10 @@ class UUR_PlayerInput;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-UUR_Widget_KeyBindingMenu::UUR_Widget_KeyBindingMenu(const FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer),
-    OwningPlayer(nullptr)
+UUR_Widget_KeyBindingMenu::UUR_Widget_KeyBindingMenu(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+    , OwningPlayer(nullptr)
 {
-
 }
 
 //Should check these again when we decide how our menu system will work

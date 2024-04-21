@@ -41,26 +41,26 @@ struct FCharacterVoice
     GENERATED_BODY()
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
-    USoundBase* FootstepSound;
+    TObjectPtr<USoundBase> FootstepSound;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
-    USoundBase* LandingSound;
+    TObjectPtr<USoundBase> LandingSound;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
-    USoundBase* JumpSound;
+    TObjectPtr<USoundBase> JumpSound;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
-    USoundBase* DodgeSound;
+    TObjectPtr<USoundBase> DodgeSound;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
-    USoundBase* PainSound;
+    TObjectPtr<USoundBase> PainSound;
 
     FCharacterVoice()
-        : FootstepSound(NULL)
-        , LandingSound(NULL)
-        , JumpSound(NULL)
-        , DodgeSound(NULL)
-        , PainSound(NULL)
+        : FootstepSound(nullptr)
+        , LandingSound(nullptr)
+        , JumpSound(nullptr)
+        , DodgeSound(nullptr)
+        , PainSound(nullptr)
     {
     }
 };
@@ -144,8 +144,8 @@ struct FReplicatedDamageEvent
         , ArmorDamage(0)
         , Location(0, 0, 0)
         , Knockback(0, 0, 0)
-        , DamType(NULL)
-        , DamageInstigator(NULL)
+        , DamType(nullptr)
+        , DamageInstigator(nullptr)
     {
     }
 

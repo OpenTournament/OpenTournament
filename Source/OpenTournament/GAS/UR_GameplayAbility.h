@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "Abilities/GameplayAbility.h"
 #include "GameplayTagContainer.h"
+#include "Abilities/GameplayAbility.h"
 
 #include "UR_AbilityTypes.h"
 
@@ -27,7 +27,10 @@ struct FUR_GameplayAbilityData
     UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "AbilityData")
     UTexture2D* AbilityIcon;
 
-    FUR_GameplayAbilityData() : AbilityIcon(NULL) {}
+    FUR_GameplayAbilityData()
+        : AbilityIcon(nullptr)
+    {
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

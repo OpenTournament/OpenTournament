@@ -19,7 +19,7 @@ class USkeletalMesh;
 /**
  * Weapon Base
  */
-UCLASS()
+UCLASS(meta=(Deprecated))
 class OPENTOURNAMENT_API AUR_WeaponBase : public AUR_PickupBase
 {
     GENERATED_BODY()
