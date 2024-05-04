@@ -350,6 +350,10 @@
 			"Type": "DynamicLibrary"
 		},
 		{
+			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-ClientPilot.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
 			"Path": "$(EngineDir)/Binaries/Win64/UnrealEditor-ClothPainter.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -2914,6 +2918,14 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Runtime/AudioModulation/Binaries/Win64/UnrealEditor-AudioModulation.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/AudioModulation/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Runtime/AudioSynesthesia/Binaries/Win64/UnrealEditor-AudioSynesthesia.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -3166,6 +3178,14 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Runtime/PacketHandlers/DTLSHandlerComponent/Binaries/Win64/UnrealEditor-DTLSHandlerComponent.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/PacketHandlers/DTLSHandlerComponent/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Runtime/ProceduralMeshComponent/Binaries/Win64/UnrealEditor-ProceduralMeshComponent.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -3183,6 +3203,14 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Runtime/PropertyAccess/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/ReplicationGraph/Binaries/Win64/UnrealEditor-ReplicationGraph.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/ReplicationGraph/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -3523,6 +3551,18 @@
 		},
 		{
 			"Path": "$(ProjectDir)/Plugins/GameSettings/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/GameSubtitles/Binaries/Win64/UnrealEditor-GameSubtitles.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/GameSubtitles/Binaries/Win64/UnrealEditor-GameSubtitles.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/GameSubtitles/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
