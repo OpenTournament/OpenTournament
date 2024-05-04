@@ -6,34 +6,106 @@ public class OpenTournament : ModuleRules
 {
     public OpenTournament(ReadOnlyTargetRules Target) : base(Target)
     {
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         ShadowVariableWarningLevel = WarningLevel.Error;
 
         PrivatePCHHeaderFile = "OpenTournament.h";
+
+        // Reference:
+        // https://docs.unrealengine.com/en-US/Programming/BuildTools/UnrealBuildTool/ModuleFiles/index.html
+        PublicIncludePaths.AddRange
+        (
+            new string[]
+            {
+                "OpenTournament",
+                "OpenTournament/AbilitySystem",
+                "OpenTournament/AnnouncementSystem",
+                "OpenTournament/AI",
+                "OpenTournament/Character",
+                "OpenTournament/Data",
+                "OpenTournament/Enums",
+                "OpenTournament/GameFeatures",
+                "OpenTournament/GameModes",
+                "OpenTournament/GAS",
+                "OpenTournament/Interfaces",
+                "OpenTournament/Messages",
+                "OpenTournament/Player",
+                "OpenTournament/Settings",
+                "OpenTournament/Slate",
+                "OpenTournament/System",
+                "OpenTournament/UI",
+                "OpenTournament/Utilities",
+                "OpenTournament/Weapons",
+                "OpenTournament/Widgets"
+            }
+        );
+
+        PrivateIncludePaths.AddRange
+        (
+            new string[] {
+            }
+        );
+
         PublicDependencyModuleNames.AddRange
         (
             new string[]
             {
+                "AIModule",
+                "ApplicationCore",
                 "Core",
+                "CoreOnline",
                 "CoreUObject",
+                "CinematicCamera",
                 "DeveloperSettings",
                 "Engine",
                 "EngineSettings",
-                "InputCore",
-                "UMG",
-                "Slate",
-                "SlateCore",
                 "GameplayAbilities",
                 "GameplayTags",
                 "GameplayTasks",
+                "InputCore",
                 "MoviePlayer",
+                "NavigationSystem",
                 "NetCore",
                 "Niagara",
-                "SoundFieldRendering", // Linux needs a symbold that it cannot find so we try to link this library by force.
                 "Paper2D",
-                "CinematicCamera",
-                "AIModule",
-                "NavigationSystem",
-                "UIExtension"
+                "PhysicsCore",
+                "ReplicationGraph",
+                "Slate",
+                "SlateCore",
+                "SoundFieldRendering", // Linux needs a symbold that it cannot find so we try to link this library by force.
+                "UIExtension",
+                "UMG"
+            }
+        );
+
+        PrivateDependencyModuleNames.AddRange
+        (
+            new string[]
+            {
+                "InputCore",
+                "Slate",
+                "SlateCore",
+                "RenderCore",
+                "DeveloperSettings",
+                "EnhancedInput",
+                "RHI",
+                "Projects",
+                "Gauntlet",
+                "UMG",
+                "CommonUI",
+                "CommonInput",
+                "CommonGame",
+                "CommonUser",
+                "GameSettings",
+                "GameSubtitles",
+                "GameplayMessageRuntime",
+                "AudioMixer",
+                "NetworkReplayStreaming",
+                "UIExtension",
+                "ClientPilot",
+                "AudioModulation",
+                "EngineSettings",
+                "DTLSHandlerComponent",
             }
         );
 
@@ -64,33 +136,8 @@ public class OpenTournament : ModuleRules
                 "ModularGameplayActors"
             }
         );
-
-        // Reference:
-        // https://docs.unrealengine.com/en-US/Programming/BuildTools/UnrealBuildTool/ModuleFiles/index.html
-        PublicIncludePaths.AddRange
-        (
-            new string[]
-            {
-                "OpenTournament",
-                "OpenTournament/AnnouncementSystem",
-                "OpenTournament/AI",
-                "OpenTournament/Character",
-                "OpenTournament/Data",
-                "OpenTournament/Enums",
-                "OpenTournament/GameFeatures",
-                "OpenTournament/GameModes",
-                "OpenTournament/GAS",
-                "OpenTournament/Interfaces",
-                "OpenTournament/Messages",
-                "OpenTournament/Player",
-                "OpenTournament/Settings",
-                "OpenTournament/Slate",
-                "OpenTournament/System",
-                "OpenTournament/UI",
-                "OpenTournament/Utilities",
-                "OpenTournament/Weapons",
-                "OpenTournament/Widgets"
-            }
-        );
+        
+        SetupGameplayDebuggerSupport(Target);
+        SetupIrisSupport(Target);
     }
 }
