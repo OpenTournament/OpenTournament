@@ -70,10 +70,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponStateChangedSignature, AUR_W
 UCLASS(NotPlaceable)
 class OPENTOURNAMENT_API AUR_Weapon
     : public AActor
-      //, public IUR_FireModeBaseInterface
-      //, public IUR_FireModeBasicInterface
-      , public IUR_FireModeChargedInterface
-      , public IUR_FireModeContinuousInterface
+    //, public IUR_FireModeBaseInterface
+    //, public IUR_FireModeBasicInterface
+    //, public IUR_FireModeChargedInterface
+    , public IUR_FireModeContinuousInterface
 {
     GENERATED_BODY()
 
@@ -453,25 +453,25 @@ public:
     // FireModeBasic interface
     //============================================================
 
-    virtual void SimulateShot_Implementation(UUR_FireModeBasic* FireMode, FSimulatedShotInfo& OutSimulatedInfo) override;
+    virtual void SimulateShot_Implementation(UUR_FireModeBasic* FireMode, FSimulatedShotInfo& OutSimulatedInfo);
 
-    virtual void SimulateHitscanShot_Implementation(UUR_FireModeBasic* FireMode, FSimulatedShotInfo& OutSimulatedInfo, FHitscanVisualInfo& OutHitscanInfo) override;
+    virtual void SimulateHitscanShot_Implementation(UUR_FireModeBasic* FireMode, FSimulatedShotInfo& OutSimulatedInfo, FHitscanVisualInfo& OutHitscanInfo);
 
-    virtual void AuthorityShot_Implementation(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo) override;
+    virtual void AuthorityShot_Implementation(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo);
 
-    virtual void AuthorityHitscanShot_Implementation(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo, FHitscanVisualInfo& OutHitscanInfo) override;
+    virtual void AuthorityHitscanShot_Implementation(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo, FHitscanVisualInfo& OutHitscanInfo);
 
     /** Play firing effects (muzzle flash, fire sound, animations...) */
-    virtual void PlayFireEffects_Implementation(UUR_FireModeBasic* FireMode) override;
+    virtual void PlayFireEffects_Implementation(UUR_FireModeBasic* FireMode);
 
     /** Play hitscan effects (beam, impact...) */
-    virtual void PlayHitscanEffects_Implementation(UUR_FireModeBasic* FireMode, const FHitscanVisualInfo& HitscanInfo) override;
+    virtual void PlayHitscanEffects_Implementation(UUR_FireModeBasic* FireMode, const FHitscanVisualInfo& HitscanInfo);
 
     //============================================================
     // FireModeCharged interface
     //============================================================
 
-    virtual void ChargeLevel_Implementation(UUR_FireModeCharged* FireMode, int32 ChargeLevel, bool bWasPaused) override;
+    //virtual void ChargeLevel_Implementation(UUR_FireModeCharged* FireMode, int32 ChargeLevel, bool bWasPaused) override;
 
     //============================================================
     // FireModeContinuous interface

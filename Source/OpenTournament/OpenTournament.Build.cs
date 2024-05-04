@@ -51,7 +51,7 @@ public class OpenTournament : ModuleRules
         PrivateDependencyModuleNames.AddRange(
             new string[]
             {
-                "AudioModulation",
+                //"AudioModulation",
                 "CommonGame",
                 "CommonInput",
                 "CommonLoadingScreen",
