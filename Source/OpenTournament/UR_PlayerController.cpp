@@ -4,6 +4,8 @@
 
 #include "UR_PlayerController.h"
 
+#include <EngineUtils.h>
+
 #include "Components/AudioComponent.h"
 #include "GameFramework/SpectatorPawn.h"
 
@@ -17,6 +19,8 @@
 #include "UR_PCInputDodgeComponent.h"
 #include "UR_PlayerState.h"
 #include "UR_Widget_ScoreboardBase.h"
+#include "UR_CheatManager.h"
+#include "UR_LogChannels.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -188,6 +192,24 @@ void AUR_PlayerController::SetPawn(APawn* InPawn)
     }
 
     // Set Spectating Pawn
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+AUR_PlayerState* AUR_PlayerController::GetGamePlayerState() const
+{
+    return CastChecked<AUR_PlayerState>(PlayerState, ECastCheckedType::NullAllowed);
+}
+
+UUR_AbilitySystemComponent* AUR_PlayerController::GetGameAbilitySystemComponent() const
+{
+    const AUR_PlayerState* GamePS = GetGamePlayerState();
+    return (GamePS ? GamePS->GetGameAbilitySystemComponent() : nullptr);
+}
+
+AUR_HUD* AUR_PlayerController::GetGameHUD() const
+{
+    return CastChecked<AUR_HUD>(GetHUD(), ECastCheckedType::NullAllowed);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -417,3 +439,46 @@ void AUR_PlayerController::SetTeamIndex_Implementation(int32 NewTeamIndex)
         IUR_TeamInterface::Execute_SetTeamIndex(PS, NewTeamIndex);
     }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool AUR_PlayerController::ServerCheatAll_Validate(const FString& Msg)
+{
+    return true;
+}
+
+void AUR_PlayerController::ServerCheatAll_Implementation(const FString& Msg)
+{
+#if USING_CHEAT_MANAGER
+    if (CheatManager)
+    {
+        UE_LOG(LogGame, Warning, TEXT("ServerCheatAll: %s"), *Msg);
+        for (TActorIterator<AUR_PlayerController> It(GetWorld()); It; ++It)
+        {
+            if (AUR_PlayerController* GamePC = (*It))
+            {
+                GamePC->ClientMessage(GamePC->ConsoleCommand(Msg));
+            }
+        }
+    }
+#endif // #if USING_CHEAT_MANAGER
+}
+
+
+bool AUR_PlayerController::ServerCheat_Validate(const FString& Msg)
+{
+    return true;
+}
+
+void AUR_PlayerController::ServerCheat_Implementation(const FString& Msg)
+{
+#if USING_CHEAT_MANAGER
+    if (CheatManager)
+    {
+        UE_LOG(LogGame, Warning, TEXT("ServerCheat: %s"), *Msg);
+        ClientMessage(ConsoleCommand(Msg));
+    }
+#endif // #if USING_CHEAT_MANAGER
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////

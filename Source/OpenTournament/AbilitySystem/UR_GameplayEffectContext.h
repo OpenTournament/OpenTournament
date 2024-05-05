@@ -71,7 +71,7 @@ public:
     int32 CartridgeID = -1;
 
 protected:
-    /** Ability Source object (should implement ILyraAbilitySourceInterface). NOT replicated currently */
+    /** Ability Source object (should implement IUR_AbilitySourceInterface). NOT replicated currently */
     UPROPERTY()
     TWeakObjectPtr<const UObject> AbilitySourceObject;
 };

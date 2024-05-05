@@ -34,7 +34,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTeamChangedSignature, AUR_Player
 UCLASS()
 class OPENTOURNAMENT_API AUR_PlayerState
     : public AModularPlayerState
-    , public IUR_TeamInterface
+      , public IUR_TeamInterface
 {
     GENERATED_BODY()
 
@@ -142,4 +142,24 @@ public:
 
     UFUNCTION()
     virtual void InternalOnPawnSet(APlayerState* PS, APawn* NewPawn, APawn* OldPawn);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    UFUNCTION(BlueprintCallable, Category = "Game|PlayerState")
+    UUR_AbilitySystemComponent* GetGameAbilitySystemComponent() const
+    {
+        return AbilitySystemComponent;
+    }
+
+    // The ability system component sub-object used by player characters.
+    UPROPERTY(VisibleAnywhere, Category = "Game|PlayerState")
+    TObjectPtr<UUR_AbilitySystemComponent> AbilitySystemComponent;
+
+    // Health attribute set used by this actor.
+    UPROPERTY()
+    TObjectPtr<const class UUR_HealthSet> HealthSet;
+
+    // Combat attribute set used by this actor.
+    UPROPERTY()
+    TObjectPtr<const class UUR_CombatSet> CombatSet;
 };

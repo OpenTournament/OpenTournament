@@ -39,10 +39,10 @@ protected:
 
 private:
     // The base amount of damage to apply in the damage execution.
-    UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_BaseDamage, Category = "Lyra|Combat", Meta = (AllowPrivateAccess = true))
+    UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_BaseDamage, Category = "Game|Combat", Meta = (AllowPrivateAccess = true))
     FGameplayAttributeData BaseDamage;
 
     // The base amount of healing to apply in the heal execution.
-    UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_BaseHeal, Category = "Lyra|Combat", Meta = (AllowPrivateAccess = true))
+    UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_BaseHeal, Category = "Game|Combat", Meta = (AllowPrivateAccess = true))
     FGameplayAttributeData BaseHeal;
 };

@@ -11,6 +11,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Forward Declarations
 
+class AUR_HUD;
+class UUR_AbilitySystemComponent;
 class UAudioComponent;
 
 class AUR_Character;
@@ -37,7 +39,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FReceiveSystemMessageSignature, cons
 UCLASS(Config = Game)
 class OPENTOURNAMENT_API AUR_PlayerController
     : public AUR_BasePlayerController
-    , public IUR_TeamInterface
+      , public IUR_TeamInterface
 {
     GENERATED_BODY()
 
@@ -60,6 +62,17 @@ public:
     virtual void ProcessPlayerInput(const float DeltaTime, const bool bGamePaused) override;
 
     virtual void SetPawn(APawn* InPawn) override;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    UFUNCTION(BlueprintCallable, Category = "Game|PlayerController")
+    AUR_PlayerState* GetGamePlayerState() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Game|PlayerController")
+    UUR_AbilitySystemComponent* GetGameAbilitySystemComponent() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Game|PlayerController")
+    AUR_HUD* GetGameHUD() const;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -292,4 +305,16 @@ public:
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
 
     //~ End TeamInterface
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Run a cheat command on the server.
+    UFUNCTION(Reliable, Server, WithValidation)
+    void ServerCheat(const FString& Msg);
+
+    // Run a cheat command on the server for all players.
+    UFUNCTION(Reliable, Server, WithValidation)
+    void ServerCheatAll(const FString& Msg);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 };
