@@ -30,6 +30,18 @@ class OPENTOURNAMENT_API UUR_CheatManager : public UCheatManager
 {
     GENERATED_BODY()
 
+    UUR_CheatManager();
+
+    virtual void InitCheatManager() override;
+
+    // Runs a cheat on the server for the owning player.
+    UFUNCTION(exec)
+    void Cheat(const FString& Msg);
+
+    // Runs a cheat on the server for the all players.
+    UFUNCTION(exec)
+    void CheatAll(const FString& Msg);
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Prevents the owning player from taking any damage.

@@ -9,6 +9,7 @@
 #include "UR_AbilitySystemComponent.h"
 #include "UR_AssetManager.h"
 #include "UR_Character.h"
+#include "UR_DeveloperSettings.h"
 #include "UR_GameData.h"
 #include "UR_GameplayTags.h"
 #include "UR_HealthComponent.h"
@@ -21,6 +22,65 @@
 DEFINE_LOG_CATEGORY(LogGameCheat);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace OpenTournamentCheat
+{
+    static bool bStartInGodMode = false;
+    static FAutoConsoleVariableRef CVarStartInGodMode(
+        TEXT("LyraCheat.StartInGodMode"),
+        bStartInGodMode,
+        TEXT("If true then the God cheat will be applied on begin play"),
+        ECVF_Cheat);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+UUR_CheatManager::UUR_CheatManager()
+{
+    //
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void UUR_CheatManager::InitCheatManager()
+{
+    Super::InitCheatManager();
+
+#if WITH_EDITOR
+    if (GIsEditor)
+    {
+        APlayerController* PC = GetOuterAPlayerController();
+        for (const FUR_CheatToRun& CheatRow : GetDefault<UUR_DeveloperSettings>()->CheatsToRun)
+        {
+            if (CheatRow.Phase == ECheatExecutionTime::OnCheatManagerCreated)
+            {
+                PC->ConsoleCommand(CheatRow.Cheat, /*bWriteToLog=*/ true);
+            }
+        }
+    }
+#endif
+
+    if (OpenTournamentCheat::bStartInGodMode)
+    {
+        God();
+    }
+}
+
+void UUR_CheatManager::Cheat(const FString& Msg)
+{
+    if (AUR_PlayerController* PC = Cast<AUR_PlayerController>(GetOuterAPlayerController()))
+    {
+        PC->ServerCheat(Msg.Left(128));
+    }
+}
+
+void UUR_CheatManager::CheatAll(const FString& Msg)
+{
+    if (AUR_PlayerController* PC = Cast<AUR_PlayerController>(GetOuterAPlayerController()))
+    {
+        PC->ServerCheatAll(Msg.Left(128));
+    }
+}
 
 void UUR_CheatManager::God()
 {
