@@ -7,10 +7,10 @@
 #include <GameFeatureAction.h>
 #include <GameFeaturesSubsystem.h>
 #include <GameFeaturesSubsystemSettings.h>
+#include <TimerManager.h>
 #include <Engine/StreamableManager.h>
 #include <Engine/World.h>
 #include <Net/UnrealNetwork.h>
-#include "TimerManager.h"
 
 #include "UR_ExperienceActionSet.h"
 #include "UR_ExperienceDefinition.h"
@@ -33,21 +33,27 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+DEFINE_LOG_CATEGORY(LogGameExperienceManagerComponent);
+
 namespace OTConsoleVariables
 {
     static float ExperienceLoadRandomDelayMin = 0.0f;
-    static FAutoConsoleVariableRef CVarExperienceLoadRandomDelayMin(
+    static FAutoConsoleVariableRef CVarExperienceLoadRandomDelayMin
+    (
         TEXT("OT.chaos.ExperienceDelayLoad.MinSecs"),
         ExperienceLoadRandomDelayMin,
         TEXT("This value (in seconds) will be added as a delay of load completion of the experience (along with the random value OT.chaos.ExperienceDelayLoad.RandomSecs)"),
-        ECVF_Default);
+        ECVF_Default
+    );
 
     static float ExperienceLoadRandomDelayRange = 0.0f;
-    static FAutoConsoleVariableRef CVarExperienceLoadRandomDelayRange(
+    static FAutoConsoleVariableRef CVarExperienceLoadRandomDelayRange
+    (
         TEXT("OT.chaos.ExperienceDelayLoad.RandomSecs"),
         ExperienceLoadRandomDelayRange,
         TEXT("A random amount of time between 0 and this value (in seconds) will be added as a delay of load completion of the experience (along with the fixed value OT.chaos.ExperienceDelayLoad.MinSecs)"),
-        ECVF_Default);
+        ECVF_Default
+    );
 
     float GetExperienceLoadDelayDuration()
     {
@@ -57,8 +63,8 @@ namespace OTConsoleVariables
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-UUR_ExperienceManagerComponent::UUR_ExperienceManagerComponent(const FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer)
+UUR_ExperienceManagerComponent::UUR_ExperienceManagerComponent(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
 {
     SetIsReplicatedByDefault(true);
 }
@@ -66,15 +72,33 @@ UUR_ExperienceManagerComponent::UUR_ExperienceManagerComponent(const FObjectInit
 void UUR_ExperienceManagerComponent::SetCurrentExperience(FPrimaryAssetId ExperienceId)
 {
     const UUR_AssetManager& AssetManager = UUR_AssetManager::Get();
-    const FSoftObjectPath AssetPath = AssetManager.GetPrimaryAssetPath(ExperienceId);
-    const TSubclassOf<UUR_ExperienceDefinition> AssetClass = Cast<UClass>(AssetPath.TryLoad());
-    check(AssetClass);
-    const UUR_ExperienceDefinition* Experience = GetDefault<UUR_ExperienceDefinition>(AssetClass);
 
-    check(Experience != nullptr);
-    check(CurrentExperience == nullptr);
-    CurrentExperience = Experience;
-    StartExperienceLoad();
+    if (AssetManager.IsInitialized())
+    {
+        const FSoftObjectPath AssetPath = AssetManager.GetPrimaryAssetPath(ExperienceId);
+
+        if (AssetPath.IsValid())
+        {
+            const TSubclassOf<UUR_ExperienceDefinition> AssetClass = Cast<UClass>(AssetPath.TryLoad());
+            check(AssetClass);
+            const UUR_ExperienceDefinition* Experience = GetDefault<UUR_ExperienceDefinition>(AssetClass);
+
+            check(Experience != nullptr);
+            check(CurrentExperience == nullptr);
+            CurrentExperience = Experience;
+            StartExperienceLoad();
+        }
+        else
+        {
+            UE_LOG(LogGameExperienceManagerComponent, Error, TEXT("AssetPath is not valid!"));
+            return;
+        }
+    }
+    else
+    {
+        UE_LOG(LogGameExperienceManagerComponent, Error, TEXT("AssetManager is not Initialized!"));
+        return;
+    }
 }
 
 void UUR_ExperienceManagerComponent::CallOrRegister_OnExperienceLoaded_HighPriority(FOnGameExperienceLoaded::FDelegate&& Delegate)
