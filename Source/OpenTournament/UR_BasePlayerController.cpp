@@ -4,20 +4,26 @@
 
 #include "UR_BasePlayerController.h"
 
-#include "GameMapsSettings.h"
-#include "Kismet/GameplayStatics.h"
+#include <GameMapsSettings.h>
+#include <Kismet/GameplayStatics.h>
 
+#include "UR_Character.h"
+#include "UR_InventoryComponent.h"
+#include "UR_MPC_Global.h"
 #include "UR_PlayerCameraManager.h"
 #include "UR_PlayerInput.h"
 #include "UR_UserSettings.h"
-#include "UR_MPC_Global.h"
-#include "UR_Character.h"
-#include "UR_InventoryComponent.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_BasePlayerController)
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_BasePlayerController::AUR_BasePlayerController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
+    , MPC_GlobalGame(nullptr)
+    , UR_MPC_Global_Ref(nullptr)
+    , UserSettings(nullptr)
 {
     PlayerCameraManagerClass = AUR_PlayerCameraManager::StaticClass();
 }
