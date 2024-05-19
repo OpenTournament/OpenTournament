@@ -21,7 +21,15 @@
 #include "UR_TeamInfo.h"
 
 // Having to include these, only to set the default classes, makes me sad
+#include <Misc/CommandLine.h>
+
+#include "UR_AssetManager.h"
+#include "UR_DeveloperSettings.h"
+#include "UR_ExperienceDefinition.h"
+#include "UR_ExperienceManagerComponent.h"
+#include "UR_LogChannels.h"
 #include "UR_Widget_ScoreboardBase.h"
+#include "UR_WorldSettings.h"
 #include "AI/UR_BotController.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +94,9 @@ void AUR_GameMode::InitGame(const FString& MapName, const FString& OptionsMeh, F
         NumTeams = 0;
         DesiredTeamSize = 1;
     }
+
+    // Wait for the next frame to give time to initialize startup settings
+    GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::HandleMatchAssignmentIfNotExpectingOne);
 }
 
 void AUR_GameMode::InitGameState()
@@ -709,4 +720,123 @@ void AUR_GameMode::OnEndGameTimeUp(AUR_GameState* GS)
 
     // else
     RestartGame();
+}
+
+void AUR_GameMode::OnExperienceLoaded(const UUR_ExperienceDefinition* CurrentExperience)
+{
+    // Spawn any players that are already attached
+    //@TODO: Here we're handling only *player* controllers, but in GetDefaultPawnClassForController_Implementation we skipped all controllers
+    // GetDefaultPawnClassForController_Implementation might only be getting called for players anyways
+    for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+    {
+        APlayerController* PC = Cast<APlayerController>(*Iterator);
+        if ((PC != nullptr) && (PC->GetPawn() == nullptr))
+        {
+            if (PlayerCanRestart(PC))
+            {
+                RestartPlayer(PC);
+            }
+        }
+    }
+}
+
+bool AUR_GameMode::IsExperienceLoaded() const
+{
+    check(GameState);
+    const UUR_ExperienceManagerComponent* ExperienceComponent = GameState->FindComponentByClass<UUR_ExperienceManagerComponent>();
+    check(ExperienceComponent);
+
+    return ExperienceComponent->IsExperienceLoaded();
+}
+
+void AUR_GameMode::OnMatchAssignmentGiven(FPrimaryAssetId ExperienceId, const FString& ExperienceIdSource)
+{
+}
+
+void AUR_GameMode::HandleMatchAssignmentIfNotExpectingOne()
+{
+    FPrimaryAssetId ExperienceId;
+	FString ExperienceIdSource;
+
+	// Precedence order (highest wins)
+	//  - Matchmaking assignment (if present)
+	//  - URL Options override
+	//  - Developer Settings (PIE only)
+	//  - Command Line override
+	//  - World Settings
+	//  - Dedicated server
+	//  - Default experience
+
+	UWorld* World = GetWorld();
+
+	if (!ExperienceId.IsValid() && UGameplayStatics::HasOption(OptionsString, TEXT("Experience")))
+	{
+		const FString ExperienceFromOptions = UGameplayStatics::ParseOption(OptionsString, TEXT("Experience"));
+
+	    FPrimaryAssetType PrimaryAsset = FPrimaryAssetType(UUR_ExperienceDefinition::StaticClass()->GetFName());
+		ExperienceId = FPrimaryAssetId(PrimaryAsset, FName(*ExperienceFromOptions));
+		ExperienceIdSource = TEXT("OptionsString");
+	}
+
+	if (!ExperienceId.IsValid() && World->IsPlayInEditor())
+	{
+		ExperienceId = GetDefault<UUR_DeveloperSettings>()->ExperienceOverride;
+		ExperienceIdSource = TEXT("DeveloperSettings");
+	}
+
+	// see if the command line wants to set the experience
+	if (!ExperienceId.IsValid())
+	{
+		FString ExperienceFromCommandLine;
+		if (FParse::Value(FCommandLine::Get(), TEXT("Experience="), ExperienceFromCommandLine))
+		{
+			ExperienceId = FPrimaryAssetId::ParseTypeAndName(ExperienceFromCommandLine);
+			if (!ExperienceId.PrimaryAssetType.IsValid())
+			{
+			    FPrimaryAssetType PrimaryAsset = FPrimaryAssetType(UUR_ExperienceDefinition::StaticClass()->GetFName());
+				ExperienceId = FPrimaryAssetId(PrimaryAsset, FName(*ExperienceFromCommandLine));
+			}
+			ExperienceIdSource = TEXT("CommandLine");
+		}
+	}
+
+	// see if the world settings has a default experience
+	if (!ExperienceId.IsValid())
+	{
+		if (AUR_WorldSettings* TypedWorldSettings = Cast<AUR_WorldSettings>(GetWorldSettings()))
+		{
+			ExperienceId = TypedWorldSettings->GetDefaultGameplayExperience();
+			ExperienceIdSource = TEXT("WorldSettings");
+		}
+	}
+
+	UUR_AssetManager& AssetManager = UUR_AssetManager::Get();
+	FAssetData Dummy;
+	if (ExperienceId.IsValid() && !AssetManager.GetPrimaryAssetData(ExperienceId, /*out*/ Dummy))
+	{
+		UE_LOG(LogGameExperience, Error, TEXT("EXPERIENCE: Wanted to use %s but couldn't find it, falling back to the default)"), *ExperienceId.ToString());
+		ExperienceId = FPrimaryAssetId();
+	}
+
+	// Final fallback to the default experience
+	if (!ExperienceId.IsValid())
+	{
+		if (TryDedicatedServerLogin())
+		{
+			// This will start to host as a dedicated server
+			return;
+		}
+
+		//@TODO: Pull this from a config setting or something
+	    FPrimaryAssetType PrimaryAsset = FPrimaryAssetType(UUR_ExperienceDefinition::StaticClass()->GetFName());
+		ExperienceId = FPrimaryAssetId(PrimaryAsset, FName("B_LyraDefaultExperience"));
+		ExperienceIdSource = TEXT("Default");
+	}
+
+	OnMatchAssignmentGiven(ExperienceId, ExperienceIdSource);
+}
+
+bool AUR_GameMode::TryDedicatedServerLogin()
+{
+    return false;
 }

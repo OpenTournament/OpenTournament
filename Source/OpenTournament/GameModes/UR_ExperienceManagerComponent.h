@@ -38,7 +38,7 @@ enum class EGameExperienceLoadState
 UCLASS()
 class UUR_ExperienceManagerComponent final
     : public UGameStateComponent
-      , public ILoadingProcessInterface
+    , public ILoadingProcessInterface
 {
     GENERATED_BODY()
 

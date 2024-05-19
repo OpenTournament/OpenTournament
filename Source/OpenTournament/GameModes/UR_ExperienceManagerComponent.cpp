@@ -135,11 +135,7 @@ void UUR_ExperienceManagerComponent::StartExperienceLoad()
     check(CurrentExperience != nullptr);
     check(LoadState == EGameExperienceLoadState::Unloaded);
 
-    UE_LOG(LogGameExperience,
-        Log,
-        TEXT("EXPERIENCE: StartExperienceLoad(CurrentExperience = %s, %s)"),
-        *CurrentExperience->GetPrimaryAssetId().ToString(),
-        *GetClientServerContextString(this));
+    UE_LOG(LogGameExperience, Log, TEXT("EXPERIENCE: StartExperienceLoad(CurrentExperience = %s, %s)"), *CurrentExperience->GetPrimaryAssetId().ToString(), *GetClientServerContextString(this));
 
     LoadState = EGameExperienceLoadState::Loading;
 
@@ -216,7 +212,7 @@ void UUR_ExperienceManagerComponent::StartExperienceLoad()
 
     // This set of assets gets preloaded, but we don't block the start of the experience based on it
     TSet<FPrimaryAssetId> PreloadAssetList;
-    //@TODO: Determine assets to preload (but not blocking-ly)
+    // @! TODO: Determine assets to preload (but not blocking-ly)
     if (PreloadAssetList.Num() > 0)
     {
         AssetManager.ChangeBundleStateForPrimaryAssets(PreloadAssetList.Array(), BundlesToLoad, { });
@@ -228,11 +224,7 @@ void UUR_ExperienceManagerComponent::OnExperienceLoadComplete()
     check(LoadState == EGameExperienceLoadState::Loading);
     check(CurrentExperience != nullptr);
 
-    UE_LOG(LogGameExperience,
-        Log,
-        TEXT("EXPERIENCE: OnExperienceLoadComplete(CurrentExperience = %s, %s)"),
-        *CurrentExperience->GetPrimaryAssetId().ToString(),
-        *GetClientServerContextString(this));
+    UE_LOG(LogGameExperience, Log, TEXT("EXPERIENCE: OnExperienceLoadComplete(CurrentExperience = %s, %s)"), *CurrentExperience->GetPrimaryAssetId().ToString(), *GetClientServerContextString(this));
 
     // find the URLs for our GameFeaturePlugins - filtering out dupes and ones that don't have a valid mapping
     GameFeaturePluginURLs.Reset();
@@ -463,7 +455,14 @@ bool UUR_ExperienceManagerComponent::ShouldShowLoadingScreen(FString& OutReason)
 {
     if (LoadState != EGameExperienceLoadState::Loaded)
     {
-        OutReason = TEXT("Experience still loading");
+        if (CurrentExperience)
+        {
+            OutReason = TEXT("Experience still loading");
+        }
+        else
+        {
+            OutReason = TEXT("Invalid Current Experience! Loading stalled...");
+        }
         return true;
     }
     else
