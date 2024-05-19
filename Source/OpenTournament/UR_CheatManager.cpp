@@ -19,6 +19,8 @@
 #include "UR_PlayerState.h"
 #include "UR_Weapon.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_CheatManager)
+
 DEFINE_LOG_CATEGORY(LogGameCheat);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
