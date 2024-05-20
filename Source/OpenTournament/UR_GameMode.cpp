@@ -4,24 +4,25 @@
 
 #include "UR_GameMode.h"
 
-#include "EngineUtils.h"    // for TActorIterator<>
-#include "Engine/DamageEvents.h"
-#include "GameFramework/Controller.h"
-#include "Kismet/GameplayStatics.h"
-#include "TimerManager.h"
+#include <EngineUtils.h>    // for TActorIterator<>
+#include <TimerManager.h>
+#include <Engine/DamageEvents.h>
+#include <GameFramework/Controller.h>
+#include <Kismet/GameplayStatics.h>
 
+// Having to include these, only to set the default classes, makes me sad
+#include <Misc/CommandLine.h>
+
+#include "UR_Ammo.h"
 #include "UR_Character.h"
 #include "UR_GameState.h"
 #include "UR_InventoryComponent.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 #include "UR_Projectile.h"
-#include "UR_Weapon.h"
-#include "UR_Ammo.h"
 #include "UR_TeamInfo.h"
+#include "UR_Weapon.h"
 
-// Having to include these, only to set the default classes, makes me sad
-#include <Misc/CommandLine.h>
 
 #include "UR_AssetManager.h"
 #include "UR_DeveloperSettings.h"
@@ -32,11 +33,15 @@
 #include "UR_WorldSettings.h"
 #include "AI/UR_BotController.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_GameMode)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Initialization
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameMode::AUR_GameMode()
+    : BotFill(0)
+    , DesiredTeamSize(0)
 {
     ScoreboardClass = UUR_Widget_ScoreboardBase::StaticClass();
     BotControllerClass = AUR_BotController::StaticClass();
@@ -117,6 +122,11 @@ void AUR_GameMode::InitGameState()
             GS->AddNewTeam();
         }
     }
+
+    // Listen for the experience load to complete
+    UUR_ExperienceManagerComponent* ExperienceComponent = GameState->FindComponentByClass<UUR_ExperienceManagerComponent>();
+    check(ExperienceComponent);
+    ExperienceComponent->CallOrRegister_OnExperienceLoaded(FOnGameExperienceLoaded::FDelegate::CreateUObject(this, &ThisClass::OnExperienceLoaded));
 }
 
 void AUR_GameMode::BroadcastSystemMessage(const FString& Msg)
@@ -597,23 +607,23 @@ AActor* AUR_GameMode::ResolveEndGameFocus_Implementation(AActor* Winner)
     {
         return PS->GetPawn();
     }
-    if (AController* C = Cast<AController>(Winner))
+    if (AController* Controller = Cast<AController>(Winner))
     {
-        return C->GetPawn();
+        return Controller->GetPawn();
     }
     if (AUR_TeamInfo* Team = Cast<AUR_TeamInfo>(Winner))
     {
-        AUR_PlayerState* Top = nullptr;
+        AUR_PlayerState* TopPlayerState = nullptr;
         for (AUR_PlayerState* PS : Team->Players)
         {
-            if (PS && PS->GetPawn() && (!Top || PS->GetScore() > Top->GetScore()))
+            if (PS && PS->GetPawn() && (!TopPlayerState || PS->GetScore() > TopPlayerState->GetScore()))
             {
-                Top = PS;
+                TopPlayerState = PS;
             }
         }
-        if (Top)
+        if (TopPlayerState)
         {
-            return Top->GetPawn();
+            return TopPlayerState->GetPawn();
         }
     }
     return Winner;
@@ -624,12 +634,12 @@ void AUR_GameMode::TriggerEndMatch_Implementation(AActor* Winner, AActor* Focus)
     if (AUR_GameState* GS = GetGameState<AUR_GameState>())
     {
         // Winner needs to be replicated. Should never be a controller!
-        if (AController* C = Cast<AController>(Winner))
+        if (AController* Controller = Cast<AController>(Winner))
         {
-            if (IsValid(C->PlayerState))
-                GS->Winner = C->PlayerState;
+            if (IsValid(Controller->PlayerState))
+                GS->Winner = Controller->PlayerState;
             else
-                GS->Winner = C->GetPawn();
+                GS->Winner = Controller->GetPawn();
         }
         else
         {
@@ -751,92 +761,125 @@ bool AUR_GameMode::IsExperienceLoaded() const
 
 void AUR_GameMode::OnMatchAssignmentGiven(FPrimaryAssetId ExperienceId, const FString& ExperienceIdSource)
 {
+    if (ExperienceId.IsValid())
+    {
+        UE_LOG(LogGameExperience, Log, TEXT("Identified experience %s (Source: %s)"), *ExperienceId.ToString(), *ExperienceIdSource);
+
+        UUR_ExperienceManagerComponent* ExperienceComponent = GameState->FindComponentByClass<UUR_ExperienceManagerComponent>();
+        check(ExperienceComponent);
+        ExperienceComponent->SetCurrentExperience(ExperienceId);
+    }
+    else
+    {
+        UE_LOG(LogGameExperience, Error, TEXT("Failed to identify experience, loading screen will stay up forever"));
+    }
 }
 
 void AUR_GameMode::HandleMatchAssignmentIfNotExpectingOne()
 {
     FPrimaryAssetId ExperienceId;
-	FString ExperienceIdSource;
+    FString ExperienceIdSource;
 
-	// Precedence order (highest wins)
-	//  - Matchmaking assignment (if present)
-	//  - URL Options override
-	//  - Developer Settings (PIE only)
-	//  - Command Line override
-	//  - World Settings
-	//  - Dedicated server
-	//  - Default experience
+    // Precedence order (highest wins)
+    //  - Matchmaking assignment (if present)
+    //  - URL Options override
+    //  - Developer Settings (PIE only)
+    //  - Command Line override
+    //  - World Settings
+    //  - Dedicated server
+    //  - Default experience
 
-	UWorld* World = GetWorld();
+    UWorld* World = GetWorld();
+    const FName ExperienceDefinitionClassName = UUR_ExperienceDefinition::StaticClass()->GetFName();
 
-	if (!ExperienceId.IsValid() && UGameplayStatics::HasOption(OptionsString, TEXT("Experience")))
-	{
-		const FString ExperienceFromOptions = UGameplayStatics::ParseOption(OptionsString, TEXT("Experience"));
+    if (!ExperienceId.IsValid() && UGameplayStatics::HasOption(OptionsString, TEXT("Experience")))
+    {
+        const FString ExperienceFromOptions = UGameplayStatics::ParseOption(OptionsString, TEXT("Experience"));
 
-	    FPrimaryAssetType PrimaryAsset = FPrimaryAssetType(UUR_ExperienceDefinition::StaticClass()->GetFName());
-		ExperienceId = FPrimaryAssetId(PrimaryAsset, FName(*ExperienceFromOptions));
-		ExperienceIdSource = TEXT("OptionsString");
-	}
+        FPrimaryAssetType PrimaryAsset = FPrimaryAssetType(ExperienceDefinitionClassName);
+        ExperienceId = FPrimaryAssetId(PrimaryAsset, FName(*ExperienceFromOptions));
+        ExperienceIdSource = TEXT("OptionsString");
+    }
 
-	if (!ExperienceId.IsValid() && World->IsPlayInEditor())
-	{
-		ExperienceId = GetDefault<UUR_DeveloperSettings>()->ExperienceOverride;
-		ExperienceIdSource = TEXT("DeveloperSettings");
-	}
+    if (!ExperienceId.IsValid() && World->IsPlayInEditor())
+    {
+        ExperienceId = GetDefault<UUR_DeveloperSettings>()->ExperienceOverride;
+        ExperienceIdSource = TEXT("DeveloperSettings");
+    }
 
-	// see if the command line wants to set the experience
-	if (!ExperienceId.IsValid())
-	{
-		FString ExperienceFromCommandLine;
-		if (FParse::Value(FCommandLine::Get(), TEXT("Experience="), ExperienceFromCommandLine))
-		{
-			ExperienceId = FPrimaryAssetId::ParseTypeAndName(ExperienceFromCommandLine);
-			if (!ExperienceId.PrimaryAssetType.IsValid())
-			{
-			    FPrimaryAssetType PrimaryAsset = FPrimaryAssetType(UUR_ExperienceDefinition::StaticClass()->GetFName());
-				ExperienceId = FPrimaryAssetId(PrimaryAsset, FName(*ExperienceFromCommandLine));
-			}
-			ExperienceIdSource = TEXT("CommandLine");
-		}
-	}
+    // see if the command line wants to set the experience
+    if (!ExperienceId.IsValid())
+    {
+        FString ExperienceFromCommandLine;
+        if (FParse::Value(FCommandLine::Get(), TEXT("Experience="), ExperienceFromCommandLine))
+        {
+            ExperienceId = FPrimaryAssetId::ParseTypeAndName(ExperienceFromCommandLine);
+            if (!ExperienceId.PrimaryAssetType.IsValid())
+            {
+                FPrimaryAssetType PrimaryAsset = FPrimaryAssetType(ExperienceDefinitionClassName);
+                ExperienceId = FPrimaryAssetId(PrimaryAsset, FName(*ExperienceFromCommandLine));
+            }
+            ExperienceIdSource = TEXT("CommandLine");
+        }
+    }
 
-	// see if the world settings has a default experience
-	if (!ExperienceId.IsValid())
-	{
-		if (AUR_WorldSettings* TypedWorldSettings = Cast<AUR_WorldSettings>(GetWorldSettings()))
-		{
-			ExperienceId = TypedWorldSettings->GetDefaultGameplayExperience();
-			ExperienceIdSource = TEXT("WorldSettings");
-		}
-	}
+    // see if the world settings has a default experience
+    if (!ExperienceId.IsValid())
+    {
+        if (AUR_WorldSettings* TypedWorldSettings = Cast<AUR_WorldSettings>(GetWorldSettings()))
+        {
+            ExperienceId = TypedWorldSettings->GetDefaultGameplayExperience();
+            ExperienceIdSource = TEXT("WorldSettings");
+        }
+    }
 
-	UUR_AssetManager& AssetManager = UUR_AssetManager::Get();
-	FAssetData Dummy;
-	if (ExperienceId.IsValid() && !AssetManager.GetPrimaryAssetData(ExperienceId, /*out*/ Dummy))
-	{
-		UE_LOG(LogGameExperience, Error, TEXT("EXPERIENCE: Wanted to use %s but couldn't find it, falling back to the default)"), *ExperienceId.ToString());
-		ExperienceId = FPrimaryAssetId();
-	}
+    UUR_AssetManager& AssetManager = UUR_AssetManager::Get();
+    FAssetData Dummy;
+    if (ExperienceId.IsValid() && !AssetManager.GetPrimaryAssetData(ExperienceId, /*out*/ Dummy))
+    {
+        UE_LOG(LogGameExperience, Error, TEXT("EXPERIENCE: Wanted to use %s but couldn't find it, falling back to the default)"), *ExperienceId.ToString());
+        ExperienceId = FPrimaryAssetId();
+    }
 
-	// Final fallback to the default experience
-	if (!ExperienceId.IsValid())
-	{
-		if (TryDedicatedServerLogin())
-		{
-			// This will start to host as a dedicated server
-			return;
-		}
+    // Final fallback to the default experience
+    if (!ExperienceId.IsValid())
+    {
+        if (TryDedicatedServerLogin())
+        {
+            // This will start to host as a dedicated server
+            return;
+        }
 
-		//@TODO: Pull this from a config setting or something
-	    FPrimaryAssetType PrimaryAsset = FPrimaryAssetType(UUR_ExperienceDefinition::StaticClass()->GetFName());
-		ExperienceId = FPrimaryAssetId(PrimaryAsset, FName("B_LyraDefaultExperience"));
-		ExperienceIdSource = TEXT("Default");
-	}
+        FPrimaryAssetType PrimaryAsset = FPrimaryAssetType(ExperienceDefinitionClassName);
+        ExperienceId = FPrimaryAssetId(PrimaryAsset, DefaultGameExperienceName);
+        ExperienceIdSource = TEXT("Default");
+    }
 
-	OnMatchAssignmentGiven(ExperienceId, ExperienceIdSource);
+    OnMatchAssignmentGiven(ExperienceId, ExperienceIdSource);
 }
 
 bool AUR_GameMode::TryDedicatedServerLogin()
 {
+    // // Some basic code to register as an active dedicated server, this would be heavily modified by the game
+    // FString DefaultMap = UGameMapsSettings::GetGameDefaultMap();
+    // UWorld* World = GetWorld();
+    // UGameInstance* GameInstance = GetGameInstance();
+    // if (GameInstance && World && World->GetNetMode() == NM_DedicatedServer && World->URL.Map == DefaultMap)
+    // {
+    //     // Only register if this is the default map on a dedicated server
+    //     UCommonUserSubsystem* UserSubsystem = GameInstance->GetSubsystem<UCommonUserSubsystem>();
+    //
+    //     // Dedicated servers may need to do an online login
+    //     UserSubsystem->OnUserInitializeComplete.AddDynamic(this, &ALyraGameMode::OnUserInitializedForDedicatedServer);
+    //
+    //     // There are no local users on dedicated server, but index 0 means the default platform user which is handled by the online login code
+    //     if (!UserSubsystem->TryToLoginForOnlinePlay(0))
+    //     {
+    //         OnUserInitializedForDedicatedServer(nullptr, false, FText(), ECommonUserPrivilege::CanPlayOnline, ECommonUserOnlineContext::Default);
+    //     }
+    //
+    //     return true;
+    // }
+
     return false;
 }

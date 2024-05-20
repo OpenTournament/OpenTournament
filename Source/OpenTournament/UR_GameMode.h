@@ -273,4 +273,6 @@ public:
 
     bool TryDedicatedServerLogin();
 
+    UPROPERTY(Config, EditDefaultsOnly, BlueprintReadOnly)
+    FName DefaultGameExperienceName;
 };
