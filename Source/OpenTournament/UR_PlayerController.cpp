@@ -11,16 +11,16 @@
 
 #include "UR_Character.h"
 #include "UR_ChatComponent.h"
+#include "UR_CheatManager.h"
 #include "UR_FunctionLibrary.h"
 #include "UR_GameMode.h"
 #include "UR_HUD.h"
 #include "UR_LocalPlayer.h"
+#include "UR_LogChannels.h"
 #include "UR_MessageHistory.h"
 #include "UR_PCInputDodgeComponent.h"
 #include "UR_PlayerState.h"
 #include "UR_Widget_ScoreboardBase.h"
-#include "UR_CheatManager.h"
-#include "UR_LogChannels.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -53,6 +53,8 @@ AUR_PlayerController::AUR_PlayerController(const FObjectInitializer& ObjectIniti
     ChatComponent = CreateDefaultSubobject<UUR_ChatComponent>(TEXT("ChatComponent"));
     ChatComponent->FallbackOwnerName = TEXT("SOMEBODY");
     ChatComponent->AntiSpamDelay = 1.f;
+
+    CheatClass = UUR_CheatManager::StaticClass();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
