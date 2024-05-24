@@ -54,7 +54,9 @@ AUR_PlayerController::AUR_PlayerController(const FObjectInitializer& ObjectIniti
     ChatComponent->FallbackOwnerName = TEXT("SOMEBODY");
     ChatComponent->AntiSpamDelay = 1.f;
 
+#if UE_WITH_CHEAT_MANAGER
     CheatClass = UUR_CheatManager::StaticClass();
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
