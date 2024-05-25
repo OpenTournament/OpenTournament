@@ -6,10 +6,10 @@
 
 #include "Engine/World.h"
 
-#include "AbilitySystem/Attributes/UR_HealthSet.h"
-#include "AbilitySystem/Attributes/UR_CombatSet.h"
-#include "AbilitySystem/UR_GameplayEffectContext.h"
 #include "AbilitySystem/UR_AbilitySourceInterface.h"
+#include "AbilitySystem/UR_GameplayEffectContext.h"
+#include "AbilitySystem/Attributes/UR_CombatSet.h"
+#include "AbilitySystem/Attributes/UR_HealthSet.h"
 //#include "Teams/UR_TeamSubsystem.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_DamageExecution)
@@ -93,9 +93,10 @@ void UUR_DamageExecution::Execute_Implementation(const FGameplayEffectCustomExec
     }
 
     // Apply rules for team damage/self damage/etc...
-    float DamageInteractionAllowedMultiplier = 0.0f;
+    float DamageInteractionAllowedMultiplier = 1.0f;
     if (HitActor)
     {
+        // @! TODO Add TeamSubsystem
         //UUR_TeamSubsystem* TeamSubsystem = HitActor->GetWorld()->GetSubsystem<UUR_TeamSubsystem>();
         //if (ensure(TeamSubsystem))
         //{
