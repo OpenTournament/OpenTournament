@@ -754,6 +754,10 @@ public:
     UPROPERTY()
     TObjectPtr<const UUR_HealthSet> HealthSet;
 
+    // Combat attribute set used by this actor.
+    UPROPERTY()
+    TObjectPtr<const class UUR_CombatSet> CombatSet;
+
     /** Abilities to grant to this character on creation. These will be activated by tag or event and are not bound to specific inputs */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Abilities")
     TArray<TSubclassOf<UUR_GameplayAbility>> GameplayAbilities;
