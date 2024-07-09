@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "InputAction.h"
+#include "InputMappingContext.h"
 #include "UR_BasePlayerController.h"
 #include "Interfaces/UR_TeamInterface.h"
 #include "UR_PlayerController.generated.h"
@@ -88,41 +90,46 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-    * Function bound to "MoveForward" AxisMovement Input
-    * @param InValue direction scalar
-    */
-    virtual void MoveForward(const float InValue);
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputMappingContext> DefaultInputMapping;
 
-    /**
-    * Function bound to "MoveBackward" AxisMovement Input
-    * @param InValue movement direction scalar
-    */
-    virtual void MoveBackward(const float InValue);
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionMove;
 
-    /**
-    * Function bound to "MoveRight" AxisMovement Input
-    * @param InValue movement direction scalar
-    */
-    virtual void MoveRight(const float InValue);
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionLook;
 
-    /**
-    * Function bound to "MoveLeft" AxisMovement Input
-    * @param InValue movement direction scalar
-    */
-    virtual void MoveLeft(const float InValue);
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionJump;
 
-    /**
-    * Function bound to "MoveUp" AxisMovement Input (used when Flying, Swimming)
-    * @param InValue movement direction scalar
-    */
-    virtual void MoveUp(const float InValue);
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionCrouch;
 
-    /**
-    * Function bound to "MoveDown" AxisMovement Input (used when Flying, Swimming)
-    * @param InValue movement direction scalar
-    */
-    virtual void MoveDown(const float InValue);
+    //because of the way the fire input stack works, we need additional input actions for the released event
+    //Maybe rethink necessity of the input stack design
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionFire;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionFireReleased;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionAltFire;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionAltFireReleased;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionThirdFire;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionThirdFireReleased;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionToggleScoreboard;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionHoldScoreboard;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -138,71 +145,12 @@ public:
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Camera")
     float BaseLookUpRate;
 
-    /**
-    * Called via input to turn at a given rate.
-    * @param InRate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
-    */
-    virtual void TurnAtRate(const float InRate);
-
-    /**
-    * Called via input to turn look up/down at a given rate.
-    * @param InRate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
-    */
-    virtual void LookUpAtRate(const float InRate);
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-    * Function bound to "Jump" ActionMapping Input. Set the Jump flag.
-    */
-    virtual void Jump();
-
-    /**
-    * Function bound to "Crouch" ActionMapping Input. Try to Crouch.
-    */
-    virtual void Crouch();
-
-    /**
-    * Function bound to "UnCrouch" ActionMapping Input. Try to UnCrouch.
-    */
-    virtual void UnCrouch();
-
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
     * Override engine's default StartFire.
     */
     virtual void StartFire(uint8 FireModeNum = 0) override;
-
-    /**
-    * Function bound to "Fire" ActionMapping Input. Forward to builtin StartFire.
-    */
-    virtual void PressedFire();
-
-    /**
-    * Forward to character like StartFire does.
-    */
-    virtual void ReleasedFire();
-
-    /**
-    * Function bound to "AltFire" ActionMapping Input.
-    */
-    virtual void PressedAltFire();
-
-    /**
-    * Function bound to "AltFire" ActionMapping Input.
-    */
-    virtual void ReleasedAltFire();
-
-    /**
-    * Function bound to "AltFire" ActionMapping Input.
-    */
-    virtual void PressedThirdFire();
-
-    /**
-    * Function bound to "AltFire" ActionMapping Input.
-    */
-    virtual void ReleasedThirdFire();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -292,4 +240,21 @@ public:
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
 
     //~ End TeamInterface
+
+private:
+
+    void OnMoveTriggered(const FInputActionInstance& InputActionInstance);
+    void OnLookTriggered(const FInputActionInstance& InputActionInstance);
+    void OnJumpTriggered(const FInputActionInstance& InputActionInstance);
+    void OnCrouchTriggered(const FInputActionInstance& InputActionInstance);
+    void OnCrouchCompleted(const FInputActionInstance& InputActionInstance);
+    void OnFireTriggered(const FInputActionInstance& InputActionInstance);
+    void OnFireReleased(const FInputActionInstance& InputActionInstance);
+    void OnAltFireTriggered(const FInputActionInstance& InputActionInstance);
+    void OnAltFireReleased(const FInputActionInstance& InputActionInstance);
+    void OnThirdFireTriggered(const FInputActionInstance& InputActionInstance);
+    void OnThirdFireReleased(const FInputActionInstance& InputActionInstance);
+    void OnToggleScoreboardTriggered(const FInputActionInstance& InputActionInstance);
+    void OnHoldScoreboardTriggered(const FInputActionInstance& InputActionInstance);
+    void OnHoldScoreboardCompleted(const FInputActionInstance& InputActionInstance);
 };
