@@ -93,42 +93,42 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
     TObjectPtr<UInputMappingContext> DefaultInputMapping;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionMove;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionLook;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionJump;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionCrouch;
 
     //because of the way the fire input stack works, we need additional input actions for the released event
     //Maybe rethink necessity of the input stack design
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionFire;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionFireReleased;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionAltFire;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionAltFireReleased;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionThirdFire;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionThirdFireReleased;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionToggleScoreboard;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionHoldScoreboard;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
