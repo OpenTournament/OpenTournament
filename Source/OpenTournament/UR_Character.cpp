@@ -42,6 +42,7 @@
 #include "Character/UR_CharacterMovementComponent.h"
 #include "Character/UR_HealthComponent.h"
 #include "Interfaces/UR_ActivatableInterface.h"
+#include "InputAction.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -218,10 +219,12 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    //@! TODO EnhancedInput
-    PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
-    PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
-    PlayerInputComponent->BindAction("DropWeapon", IE_Pressed, this, &AUR_Character::DropWeapon);
+    if (auto EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+    {
+        EnhancedInputComponent->BindAction(InputActionNextWeapon, ETriggerEvent::Triggered, this, &AUR_Character::NextWeapon);
+        EnhancedInputComponent->BindAction(InputActionPreviousWeapon, ETriggerEvent::Triggered, this, &AUR_Character::PrevWeapon);
+        EnhancedInputComponent->BindAction(InputActionDropWeapon, ETriggerEvent::Triggered, this, &AUR_Character::DropWeapon);
+    }
 
     SetupWeaponBindings();
 
@@ -507,25 +510,11 @@ void AUR_Character::PlayFootstepEffects(const float WalkingSpeedPercentage) cons
 
 void AUR_Character::SetupWeaponBindings()
 {
-    if (auto URInputComponent = Cast<UUR_InputComponent>(InputComponent))
+    if (auto EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
     {
-        for (const auto& Binding : WeaponBindings)
+        for (auto WeaponBinding : WeaponBindings)
         {
-            URInputComponent->RemoveKeyBinding(Binding);
-        }
-        WeaponBindings.Empty();
-
-        if (auto Settings = UUR_UserSettings::Get(this))
-        {
-            for (int32 Index = 0; Index < Settings->WeaponGroups.Num(); Index++)
-            {
-                const auto& Group = Settings->WeaponGroups[Index];
-                if (Group.Keybind.IsValidChord())
-                {
-                    //@! TODO EnhancedInput
-                    //WeaponBindings.Add(URInputComponent->BindKeyParameterized<TDelegate<void(int32)>>(Group.Keybind, IE_Pressed, this, &AUR_Character::SelectWeapon, Index));
-                }
-            }
+            EnhancedInputComponent->BindAction(WeaponBinding.Value, ETriggerEvent::Triggered, this, &AUR_Character::SelectWeapon, WeaponBinding.Key);
         }
     }
 }
