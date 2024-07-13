@@ -10,6 +10,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_PawnData;
 class UUR_ExperienceDefinition;
 class AUR_GameState;
 class AUR_Weapon;
@@ -80,6 +81,9 @@ public:
 
 #pragma endregion AGameModeBaseInterface
 
+
+    UFUNCTION(BlueprintCallable, Category = "OT|Pawn")
+    const UUR_PawnData* GetPawnDataForController(const AController* InController) const;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Classes

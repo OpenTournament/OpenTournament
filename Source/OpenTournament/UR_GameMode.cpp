@@ -23,12 +23,12 @@
 #include "UR_TeamInfo.h"
 #include "UR_Weapon.h"
 
-
 #include "UR_AssetManager.h"
 #include "UR_DeveloperSettings.h"
 #include "UR_ExperienceDefinition.h"
 #include "UR_ExperienceManagerComponent.h"
 #include "UR_LogChannels.h"
+#include "UR_PawnData.h"
 #include "UR_Widget_ScoreboardBase.h"
 #include "UR_WorldSettings.h"
 #include "AI/UR_BotController.h"
@@ -199,6 +199,41 @@ void AUR_GameMode::GenericPlayerInitialization(AController* C)
             }
         }
     }
+}
+
+const UUR_PawnData* AUR_GameMode::GetPawnDataForController(const AController* InController) const
+{
+    // See if pawn data is already set on the player state
+    if (InController != nullptr)
+    {
+        if (const AUR_PlayerState* GamePS = InController->GetPlayerState<AUR_PlayerState>())
+        {
+            if (const UUR_PawnData* PawnData = GamePS->GetPawnData<UUR_PawnData>())
+            {
+                return PawnData;
+            }
+        }
+    }
+
+    // If not, fall back to the the default for the current experience
+    check(GameState);
+    UUR_ExperienceManagerComponent* ExperienceComponent = GameState->FindComponentByClass<UUR_ExperienceManagerComponent>();
+    check(ExperienceComponent);
+
+    if (ExperienceComponent->IsExperienceLoaded())
+    {
+        const UUR_ExperienceDefinition* Experience = ExperienceComponent->GetCurrentExperienceChecked();
+        if (Experience->DefaultPawnData != nullptr)
+        {
+            return Experience->DefaultPawnData;
+        }
+
+        // Experience is loaded and there's still no pawn data, fall back to the default for now
+        return UUR_AssetManager::Get().GetDefaultPawnData();
+    }
+
+    // Experience not loaded yet, so there is no pawn data to be had
+    return nullptr;
 }
 
 void AUR_GameMode::AssignDefaultTeam(AUR_PlayerState* PS)
@@ -870,7 +905,7 @@ bool AUR_GameMode::TryDedicatedServerLogin()
     //     UCommonUserSubsystem* UserSubsystem = GameInstance->GetSubsystem<UCommonUserSubsystem>();
     //
     //     // Dedicated servers may need to do an online login
-    //     UserSubsystem->OnUserInitializeComplete.AddDynamic(this, &ALyraGameMode::OnUserInitializedForDedicatedServer);
+    //     UserSubsystem->OnUserInitializeComplete.AddDynamic(this, &AUR_GameMode::OnUserInitializedForDedicatedServer);
     //
     //     // There are no local users on dedicated server, but index 0 means the default platform user which is handled by the online login code
     //     if (!UserSubsystem->TryToLoginForOnlinePlay(0))
