@@ -90,7 +90,7 @@ void UUR_ExperienceManagerComponent::SetCurrentExperience(FPrimaryAssetId Experi
         }
         else
         {
-            UE_LOG(LogGameExperienceManagerComponent, Error, TEXT("AssetPath is not valid!"));
+            UE_LOG(LogGameExperienceManagerComponent, Error, TEXT("AssetPath is not valid! Check the AssetManagerSettings in DefaultGame.ini"));
             return;
         }
     }
@@ -228,10 +228,14 @@ void UUR_ExperienceManagerComponent::StartExperienceLoad()
     {
         Handle->BindCompleteDelegate(OnAssetsLoadedDelegate);
 
-        Handle->BindCancelDelegate(FStreamableDelegate::CreateLambda([OnAssetsLoadedDelegate]()
-        {
-            OnAssetsLoadedDelegate.ExecuteIfBound();
-        }));
+        Handle->BindCancelDelegate
+        (FStreamableDelegate::CreateLambda
+            ([OnAssetsLoadedDelegate]()
+                {
+                    OnAssetsLoadedDelegate.ExecuteIfBound();
+                }
+            )
+        );
     }
 
     // This set of assets gets preloaded, but we don't block the start of the experience based on it
@@ -428,11 +432,13 @@ void UUR_ExperienceManagerComponent::EndPlay(const EEndPlayReason::Type EndPlayR
         NumObservedPausers = 0;
 
         // Deactivate and unload the actions
-        FGameFeatureDeactivatingContext Context(TEXT(""),
+        FGameFeatureDeactivatingContext Context
+        (TEXT(""),
             [this](FStringView)
             {
                 this->OnActionDeactivationCompleted();
-            });
+            }
+        );
 
         const FWorldContext* ExistingWorldContext = GEngine->GetWorldContextFromWorld(GetWorld());
         if (ExistingWorldContext)
