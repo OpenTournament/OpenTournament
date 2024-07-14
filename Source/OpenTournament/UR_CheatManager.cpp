@@ -28,11 +28,13 @@ DEFINE_LOG_CATEGORY(LogGameCheat);
 namespace OpenTournamentCheat
 {
     static bool bStartInGodMode = false;
-    static FAutoConsoleVariableRef CVarStartInGodMode(
-        TEXT("LyraCheat.StartInGodMode"),
+    static FAutoConsoleVariableRef CVarStartInGodMode
+    (
+        TEXT("OTCheat.StartInGodMode"),
         bStartInGodMode,
         TEXT("If true then the God cheat will be applied on begin play"),
-        ECVF_Cheat);
+        ECVF_Cheat
+    );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,12 +88,14 @@ void UUR_CheatManager::CheatAll(const FString& Msg)
 
 void UUR_CheatManager::God()
 {
+    const FString CheatString = FString::Printf(TEXT("God"));
+
     if (AUR_PlayerController* GamePC = Cast<AUR_PlayerController>(GetOuterAPlayerController()))
     {
         if (GamePC->GetNetMode() == NM_Client)
         {
             // Automatically send cheat to server for convenience.
-            GamePC->ServerCheat(FString::Printf(TEXT("God")));
+            GamePC->ServerCheat(CheatString);
             return;
         }
 
@@ -103,32 +107,51 @@ void UUR_CheatManager::God()
             if (bHasTag)
             {
                 GameASC->RemoveDynamicTagGameplayEffect(Tag);
+                GetOuterAPlayerController()->ClientMessage(TEXT("God Mode off"));
             }
             else
             {
                 GameASC->AddDynamicTagGameplayEffect(Tag);
+                GetOuterAPlayerController()->ClientMessage(TEXT("God mode on"));
             }
         }
     }
 }
 
-// void UUR_CheatManager::God()
-// {
-//     if (AUR_Character* URCharacter = Cast<AUR_Character>(GetOuterAPlayerController()->GetPawn()))
-//     {
-//         if (URCharacter->CanBeDamaged())
-//         {
-//             GetOuterAPlayerController()->ClientMessage(TEXT("God mode on"));
-//         }
-//         else
-//         {
-//             GetOuterAPlayerController()->ClientMessage(TEXT("God Mode off"));
-//         }
-//     }
-//
-//     // This handles the heavy lifting hooking into CanBeDamaged
-//     Super::God();
-// }
+void UUR_CheatManager::UnlimitedHealth(int32 Enabled)
+{
+    const FString CheatString = FString::Printf(TEXT("UnlimitedHealth -1"));
+
+    if (AUR_PlayerController* GamePC = Cast<AUR_PlayerController>(GetOuterAPlayerController()))
+    {
+        if (GamePC->GetNetMode() == NM_Client)
+        {
+            // Automatically send cheat to server for convenience.
+            GamePC->ServerCheat(CheatString);
+            return;
+        }
+
+        if (UUR_AbilitySystemComponent* GameASC = GetPlayerAbilitySystemComponent())
+        {
+            const FGameplayTag Tag = URGameplayTags::Cheat_UnlimitedHealth;
+            const bool bHasTag = GameASC->HasMatchingGameplayTag(Tag);
+
+            if ((Enabled == -1) || ((Enabled > 0) && !bHasTag) || ((Enabled == 0) && bHasTag))
+            {
+                if (bHasTag)
+                {
+                    GameASC->RemoveDynamicTagGameplayEffect(Tag);
+                    GetOuterAPlayerController()->ClientMessage(TEXT("UnlimitedHealth Mode off"));
+                }
+                else
+                {
+                    GameASC->AddDynamicTagGameplayEffect(Tag);
+                    GetOuterAPlayerController()->ClientMessage(TEXT("UnlimitedHealth Mode on"));
+                }
+            }
+        }
+    }
+}
 
 void UUR_CheatManager::Cheat_Loaded()
 {
@@ -160,48 +183,36 @@ void UUR_CheatManager::Cheat_AddScore(int32 InValue)
     }
 }
 
-void UUR_CheatManager::Cheat_HurtPlayer(int32 InDamage)
-{
-    if (const auto PC = Cast<AUR_PlayerController>(GetOuter()))
-    {
-        if (const auto Character = Cast<AUR_Character>(PC->GetCharacter()))
-        {
-            if (auto ASC = Character->GetGameAbilitySystemComponent())
-            {
-                //FGameplayEffectContextHandle GEContext;
-                //auto GESpec = ASC->MakeOutgoingSpec()
-                //ASC->ApplyGameplayEffectSpecToSelf()
-            }
-        }
-
-        // @! TODO : Do we want ASC on PS?
-        // if (auto PS = Cast<AUR_PlayerState>(PC->PlayerState))
-        // {
-        //     PS->SetScore(PS->GetScore() + InValue);
-        // }
-    }
-}
-
-void UUR_CheatManager::Cheat_HealPlayer(int32 InHeal)
-{
-}
-
 void UUR_CheatManager::DamageSelf(float DamageAmount)
 {
-    if (UUR_AbilitySystemComponent* GameASC = GetPlayerAbilitySystemComponent())
-    {
-        ApplySetByCallerDamage(GameASC, DamageAmount);
-    }
-}
+    const FString CheatString = FString::Printf(TEXT("DamageSelf %.2f"), DamageAmount);
 
-void UUR_CheatManager::DamageTarget(float DamageAmount)
-{
     if (AUR_PlayerController* GamePC = Cast<AUR_PlayerController>(GetOuterAPlayerController()))
     {
         if (GamePC->GetNetMode() == NM_Client)
         {
             // Automatically send cheat to server for convenience.
-            GamePC->ServerCheat(FString::Printf(TEXT("DamageTarget %.2f"), DamageAmount));
+            GamePC->ServerCheat(CheatString);
+            return;
+        }
+
+        if (UUR_AbilitySystemComponent* GameASC = GetPlayerAbilitySystemComponent())
+        {
+            ApplySetByCallerDamage(GameASC, DamageAmount);
+        }
+    }
+}
+
+void UUR_CheatManager::DamageTarget(float DamageAmount)
+{
+    const FString CheatString = FString::Printf(TEXT("DamageTarget %.2f"), DamageAmount);
+
+    if (AUR_PlayerController* GamePC = Cast<AUR_PlayerController>(GetOuterAPlayerController()))
+    {
+        if (GamePC->GetNetMode() == NM_Client)
+        {
+            // Automatically send cheat to server for convenience.
+            GamePC->ServerCheat(CheatString);
             return;
         }
 
@@ -211,6 +222,7 @@ void UUR_CheatManager::DamageTarget(float DamageAmount)
         if (UUR_AbilitySystemComponent* UR_TargetASC = Cast<UUR_AbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor)))
         {
             ApplySetByCallerDamage(UR_TargetASC, DamageAmount);
+            GetOuterAPlayerController()->ClientMessage(CheatString);
         }
     }
 }
@@ -225,6 +237,7 @@ void UUR_CheatManager::ApplySetByCallerDamage(UUR_AbilitySystemComponent* GameAS
     if (SpecHandle.IsValid())
     {
         SpecHandle.Data->SetSetByCallerMagnitude(URGameplayTags::SetByCaller_Damage, DamageAmount);
+        //
         GameASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
     }
 }
@@ -269,16 +282,7 @@ UUR_AbilitySystemComponent* UUR_CheatManager::GetPlayerAbilitySystemComponent() 
 {
     if (AUR_PlayerController* GamePC = Cast<AUR_PlayerController>(GetOuterAPlayerController()))
     {
-        // @! TODO : Move ASC to PlayerState, e.g. as follows...
-        //return GamePC->GetGameAbilitySystemComponent();
-
-        if (auto Character = Cast<AUR_Character>(GamePC->GetCharacter()))
-        {
-            if (auto GameASC = Cast<UUR_AbilitySystemComponent>(Character->GetAbilitySystemComponent()))
-            {
-                return GameASC;
-            }
-        }
+        return GamePC->GetGameAbilitySystemComponent();
     }
     return nullptr;
 }
@@ -300,23 +304,3 @@ void UUR_CheatManager::DamageSelfDestruct()
     }
 }
 
-void UUR_CheatManager::UnlimitedHealth(int32 Enabled)
-{
-    if (UUR_AbilitySystemComponent* GameASC = GetPlayerAbilitySystemComponent())
-    {
-        const FGameplayTag Tag = URGameplayTags::Cheat_UnlimitedHealth;
-        const bool bHasTag = GameASC->HasMatchingGameplayTag(Tag);
-
-        if ((Enabled == -1) || ((Enabled > 0) && !bHasTag) || ((Enabled == 0) && bHasTag))
-        {
-            if (bHasTag)
-            {
-                GameASC->RemoveDynamicTagGameplayEffect(Tag);
-            }
-            else
-            {
-                GameASC->AddDynamicTagGameplayEffect(Tag);
-            }
-        }
-    }
-}
