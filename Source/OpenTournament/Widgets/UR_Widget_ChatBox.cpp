@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Widget_ChatBox.h"
-
+#include "InputAction.h"
 #include <EnhancedInputComponent.h>
 #include <Components/InputComponent.h>
 
@@ -20,15 +20,11 @@ void UUR_Widget_ChatBox::NativeOnInitialized()
         if (auto Input = PC->InputComponent)
         {
             //@! TODO EnhancedInput
-            if (auto EnhancedInput = Cast<UEnhancedInputComponent>(Input))
+            if (auto EnhancedInputComponent = Cast<UEnhancedInputComponent>(Input))
             {
                 // UInputAction
-                //EnhancedInput->BindAction()
-            }
-            else
-            {
-                InputComponent->BindAction("BeginSay", IE_Pressed, this, &UUR_Widget_ChatBox::OnBeginSay);
-                InputComponent->BindAction("BeginTeamSay", IE_Pressed, this, &UUR_Widget_ChatBox::OnBeginTeamSay);
+                EnhancedInputComponent->BindAction(InputActionBeginSay, ETriggerEvent::Triggered, this, &UUR_Widget_ChatBox::OnBeginSay);
+                EnhancedInputComponent->BindAction(InputActionBeginTeamSay, ETriggerEvent::Triggered, this, &UUR_Widget_ChatBox::OnBeginTeamSay);
             }
         }
     }

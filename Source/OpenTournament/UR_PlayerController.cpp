@@ -128,11 +128,14 @@ void AUR_PlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent();
 
-    //TODO: Perhaps a better idea to handle input by pawn so each pawn can separately decide what input actions/mappings it needs
-    //probably starts being useful once it's possible to switch pawns during the game, i.e. vehicles
     if (UEnhancedInputLocalPlayerSubsystem* InputSystem = GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
     {
+        //TODO: Perhaps a better idea to handle input by pawn so each pawn can separately decide what input actions/mappings it needs
+        //probably starts being useful once it's possible to switch pawns during the game, i.e. vehicles
         InputSystem->AddMappingContext(DefaultInputMapping, 0);
+
+        //interface functions like scoreboard/chat should be separate from pawn and get their own mapping context
+        InputSystem->AddMappingContext(DefaultInterfaceMapping, 0);
     }
 
     UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
