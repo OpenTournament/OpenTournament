@@ -100,6 +100,11 @@ void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
 {
     Super::SetPlayer(InPlayer);
 
+    if (this != GetClass()->GetDefaultObject())
+    {
+        return;
+    }
+
     UUR_LocalPlayer* LocalPlayer = Cast<UUR_LocalPlayer>(GetLocalPlayer());
     if (IsValid(LocalPlayer))
     {
@@ -114,7 +119,7 @@ void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
     }
     else
     {
-        UE_LOG(LogPlayerController, Warning, TEXT("URPlayerController created but no URLocalPlayer available ?! %s"), *GetDebugName(this));
+        UE_LOG(LogPlayerController, Warning, TEXT("UR_PlayerController created but no UR_LocalPlayer available ?! %s"), *GetDebugName(this));
     }
 }
 
