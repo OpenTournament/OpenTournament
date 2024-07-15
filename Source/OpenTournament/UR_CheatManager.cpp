@@ -141,12 +141,12 @@ void UUR_CheatManager::UnlimitedHealth(int32 Enabled)
                 if (bHasTag)
                 {
                     GameASC->RemoveDynamicTagGameplayEffect(Tag);
-                    GetOuterAPlayerController()->ClientMessage(TEXT("UnlimitedHealth Mode off"));
+                    GamePC->ClientMessage(TEXT("UnlimitedHealth Mode off"));
                 }
                 else
                 {
                     GameASC->AddDynamicTagGameplayEffect(Tag);
-                    GetOuterAPlayerController()->ClientMessage(TEXT("UnlimitedHealth Mode on"));
+                    GamePC->ClientMessage(TEXT("UnlimitedHealth Mode on"));
                 }
             }
         }
@@ -189,16 +189,11 @@ void UUR_CheatManager::DamageSelf(float DamageAmount)
 
     if (AUR_PlayerController* GamePC = Cast<AUR_PlayerController>(GetOuterAPlayerController()))
     {
-        if (GamePC->GetNetMode() == NM_Client)
-        {
-            // Automatically send cheat to server for convenience.
-            GamePC->ServerCheat(CheatString);
-            return;
-        }
-
+        // Note: Not Server-instigated
         if (UUR_AbilitySystemComponent* GameASC = GetPlayerAbilitySystemComponent())
         {
             ApplySetByCallerDamage(GameASC, DamageAmount);
+            GamePC->ClientMessage(CheatString);
         }
     }
 }
@@ -222,7 +217,7 @@ void UUR_CheatManager::DamageTarget(float DamageAmount)
         if (UUR_AbilitySystemComponent* UR_TargetASC = Cast<UUR_AbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor)))
         {
             ApplySetByCallerDamage(UR_TargetASC, DamageAmount);
-            GetOuterAPlayerController()->ClientMessage(CheatString);
+            GamePC->ClientMessage(CheatString);
         }
     }
 }
