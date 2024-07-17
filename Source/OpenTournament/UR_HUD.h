@@ -26,9 +26,22 @@ class OPENTOURNAMENT_API AUR_HUD : public AHUD
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    AUR_HUD();
+    AUR_HUD(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //~UObject interface
+    virtual void PreInitializeComponents() override;
+    //~End of UObject interface
+
+    //~AActor interface
+    virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+    //~End of AActor interface
+
+    //~AHUD interface
+    virtual void GetDebugActorList(TArray<AActor*>& InOutList) override;
+    //~End of AHUD interface
 
     /**
     * [Client] Call to restart the HUD
