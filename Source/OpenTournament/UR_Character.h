@@ -5,7 +5,7 @@
 #pragma once
 
 #include <ModularCharacter.h>
-
+#include "Templates/NonNullPointer.h"
 #include "AbilitySystemInterface.h"
 #include "GameplayAbilitySpec.h"
 #include "GameplayEffect.h"
@@ -32,6 +32,7 @@ class APlayerController;
 class IUR_ActivatableInterface;
 class UUR_DamageType;
 class UAIPerceptionSourceNativeComp;
+class UInputAction;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -432,13 +433,21 @@ public:
     float FootstepTimeIntervalBase;
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    // Weapons bindings
+    // Input bindings
 
-    TArray<FInputKeyBinding> WeaponBindings;
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionNextWeapon;
 
-    // Called on possess, and when controlling player changes binds.
-    UFUNCTION(BlueprintCallable)
-    virtual void SetupWeaponBindings();
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionPreviousWeapon;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionDropWeapon;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TMap<int, TObjectPtr<UInputAction>> WeaponBindings;
+
+    void SetupWeaponBindings();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // General - EyeHeight Adjustment

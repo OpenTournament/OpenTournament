@@ -5,9 +5,8 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
-
+#include "InputAction.h"
 #include "UR_Type_DodgeDirection.h"
-
 #include "UR_PCInputDodgeComponent.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,8 +92,6 @@ public:
     */
     virtual void ProcessPlayerInput(const float DeltaTime, const bool bGamePaused);
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
     /**
     * Current movement axis deflecton forward/back (back is negative)
     */
@@ -107,23 +104,13 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement)
     float MovementStrafeAxis;
 
+protected:
+
     /**
     * Set KeyDodge requested. Used to capture KeyDodge action and hold until MovementAxis values are valid.
     */
     UPROPERTY(BluePrintReadOnly, Category = "Dodging")
     bool bRequestedKeyDodge;
-
-    /**
-    * Function bound to "KeyDodge" ActionMapping Input. Set bRequestedKeyDodge.
-    */
-    void OnKeyDodge();
-
-    /**
-    * Set the Dodge direction via cached MovementAxes.
-    */
-    void SetKeyDodgeInputDirection() const;
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
     * Max Time between directional keypresses that will register as a dodge
@@ -137,44 +124,69 @@ public:
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Dodging")
     FKeyTapTime KeyTapTime;
 
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionKeyDodge;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionTapForward;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionTapBack;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionTapRight;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionTapLeft;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionTapUp;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionTapDown;
+
+private:
+
+    /**
+    * Function bound to "KeyDodge" ActionMapping Input. Set bRequestedKeyDodge.
+    */
+    void OnKeyDodge(const FInputActionInstance& InputActionInstance);
+
+    /**
+    * Set the Dodge direction via cached MovementAxes.
+    */
+    void SetKeyDodgeInputDirection() const;
+
     /**
     * Function bound to "TapForward" ActionMapping Input.
     */
-    void OnTapForward();
+    void OnTapForward(const FInputActionInstance& InputActionInstance);
 
     /**
     * Function bound to "TapBack" ActionMapping Input.
     */
-    void OnTapBack();
+    void OnTapBack(const FInputActionInstance& InputActionInstance);
 
     /**
     * Function bound to "TapLeft" ActionMapping Input.
     */
-    void OnTapLeft();
+    void OnTapLeft(const FInputActionInstance& InputActionInstance);
 
     /**
     * Function bound to "TapRight" ActionMapping Input.
     */
-    void OnTapRight();
+    void OnTapRight(const FInputActionInstance& InputActionInstance);
 
     /**
     * Function bound to "TapUpward" ActionMapping Input (Jump while 3DMovementMode).
     */
-    void OnTapUpward();
+    void OnTapUp(const FInputActionInstance& InputActionInstance);
 
     /**
     * Function bound to "TapDownward" ActionMapping Input (Crouch while 3DMovementMode).
     */
-    void OnTapDownward();
-
-
-    void OnTapLeftRelease();
-
-    void OnTapRightRelease();
-
-    void OnTapForwardRelease();
-
-    void OnTapBackRelease();
+    void OnTapDown(const FInputActionInstance& InputActionInstance);
 
     /**
      * Process Taps and set the Dodge direction.
