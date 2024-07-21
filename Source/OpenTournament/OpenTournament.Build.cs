@@ -32,7 +32,8 @@ public class OpenTournament : ModuleRules
                 "Paper2D",
                 "CinematicCamera",
                 "AIModule",
-                "NavigationSystem"
+                "NavigationSystem",
+                "UIExtension"
             }
         );
 
@@ -51,6 +52,7 @@ public class OpenTournament : ModuleRules
             new string[]
             {
                 "AudioModulation",
+                "CommonGame",
                 "CommonInput",
                 "CommonLoadingScreen",
                 "CommonUI",
@@ -59,7 +61,7 @@ public class OpenTournament : ModuleRules
                 "GameFeatures",
                 "GameplayMessageRuntime",
                 "ModularGameplay",
-                "ModularGameplayActors",
+                "ModularGameplayActors"
             }
         );
 
@@ -71,12 +73,22 @@ public class OpenTournament : ModuleRules
             {
                 "OpenTournament",
                 "OpenTournament/AnnouncementSystem",
+                "OpenTournament/AI",
+                "OpenTournament/Character",
                 "OpenTournament/Data",
                 "OpenTournament/Enums",
+                "OpenTournament/GameFeatures",
+                "OpenTournament/GameModes",
                 "OpenTournament/GAS",
                 "OpenTournament/Interfaces",
+                "OpenTournament/Messages",
+                "OpenTournament/Player",
+                "OpenTournament/Settings",
                 "OpenTournament/Slate",
+                "OpenTournament/System",
+                "OpenTournament/UI",
                 "OpenTournament/Utilities",
+                "OpenTournament/Weapons",
                 "OpenTournament/Widgets"
             }
         );

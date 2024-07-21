@@ -1,21 +1,28 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "UR_FireModeBase.h"
 #include "Interfaces/UR_ActivatableInterface.h"
+
 #include "UR_FireModeZoom.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 class UUserWidget;
 
 /**
- * 
+ *
  */
-UCLASS(ClassGroup = (FireMode), Meta = (BlueprintSpawnableComponent), HideCategories = ("FireMode|SpinUp"))
-class OPENTOURNAMENT_API UUR_FireModeZoom : public UUR_FireModeBase, public IUR_ActivatableInterface
+UCLASS(ClassGroup = (FireMode), Meta = (BlueprintSpawnableComponent), HideCategories = ("FireMode"))
+class OPENTOURNAMENT_API UUR_FireModeZoom
+    : public UUR_FireModeBase
+    , public IUR_ActivatableInterface
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
     UUR_FireModeZoom()
@@ -59,8 +66,8 @@ public:
     bool bHide1PMeshes;
 
 public:
-
     virtual void RequestStartFire_Implementation() override;
+
     virtual void Deactivate() override;
 
     virtual bool IsIndependentFireMode_Implementation()
@@ -68,17 +75,18 @@ public:
         return true;
     }
 
-// ActivatableInterface
+    // ActivatableInterface
 protected:
     virtual void AIF_InternalActivate_Implementation() override;
+
     virtual void AIF_InternalDeactivate_Implementation() override;
 
 protected:
-
     UPROPERTY()
     UUserWidget* ZoomWidget;
 
-    template<class T> T* GetInstigator();
+    template <class T>
+    T* GetInstigator();
 
     // Animation
 
@@ -103,5 +111,4 @@ protected:
 
     UFUNCTION()
     virtual void OnRep_bZooming();
-
 };

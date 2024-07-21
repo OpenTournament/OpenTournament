@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -14,6 +14,6 @@
 UENUM()
 enum class EExitRotation : uint8
 {
-    Relative	UMETA(DisplayName = "Relative"),
-    Fixed 	    UMETA(DisplayName = "Fixed"),
+    Relative UMETA(DisplayName = "Relative"),
+    Fixed    UMETA(DisplayName = "Fixed"),
 };

@@ -1,19 +1,16 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "GameFramework/HUD.h"
+#include <GameFramework/HUD.h>
 
 #include "UR_HUD.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Forward declarations
 
-class UUserWidget;
-class UTexture2D;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -29,21 +26,7 @@ class OPENTOURNAMENT_API AUR_HUD : public AHUD
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     AUR_HUD();
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-    * Primary draw call for the HUD
-    */
-    virtual void DrawHUD() override;
-
-    /**
-    * Crosshair asset pointer
-    */
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "HUD")
-    UTexture2D* CrosshairTex;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -58,10 +41,4 @@ public:
     */
     UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "HUD")
     void OnHUDRestart();
-
-protected:
-    void DrawCrosshair();
-
-    UPROPERTY()
-    TArray<UUserWidget*> HUDWidgets;
 };

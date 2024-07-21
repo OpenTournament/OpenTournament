@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -15,11 +15,9 @@
 class FRichTextDecorator_CustomStyle : public ITextDecorator
 {
 private:
-
     URichTextBlock* Owner;
 
 public:
-
     FRichTextDecorator_CustomStyle(URichTextBlock* InOwner)
         : Owner(InOwner)
     {
@@ -31,8 +29,8 @@ public:
     }
 
 protected:
-
-    virtual TSharedRef<ISlateRun> Create(const TSharedRef<class FTextLayout>& TextLayout, const FTextRunParseResults& RunParseResult, const FString& OriginalText, const TSharedRef< FString >& InOutModelText, const ISlateStyle* Style) override
+    virtual TSharedRef<ISlateRun> Create(const TSharedRef<class FTextLayout>& TextLayout, const FTextRunParseResults& RunParseResult, const FString& OriginalText, const TSharedRef<FString>& InOutModelText,
+                                         const ISlateStyle* Style) override
     {
         FTextRange ModelRange;
         ModelRange.BeginIndex = InOutModelText->Len();

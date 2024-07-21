@@ -1,23 +1,24 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_PlayerController.h"
 
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 #include "Components/AudioComponent.h"
 #include "GameFramework/SpectatorPawn.h"
 
 #include "UR_Character.h"
 #include "UR_ChatComponent.h"
+#include "UR_FunctionLibrary.h"
+#include "UR_GameMode.h"
 #include "UR_HUD.h"
 #include "UR_LocalPlayer.h"
 #include "UR_MessageHistory.h"
 #include "UR_PCInputDodgeComponent.h"
-#include "UR_FunctionLibrary.h"
-#include "UR_GameMode.h"
-#include "UR_Widget_ScoreboardBase.h"
 #include "UR_PlayerState.h"
-#include "UR_GameState.h"
+#include "UR_Widget_ScoreboardBase.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -61,7 +62,7 @@ void AUR_PlayerController::BeginPlay()
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AUR_PlayerController::PlayMusic(USoundBase * Music, float FadeInDuration)
+void AUR_PlayerController::PlayMusic(USoundBase* Music, float FadeInDuration)
 {
     if (MusicComponent)
     {
@@ -94,13 +95,20 @@ void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
     Super::SetPlayer(InPlayer);
 
     UUR_LocalPlayer* LocalPlayer = Cast<UUR_LocalPlayer>(GetLocalPlayer());
-    if (LocalPlayer && LocalPlayer->MessageHistory)
+    if (IsValid(LocalPlayer))
     {
-        LocalPlayer->MessageHistory->InitWithPlayer(this);
+        if (IsValid(LocalPlayer->MessageHistory))
+        {
+            LocalPlayer->MessageHistory->InitWithPlayer(this);
+        }
+        else
+        {
+            UE_LOG(LogPlayerController, Warning, TEXT("No MessageHistory for Controller ?! %s"), *GetDebugName(this));
+        }
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("URPlayerController created but no URLocalPlayer available ?! %s"), *GetDebugName(this));
+        UE_LOG(LogPlayerController, Warning, TEXT("URPlayerController created but no URLocalPlayer available ?! %s"), *GetDebugName(this));
     }
 }
 
@@ -120,38 +128,35 @@ void AUR_PlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent();
 
-    // Turning with absolute delta (e.g. mouse)
-    InputComponent->BindAxis("Turn", this, &APlayerController::AddYawInput);
-    InputComponent->BindAxis("LookUp", this, &APlayerController::AddPitchInput);
-    // Turning with analog device (e.g. joystick)
-    InputComponent->BindAxis("TurnRate", this, &AUR_PlayerController::TurnAtRate);
-    InputComponent->BindAxis("LookUpRate", this, &AUR_PlayerController::LookUpAtRate);
+    if (UEnhancedInputLocalPlayerSubsystem* InputSystem = GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+    {
+        //TODO: Perhaps a better idea to handle input by pawn so each pawn can separately decide what input actions/mappings it needs
+        //probably starts being useful once it's possible to switch pawns during the game, i.e. vehicles
+        InputSystem->AddMappingContext(DefaultInputMapping, 0);
 
-    InputComponent->BindAxis("MoveForward", this, &AUR_PlayerController::MoveForward);
-    InputComponent->BindAxis("MoveBackward", this, &AUR_PlayerController::MoveBackward);
-    InputComponent->BindAxis("MoveLeft", this, &AUR_PlayerController::MoveLeft);
-    InputComponent->BindAxis("MoveRight", this, &AUR_PlayerController::MoveRight);
-    InputComponent->BindAxis("MoveUp", this, &AUR_PlayerController::MoveUp);
-    InputComponent->BindAxis("MoveDown", this, &AUR_PlayerController::MoveDown);
-    InputComponent->BindAction("Jump", IE_Pressed, this, &AUR_PlayerController::Jump);
+        //interface functions like scoreboard/chat should be separate from pawn and get their own mapping context
+        InputSystem->AddMappingContext(DefaultInterfaceMapping, 0);
+    }
 
-    InputComponent->BindAction("Crouch", IE_Pressed, this, &AUR_PlayerController::Crouch);
-    InputComponent->BindAction("Crouch", IE_Released, this, &AUR_PlayerController::UnCrouch);
-
-    // Forward to StartFire() provided by engine, handles things like spectator, request respawn...
-    InputComponent->BindAction("Fire", IE_Pressed, this, &AUR_PlayerController::PressedFire);
-    //NOTE: we cannot bind 'Pressed' in PC and 'Released' in Character that just doesn't work...
-    InputComponent->BindAction("Fire", IE_Released, this, &AUR_PlayerController::ReleasedFire);
-
-    InputComponent->BindAction("AltFire", IE_Pressed, this, &AUR_PlayerController::PressedAltFire);
-    InputComponent->BindAction("AltFire", IE_Released, this, &AUR_PlayerController::ReleasedAltFire);
-
-    InputComponent->BindAction("ThirdFire", IE_Pressed, this, &AUR_PlayerController::PressedThirdFire);
-    InputComponent->BindAction("ThirdFire", IE_Released, this, &AUR_PlayerController::ReleasedThirdFire);
-
-    InputComponent->BindAction("ToggleScoreboard", IE_Pressed, this, &AUR_PlayerController::ToggleScoreboard);
-    InputComponent->BindAction("HoldScoreboard", IE_Pressed, this, &AUR_PlayerController::ShowScoreboard);
-    InputComponent->BindAction("HoldScoreboard", IE_Released, this, &AUR_PlayerController::HideScoreboard);
+    UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
+    //Bind our Input Actions here depending on them being assigned on the PC
+    if(EnhancedInputComponent)
+    {
+        EnhancedInputComponent->BindAction(InputActionMove, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnMoveTriggered);
+        EnhancedInputComponent->BindAction(InputActionLook, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnLookTriggered);
+        EnhancedInputComponent->BindAction(InputActionJump, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnJumpTriggered);
+        EnhancedInputComponent->BindAction(InputActionCrouch, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnCrouchTriggered);
+        EnhancedInputComponent->BindAction(InputActionCrouch, ETriggerEvent::Completed, this, &AUR_PlayerController::OnCrouchCompleted);
+        EnhancedInputComponent->BindAction(InputActionFire, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnFireTriggered);
+        EnhancedInputComponent->BindAction(InputActionFireReleased, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnFireReleased);
+        EnhancedInputComponent->BindAction(InputActionAltFire, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnAltFireTriggered);
+        EnhancedInputComponent->BindAction(InputActionAltFireReleased, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnAltFireReleased);
+        EnhancedInputComponent->BindAction(InputActionThirdFire, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnThirdFireTriggered);
+        EnhancedInputComponent->BindAction(InputActionThirdFireReleased, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnThirdFireReleased);
+        EnhancedInputComponent->BindAction(InputActionToggleScoreboard, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnToggleScoreboardTriggered);
+        EnhancedInputComponent->BindAction(InputActionHoldScoreboard, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnHoldScoreboardTriggered);
+        EnhancedInputComponent->BindAction(InputActionHoldScoreboard, ETriggerEvent::Completed, this, &AUR_PlayerController::OnHoldScoreboardCompleted);
+    }
 }
 
 void AUR_PlayerController::ProcessPlayerInput(const float DeltaTime, const bool bGamePaused)
@@ -186,159 +191,11 @@ void AUR_PlayerController::SetPawn(APawn* InPawn)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AUR_PlayerController::MoveForward(const float InValue)
-{
-    if (URCharacter != nullptr && InValue != 0.0f)
-    {
-        if (InputDodgeComponent)
-        {
-            InputDodgeComponent->MovementForwardAxis = InValue;
-        }
-
-        URCharacter->MoveForward(InValue);
-    }
-    else if (GetSpectatorPawn() != nullptr)
-    {
-        GetSpectatorPawn()->MoveForward(InValue);
-    }
-}
-
-void AUR_PlayerController::MoveBackward(const float InValue)
-{
-    MoveForward(InValue * -1);
-}
-
-void AUR_PlayerController::MoveRight(const float InValue)
-{
-    if (URCharacter != nullptr && InValue != 0.0f)
-    {
-        if (InputDodgeComponent)
-        {
-            InputDodgeComponent->MovementStrafeAxis = InValue;
-        }
-
-        URCharacter->MoveRight(InValue);
-    }
-    else if (GetSpectatorPawn() != nullptr)
-    {
-        GetSpectatorPawn()->MoveRight(InValue);
-    }
-}
-
-void AUR_PlayerController::MoveLeft(const float InValue)
-{
-    MoveRight(InValue * -1);
-}
-
-void AUR_PlayerController::MoveUp(const float InValue)
-{
-    if (URCharacter != nullptr && InValue != 0.0f)
-    {
-        URCharacter->MoveUp(InValue);
-    }
-    else if (GetSpectatorPawn() != nullptr)
-    {
-        GetSpectatorPawn()->MoveUp_World(InValue);
-    }
-}
-
-void AUR_PlayerController::MoveDown(const float InValue)
-{
-    MoveUp(InValue * -1);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-void AUR_PlayerController::TurnAtRate(const float InRate)
-{
-    // calculate delta for this frame from the rate information
-    AddYawInput(InRate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
-}
-
-void AUR_PlayerController::LookUpAtRate(const float InRate)
-{
-    // calculate delta for this frame from the rate information
-    AddPitchInput(InRate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-void AUR_PlayerController::Jump()
-{
-    if (URCharacter != nullptr && !IsMoveInputIgnored())
-    {
-        URCharacter->bPressedJump = true;
-    }
-}
-
-void AUR_PlayerController::Crouch()
-{
-    if (!IsMoveInputIgnored())
-    {
-        if (URCharacter)
-        {
-            URCharacter->Crouch(false);
-        }
-    }
-}
-
-void AUR_PlayerController::UnCrouch()
-{
-    if (URCharacter)
-    {
-        URCharacter->UnCrouch(false);
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_PlayerController::StartFire(uint8 FireModeNum)
 {
     //NOTE: here we might want to implement different functions according to FireModeNum, when player is spectating etc.
     Super::StartFire(FireModeNum);
-}
-
-//TODO: We might want a better approach here, where we bind keys to exec commands like "StartFire 0 | onrelease StopFire 0"
-// So we could get away with just two exec methods, instead of having to forward each input like this.
-// Dunno what it takes to achieve this in UE4.
-
-void AUR_PlayerController::PressedFire()
-{
-    StartFire(0);
-}
-
-void AUR_PlayerController::ReleasedFire()
-{
-    if (URCharacter)
-    {
-        URCharacter->PawnStopFire(0);
-    }
-}
-
-void AUR_PlayerController::PressedAltFire()
-{
-    StartFire(1);
-}
-
-void AUR_PlayerController::ReleasedAltFire()
-{
-    if (URCharacter)
-    {
-        URCharacter->PawnStopFire(1);
-    }
-}
-
-void AUR_PlayerController::PressedThirdFire()
-{
-    StartFire(2);
-}
-
-void AUR_PlayerController::ReleasedThirdFire()
-{
-    if (URCharacter)
-    {
-        URCharacter->PawnStopFire(2);
-    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -410,4 +267,113 @@ void AUR_PlayerController::SetTeamIndex_Implementation(int32 NewTeamIndex)
     {
         IUR_TeamInterface::Execute_SetTeamIndex(PS, NewTeamIndex);
     }
+}
+
+void AUR_PlayerController::OnMoveTriggered(const FInputActionInstance& InputActionInstance)
+{
+    const FVector Move = InputActionInstance.GetValue().Get<FVector>();
+    if (URCharacter)
+    {
+        if (InputDodgeComponent)
+        {
+            InputDodgeComponent->MovementForwardAxis = Move.X;
+            InputDodgeComponent->MovementStrafeAxis = Move.Y;
+        }
+
+        URCharacter->MoveForward(Move.X);
+        URCharacter->MoveRight(Move.Y);
+        URCharacter->MoveForward(Move.Z);
+    }
+    else if (const auto Spectator = GetSpectatorPawn())
+    {
+        Spectator->MoveForward(Move.X);
+        Spectator->MoveRight(Move.Y);
+        Spectator->MoveForward(Move.Z);
+    }
+}
+
+void AUR_PlayerController::OnLookTriggered(const FInputActionInstance& InputActionInstance)
+{
+    const FVector2d Move = InputActionInstance.GetValue().Get<FVector2d>();
+
+    AddYawInput(Move.X);
+    AddPitchInput(Move.Y);
+}
+
+void AUR_PlayerController::OnJumpTriggered(const FInputActionInstance& InputActionInstance)
+{
+    if (URCharacter && !IsMoveInputIgnored())
+    {
+        URCharacter->bPressedJump = true;
+    }
+}
+
+void AUR_PlayerController::OnCrouchTriggered(const FInputActionInstance& InputActionInstance)
+{
+    if (URCharacter && !IsMoveInputIgnored())
+    {
+        URCharacter->Crouch(false);
+    }
+}
+
+void AUR_PlayerController::OnCrouchCompleted(const FInputActionInstance& InputActionInstance)
+{
+    if (URCharacter && !IsMoveInputIgnored())
+    {
+        URCharacter->UnCrouch(false);
+    }
+}
+
+void AUR_PlayerController::OnFireTriggered(const FInputActionInstance& InputActionInstance)
+{
+    StartFire(0);
+}
+
+void AUR_PlayerController::OnFireReleased(const FInputActionInstance& InputActionInstance)
+{
+    if (URCharacter)
+    {
+        URCharacter->PawnStopFire(0);
+    }
+}
+
+void AUR_PlayerController::OnAltFireTriggered(const FInputActionInstance& InputActionInstance)
+{
+    StartFire(1);
+}
+
+void AUR_PlayerController::OnAltFireReleased(const FInputActionInstance& InputActionInstance)
+{
+    if (URCharacter)
+    {
+        URCharacter->PawnStopFire(1);
+    }
+}
+
+void AUR_PlayerController::OnThirdFireTriggered(const FInputActionInstance& InputActionInstance)
+{
+    StartFire(2);
+}
+
+void AUR_PlayerController::OnThirdFireReleased(const FInputActionInstance& InputActionInstance)
+{
+    if (URCharacter)
+    {
+        URCharacter->PawnStopFire(2);
+    }
+}
+
+void AUR_PlayerController::OnToggleScoreboardTriggered(const FInputActionInstance& InputActionInstance)
+{
+    ScoreboardWidget ? HideScoreboard() : ShowScoreboard();
+}
+
+void AUR_PlayerController::OnHoldScoreboardTriggered(const FInputActionInstance& InputActionInstance)
+{
+    ShowScoreboard();
+}
+
+void AUR_PlayerController::OnHoldScoreboardCompleted(const FInputActionInstance& InputActionInstance)
+{
+    HideScoreboard();
 }

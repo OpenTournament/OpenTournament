@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -8,12 +8,15 @@
 #include "Components/BoxComponent.h"
 #include "Logging/MessageLog.h"
 #include "Logging/TokenizedMessage.h"
-#include "Misc/MapErrors.h"
 #include "Misc/UObjectToken.h"
 #include "Net/UnrealNetwork.h"
 
 #include "OpenTournament.h"
 #include "UR_Character.h"
+
+#if WITH_EDITOR
+#include "Misc/MapErrors.h"
+#endif WITH_EDITOR
 
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
@@ -23,16 +26,16 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_TriggerZone::AUR_TriggerZone(const FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer),
-    ShapeComponent(nullptr),
-    TriggerActorClass(AActor::StaticClass()),
-    TriggerActors(),
-    GameplayTags(),
-    bRequiredTagsExact(false),
-    RequiredTags(),
-    bExcludedTagsExact(true),
-    ExcludedTags()
+AUR_TriggerZone::AUR_TriggerZone(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+    , ShapeComponent(nullptr)
+    , TriggerActorClass(AActor::StaticClass())
+    , TriggerActors()
+    , GameplayTags()
+    , bRequiredTagsExact(false)
+    , RequiredTags()
+    , bExcludedTagsExact(true)
+    , ExcludedTags()
 {
     TriggerActors.Reserve(4);
 }
@@ -55,6 +58,10 @@ void AUR_TriggerZone::PostInitializeComponents()
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if WITH_EDITOR
+
 void AUR_TriggerZone::CheckForErrors()
 {
     FMessageLog MapCheck("MapCheck");
@@ -64,10 +71,12 @@ void AUR_TriggerZone::CheckForErrors()
         FFormatNamedArguments Arguments;
         Arguments.Add(TEXT("ActorName"), FText::FromString(GetPathName()));
         MapCheck.Warning()
-            ->AddToken(FUObjectToken::Create(this))
-            ->AddToken(FTextToken::Create(FText::Format(LOCTEXT("MapCheck_Message_TriggerZone", "{ActorName} : TriggerZone actor has NULL ShapeComponent property - please add one."), Arguments)));
+                ->AddToken(FUObjectToken::Create(this))
+                ->AddToken(FTextToken::Create(FText::Format(LOCTEXT("MapCheck_Message_TriggerZone", "{ActorName} : TriggerZone actor has NULL ShapeComponent property - please add one."), Arguments)));
     }
 }
+
+#endif WITH_EDITOR
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

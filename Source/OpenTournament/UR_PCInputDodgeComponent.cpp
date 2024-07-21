@@ -1,21 +1,22 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_PCInputDodgeComponent.h"
 
 #include "UR_Character.h"
-#include "UR_CharacterMovementComponent.h"
 #include "UR_PlayerController.h"
+#include "Character/UR_CharacterMovementComponent.h"
+#include <EnhancedInputComponent.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-UUR_PCInputDodgeComponent::UUR_PCInputDodgeComponent() :
-    MovementForwardAxis(0.0f),
-    MovementStrafeAxis(0.0f),
-    bRequestedKeyDodge(false),
-    MaxDodgeClickThresholdTime(0.25f),
-    KeyTapTime(FKeyTapTime())
+UUR_PCInputDodgeComponent::UUR_PCInputDodgeComponent()
+    : MovementForwardAxis(0.0f)
+    , MovementStrafeAxis(0.0f)
+    , bRequestedKeyDodge(false)
+    , MaxDodgeClickThresholdTime(0.25f)
+    , KeyTapTime(FKeyTapTime())
 {
     KeyTapTime.LastTapLeftTime = -10.f;
     KeyTapTime.LastTapRightTime = -10.f;
@@ -33,18 +34,15 @@ void UUR_PCInputDodgeComponent::BeginPlay()
 
     if (const auto OwningPC = Cast<AUR_PlayerController>(GetOwner()))
     {
-        if (auto InputComponent = OwningPC->InputComponent)
+        if (auto EnhancedInputComponent = Cast<UEnhancedInputComponent>(OwningPC->InputComponent))
         {
-            // Single Key Dodge Binding
-            InputComponent->BindAction("KeyDodge", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnKeyDodge);
-
-            // Directional Key Bindings
-            InputComponent->BindAction("TapLeft", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapLeft);
-            InputComponent->BindAction("TapRight", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapRight);
-            InputComponent->BindAction("TapForward", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapForward);
-            InputComponent->BindAction("TapBackward", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapBack);
-            InputComponent->BindAction("TapUp", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapUpward);
-            InputComponent->BindAction("TapDown", IE_Pressed, this, &UUR_PCInputDodgeComponent::OnTapDownward);
+            EnhancedInputComponent->BindAction(InputActionKeyDodge, ETriggerEvent::Triggered, this, &UUR_PCInputDodgeComponent::OnKeyDodge);
+            EnhancedInputComponent->BindAction(InputActionTapForward, ETriggerEvent::Triggered, this, &UUR_PCInputDodgeComponent::OnTapForward);
+            EnhancedInputComponent->BindAction(InputActionTapBack, ETriggerEvent::Triggered, this, &UUR_PCInputDodgeComponent::OnTapBack);
+            EnhancedInputComponent->BindAction(InputActionTapRight, ETriggerEvent::Triggered, this, &UUR_PCInputDodgeComponent::OnTapRight);
+            EnhancedInputComponent->BindAction(InputActionTapLeft, ETriggerEvent::Triggered, this, &UUR_PCInputDodgeComponent::OnTapLeft);
+            EnhancedInputComponent->BindAction(InputActionTapUp, ETriggerEvent::Triggered, this, &UUR_PCInputDodgeComponent::OnTapUp);
+            EnhancedInputComponent->BindAction(InputActionTapDown, ETriggerEvent::Triggered, this, &UUR_PCInputDodgeComponent::OnTapDown);
         }
     }
 }
@@ -63,7 +61,7 @@ void UUR_PCInputDodgeComponent::ProcessPlayerInput(const float DeltaTime, const 
     MovementStrafeAxis = 0.f;
 }
 
-void UUR_PCInputDodgeComponent::OnKeyDodge()
+void UUR_PCInputDodgeComponent::OnKeyDodge(const FInputActionInstance& InputActionInstance)
 {
     bRequestedKeyDodge = true;
 }
@@ -97,7 +95,7 @@ void UUR_PCInputDodgeComponent::SetKeyDodgeInputDirection() const
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void UUR_PCInputDodgeComponent::OnTapForward()
+void UUR_PCInputDodgeComponent::OnTapForward(const FInputActionInstance& InputActionInstance)
 {
     KeyTapTime.LastTapRightTime = -10.f;
     KeyTapTime.LastTapLeftTime = -10.f;
@@ -109,7 +107,7 @@ void UUR_PCInputDodgeComponent::OnTapForward()
     KeyTapTime.LastTapForwardTime = GetWorld()->GetTimeSeconds();
 }
 
-void UUR_PCInputDodgeComponent::OnTapBack()
+void UUR_PCInputDodgeComponent::OnTapBack(const FInputActionInstance& InputActionInstance)
 {
     KeyTapTime.LastTapRightTime = -10.f;
     KeyTapTime.LastTapLeftTime = -10.f;
@@ -121,7 +119,7 @@ void UUR_PCInputDodgeComponent::OnTapBack()
     KeyTapTime.LastTapBackTime = GetWorld()->GetTimeSeconds();
 }
 
-void UUR_PCInputDodgeComponent::OnTapLeft()
+void UUR_PCInputDodgeComponent::OnTapLeft(const FInputActionInstance& InputActionInstance)
 {
     KeyTapTime.LastTapRightTime = -10.f;
     KeyTapTime.LastTapForwardTime = -10.f;
@@ -133,7 +131,7 @@ void UUR_PCInputDodgeComponent::OnTapLeft()
     KeyTapTime.LastTapLeftTime = GetWorld()->GetTimeSeconds();
 }
 
-void UUR_PCInputDodgeComponent::OnTapRight()
+void UUR_PCInputDodgeComponent::OnTapRight(const FInputActionInstance& InputActionInstance)
 {
     KeyTapTime.LastTapLeftTime = -10.f;
     KeyTapTime.LastTapForwardTime = -10.f;
@@ -145,7 +143,7 @@ void UUR_PCInputDodgeComponent::OnTapRight()
     KeyTapTime.LastTapRightTime = GetWorld()->GetTimeSeconds();
 }
 
-void UUR_PCInputDodgeComponent::OnTapUpward()
+void UUR_PCInputDodgeComponent::OnTapUp(const FInputActionInstance& InputActionInstance)
 {
     KeyTapTime.LastTapRightTime = -10.f;
     KeyTapTime.LastTapLeftTime = -10.f;
@@ -157,7 +155,7 @@ void UUR_PCInputDodgeComponent::OnTapUpward()
     KeyTapTime.LastTapUpTime = GetWorld()->GetTimeSeconds();
 }
 
-void UUR_PCInputDodgeComponent::OnTapDownward()
+void UUR_PCInputDodgeComponent::OnTapDown(const FInputActionInstance& InputActionInstance)
 {
     KeyTapTime.LastTapRightTime = -10.f;
     KeyTapTime.LastTapLeftTime = -10.f;
@@ -169,28 +167,8 @@ void UUR_PCInputDodgeComponent::OnTapDownward()
     KeyTapTime.LastTapDownTime = GetWorld()->GetTimeSeconds();
 }
 
-void UUR_PCInputDodgeComponent::OnTapForwardRelease()
-{
-    // SingleTap WallDodge Behavior
-}
-
-void UUR_PCInputDodgeComponent::OnTapBackRelease()
-{
-
-}
-
-void UUR_PCInputDodgeComponent::OnTapLeftRelease()
-{
-
-}
-
-void UUR_PCInputDodgeComponent::OnTapRightRelease()
-{
-
-}
-
 void UUR_PCInputDodgeComponent::SetTapDodgeInputDirection(const float LastTapTime, const float MaxClickTime,
-                                                       const EDodgeDirection DodgeDirection) const
+                                                          const EDodgeDirection DodgeDirection) const
 {
     if (const auto OwningPC = Cast<AUR_PlayerController>(GetOwner()))
     {

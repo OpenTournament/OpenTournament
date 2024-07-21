@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -13,9 +13,9 @@
 
 // Sets default values
 AUR_Armor::AUR_Armor(const FObjectInitializer& ObjectInitializer)
-    : Super(ObjectInitializer),
-    ArmorValue(0.f),
-    IsBarrier(false)
+    : Super(ObjectInitializer)
+    , ArmorValue(0.f)
+    , IsBarrier(false)
 {
 }
 

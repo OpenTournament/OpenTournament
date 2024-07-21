@@ -1,13 +1,18 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
+#include <ModularPlayerState.h>
+
 #include "GameFramework/PlayerState.h"
 #include "Interfaces/UR_TeamInterface.h"
-#include "UR_CharacterCustomization.h"
+
 #include "GameplayTagContainer.h"
+
+#include "Character/UR_CharacterCustomization.h"
+
 #include "UR_PlayerState.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -24,26 +29,26 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTeamChangedSignature, AUR_Player
 
 
 /**
- * 
+ *
  */
 UCLASS()
-class OPENTOURNAMENT_API AUR_PlayerState : public APlayerState
+class OPENTOURNAMENT_API AUR_PlayerState
+    : public AModularPlayerState
     , public IUR_TeamInterface
 {
     GENERATED_BODY()
-    
+
     AUR_PlayerState();
 
 protected:
-
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
     virtual void BeginPlay() override;
 
     UFUNCTION()
     virtual void OnRep_ReplicatedTeamIndex();
 
 public:
-
     UPROPERTY(Replicated, BlueprintReadOnly)
     int32 Kills;
 
@@ -86,7 +91,6 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     UPROPERTY()
     int32 TeamIndex;
 
@@ -102,7 +106,9 @@ public:
 
     //~ Begin TeamInterface
     virtual int32 GetTeamIndex_Implementation() override;
+
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
+
     //~ End TeamInterface
 
     UPROPERTY(BlueprintAssignable)
@@ -136,5 +142,4 @@ public:
 
     UFUNCTION()
     virtual void InternalOnPawnSet(APlayerState* PS, APawn* NewPawn, APawn* OldPawn);
-
 };

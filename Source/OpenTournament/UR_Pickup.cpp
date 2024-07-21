@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -10,20 +10,20 @@
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
-#include "TimerManager.h"
 
 #include "OpenTournament.h"
 #include "UR_Character.h"
 #include "UR_FunctionLibrary.h"
 #include "UR_GameState.h"
+#include "UR_LogChannels.h"
 #include "UR_PlayerState.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_Pickup::AUR_Pickup(const FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer),
-    DisplayName(FText::FromString(TEXT("Item"))),
-    bBroadcastPickupEvent(false)
+AUR_Pickup::AUR_Pickup(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+    , DisplayName(FText::FromString(TEXT("Item")))
+    , bBroadcastPickupEvent(false)
 {
     CollisionComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Collision"));
     CollisionComponent->SetCapsuleSize(20.f, 20.f, true);
@@ -51,11 +51,11 @@ void AUR_Pickup::OnOverlap(UPrimitiveComponent* HitComp, AActor* Other, UPrimiti
 {
     if (AUR_Character* URCharacter = Cast<AUR_Character>(Other))
     {
-        GAME_LOG(Game, Log, "Overlap on Pickup (%s) by Character (%s)", *GetName(), *URCharacter->GetName());
+        GAME_LOG(LogGame, Log, "Overlap on Pickup (%s) by Character (%s)", *GetName(), *URCharacter->GetName());
 
         if (IsPickupValid(URCharacter))
         {
-            GAME_LOG(Game, Log, "Valid Pickup of PickupActor (%s) by Character (%s)", *GetName(), *URCharacter->GetName());
+            GAME_LOG(LogGame, Log, "Valid Pickup of PickupActor (%s) by Character (%s)", *GetName(), *URCharacter->GetName());
 
             Pickup(URCharacter);
         }
@@ -71,7 +71,7 @@ bool AUR_Pickup::IsPickupPermitted(const AUR_Character* PickupCharacter) const
 {
     if (PickupCharacter == nullptr)
     {
-        GAME_LOG(Game, Log, "Error. Character was invalid.");
+        GAME_LOG(LogGame, Log, "Error. Character was invalid.");
         return false;
     }
 

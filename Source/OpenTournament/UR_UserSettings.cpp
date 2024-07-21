@@ -1,10 +1,11 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_UserSettings.h"
 
 #include "Kismet/GameplayStatics.h"
+
 #include "UR_BasePlayerController.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,5 +20,5 @@ UUR_UserSettings* UUR_UserSettings::Get(const UObject* WorldContext, int32 Playe
 	{
 		return PC->GetUserSettings();
 	}
-	return NULL;
+	return nullptr;
 }

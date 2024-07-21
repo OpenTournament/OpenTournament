@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -13,34 +13,34 @@
 
 void UUR_GameInstance::Init()
 {
-	Super::Init();
+    Super::Init();
 
-	FCoreUObjectDelegates::PreLoadMap.AddUObject(this, &UUR_GameInstance::BeginLoadingScreen);
-	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UUR_GameInstance::EndLoadingScreen);
+    FCoreUObjectDelegates::PreLoadMap.AddUObject(this, &UUR_GameInstance::BeginLoadingScreen);
+    FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UUR_GameInstance::EndLoadingScreen);
 }
 
 void UUR_GameInstance::FTest_AddLocalPlayer(int32 ControllerId)
 {
 #if !UE_BUILD_SHIPPING
-	FString OutError{};
-	ULocalPlayer* NewPlayer = CreateLocalPlayer(0, OutError, true);
+    FString OutError{ };
+    ULocalPlayer* NewPlayer = CreateLocalPlayer(0, OutError, true);
 #endif
 }
 
 void UUR_GameInstance::BeginLoadingScreen(const FString& InMapName)
 {
-	if (!IsRunningDedicatedServer())
-	{
-		FLoadingScreenAttributes LoadingScreen;
-		LoadingScreen.bAutoCompleteWhenLoadingCompletes = false;
-		LoadingScreen.WidgetLoadingScreen = SUR_LoadingScreenWidget::Create(FPaths::GetBaseFilename(InMapName));
+    if (!IsRunningDedicatedServer())
+    {
+        FLoadingScreenAttributes LoadingScreen;
+        LoadingScreen.bAutoCompleteWhenLoadingCompletes = false;
+        LoadingScreen.WidgetLoadingScreen = SUR_LoadingScreenWidget::Create(FPaths::GetBaseFilename(InMapName));
 
 #if !UE_BUILD_SHIPPING
-		LoadingScreen.MinimumLoadingScreenDisplayTime = 2.f;
+        LoadingScreen.MinimumLoadingScreenDisplayTime = 2.f;
 #endif
 
-		GetMoviePlayer()->SetupLoadingScreen(LoadingScreen);
-	}
+        GetMoviePlayer()->SetupLoadingScreen(LoadingScreen);
+    }
 }
 
 void UUR_GameInstance::EndLoadingScreen(UWorld* InLoadedWorld)

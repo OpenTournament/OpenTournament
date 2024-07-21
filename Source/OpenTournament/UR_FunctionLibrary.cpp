@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -8,26 +8,26 @@
 #include <Components/SkinnedMeshComponent.h>
 #include <UObject/UObjectIterator.h>
 
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Animation/AnimInstance.h"
+#include "Animation/AnimMontage.h"
+#include "Components/MeshComponent.h"
+#include "Components/PanelWidget.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/Widget.h"
 #include "Engine/Engine.h"
 #include "GameFramework/GameStateBase.h"
 #include "Internationalization/Regex.h"
-#include "Particles/ParticleSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetStringLibrary.h"
-#include "NiagaraFunctionLibrary.h"
-#include "NiagaraComponent.h"
-#include "Animation/AnimInstance.h"
-#include "Animation/AnimMontage.h"
-#include "Components/Widget.h"
-#include "Components/PanelWidget.h"
-#include "Components/MeshComponent.h"
-#include "Components/SkeletalMeshComponent.h"
+#include "Particles/ParticleSystemComponent.h"
 
+#include "UR_Character.h"
 #include "UR_GameModeBase.h"
 #include "UR_PlayerController.h"
-#include "UR_PlayerState.h"
-#include "UR_Character.h"
 #include "UR_PlayerInput.h"
+#include "UR_PlayerState.h"
 #include "UR_Weapon.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -207,15 +207,34 @@ UFXSystemComponent* UUR_FunctionLibrary::SpawnEffectAtLocation(const UObject* Wo
     return nullptr;
 }
 
-UFXSystemComponent* UUR_FunctionLibrary::SpawnEffectAttached(UFXSystemAsset* Template, const FTransform& Transform, USceneComponent* AttachToComponent, FName AttachPointName, EAttachLocation::Type LocationType, bool bAutoDestroy, bool bAutoActivate)
+UFXSystemComponent* UUR_FunctionLibrary::SpawnEffectAttached(UFXSystemAsset* Template, const FTransform& Transform, USceneComponent* AttachToComponent, FName AttachPointName, EAttachLocation::Type LocationType,
+                                                             bool bAutoDestroy, bool bAutoActivate)
 {
     if (auto PS = Cast<UParticleSystem>(Template))
     {
-        return UGameplayStatics::SpawnEmitterAttached(PS, AttachToComponent, AttachPointName, Transform.GetLocation(), Transform.GetRotation().Rotator(), Transform.GetScale3D(), LocationType, bAutoDestroy, EPSCPoolMethod::None, bAutoActivate);
+        return UGameplayStatics::SpawnEmitterAttached(PS,
+            AttachToComponent,
+            AttachPointName,
+            Transform.GetLocation(),
+            Transform.GetRotation().Rotator(),
+            Transform.GetScale3D(),
+            LocationType,
+            bAutoDestroy,
+            EPSCPoolMethod::None,
+            bAutoActivate);
     }
     else if (auto NS = Cast<UNiagaraSystem>(Template))
     {
-        return UNiagaraFunctionLibrary::SpawnSystemAttached(NS, AttachToComponent, AttachPointName, Transform.GetLocation(), Transform.GetRotation().Rotator(), Transform.GetScale3D(), LocationType, bAutoDestroy, ENCPoolMethod::None, bAutoActivate);
+        return UNiagaraFunctionLibrary::SpawnSystemAttached(NS,
+            AttachToComponent,
+            AttachPointName,
+            Transform.GetLocation(),
+            Transform.GetRotation().Rotator(),
+            Transform.GetScale3D(),
+            LocationType,
+            bAutoDestroy,
+            ENCPoolMethod::None,
+            bAutoActivate);
     }
     return nullptr;
 }
@@ -239,7 +258,7 @@ UAnimMontage* UUR_FunctionLibrary::GetCurrentActiveMontageInSlot(UAnimInstance* 
     }
     bIsValid = false;
     Weight = 0.f;
-    return NULL;
+    return nullptr;
 }
 
 
@@ -367,7 +386,8 @@ void UUR_FunctionLibrary::GenericArray_Slice(void* SourceArray, const FArrayProp
     }
 }
 
-template<typename T> TArray<T> UUR_FunctionLibrary::ArraySlice(const TArray<T>& InArray, int32 Start, int32 End)
+template <typename T>
+TArray<T> UUR_FunctionLibrary::ArraySlice(const TArray<T>& InArray, int32 Start, int32 End)
 {
     End = (End < 0) ? InArray.Num() : FMath::Min(End, InArray.Num());
     TArray<T> Result(FMath::Max(0, End - Start));

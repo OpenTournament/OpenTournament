@@ -408,6 +408,14 @@
 		{
 			"Name": "AssetSearch",
 			"Enabled": true
+		},
+		{
+			"Name": "UIExtension",
+			"Enabled": true
+		},
+		{
+			"Name": "BUIValidator",
+			"Enabled": false
 		}
 	]
 }

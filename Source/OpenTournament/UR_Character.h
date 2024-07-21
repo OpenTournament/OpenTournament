@@ -1,24 +1,27 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "GameFramework/Character.h"
+#include <ModularCharacter.h>
+#include "Templates/NonNullPointer.h"
 #include "AbilitySystemInterface.h"
-#include "GameplayTagAssetInterface.h"
-#include "Interfaces/UR_TeamInterface.h"
-#include "Components/InputComponent.h"  //struct FInputKeyBinding
-
 #include "GameplayAbilitySpec.h"
 #include "GameplayEffect.h"
-#include "UR_Type_DodgeDirection.h"
+#include "GameplayTagAssetInterface.h"
+#include "Components/InputComponent.h"  //struct FInputKeyBinding
+#include "Interfaces/UR_TeamInterface.h"
+
 #include "Enums/UR_MovementAction.h"
+#include "Enums/UR_Type_DodgeDirection.h"
 
 #include "UR_Character.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_HealthComponent;
+class UUR_HealthSet;
 class UAnimationMontage;
 class UGameplayTagsManager;
 class UUR_AbilitySystemComponent;
@@ -29,6 +32,7 @@ class APlayerController;
 class IUR_ActivatableInterface;
 class UUR_DamageType;
 class UAIPerceptionSourceNativeComp;
+class UInputAction;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -38,21 +42,28 @@ struct FCharacterVoice
     GENERATED_BODY()
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
-    USoundBase* FootstepSound;
+    TObjectPtr<USoundBase> FootstepSound;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
-    USoundBase* LandingSound;
+    TObjectPtr<USoundBase> LandingSound;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
-    USoundBase* JumpSound;
+    TObjectPtr<USoundBase> JumpSound;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
-    USoundBase* DodgeSound;
+    TObjectPtr<USoundBase> DodgeSound;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Sounds)
-    USoundBase* PainSound;
+    TObjectPtr<USoundBase> PainSound;
 
-    FCharacterVoice() : FootstepSound(NULL), LandingSound(NULL), JumpSound(NULL), DodgeSound(NULL), PainSound(NULL) {}
+    FCharacterVoice()
+        : FootstepSound(nullptr)
+        , LandingSound(nullptr)
+        , JumpSound(nullptr)
+        , DodgeSound(nullptr)
+        , PainSound(nullptr)
+    {
+    }
 };
 
 /**
@@ -127,9 +138,22 @@ struct FReplicatedDamageEvent
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     APawn* DamageInstigator;
 
-    FReplicatedDamageEvent() : Type(0), Damage(0), HealthDamage(0), ArmorDamage(0), Location(0,0,0), Knockback(0,0,0), DamType(NULL), DamageInstigator(NULL) {}
+    FReplicatedDamageEvent()
+        : Type(0)
+        , Damage(0)
+        , HealthDamage(0)
+        , ArmorDamage(0)
+        , Location(0, 0, 0)
+        , Knockback(0, 0, 0)
+        , DamType(nullptr)
+        , DamageInstigator(nullptr)
+    {
+    }
 
-    bool IsOfType(int32 InID) const { return Type == InID; };
+    bool IsOfType(int32 InID) const
+    {
+        return Type == InID;
+    };
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,15 +181,15 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPickupEventSignature, AUR_Pickup*, 
  *
  */
 UCLASS()
-class OPENTOURNAMENT_API AUR_Character : public ACharacter
-    , public IAbilitySystemInterface
-    , public IGameplayTagAssetInterface
-    , public IUR_TeamInterface
+class OPENTOURNAMENT_API AUR_Character
+    : public AModularCharacter
+      , public IAbilitySystemInterface
+      , public IGameplayTagAssetInterface
+      , public IUR_TeamInterface
 {
     GENERATED_BODY()
 
 public:
-
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     AUR_Character(const FObjectInitializer& ObjectInitializer);
@@ -174,7 +198,7 @@ public:
 
     /**
     * Notes on camera management :
-    * 
+    *
     * The final camera view of player is calculated in CameraManager->UpdateViewTargetInternal (result in OutVT.POV, and cached in CachedPOV).
     * It is calculated via ViewTarget->CalcCamera
     * --| CalcCamera relies on CameraComponent->GetCameraView if there is one, or falls back to GetActorEyesViewPoint
@@ -274,22 +298,35 @@ public:
     USkeletalMeshComponent* GetPawnMesh() const;
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
-    FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return MeshFirstPerson; }
+    FORCEINLINE USkeletalMeshComponent* GetMesh1P() const
+    {
+        return MeshFirstPerson;
+    }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
-    FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
+    FORCEINLINE USkeletalMeshComponent* GetMesh3P() const
+    {
+        return GetMesh();
+    }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
     virtual void BeginPlay() override;
+
     virtual void Tick(float DeltaTime) override;
+
     virtual UInputComponent* CreatePlayerInputComponent() override;
+
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
     virtual void CalcCamera(float DeltaTime, struct FMinimalViewInfo& OutResult) override;
+
     virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
 
     virtual void BecomeViewTarget(APlayerController* PC) override;
+
     virtual void EndViewTarget(APlayerController* PC) override;
 
     // Override to update Physics Movement GameplayTags
@@ -379,7 +416,7 @@ public:
 
     /**
     * Play effects for footsteps
-    * @param WalkingSpeedPercentage current movement speed 
+    * @param WalkingSpeedPercentage current movement speed
     */
     void PlayFootstepEffects(float WalkingSpeedPercentage) const;
 
@@ -390,19 +427,27 @@ public:
     float FootstepTimestamp;
 
     /**
-    * Footstep Time Interval 
+    * Footstep Time Interval
     */
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Character|Walk")
     float FootstepTimeIntervalBase;
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    // Weapons bindings
+    // Input bindings
 
-    TArray<FInputKeyBinding> WeaponBindings;
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionNextWeapon;
 
-    // Called on possess, and when controlling player changes binds.
-    UFUNCTION(BlueprintCallable)
-    virtual void SetupWeaponBindings();
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionPreviousWeapon;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionDropWeapon;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TMap<int, TObjectPtr<UInputAction>> WeaponBindings;
+
+    void SetupWeaponBindings();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // General - EyeHeight Adjustment
@@ -560,7 +605,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Character|Dodge")
     void DodgeTest(const EDodgeDirection InDodgeDirection);
 
-    /** 
+    /**
     * Hook for sounds / effects OnDodge
     */
     UFUNCTION(BlueprintNativeEvent)
@@ -589,8 +634,10 @@ public:
         DodgeDirection = InDodgeDirection;
         ServerSetDodgeDirection(DodgeDirection);
     }
+
     UFUNCTION(Server, Reliable)
     void ServerSetDodgeDirection(const EDodgeDirection InDodgeDirection);
+
     virtual void ServerSetDodgeDirection_Implementation(const EDodgeDirection InDodgeDirection)
     {
         DodgeDirection = InDodgeDirection;
@@ -613,7 +660,7 @@ public:
     * Initialize the GameplayTagsManager reference
     */
     void InitializeGameplayTagsManager();
-    
+
     /**
     * Character's GameplayTags
     */
@@ -623,7 +670,10 @@ public:
     /**
     * Get Character's GameplayTags
     */
-    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; }
+    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override
+    {
+        TagContainer = GameplayTags;
+    }
 
     /**
     * Update Movement GameplayTags pertaining to Physics
@@ -667,7 +717,7 @@ public:
     * Get the GameplayTag associated with given MovementAction
     */
     FGameplayTag GetMovementActionGameplayTag(const EMovementAction InMovementAction);
-    
+
     /**
     * Get the GameplayTag associated with given EMovementMode
     */
@@ -678,6 +728,8 @@ public:
 
     // Implement IAbilitySystemInterface
     UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+    virtual UUR_AbilitySystemComponent* GetGameAbilitySystemComponent() const;
 
     /** Grant a GameplayAbility */
     UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Character")
@@ -706,6 +758,10 @@ public:
     */
     UPROPERTY()
     UUR_AttributeSet* AttributeSet;
+
+    // Health attribute set used by this actor.
+    UPROPERTY()
+    TObjectPtr<const UUR_HealthSet> HealthSet;
 
     /** Abilities to grant to this character on creation. These will be activated by tag or event and are not bound to specific inputs */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Abilities")
@@ -742,6 +798,7 @@ public:
 
     UFUNCTION(NetMulticast, Reliable)
     void MulticastDied(AController* Killer, const FReplicatedDamageEvent RepDamageEvent);
+
     virtual void MulticastDied_Implementation(AController* Killer, const FReplicatedDamageEvent RepDamageEvent)
     {
         PlayDeath(Killer, RepDamageEvent);
@@ -752,6 +809,24 @@ public:
     */
     UFUNCTION(BlueprintCosmetic, BlueprintNativeEvent)
     void PlayDeath(AController* Killer, const FReplicatedDamageEvent& RepDamageEvent);
+
+    // Begins the death sequence for the character (disables collision, disables movement, etc...)
+    UFUNCTION()
+    virtual void OnDeathStarted(AActor* OwningActor);
+
+    // Ends the death sequence for the character (detaches controller, destroys pawn, etc...)
+    UFUNCTION()
+    virtual void OnDeathFinished(AActor* OwningActor);
+
+    void DisableMovementAndCollision();
+
+    void DestroyDueToDeath();
+
+    void UninitAndDestroy();
+
+    // Called when the death sequence for the character has completed
+    UFUNCTION(BlueprintImplementableEvent, meta=(DisplayName="OnDeathFinished"))
+    void K2_OnDeathFinished();
 
     /**
     * Set to true after PlayDeath() is received on clients.
@@ -784,6 +859,9 @@ public:
     UFUNCTION(Server, Reliable)
     void ServerSuicide();
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game|Character", Meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UUR_HealthComponent> HealthComponent;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Inventory
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -793,6 +871,9 @@ public:
     */
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Inventory")
     UUR_InventoryComponent* InventoryComponent;
+
+    UFUNCTION(BlueprintPure, BlueprintCallable)
+    UUR_InventoryComponent* GetInventoryComponent();
 
     //deprecated
     bool bIsFiring = false;
@@ -804,6 +885,7 @@ public:
     TArray<uint8> DesiredFireModeNum;
 
     virtual void PawnStartFire(uint8 FireModeNum = 0) override;
+
     virtual void PawnStopFire(uint8 FireModeNum = 0);
 
     /** get weapon attach point */
@@ -840,7 +922,8 @@ public:
 
     //~ Begin TeamInterface
     virtual int32 GetTeamIndex_Implementation() override;
+
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
+
     //~ End TeamInterface
-   
 };

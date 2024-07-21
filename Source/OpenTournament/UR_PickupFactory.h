@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -28,10 +28,14 @@ class OPENTOURNAMENT_API AUR_PickupFactory : public AActor
     GENERATED_BODY()
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-public:	
+public:
     AUR_PickupFactory();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if WITH_EDITOR
+    virtual void CheckForErrors() override;
+#endif
 
     /**
     * Spawned pickup will be attached to this component.
@@ -43,6 +47,7 @@ public:
     UPROPERTY(BlueprintReadWrite)
     USceneComponent* AttachComponent;
 
+#if WITH_EDITORONLY_DATA
     /**
     * EditorOnly - pickup preview static mesh component.
     * Default setup happens just after Construction script.
@@ -50,6 +55,7 @@ public:
     */
     UPROPERTY(Transient, BlueprintReadOnly)
     UStaticMeshComponent* EditorPreview;
+#endif
 
     /**
     * Rotates AttachComponent at a fixed rate.
@@ -103,7 +109,10 @@ public:
     * Replicated initial-only to let gamemode replace pickups on startup.
     */
     UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_PickupClass)
-    TSubclassOf<AUR_Pickup> PickupClass;
+    TSubclassOf<AUR_Pickup> PickupClass_Internal;
+
+    UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_PickupClass_Soft)
+    TSoftClassPtr<AUR_Pickup> PickupClass_Soft;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
     UFXSystemAsset* RespawnEffect;
@@ -128,6 +137,8 @@ protected:
     UFUNCTION()
     virtual void OnRep_PickupClass();
     UFUNCTION()
+    virtual void OnRep_PickupClass_Soft();
+    UFUNCTION()
     virtual void OnRep_Pickup();
 
 public:
@@ -138,7 +149,6 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent)
     void SetupEditorPreview(UStaticMeshComponent* PreviewComp);
-    virtual void SetupEditorPreview_Implementation(UStaticMeshComponent* PreviewComp) {}
 
     /**
     * Factor method for setting up respawn timer or initial spawn delay,
@@ -162,13 +172,13 @@ public:
     TSubclassOf<AUR_Pickup> GetPickupClass();
     virtual TSubclassOf<AUR_Pickup> GetPickupClass_Implementation()
     {
-        return PickupClass;
+        return PickupClass_Internal;
     }
 
     UFUNCTION(BlueprintCallable)
     virtual void SetPickupClass(TSubclassOf<AUR_Pickup> NewClass)
     {
-        PickupClass = NewClass;
+        PickupClass_Internal = NewClass;
     }
 
     /**

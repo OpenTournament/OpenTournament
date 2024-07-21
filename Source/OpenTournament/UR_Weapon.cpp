@@ -1,8 +1,10 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Weapon.h"
+
+#include <GameFramework/GameplayMessageSubsystem.h>
 
 #include "Animation/AnimMontage.h"
 #include "Animation/AnimInstance.h"
@@ -31,6 +33,9 @@
 #include "UR_FireModeBasic.h"
 #include "UR_FireModeCharged.h"
 #include "UR_FireModeContinuous.h"
+#include "UR_GameplayTags.h"
+#include "UR_LogChannels.h"
+#include "Messages/CrosshairVerbMessage.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -111,7 +116,7 @@ UClass* AUR_Weapon::GetNextFallbackConfigWeapon(TSubclassOf<AUR_Weapon> ForClass
     {
         if (auto ModDefined = ForClass->GetDefaultObject<AUR_Weapon>()->ModFallbackToWeaponConfig)
         {
-            return (ModDefined != ForClass) ? ModDefined : NULL;
+            return (ModDefined != ForClass) ? ModDefined : nullptr;
         }
 
         UClass* ParentClass = ForClass->GetSuperClass();
@@ -120,7 +125,7 @@ UClass* AUR_Weapon::GetNextFallbackConfigWeapon(TSubclassOf<AUR_Weapon> ForClass
             return ParentClass;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -173,27 +178,32 @@ void AUR_Weapon::ToggleGeneralVisibility(bool bVisible)
     SetActorHiddenInGame(!bVisible);
     Mesh3P->SetCastHiddenShadow(bVisible);
     if (bVisible)
+    {
         UpdateMeshVisibility();
+    }
 }
 
 void AUR_Weapon::CheckWeaponAttachment()
 {
     switch (WeaponState)
     {
-    case EWeaponState::Dropped:
-    case EWeaponState::Holstered:
-        if (bIsAttached)
+        case EWeaponState::Dropped:
+        case EWeaponState::Holstered:
         {
-            DetachMeshFromPawn();
+            if (bIsAttached)
+            {
+                DetachMeshFromPawn();
+            }
+            break;
         }
-        break;
-
-    default:
-        if (!bIsAttached)
+        default:
         {
-            AttachMeshToPawn();
+            if (!bIsAttached)
+            {
+                AttachMeshToPawn();
+            }
+            break;
         }
-        break;
     }
 }
 
@@ -265,43 +275,45 @@ void AUR_Weapon::SetWeaponState(EWeaponState NewState)
 
     switch (WeaponState)
     {
-
-    case EWeaponState::BringUp:
-        Activate();
-        break;
-
-    case EWeaponState::Idle:
-        if (GetWorld()->GetTimerManager().IsTimerActive(PutDownDelayTimerHandle))
+        case EWeaponState::BringUp:
         {
-            // if cooldown delays putdown by 100%, the timer can be slightly late.
-            // we can force it to happen now.
-            GetWorld()->GetTimerManager().ClearTimer(PutDownDelayTimerHandle);
-            RequestPutDown();
+            Activate();
+            break;
         }
-        else
+        case EWeaponState::Idle:
         {
-            // Fire all independent modes in queue
-            for (int32 i = DesiredFireModes.Num() - 1; i >= 0; i--)
+            if (GetWorld()->GetTimerManager().IsTimerActive(PutDownDelayTimerHandle))
             {
-                if (DesiredFireModes[i]->IsIndependentFireMode())
+                // if cooldown delays putdown by 100%, the timer can be slightly late.
+                // we can force it to happen now.
+                GetWorld()->GetTimerManager().ClearTimer(PutDownDelayTimerHandle);
+                RequestPutDown();
+            }
+            else
+            {
+                // Fire all independent modes in queue
+                for (int32 i = DesiredFireModes.Num() - 1; i >= 0; i--)
                 {
-                    TryStartFire(DesiredFireModes[i]);
+                    if (DesiredFireModes[i]->IsIndependentFireMode())
+                    {
+                        TryStartFire(DesiredFireModes[i]);
+                    }
+                }
+                // Fire topmost non-independent mode
+                if (DesiredFireModes.Num() > 0)
+                {
+                    TryStartFire(DesiredFireModes[0]);
                 }
             }
-            // Fire topmost non-independent mode
-            if (DesiredFireModes.Num() > 0)
-            {
-                TryStartFire(DesiredFireModes[0]);
-            }
+            break;
         }
-        break;
-
-    case EWeaponState::PutDown:
-    case EWeaponState::Holstered:
-    case EWeaponState::Dropped:
-        Deactivate();
-        break;
-
+        case EWeaponState::PutDown:
+        case EWeaponState::Holstered:
+        case EWeaponState::Dropped:
+        {
+            Deactivate();
+            break;
+        }
     }
 }
 
@@ -414,6 +426,16 @@ void AUR_Weapon::Activate()
         {
             RequestStartFire(URCharOwner->DesiredFireModeNum[i]);
         }
+    }
+
+    if (IsValid(CrosshairData))
+    {
+        UGameplayMessageSubsystem& MessageSubsystem = UGameplayMessageSubsystem::Get(this);
+        FCrosshairVerbMessage Message;
+        Message.Verb = URGameplayTags::Crosshair_Enable;
+        Message.Instigator = GetOwner();
+        Message.CrosshairData = CrosshairData;
+        MessageSubsystem.BroadcastMessage(URGameplayTags::Crosshair_Enable, Message);
     }
 }
 
@@ -539,16 +561,22 @@ void AUR_Weapon::RequestBringUp()
 
     switch (WeaponState)
     {
-
-    case EWeaponState::Holstered:
-    case EWeaponState::Dropped:
-        BringUp(0.f);
-        break;
-
-    case EWeaponState::PutDown:
-        BringUp(GetWorld()->GetTimerManager().GetTimerRemaining(SwapAnimTimerHandle) / PutDownTime);
-        break;
-
+        case EWeaponState::Holstered:
+        case EWeaponState::Dropped:
+        {
+            BringUp(0.f);
+            break;
+        }
+        case EWeaponState::PutDown:
+        {
+            BringUp(GetWorld()->GetTimerManager().GetTimerRemaining(SwapAnimTimerHandle) / PutDownTime);
+            break;
+        }
+        default:
+        {
+            GAME_LOG(LogGame, Log, "Unhandled case! This is probably an error.");
+            break;
+        }
     }
 }
 
@@ -556,62 +584,68 @@ void AUR_Weapon::RequestPutDown()
 {
     switch (WeaponState)
     {
-
-    case EWeaponState::BringUp:
-        PutDown(1.f - GetWorld()->GetTimerManager().GetTimerRemaining(SwapAnimTimerHandle) / BringUpTime);
-        return;
-
-    case EWeaponState::Idle:
-        PutDown(1.f);
-        return;
-
-    case EWeaponState::Firing:
-    {
-        // Request firemode to go idle whenever it sees opportunity.
-        CurrentFireMode->SetRequestIdle(true);
-
-        float Delay = 0.f;
-
-        float CooldownStartTime = CurrentFireMode->GetCooldownStartTime();
-        float CooldownRemaining = CurrentFireMode->GetTimeUntilIdle();
-
-        // Bit of an edge case - if fire mode returns future cooldown start, this is an indication to prevent put down.
-        // Used by charging firemode so we dont allow swap while charging, even if CooldownPercent is at 0.
-        if (GetWorld()->TimeSince(CooldownStartTime) < 0.f)
+        case EWeaponState::BringUp:
         {
-            Delay = FMath::Max(CooldownRemaining * CooldownDelaysPutDownByPercent, 0.1f);
+            PutDown(1.f - GetWorld()->GetTimerManager().GetTimerRemaining(SwapAnimTimerHandle) / BringUpTime);
+            return;
         }
-        else if (CooldownRemaining > 0.f && CooldownDelaysPutDownByPercent > 0.f)
-        {
-            float TotalCooldown = GetWorld()->TimeSince(CooldownStartTime) + CooldownRemaining;
-            float TotalPutDownDelay = TotalCooldown * CooldownDelaysPutDownByPercent;
-            if (bReducePutDownDelayByPutDownTime)
-            {
-                TotalPutDownDelay -= PutDownTime;
-            }
-            float PutDownStartTime = CooldownStartTime + TotalPutDownDelay;
-            Delay = PutDownStartTime - GetWorld()->GetTimeSeconds();
-        }
-
-        if (Delay > 0.f)
-        {
-            // We call back RequestPutDown until delay is 0, and only then we will call PutDown.
-            // This is because some fire modes may not have proper cooldown information at all times (eg. charging).
-            // NOTE: this loop can be canceled anytime by a subsequent RequestBringUp() call.
-            GetWorld()->GetTimerManager().SetTimer(PutDownDelayTimerHandle, this, &AUR_Weapon::RequestPutDown, Delay, false);
-        }
-        else
+        case EWeaponState::Idle:
         {
             PutDown(1.f);
+            return;
         }
-        break;
-    }
+        case EWeaponState::Firing:
+        {
+            // Request firemode to go idle whenever it sees opportunity.
+            CurrentFireMode->SetRequestIdle(true);
 
-    case EWeaponState::Busy:
-        // Stub. Just wait. SetWeaponState(Idle) will notice and cancel the loop, and call this back.
-        GetWorld()->GetTimerManager().SetTimer(PutDownDelayTimerHandle, this, &AUR_Weapon::RequestPutDown, 1.f, false);
-        break;
+            float Delay = 0.f;
 
+            float CooldownStartTime = CurrentFireMode->GetCooldownStartTime();
+            float CooldownRemaining = CurrentFireMode->GetTimeUntilIdle();
+
+            // Bit of an edge case - if fire mode returns future cooldown start, this is an indication to prevent put down.
+            // Used by charging firemode so we dont allow swap while charging, even if CooldownPercent is at 0.
+            if (GetWorld()->TimeSince(CooldownStartTime) < 0.f)
+            {
+                Delay = FMath::Max(CooldownRemaining * CooldownDelaysPutDownByPercent, 0.1f);
+            }
+            else if (CooldownRemaining > 0.f && CooldownDelaysPutDownByPercent > 0.f)
+            {
+                float TotalCooldown = GetWorld()->TimeSince(CooldownStartTime) + CooldownRemaining;
+                float TotalPutDownDelay = TotalCooldown * CooldownDelaysPutDownByPercent;
+                if (bReducePutDownDelayByPutDownTime)
+                {
+                    TotalPutDownDelay -= PutDownTime;
+                }
+                float PutDownStartTime = CooldownStartTime + TotalPutDownDelay;
+                Delay = PutDownStartTime - GetWorld()->GetTimeSeconds();
+            }
+
+            if (Delay > 0.f)
+            {
+                // We call back RequestPutDown until delay is 0, and only then we will call PutDown.
+                // This is because some fire modes may not have proper cooldown information at all times (eg. charging).
+                // NOTE: this loop can be canceled anytime by a subsequent RequestBringUp() call.
+                GetWorld()->GetTimerManager().SetTimer(PutDownDelayTimerHandle, this, &AUR_Weapon::RequestPutDown, Delay, false);
+            }
+            else
+            {
+                PutDown(1.f);
+            }
+            break;
+        }
+        case EWeaponState::Busy:
+        {
+            // Stub. Just wait. SetWeaponState(Idle) will notice and cancel the loop, and call this back.
+            GetWorld()->GetTimerManager().SetTimer(PutDownDelayTimerHandle, this, &AUR_Weapon::RequestPutDown, 1.f, false);
+            break;
+        }
+        default:
+        {
+            GAME_LOG(LogGame, Log, "Unhandled case! This is probably an error.");
+            break;
+        }
     }
 }
 
@@ -801,7 +835,7 @@ FVector AUR_Weapon::SeededRandCone(const FVector& Dir, float ConeHalfAngleDeg, i
         FVector Point = Dir2 + FMath::SRand() * MaxOppositeSize * OppositeVector;
 
         // Rotate point around axis by a random angle
-        FQuat RandRotation = FQuat(Dir2, FMath::DegreesToRadians(FMath::SRand()*360.f));
+        FQuat RandRotation = FQuat(Dir2, FMath::DegreesToRadians(FMath::SRand() * 360.f));
 
         return RandRotation.RotateVector(Point).GetSafeNormal();
     }
@@ -956,36 +990,40 @@ float AUR_Weapon::TimeUntilReadyToFire_Implementation(UUR_FireModeBase* FireMode
     float Delay;
     switch (WeaponState)
     {
-    case EWeaponState::BringUp:
-        Delay = GetWorld()->GetTimerManager().GetTimerRemaining(SwapAnimTimerHandle);
-        break;
-
-    case EWeaponState::PutDown:
-    {
-        // delay to check if we're late in a very quick putdown-bringup-idle scenario
-        // delay by the amount of time it would take to reach idle if we called bringup now
-        float BringUpPct = GetWorld()->GetTimerManager().GetTimerRemaining(SwapAnimTimerHandle) / PutDownTime;
-        Delay = FMath::Max(0.001f, (1.f - BringUpPct) * BringUpTime);
-        break;
-    }
-
-    case EWeaponState::Idle:
-        Delay = 0.f;
-        break;
-
-    case EWeaponState::Firing:
-        if (FireMode == CurrentFireMode && FireMode->SpinUpTime > 0.f)
+        case EWeaponState::BringUp:
         {
-            Delay = 0.f;    // we can resume spinning up at any point during spindown
+            Delay = GetWorld()->GetTimerManager().GetTimerRemaining(SwapAnimTimerHandle);
+            break;
         }
-        else
+        case EWeaponState::PutDown:
         {
-            Delay = CurrentFireMode->GetTimeUntilIdle();
+            // delay to check if we're late in a very quick putdown-bringup-idle scenario
+            // delay by the amount of time it would take to reach idle if we called bringup now
+            float BringUpPct = GetWorld()->GetTimerManager().GetTimerRemaining(SwapAnimTimerHandle) / PutDownTime;
+            Delay = FMath::Max(0.001f, (1.f - BringUpPct) * BringUpTime);
+            break;
         }
-        break;
-
-    default:
-        return TIMEUNTILFIRE_NEVER;
+        case EWeaponState::Idle:
+        {
+            Delay = 0.f;
+            break;
+        }
+        case EWeaponState::Firing:
+        {
+            if (FireMode == CurrentFireMode && FireMode->SpinUpTime > 0.f)
+            {
+                Delay = 0.f;    // we can resume spinning up at any point during spindown
+            }
+            else
+            {
+                Delay = CurrentFireMode->GetTimeUntilIdle();
+            }
+            break;
+        }
+        default:
+        {
+            return TIMEUNTILFIRE_NEVER;
+        }
     }
 
     if (Delay <= 0.f && !HasEnoughAmmoFor(FireMode))
@@ -1204,7 +1242,7 @@ void AUR_Weapon::ChargeLevel_Implementation(UUR_FireModeCharged* FireMode, int32
     // Default hitscan damage = linear scale
     FireMode->HitscanDamage = FMath::Lerp(FireMode->HitscanDamageMin, FireMode->HitscanDamageMax, FireMode->GetTotalChargePercent(false));
 
-    GEngine->AddOnScreenDebugMessage(118, 3.f, FColor::Blue, *FString::Printf(TEXT("CHARGE LEVEL %i (%i)"), ChargeLevel, bWasPaused?1:0));
+    GEngine->AddOnScreenDebugMessage(118, 3.f, FColor::Blue, *FString::Printf(TEXT("CHARGE LEVEL %i (%i)"), ChargeLevel, bWasPaused ? 1 : 0));
 }
 
 /**

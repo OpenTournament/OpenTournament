@@ -1,11 +1,10 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "UR_Weapon.h"
+#include <UR_Weapon.h>
 
 #include "UR_Weap_Shotgun.generated.h"
 
@@ -40,22 +39,33 @@ struct FShotgunSpawnBox
     UPROPERTY(EditAnywhere)
     int32 Count;
 
-    FShotgunSpawnBox() : RelativeLoc(0, 0, 0), Extent(0, 0, 0), Count(0) {}
-    FShotgunSpawnBox(FVector RelativeLoc, FVector Extent, int32 Count) : RelativeLoc(RelativeLoc), Extent(Extent), Count(Count) {}
+    FShotgunSpawnBox()
+        : RelativeLoc(0, 0, 0)
+        , Extent(0, 0, 0)
+        , Count(0)
+    {
+    }
+
+    FShotgunSpawnBox(FVector RelativeLoc, FVector Extent, int32 Count)
+        : RelativeLoc(RelativeLoc)
+        , Extent(Extent)
+        , Count(Count)
+    {
+    }
 };
 
 /**
  *
  */
 UCLASS()
-class OPENTOURNAMENT_API AUR_Weap_Shotgun : public AUR_Weapon
+class OPENTOURNAMENT_API AUR_Weap_Shotgun
+    : public AUR_Weapon
 {
     GENERATED_BODY()
 
     AUR_Weap_Shotgun(const FObjectInitializer& ObjectInitializer);
 
 public:
-
     UPROPERTY(EditAnywhere, Category = "Weapon|Shotgun")
     TArray<FShotgunSpawnBox> SpawnBoxes;
 
@@ -71,5 +81,4 @@ public:
     UUR_FireModeBasic* ShotgunFireMode;
 
     virtual void AuthorityShot_Implementation(UUR_FireModeBasic* FireMode, const FSimulatedShotInfo& SimulatedInfo) override;
-
 };

@@ -1,18 +1,18 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_InventoryComponent.h"
 
-#include "Net/UnrealNetwork.h"
-#include "TimerManager.h"
 #include "Engine.h"
+#include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 
 #include "OpenTournament.h"
-#include "UR_Weapon.h"
 #include "UR_Ammo.h"
-#include "UR_UserSettings.h"
 #include "UR_Pickup_DroppedWeapon.h"
+#include "UR_UserSettings.h"
+#include "UR_Weapon.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -33,6 +33,11 @@ void UUR_InventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+AUR_Weapon* UUR_InventoryComponent::GetActiveWeapon() const
+{
+    return ActiveWeapon;
+}
 
 bool UUR_InventoryComponent::IsLocallyControlled() const
 {
@@ -145,7 +150,8 @@ void UUR_InventoryComponent::SelectWeapon(int32 Index)
 {
     if (WeaponGroups.IsValidIndex(Index))
     {
-        auto GroupWeapons = WeaponGroups[Index].Weapons.FilterByPredicate([&](AUR_Weapon* W) {
+        auto GroupWeapons = WeaponGroups[Index].Weapons.FilterByPredicate([&](AUR_Weapon* W)
+        {
             return W && (W->HasAnyAmmo() || W == DesiredWeapon);
         });
         if (GroupWeapons.Num() > 0)
@@ -258,7 +264,7 @@ void UUR_InventoryComponent::SelectPreferredWeapon()
             return;
         }
     }
-    SetDesiredWeapon(NULL);
+    SetDesiredWeapon(nullptr);
 }
 
 void UUR_InventoryComponent::SetDesiredWeapon(AUR_Weapon* InWeapon)
@@ -502,7 +508,11 @@ AUR_Pickup_DroppedWeapon* UUR_InventoryComponent::DropWeapon(AUR_Weapon* WeaponT
     FTransform SpawnTransform(SpawnRot, SpawnLoc);
 
     // Spawn dropped pickup
-    auto DroppedWeapon = Cast<AUR_Pickup_DroppedWeapon>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, AUR_Pickup_DroppedWeapon::StaticClass(), SpawnTransform, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn, GetOwner()));
+    auto DroppedWeapon = Cast<AUR_Pickup_DroppedWeapon>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this,
+        AUR_Pickup_DroppedWeapon::StaticClass(),
+        SpawnTransform,
+        ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn,
+        GetOwner()));
     if (!DroppedWeapon)
     {
         return NULL;

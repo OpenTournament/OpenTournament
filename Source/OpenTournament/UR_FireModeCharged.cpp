@@ -1,10 +1,15 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_FireModeCharged.h"
 
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "UR_LogChannels.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_FireModeCharged::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

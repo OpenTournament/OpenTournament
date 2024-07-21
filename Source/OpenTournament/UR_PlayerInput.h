@@ -1,11 +1,11 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "GameFramework/PlayerInput.h"
+#include <EnhancedPlayerInput.h>
+
 #include "UR_PlayerInput.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -15,17 +15,17 @@ class UInputSettings;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * 
+ *
  */
 UCLASS(BlueprintType, Config = Input)
-class OPENTOURNAMENT_API UUR_PlayerInput : public UPlayerInput
+class OPENTOURNAMENT_API UUR_PlayerInput
+    : public UEnhancedPlayerInput
 {
     GENERATED_BODY()
-    
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 protected:
-
     virtual void PostInitProperties() override;
 
     /**
@@ -74,7 +74,6 @@ protected:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     /**
     * Modify a key mapping for an action or axis
     * returns true if the key mapping was modified successfully, otherwise returns false
@@ -82,7 +81,6 @@ public:
     bool ModifyKeyMapping(const FName& MappingName, const FInputChord& InputChord);
 
 protected:
-
     /**
     * Remap the given action to the given key
     */
@@ -96,7 +94,6 @@ protected:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     UFUNCTION(BlueprintPure)
     virtual bool FindUserActionMappings(FName ActionName, TArray<FInputActionKeyMapping>& OutMappings) const;
 
@@ -115,5 +112,4 @@ public:
 
     UFUNCTION(BlueprintPure)
     virtual bool AxisShouldGenerateTapAction(FName AxisName, FName& OutTapActionName);
-
 };
