@@ -9,6 +9,7 @@
 #include <Components/SkinnedMeshComponent.h>
 
 #include "GameplayTagsManager.h"
+#include "InputAction.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/DamageEvents.h"
@@ -42,7 +43,6 @@
 #include "Character/UR_CharacterMovementComponent.h"
 #include "Character/UR_HealthComponent.h"
 #include "Interfaces/UR_ActivatableInterface.h"
-#include "InputAction.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -219,11 +219,11 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    if (auto EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+    if (auto URInputComponent = Cast<UUR_InputComponent>(InputComponent))
     {
-        EnhancedInputComponent->BindAction(InputActionNextWeapon, ETriggerEvent::Triggered, this, &AUR_Character::NextWeapon);
-        EnhancedInputComponent->BindAction(InputActionPreviousWeapon, ETriggerEvent::Triggered, this, &AUR_Character::PrevWeapon);
-        EnhancedInputComponent->BindAction(InputActionDropWeapon, ETriggerEvent::Triggered, this, &AUR_Character::DropWeapon);
+        URInputComponent->BindAction(InputActionNextWeapon, ETriggerEvent::Triggered, this, &AUR_Character::NextWeapon);
+        URInputComponent->BindAction(InputActionPreviousWeapon, ETriggerEvent::Triggered, this, &AUR_Character::PrevWeapon);
+        URInputComponent->BindAction(InputActionDropWeapon, ETriggerEvent::Triggered, this, &AUR_Character::DropWeapon);
     }
 
     SetupWeaponBindings();
@@ -510,11 +510,11 @@ void AUR_Character::PlayFootstepEffects(const float WalkingSpeedPercentage) cons
 
 void AUR_Character::SetupWeaponBindings()
 {
-    if (auto EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+    if (auto URInputComponent = Cast<UUR_InputComponent>(InputComponent))
     {
         for (auto WeaponBinding : WeaponBindings)
         {
-            EnhancedInputComponent->BindAction(WeaponBinding.Value, ETriggerEvent::Triggered, this, &AUR_Character::SelectWeapon, WeaponBinding.Key);
+            URInputComponent->BindAction(WeaponBinding.Value, ETriggerEvent::Triggered, this, &AUR_Character::SelectWeapon, WeaponBinding.Key);
         }
     }
 }

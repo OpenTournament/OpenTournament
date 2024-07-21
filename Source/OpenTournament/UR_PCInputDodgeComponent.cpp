@@ -4,10 +4,12 @@
 
 #include "UR_PCInputDodgeComponent.h"
 
+#include <EnhancedInputComponent.h>
+#include <InputAction.h>
+
 #include "UR_Character.h"
 #include "UR_PlayerController.h"
 #include "Character/UR_CharacterMovementComponent.h"
-#include <EnhancedInputComponent.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

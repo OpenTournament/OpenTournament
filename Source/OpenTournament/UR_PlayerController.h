@@ -4,15 +4,17 @@
 
 #pragma once
 
-#include "InputAction.h"
-#include "InputMappingContext.h"
 #include "UR_BasePlayerController.h"
+
 #include "Interfaces/UR_TeamInterface.h"
+
 #include "UR_PlayerController.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Forward Declarations
 
+class UInputAction;
+class UInputMappingContext;
 class UAudioComponent;
 
 class AUR_Character;
@@ -23,6 +25,8 @@ class UUR_Widget_BaseMenu;
 
 class UUR_ChatComponent;
 enum class EChatChannel : uint8;
+
+struct FInputActionInstance;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

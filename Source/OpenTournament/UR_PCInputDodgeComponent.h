@@ -5,13 +5,16 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
-#include "InputAction.h"
+
 #include "UR_Type_DodgeDirection.h"
+
 #include "UR_PCInputDodgeComponent.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Forward Declarations
 
+class UInputAction;
+struct FInputActionInstance;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Structures
@@ -19,7 +22,7 @@
 USTRUCT(BlueprintType)
 struct FKeyTapTime
 {
-    GENERATED_USTRUCT_BODY()
+    GENERATED_BODY()
 
     /**
     * Timestamp for last Left key tap

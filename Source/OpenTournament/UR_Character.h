@@ -5,34 +5,33 @@
 #pragma once
 
 #include <ModularCharacter.h>
-#include "Templates/NonNullPointer.h"
+
 #include "AbilitySystemInterface.h"
-#include "GameplayAbilitySpec.h"
-#include "GameplayEffect.h"
 #include "GameplayTagAssetInterface.h"
-#include "Components/InputComponent.h"  //struct FInputKeyBinding
-#include "Interfaces/UR_TeamInterface.h"
 
 #include "Enums/UR_MovementAction.h"
 #include "Enums/UR_Type_DodgeDirection.h"
+#include "Interfaces/UR_TeamInterface.h"
 
 #include "UR_Character.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class APlayerController;
+class UAnimationMontage;
+class UGameplayEffect;
+class UGameplayTagsManager;
+class UInputAction;
+
 class UUR_HealthComponent;
 class UUR_HealthSet;
-class UAnimationMontage;
-class UGameplayTagsManager;
 class UUR_AbilitySystemComponent;
 class UUR_AttributeSet;
 class UUR_GameplayAbility;
 class UUR_InventoryComponent;
-class APlayerController;
 class IUR_ActivatableInterface;
 class UUR_DamageType;
 class UAIPerceptionSourceNativeComp;
-class UInputAction;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
