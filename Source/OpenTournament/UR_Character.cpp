@@ -9,6 +9,7 @@
 #include <Components/SkinnedMeshComponent.h>
 
 #include "GameplayTagsManager.h"
+#include "InputAction.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/DamageEvents.h"
@@ -219,10 +220,12 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    //@! TODO EnhancedInput
-    PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
-    PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
-    PlayerInputComponent->BindAction("DropWeapon", IE_Pressed, this, &AUR_Character::DropWeapon);
+    if (auto URInputComponent = Cast<UUR_InputComponent>(InputComponent))
+    {
+        URInputComponent->BindAction(InputActionNextWeapon, ETriggerEvent::Triggered, this, &AUR_Character::NextWeapon);
+        URInputComponent->BindAction(InputActionPreviousWeapon, ETriggerEvent::Triggered, this, &AUR_Character::PrevWeapon);
+        URInputComponent->BindAction(InputActionDropWeapon, ETriggerEvent::Triggered, this, &AUR_Character::DropWeapon);
+    }
 
     SetupWeaponBindings();
 
@@ -510,23 +513,9 @@ void AUR_Character::SetupWeaponBindings()
 {
     if (auto URInputComponent = Cast<UUR_InputComponent>(InputComponent))
     {
-        for (const auto& Binding : WeaponBindings)
+        for (auto WeaponBinding : WeaponBindings)
         {
-            URInputComponent->RemoveKeyBinding(Binding);
-        }
-        WeaponBindings.Empty();
-
-        if (auto Settings = UUR_UserSettings::Get(this))
-        {
-            for (int32 Index = 0; Index < Settings->WeaponGroups.Num(); Index++)
-            {
-                const auto& Group = Settings->WeaponGroups[Index];
-                if (Group.Keybind.IsValidChord())
-                {
-                    //@! TODO EnhancedInput
-                    //WeaponBindings.Add(URInputComponent->BindKeyParameterized<TDelegate<void(int32)>>(Group.Keybind, IE_Pressed, this, &AUR_Character::SelectWeapon, Index));
-                }
-            }
+            URInputComponent->BindAction(WeaponBinding.Value, ETriggerEvent::Triggered, this, &AUR_Character::SelectWeapon, WeaponBinding.Key);
         }
     }
 }

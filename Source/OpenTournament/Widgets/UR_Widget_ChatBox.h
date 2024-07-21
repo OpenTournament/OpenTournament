@@ -8,6 +8,8 @@
 
 #include "UR_Widget_ChatBox.generated.h"
 
+
+class UInputAction;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -34,4 +36,10 @@ public:
     */
     UFUNCTION(BlueprintImplementableEvent)
     void OnBeginTeamSay();
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionBeginSay;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionBeginTeamSay;
 };
