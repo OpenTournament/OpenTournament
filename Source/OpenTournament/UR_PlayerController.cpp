@@ -4,6 +4,7 @@
 
 #include "UR_PlayerController.h"
 
+#include <EngineUtils.h>
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Components/AudioComponent.h"
@@ -11,10 +12,12 @@
 
 #include "UR_Character.h"
 #include "UR_ChatComponent.h"
+#include "UR_CheatManager.h"
 #include "UR_FunctionLibrary.h"
 #include "UR_GameMode.h"
 #include "UR_HUD.h"
 #include "UR_LocalPlayer.h"
+#include "UR_LogChannels.h"
 #include "UR_MessageHistory.h"
 #include "UR_PCInputDodgeComponent.h"
 #include "UR_PlayerState.h"
@@ -51,6 +54,10 @@ AUR_PlayerController::AUR_PlayerController(const FObjectInitializer& ObjectIniti
     ChatComponent = CreateDefaultSubobject<UUR_ChatComponent>(TEXT("ChatComponent"));
     ChatComponent->FallbackOwnerName = TEXT("SOMEBODY");
     ChatComponent->AntiSpamDelay = 1.f;
+
+#if UE_WITH_CHEAT_MANAGER
+    CheatClass = UUR_CheatManager::StaticClass();
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,6 +101,11 @@ void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
 {
     Super::SetPlayer(InPlayer);
 
+    if (this != GetClass()->GetDefaultObject())
+    {
+        return;
+    }
+
     UUR_LocalPlayer* LocalPlayer = Cast<UUR_LocalPlayer>(GetLocalPlayer());
     if (IsValid(LocalPlayer))
     {
@@ -108,7 +120,7 @@ void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
     }
     else
     {
-        UE_LOG(LogPlayerController, Warning, TEXT("URPlayerController created but no URLocalPlayer available ?! %s"), *GetDebugName(this));
+        UE_LOG(LogPlayerController, Warning, TEXT("UR_PlayerController created but no UR_LocalPlayer available ?! %s"), *GetDebugName(this));
     }
 }
 
@@ -191,6 +203,23 @@ void AUR_PlayerController::SetPawn(APawn* InPawn)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+AUR_PlayerState* AUR_PlayerController::GetGamePlayerState() const
+{
+    return CastChecked<AUR_PlayerState>(PlayerState, ECastCheckedType::NullAllowed);
+}
+
+UUR_AbilitySystemComponent* AUR_PlayerController::GetGameAbilitySystemComponent() const
+{
+    const AUR_PlayerState* GamePS = GetGamePlayerState();
+    return (GamePS ? GamePS->GetGameAbilitySystemComponent() : nullptr);
+}
+
+AUR_HUD* AUR_PlayerController::GetGameHUD() const
+{
+    return CastChecked<AUR_HUD>(GetHUD(), ECastCheckedType::NullAllowed);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_PlayerController::StartFire(uint8 FireModeNum)
 {
@@ -377,3 +406,46 @@ void AUR_PlayerController::OnHoldScoreboardCompleted(const FInputActionInstance&
 {
     HideScoreboard();
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool AUR_PlayerController::ServerCheatAll_Validate(const FString& Msg)
+{
+    return true;
+}
+
+void AUR_PlayerController::ServerCheatAll_Implementation(const FString& Msg)
+{
+#if USING_CHEAT_MANAGER
+    if (CheatManager)
+    {
+        UE_LOG(LogGame, Warning, TEXT("ServerCheatAll: %s"), *Msg);
+        for (TActorIterator<AUR_PlayerController> It(GetWorld()); It; ++It)
+        {
+            if (AUR_PlayerController* GamePC = (*It))
+            {
+                GamePC->ClientMessage(GamePC->ConsoleCommand(Msg));
+            }
+        }
+    }
+#endif // #if USING_CHEAT_MANAGER
+}
+
+
+bool AUR_PlayerController::ServerCheat_Validate(const FString& Msg)
+{
+    return true;
+}
+
+void AUR_PlayerController::ServerCheat_Implementation(const FString& Msg)
+{
+#if USING_CHEAT_MANAGER
+    if (CheatManager)
+    {
+        UE_LOG(LogGame, Warning, TEXT("ServerCheat: %s"), *Msg);
+        ClientMessage(ConsoleCommand(Msg));
+    }
+#endif // #if USING_CHEAT_MANAGER
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////

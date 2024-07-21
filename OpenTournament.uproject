@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.3",
+	"EngineAssociation": "5.4",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -11,6 +11,22 @@
 		}
 	],
 	"Plugins": [
+		{
+			"Name": "ReplicationGraph",
+			"Enabled": true
+		},
+		{
+			"Name": "GameSubtitles",
+			"Enabled": true
+		},
+		{
+			"Name": "AudioModulation",
+			"Enabled": true
+		},
+		{
+			"Name": "DTLSHandlerComponent",
+			"Enabled": true
+		},
 		{
 			"Name": "SteamVR",
 			"Enabled": false
@@ -415,6 +431,10 @@
 		},
 		{
 			"Name": "BUIValidator",
+			"Enabled": false
+		},
+		{
+			"Name": "GitSourceControl",
 			"Enabled": false
 		}
 	]

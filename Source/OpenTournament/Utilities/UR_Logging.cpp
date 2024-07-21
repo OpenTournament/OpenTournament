@@ -15,7 +15,7 @@ void URLogging::Log(FString inText, bool inLogToConsole, bool inLogToScreen, FCo
 
 void URLogging::LogToConsoleInternal(FString inText)
 {
-    UE_LOG(LogTemp, Warning, TEXT("%S"), *inText);
+    UE_LOG(LogTemp, Warning, TEXT("%s"), *inText);
 }
 
 void URLogging::LogToScreenInternal(FString inText, FColor inColor, float inTimeToDisplay, int32 inKey)

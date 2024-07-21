@@ -9,6 +9,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_PawnData;
 class UGameFeatureAction;
 class UUR_ExperienceActionSet;
 
@@ -46,11 +47,10 @@ public:
     UPROPERTY(EditDefaultsOnly, Instanced, Category="Actions")
     TArray<TObjectPtr<UGameFeatureAction>> Actions;
 
-    // @! TODO PawnData
     /** The default pawn class to spawn for players */
     //@TODO: Make soft?
-    //UPROPERTY(EditDefaultsOnly, Category=Gameplay)
-    //TObjectPtr<const ULyraPawnData> DefaultPawnData;
+    UPROPERTY(EditDefaultsOnly, Category=Gameplay)
+    TObjectPtr<const UUR_PawnData> DefaultPawnData;
 
     // List of additional action sets to compose into this experience
     UPROPERTY(EditDefaultsOnly, Category=Gameplay)

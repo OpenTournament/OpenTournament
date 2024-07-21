@@ -6,17 +6,21 @@
 
 #include <ModularPlayerState.h>
 
-#include "GameFramework/PlayerState.h"
-#include "Interfaces/UR_TeamInterface.h"
+#include <AbilitySystemInterface.h>
+#include <GameplayTagContainer.h>
+#include <GameFramework/PlayerState.h>
 
-#include "GameplayTagContainer.h"
-
+#include "Enums/UR_PlayerConnectionType.h"
 #include "Character/UR_CharacterCustomization.h"
+#include "Interfaces/UR_TeamInterface.h"
 
 #include "UR_PlayerState.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_PawnData;
+class UUR_ExperienceDefinition;
+class UUR_AbilitySystemComponent;
 class AUR_PlayerState;
 class AUR_TeamInfo;
 
@@ -31,23 +35,64 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTeamChangedSignature, AUR_Player
 /**
  *
  */
-UCLASS()
+UCLASS(Config = Game)
 class OPENTOURNAMENT_API AUR_PlayerState
     : public AModularPlayerState
+    , public IAbilitySystemInterface
     , public IUR_TeamInterface
 {
     GENERATED_BODY()
 
-    AUR_PlayerState();
+public:
+    AUR_PlayerState(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+    //~AActor interface
+    virtual void PreInitializeComponents() override;
+    virtual void PostInitializeComponents() override;
+    //~End of AActor interface
+
+    //~APlayerState interface
     virtual void BeginPlay() override;
+
+    //~APlayerState interface
+
+    //~AbilitySystem interface
+    virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+    //~End of AbilitySystem interface
+
 
     UFUNCTION()
     virtual void OnRep_ReplicatedTeamIndex();
 
+public:
+
+    UFUNCTION(BlueprintCallable, Category = "OT|PlayerState")
+    UUR_AbilitySystemComponent* GetGameAbilitySystemComponent() const { return AbilitySystemComponent; }
+
+    template <class T>
+    const T* GetPawnData() const { return Cast<T>(PawnData); }
+
+    void SetPawnData(const UUR_PawnData* InPawnData);
+
+    static const FName NAME_GameAbilityReady;
+
+    void SetPlayerConnectionType(EPlayerConnectionType NewType);
+    EPlayerConnectionType GetPlayerConnectionType() const { return MyPlayerConnectionType; }
+
+
+private:
+    void OnExperienceLoaded(const UUR_ExperienceDefinition* CurrentExperience);
+
+protected:
+    UFUNCTION()
+    void OnRep_PawnData();
+
+    UPROPERTY(ReplicatedUsing = OnRep_PawnData)
+    TObjectPtr<const UUR_PawnData> PawnData;
+
+    //
 public:
     UPROPERTY(Replicated, BlueprintReadOnly)
     int32 Kills;
@@ -142,4 +187,21 @@ public:
 
     UFUNCTION()
     virtual void InternalOnPawnSet(APlayerState* PS, APawn* NewPawn, APawn* OldPawn);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // The ability system component sub-object used by player characters.
+    UPROPERTY(VisibleAnywhere, Category = "Game|PlayerState")
+    TObjectPtr<UUR_AbilitySystemComponent> AbilitySystemComponent;
+
+    // Health attribute set used by this actor.
+    UPROPERTY()
+    TObjectPtr<const class UUR_HealthSet> HealthSet;
+
+    // Combat attribute set used by this actor.
+    UPROPERTY()
+    TObjectPtr<const class UUR_CombatSet> CombatSet;
+
+    UPROPERTY(Replicated)
+    EPlayerConnectionType MyPlayerConnectionType;
 };

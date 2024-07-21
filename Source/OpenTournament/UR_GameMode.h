@@ -10,6 +10,8 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_PawnData;
+class UUR_ExperienceDefinition;
 class AUR_GameState;
 class AUR_Weapon;
 class UUR_Widget_ScoreboardBase;
@@ -69,6 +71,20 @@ class OPENTOURNAMENT_API AUR_GameMode : public AUR_GameModeBase
 public:
     AUR_GameMode();
 
+#pragma region AGameModeBaseInterface
+
+    virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+
+    virtual void InitGameState() override;
+
+    virtual void GenericPlayerInitialization(AController* C) override;
+
+#pragma endregion AGameModeBaseInterface
+
+
+    UFUNCTION(BlueprintCallable, Category = "OT|Pawn")
+    const UUR_PawnData* GetPawnDataForController(const AController* InController) const;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Classes
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -127,14 +143,6 @@ public:
     UPROPERTY(BlueprintReadOnly)
     int32 DesiredTeamSize;
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // Initialization
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
-
-    virtual void InitGameState() override;
-
     UFUNCTION(BlueprintCallable)
     void BroadcastSystemMessage(const FString& Msg);
 
@@ -145,8 +153,6 @@ public:
     virtual void OnPostLogin(AController* NewPlayer) override;
 
     virtual void Logout(AController* Exiting) override;
-
-    virtual void GenericPlayerInitialization(AController* C) override;
 
     UFUNCTION()
     virtual void AssignDefaultTeam(AUR_PlayerState* PS);
@@ -258,4 +264,19 @@ public:
     virtual void OnEndGameTimeUp(AUR_GameState* GS);
 
     virtual void HandleMatchHasEnded() override;
+
+    //
+
+    void OnExperienceLoaded(const UUR_ExperienceDefinition* CurrentExperience);
+
+    bool IsExperienceLoaded() const;
+
+    void OnMatchAssignmentGiven(FPrimaryAssetId ExperienceId, const FString& ExperienceIdSource);
+
+    void HandleMatchAssignmentIfNotExpectingOne();
+
+    bool TryDedicatedServerLogin();
+
+    UPROPERTY(Config, EditDefaultsOnly, BlueprintReadOnly)
+    FName DefaultGameExperienceName;
 };

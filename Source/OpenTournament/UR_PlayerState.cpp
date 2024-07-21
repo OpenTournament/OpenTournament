@@ -6,6 +6,9 @@
 
 #include "Net/UnrealNetwork.h"
 //#include "Net/Core/PushModel/PushModel.h"
+#include <AbilitySystemComponent.h>
+#include <Components/GameFrameworkComponentManager.h>
+
 #include "Engine/World.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -15,34 +18,99 @@
 #include "UR_FunctionLibrary.h"
 #include "UR_Character.h"
 #include "UR_UserSettings.h"
+#include "UR_AbilitySystemComponent.h"
+#include "UR_ExperienceManagerComponent.h"
+#include "UR_GameMode.h"
+#include "UR_LogChannels.h"
+#include "UR_PawnData.h"
+#include "UR_AbilitySet.h"
+#include "Attributes/UR_CombatSet.h"
+#include "Attributes/UR_HealthSet.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_PlayerState)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_PlayerState::AUR_PlayerState()
+const FName AUR_PlayerState::NAME_GameAbilityReady("GameAbilitiesReady");
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+AUR_PlayerState::AUR_PlayerState(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+    , MyPlayerConnectionType(EPlayerConnectionType::Player)
 {
     TeamIndex = -1;
     ReplicatedTeamIndex = -1;
 
     OnPawnSet.AddUniqueDynamic(this, &ThisClass::InternalOnPawnSet);
     OnTeamChanged.AddUniqueDynamic(this, &ThisClass::InternalOnTeamChanged);
+
+    //
+
+    AbilitySystemComponent = ObjectInitializer.CreateDefaultSubobject<UUR_AbilitySystemComponent>(this, TEXT("AbilitySystemComponent"));
+    AbilitySystemComponent->SetIsReplicated(true);
+    AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+
+    // These attribute sets will be detected by AbilitySystemComponent::InitializeComponent. Keeping a reference so that the sets don't get garbage collected before that.
+    HealthSet = CreateDefaultSubobject<UUR_HealthSet>(TEXT("HealthSet"));
+    CombatSet = CreateDefaultSubobject<UUR_CombatSet>(TEXT("CombatSet"));
+
+    // AbilitySystemComponent needs to be updated at a high frequency.
+    NetUpdateFrequency = 100.0f;
 }
 
 void AUR_PlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    FDoRepLifetimeParams Params;
-    Params.bIsPushBased = true;
+    FDoRepLifetimeParams SharedParams;
+    SharedParams.bIsPushBased = true;
 
-    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Kills, Params);
-    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Deaths, Params);
-    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Suicides, Params);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Kills, SharedParams);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Deaths, SharedParams);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Suicides, SharedParams);
 
-    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CharacterCustomization, Params);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CharacterCustomization, SharedParams);
 
-    Params.RepNotifyCondition = REPNOTIFY_OnChanged;
-    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ReplicatedTeamIndex, Params);
+    SharedParams.RepNotifyCondition = REPNOTIFY_OnChanged;
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ReplicatedTeamIndex, SharedParams);
+
+
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, PawnData, SharedParams);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, MyPlayerConnectionType, SharedParams)
+    //DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, MyTeamID, SharedParams);
+    //DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, MySquadID, SharedParams);
+
+    SharedParams.Condition = ELifetimeCondition::COND_SkipOwner;
+    //DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ReplicatedViewRotation, SharedParams);
+
+    //DOREPLIFETIME(ThisClass, StatTags);
 }
+
+void AUR_PlayerState::PreInitializeComponents()
+{
+    Super::PreInitializeComponents();
+}
+
+void AUR_PlayerState::PostInitializeComponents()
+{
+    Super::PostInitializeComponents();
+
+    check(AbilitySystemComponent);
+    AbilitySystemComponent->InitAbilityActorInfo(this, GetPawn());
+
+    UWorld* World = GetWorld();
+    if (World && World->IsGameWorld() && World->GetNetMode() != NM_Client)
+    {
+        AGameStateBase* GameState = GetWorld()->GetGameState();
+        check(GameState);
+        UUR_ExperienceManagerComponent* ExperienceComponent = GameState->FindComponentByClass<UUR_ExperienceManagerComponent>();
+        check(ExperienceComponent);
+        ExperienceComponent->CallOrRegister_OnExperienceLoaded(FOnGameExperienceLoaded::FDelegate::CreateUObject(this, &ThisClass::OnExperienceLoaded));
+    }
+}
+
 
 void AUR_PlayerState::BeginPlay()
 {
@@ -65,6 +133,30 @@ void AUR_PlayerState::BeginPlay()
         // Bot = make random customization
         ServerSetCharacterCustomization(UUR_CharacterCustomizationBackend::MakeRandomCharacterCustomization());
     }
+}
+
+UAbilitySystemComponent* AUR_PlayerState::GetAbilitySystemComponent() const
+{
+    return GetGameAbilitySystemComponent();
+}
+
+void AUR_PlayerState::OnExperienceLoaded(const UUR_ExperienceDefinition* /*CurrentExperience*/)
+{
+    if (AUR_GameMode* UR_GameMode = GetWorld()->GetAuthGameMode<AUR_GameMode>())
+    {
+        if (const UUR_PawnData* NewPawnData = UR_GameMode->GetPawnDataForController(GetOwningController()))
+        {
+            SetPawnData(NewPawnData);
+        }
+        else
+        {
+            UE_LOG(LogGame, Error, TEXT("AUR_PlayerState::OnExperienceLoaded(): Unable to find PawnData to initialize player state [%s]!"), *GetNameSafe(this));
+        }
+    }
+}
+
+void AUR_PlayerState::OnRep_PawnData()
+{
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,6 +315,43 @@ void AUR_PlayerState::OnRep_ReplicatedTeamIndex()
         // Maintains all the Team->Players arrays on client-side & trigger events appropriately.
         IUR_TeamInterface::Execute_SetTeamIndex(this, ReplicatedTeamIndex);
     }
+}
+
+void AUR_PlayerState::SetPawnData(const UUR_PawnData* InPawnData)
+{
+    check(InPawnData);
+
+    if (GetLocalRole() != ROLE_Authority)
+    {
+        return;
+    }
+
+    if (PawnData)
+    {
+        UE_LOG(LogGame, Error, TEXT("Trying to set PawnData [%s] on player state [%s] that already has valid PawnData [%s]."), *GetNameSafe(InPawnData), *GetNameSafe(this), *GetNameSafe(PawnData));
+        return;
+    }
+
+    MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, PawnData, this);
+    PawnData = InPawnData;
+
+    for (const UUR_AbilitySet* AbilitySet : PawnData->AbilitySets)
+    {
+        if (AbilitySet)
+        {
+            AbilitySet->GiveToAbilitySystem(AbilitySystemComponent, nullptr);
+        }
+    }
+
+    UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(this, NAME_GameAbilityReady);
+
+    ForceNetUpdate();
+}
+
+void AUR_PlayerState::SetPlayerConnectionType(EPlayerConnectionType NewType)
+{
+    MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, MyPlayerConnectionType, this);
+    MyPlayerConnectionType = NewType;
 }
 
 void AUR_PlayerState::InternalOnTeamChanged(AUR_PlayerState* PS, int32 OldTeamIndex, int32 NewTeamIndex)

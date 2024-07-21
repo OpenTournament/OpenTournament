@@ -4,16 +4,17 @@
 
 #pragma once
 
+#include <AbilitySystemInterface.h>
+#include <GameplayTagContainer.h>
 #include <ModularGameState.h>
-
-#include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
-#include "GameFramework/GameState.h"
 
 #include "UR_GameState.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_AbilitySystemComponent;
+class UUR_ExperienceManagerComponent;
+class AUR_PlayerState;
 class AUR_TeamInfo;
 class AUR_Pickup;
 
@@ -32,13 +33,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWinnerAssignedSignature, AUR_GameSt
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+// @! TODO : Extend AModulerGameStateBase not AModularGameState
 /**
  *
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_GameState
     : public AModularGameState
+    , public IAbilitySystemInterface
 {
     GENERATED_BODY()
 
@@ -46,6 +48,10 @@ protected:
     AUR_GameState();
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+    //~IAbilitySystemInterface
+    virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+    //~End of IAbilitySystemInterface
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Match state
@@ -237,6 +243,7 @@ public:
     UPROPERTY(BlueprintAssignable)
     FFragEventSignature FragEvent;
 
+    // @! TODO : Use GameplayMessageSubsystem
     UFUNCTION(NetMulticast, Reliable)
     void MulticastFragEvent(AUR_PlayerState* Victim, AUR_PlayerState* Killer, TSubclassOf<UDamageType> DamType, const FGameplayTagContainer& EventTags);
 
@@ -252,6 +259,7 @@ public:
     UPROPERTY(BlueprintAssignable)
     FGlobalPickupEventSignature PickupEvent;
 
+    // @! TODO : Use GameplayMessageSubsystem
     UFUNCTION(NetMulticast, Reliable)
     void MulticastPickupEvent(TSubclassOf<AUR_Pickup> PickupClass, AUR_PlayerState* Recipient);
 
@@ -276,4 +284,14 @@ public:
 
     UPROPERTY(BlueprintAssignable)
     FWinnerAssignedSignature OnWinnerAssigned;
+
+    ////
+
+    // The ability system component subobject for game-wide things (primarily gameplay cues)
+    UPROPERTY(VisibleAnywhere, Category = "GameState")
+    TObjectPtr<UUR_AbilitySystemComponent> AbilitySystemComponent;
+
+    // Handles loading and managing the current gameplay experience
+    UPROPERTY()
+    TObjectPtr<UUR_ExperienceManagerComponent> ExperienceManagerComponent;
 };

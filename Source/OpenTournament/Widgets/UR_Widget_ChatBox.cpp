@@ -15,11 +15,11 @@ void UUR_Widget_ChatBox::NativeOnInitialized()
 {
     Super::NativeOnInitialized();
 
+    // @! TODO : Widgets shouldn't be adding bindings to Input in this way, we should have some other ChatComponent or something which handles that aspect
     if (const APlayerController* PC = Cast<APlayerController>(GetOwningPlayer()); IsValid(PC))
     {
         if (auto Input = PC->InputComponent)
         {
-            //@! TODO EnhancedInput
             if (auto EnhancedInputComponent = Cast<UEnhancedInputComponent>(Input))
             {
                 // UInputAction

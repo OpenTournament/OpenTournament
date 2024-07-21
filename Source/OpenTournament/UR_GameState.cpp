@@ -4,10 +4,13 @@
 
 #include "UR_GameState.h"
 
-#include "TimerManager.h"
-#include "Engine/World.h"
-#include "Net/UnrealNetwork.h"
 
+#include <TimerManager.h>
+#include <Engine/World.h>
+#include <Net/UnrealNetwork.h>
+
+#include "UR_AbilitySystemComponent.h"
+#include "UR_ExperienceManagerComponent.h"
 #include "UR_GameMode.h"
 #include "UR_LocalPlayer.h"
 #include "UR_MessageHistory.h"
@@ -15,10 +18,20 @@
 #include "UR_PlayerState.h"
 #include "UR_TeamInfo.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_GameState)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameState::AUR_GameState()
 {
+    PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bStartWithTickEnabled = true;
+
+    AbilitySystemComponent = CreateDefaultSubobject<UUR_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+    AbilitySystemComponent->SetIsReplicated(true);
+    AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+
+    ExperienceManagerComponent = CreateDefaultSubobject<UUR_ExperienceManagerComponent>(TEXT("ExperienceManagerComponent"));
 }
 
 void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -29,6 +42,11 @@ void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     DOREPLIFETIME(ThisClass, ClockReferencePoint);
     DOREPLIFETIME(ThisClass, MatchStateTag);
     DOREPLIFETIME(ThisClass, Winner);
+}
+
+UAbilitySystemComponent* AUR_GameState::GetAbilitySystemComponent() const
+{
+    return AbilitySystemComponent;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -11,7 +11,13 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+DECLARE_LOG_CATEGORY_EXTERN(LogGameExperienceManagerComponent, Log, All);
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 class UUR_ExperienceDefinition;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnGameExperienceLoaded, const UUR_ExperienceDefinition* /*Experience*/);
 
@@ -38,7 +44,7 @@ enum class EGameExperienceLoadState
 UCLASS()
 class UUR_ExperienceManagerComponent final
     : public UGameStateComponent
-      , public ILoadingProcessInterface
+    , public ILoadingProcessInterface
 {
     GENERATED_BODY()
 
@@ -47,10 +53,12 @@ public:
 
     //~UActorComponent interface
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
     //~End of UActorComponent interface
 
     //~ILoadingProcessInterface interface
     virtual bool ShouldShowLoadingScreen(FString& OutReason) const override;
+
     //~End of ILoadingProcessInterface
 
     // Tries to set the current experience, either a UI or gameplay one
@@ -81,11 +89,15 @@ private:
     void OnRep_CurrentExperience();
 
     void StartExperienceLoad();
+
     void OnExperienceLoadComplete();
+
     void OnGameFeaturePluginLoadComplete(const UE::GameFeatures::FResult& Result);
+
     void OnExperienceFullLoadCompleted();
 
     void OnActionDeactivationCompleted();
+
     void OnAllActionsDeactivated();
 
 private:
