@@ -12,8 +12,8 @@
 	{
 		"MajorVersion": 5,
 		"MinorVersion": 4,
-		"PatchVersion": 1,
-		"Changelist": 33305029,
+		"PatchVersion": 3,
+		"Changelist": 34507850,
 		"CompatibleChangelist": 33043543,
 		"IsLicenseeVersion": 0,
 		"IsPromotedBuild": 0,
@@ -1950,14 +1950,6 @@
 			"Type": "RequiredResource"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Developer/GitSourceControl/Binaries/Win64/UnrealEditor-GitSourceControl.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Developer/GitSourceControl/Binaries/Win64/UnrealEditor.modules",
-			"Type": "RequiredResource"
-		},
-		{
 			"Path": "$(EngineDir)/Plugins/Developer/N10XSourceCodeAccess/Binaries/Win64/UnrealEditor-N10XSourceCodeAccess.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -2919,6 +2911,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Runtime/AudioModulation/Binaries/Win64/UnrealEditor-AudioModulation.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/AudioModulation/Binaries/Win64/UnrealEditor-AudioModulationEditor.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
@@ -24932,10 +24928,6 @@
 			"Type": "UFS"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Developer/GitSourceControl/GitSourceControl.uplugin",
-			"Type": "UFS"
-		},
-		{
 			"Path": "$(EngineDir)/Plugins/Developer/N10XSourceCodeAccess/N10XSourceCodeAccess.uplugin",
 			"Type": "UFS"
 		},
@@ -25272,6 +25264,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Runtime/AudioModulation/AudioModulation.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Runtime/AudioSynesthesia/AudioSynesthesia.uplugin",
 			"Type": "UFS"
 		},
@@ -25348,11 +25344,19 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Runtime/PacketHandlers/DTLSHandlerComponent/DTLSHandlerComponent.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Runtime/ProceduralMeshComponent/ProceduralMeshComponent.uplugin",
 			"Type": "UFS"
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Runtime/PropertyAccess/PropertyAccessEditor.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Runtime/ReplicationGraph/ReplicationGraph.uplugin",
 			"Type": "UFS"
 		},
 		{
@@ -25448,6 +25452,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(ProjectDir)/Plugins/GameSubtitles/GameSubtitles.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(ProjectDir)/Plugins/GameplayMessageRouter/GameplayMessageRouter.uplugin",
 			"Type": "UFS"
 		},
@@ -25471,6 +25479,7 @@
 		"AssetSearch",
 		"AssetTags",
 		"AudioCapture",
+		"AudioModulation",
 		"AudioSynesthesia",
 		"AudioWidgets",
 		"AutomationUtils",
@@ -25499,6 +25508,7 @@
 		"ControlRigModules",
 		"ControlRigSpline",
 		"CustomMeshComponent",
+		"DTLSHandlerComponent",
 		"DataRegistry",
 		"DataValidation",
 		"Dataflow",
@@ -25516,6 +25526,7 @@
 		"GLTFExporter",
 		"GameFeatures",
 		"GameSettings",
+		"GameSubtitles",
 		"GameplayAbilities",
 		"GameplayCameras",
 		"GameplayMessageRouter",
@@ -25527,7 +25538,6 @@
 		"GeometryMode",
 		"GeometryProcessing",
 		"GeometryScripting",
-		"GitSourceControl",
 		"IKRig",
 		"ImgMedia",
 		"InputDebugging",
@@ -25576,6 +25586,7 @@
 		"PythonScriptPlugin",
 		"RenderDocPlugin",
 		"RenderGraphInsights",
+		"ReplicationGraph",
 		"ResonanceAudio",
 		"RiderLink",
 		"RiderSourceCodeAccess",
