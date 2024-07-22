@@ -99,7 +99,12 @@ void AUR_Weapon::PostInitializeComponents()
             }
             FireModes[FireMode->Index] = FireMode;
 
-            FireMode->SetCallbackInterface(this);
+            //due to both our interfaces leading to the same base interface, just putting in "this" as callback interface would be ambiguous
+            //we need to be specific which side of our diamond (https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem) we take to remove the ambiguity
+            TScriptInterface<IUR_FireModeBaseInterface> CallbackInterface;
+            CallbackInterface.SetObject(this);
+            CallbackInterface.SetInterface(Cast<IUR_FireModeChargedInterface>(this));
+            FireMode->SetCallbackInterface(CallbackInterface);
         }
     }
 
@@ -1221,29 +1226,29 @@ void AUR_Weapon::PlayHitscanEffects_Implementation(UUR_FireModeBasic* FireMode, 
 // FireModeCharged interface
 //============================================================
 
-// void AUR_Weapon::ChargeLevel_Implementation(UUR_FireModeCharged* FireMode, int32 ChargeLevel, bool bWasPaused)
-// {
-//     // Default ammo consumption = 1 per charge
-//     if (HasAuthority())
-//     {
-//         // If a charge was loaded, consume ammo for it
-//         if (!bWasPaused)
-//         {
-//             ConsumeAmmo(1);
-//         }
-//
-//         // If we don't have enough ammo for next charge, stop charging
-//         if (GetCurrentAmmo(FireMode->Index) < 1)
-//         {
-//             FireMode->BlockNextCharge(FireMode->MaxChargeHoldTime);
-//         }
-//     }
-//
-//     // Default hitscan damage = linear scale
-//     FireMode->HitscanDamage = FMath::Lerp(FireMode->HitscanDamageMin, FireMode->HitscanDamageMax, FireMode->GetTotalChargePercent(false));
-//
-//     GEngine->AddOnScreenDebugMessage(118, 3.f, FColor::Blue, *FString::Printf(TEXT("CHARGE LEVEL %i (%i)"), ChargeLevel, bWasPaused ? 1 : 0));
-// }
+void AUR_Weapon::ChargeLevel_Implementation(UUR_FireModeCharged* FireMode, int32 ChargeLevel, bool bWasPaused)
+{
+    // Default ammo consumption = 1 per charge
+    if (HasAuthority())
+    {
+        // If a charge was loaded, consume ammo for it
+        if (!bWasPaused)
+        {
+            ConsumeAmmo(1);
+        }
+
+        // If we don't have enough ammo for next charge, stop charging
+        if (GetCurrentAmmo(FireMode->Index) < 1)
+        {
+            FireMode->BlockNextCharge(FireMode->MaxChargeHoldTime);
+        }
+    }
+
+    // Default hitscan damage = linear scale
+    FireMode->HitscanDamage = FMath::Lerp(FireMode->HitscanDamageMin, FireMode->HitscanDamageMax, FireMode->GetTotalChargePercent(false));
+
+    GEngine->AddOnScreenDebugMessage(118, 3.f, FColor::Blue, *FString::Printf(TEXT("CHARGE LEVEL %i (%i)"), ChargeLevel, bWasPaused ? 1 : 0));
+}
 
 /**
 * SOME NOTES:
