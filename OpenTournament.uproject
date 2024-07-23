@@ -434,8 +434,8 @@
 			"Enabled": false
 		},
 		{
-			"Name": "GitSourceControl",
-			"Enabled": false
+			"Name": "CommonLoadingScreen",
+			"Enabled": true
 		}
 	]
 }
