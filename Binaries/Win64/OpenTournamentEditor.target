@@ -1946,15 +1946,35 @@
 			"Type": "DynamicLibrary"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Compression/OodleNetwork/Binaries/Win64/UnrealEditor.modules",
-			"Type": "RequiredResource"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Developer/GitSourceControl/Binaries/Win64/UnrealEditor-GitSourceControl.dll",
+			"Path": "$(EngineDir)/Plugins/ChaosCloth/Binaries/Win64/UnrealEditor-ChaosClothEditor.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Developer/GitSourceControl/Binaries/Win64/UnrealEditor.modules",
+			"Path": "$(EngineDir)/Plugins/ChaosCloth/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/ChaosVD/Binaries/Win64/UnrealEditor-ChaosVD.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/ChaosVD/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/CmdLinkServer/Binaries/Win64/UnrealEditor-CmdLinkServer.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/CmdLinkServer/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Compression/OodleNetwork/Binaries/Win64/UnrealEditor-OodleNetworkHandlerComponent.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Compression/OodleNetwork/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -24936,7 +24956,15 @@
 			"Type": "UFS"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Developer/GitSourceControl/GitSourceControl.uplugin",
+			"Path": "$(EngineDir)/Plugins/ChaosVD/ChaosVD.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/CmdLinkServer/CmdLinkServer.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Compression/OodleNetwork/OodleNetwork.uplugin",
 			"Type": "UFS"
 		},
 		{
