@@ -39,7 +39,7 @@ AUR_WorldSettings::AUR_WorldSettings(const FObjectInitializer& ObjectInitializer
     MapInfo.DisplayName = "MyLevel";
 
 #if WITH_EDITORONLY_DATA
-    FWorldDelegates::GetAssetTags.AddStatic(&AUR_WorldSettings::AddMapInfoTags);
+    FWorldDelegates::GetAssetTagsWithContext.AddStatic(&AUR_WorldSettings::AddMapInfoTags);
 #endif
 }
 
@@ -191,18 +191,26 @@ void AUR_WorldSettings::DebugDumpPackageTags(FString Path)
 
 #if WITH_EDITORONLY_DATA
 
-void AUR_WorldSettings::AddMapInfoTags(const UWorld* World, TArray<FAssetRegistryTag>& OutTags)
+#include "UObject/AssetRegistryTagsContext.h"
+
+// We use this trick to inject WorldSettings' tags into the World (.umap) asset file
+// UObject::GetAssetRegistryTags iterates all UPROPERTY marked with AssetRegistrySearchable
+// As such, our MapInfo data will end up in the .umap asset and can be retrieved without loading the entire levels in memory.
+
+//NOTE: investigate OnGetExtraObjectTagsWithContext
+
+void AUR_WorldSettings::AddMapInfoTags(const UWorld* World, FAssetRegistryTagsContext Context)
 {
     if (World && World->GetWorldSettings())
     {
-        World->GetWorldSettings()->GetAssetRegistryTags(OutTags);
+        World->GetWorldSettings()->GetAssetRegistryTags(Context);
     }
 }
 
-void AUR_WorldSettings::GetAssetRegistryTags(TArray<FAssetRegistryTag>& OutTags) const
+void AUR_WorldSettings::GetAssetRegistryTags(FAssetRegistryTagsContext Context) const
 {
     // skip AActor
-    UObject::GetAssetRegistryTags(OutTags);
+    UObject::GetAssetRegistryTags(Context);
 }
 
 #endif
