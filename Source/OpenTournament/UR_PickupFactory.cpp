@@ -244,7 +244,7 @@ void AUR_PickupFactory::SpawnPickup()
     Pickup->OnDestroyed.AddDynamic(this, &ThisClass::OnPickupDestroyed);
 
     // Blueprint init properties here
-    PreInitializePickup(Pickup, Transform);
+    PreInitializePickup(Pickup);
 
     // Blueprint may decide to destroy pickup
     if (!Pickup)
