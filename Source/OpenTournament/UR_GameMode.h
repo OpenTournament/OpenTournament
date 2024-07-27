@@ -270,13 +270,4 @@ public:
     void OnExperienceLoaded(const UUR_ExperienceDefinition* CurrentExperience);
 
     bool IsExperienceLoaded() const;
-
-    void OnMatchAssignmentGiven(FPrimaryAssetId ExperienceId, const FString& ExperienceIdSource);
-
-    void HandleMatchAssignmentIfNotExpectingOne();
-
-    bool TryDedicatedServerLogin();
-
-    UPROPERTY(Config, EditDefaultsOnly, BlueprintReadOnly)
-    FName DefaultGameExperienceName;
 };
