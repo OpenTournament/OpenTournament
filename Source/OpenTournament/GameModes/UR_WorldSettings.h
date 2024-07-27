@@ -106,9 +106,9 @@ protected:
 public:
 #if WITH_EDITORONLY_DATA
 
-    static void AddMapInfoTags(const UWorld* World, TArray<FAssetRegistryTag>& OutTags);
+    static void AddMapInfoTags(const UWorld* World, FAssetRegistryTagsContext Context);
 
-    virtual void GetAssetRegistryTags(TArray<FAssetRegistryTag>& OutTags) const override;
+    virtual void GetAssetRegistryTags(FAssetRegistryTagsContext Context) const override;
 
     // Is this level part of a front-end or other standalone experience?
     // When set, the net mode will be forced to Standalone when you hit Play in the editor

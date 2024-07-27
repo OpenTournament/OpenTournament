@@ -187,8 +187,8 @@ public:
     * This is necessary because if player is standing on spawn, pickup may be instantly deleted.
     */
     UFUNCTION(BlueprintNativeEvent)
-    void PreInitializePickup(AUR_Pickup* UpcomingPickup, UPARAM(Ref) FTransform& InOutTransform);
-    virtual void PreInitializePickup_Implementation(AUR_Pickup* UpcomingPickup, FTransform& InOutTransform) {}
+    void PreInitializePickup(AUR_Pickup* UpcomingPickup);
+    virtual void PreInitializePickup_Implementation(AUR_Pickup* UpcomingPickup) {}
 
     /**
     * Adjust pickup after is has been fully spawned.
