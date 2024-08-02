@@ -23,7 +23,7 @@ class AUR_Character;
 class AUR_HUD;
 class AUR_PlayerState;
 class AUR_Pickup;
-class UUR_PCInputDodgeComponent;
+class UUR_InputDodgeComponent;
 class UUR_Widget_BaseMenu;
 
 class UUR_ChatComponent;
@@ -100,48 +100,8 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-    * Component for handling Dodge Inputs.
-    */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PC|Dodge")
-    UUR_PCInputDodgeComponent* InputDodgeComponent;
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
-    TObjectPtr<UInputMappingContext> DefaultInputMapping;
-
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
     TObjectPtr<UInputMappingContext> DefaultInterfaceMapping;
-
-    UPROPERTY(EditDefaultsOnly, Category = "Input")
-    TObjectPtr<UInputAction> InputActionMove;
-
-    UPROPERTY(EditDefaultsOnly, Category = "Input")
-    TObjectPtr<UInputAction> InputActionLook;
-
-    UPROPERTY(EditDefaultsOnly, Category = "Input")
-    TObjectPtr<UInputAction> InputActionJump;
-
-    UPROPERTY(EditDefaultsOnly, Category = "Input")
-    TObjectPtr<UInputAction> InputActionCrouch;
-
-    //because of the way the fire input stack works, we need additional input actions for the released event
-    //Maybe rethink necessity of the input stack design
-    UPROPERTY(EditDefaultsOnly, Category = "Input")
-    TObjectPtr<UInputAction> InputActionFire;
-
-    UPROPERTY(EditDefaultsOnly, Category = "Input")
-    TObjectPtr<UInputAction> InputActionFireReleased;
-
-    UPROPERTY(EditDefaultsOnly, Category = "Input")
-    TObjectPtr<UInputAction> InputActionAltFire;
-
-    UPROPERTY(EditDefaultsOnly, Category = "Input")
-    TObjectPtr<UInputAction> InputActionAltFireReleased;
-
-    UPROPERTY(EditDefaultsOnly, Category = "Input")
-    TObjectPtr<UInputAction> InputActionThirdFire;
 
     UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionThirdFireReleased;
@@ -168,12 +128,6 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-    * Override engine's default StartFire.
-    */
-    virtual void StartFire(uint8 FireModeNum = 0) override;
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
     * Component handling Chat Messages
@@ -276,17 +230,6 @@ public:
 
 private:
 
-    void OnMoveTriggered(const FInputActionInstance& InputActionInstance);
-    void OnLookTriggered(const FInputActionInstance& InputActionInstance);
-    void OnJumpTriggered(const FInputActionInstance& InputActionInstance);
-    void OnCrouchTriggered(const FInputActionInstance& InputActionInstance);
-    void OnCrouchCompleted(const FInputActionInstance& InputActionInstance);
-    void OnFireTriggered(const FInputActionInstance& InputActionInstance);
-    void OnFireReleased(const FInputActionInstance& InputActionInstance);
-    void OnAltFireTriggered(const FInputActionInstance& InputActionInstance);
-    void OnAltFireReleased(const FInputActionInstance& InputActionInstance);
-    void OnThirdFireTriggered(const FInputActionInstance& InputActionInstance);
-    void OnThirdFireReleased(const FInputActionInstance& InputActionInstance);
     void OnToggleScoreboardTriggered(const FInputActionInstance& InputActionInstance);
     void OnHoldScoreboardTriggered(const FInputActionInstance& InputActionInstance);
     void OnHoldScoreboardCompleted(const FInputActionInstance& InputActionInstance);

@@ -17,10 +17,13 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_InputDodgeComponent;
+struct FInputActionInstance;
 class APlayerController;
 class UAnimationMontage;
 class UGameplayEffect;
 class UGameplayTagsManager;
+class UInputMappingContext;
 class UInputAction;
 
 class UUR_HealthComponent;
@@ -283,6 +286,12 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
     UAIPerceptionSourceNativeComp* AIPerceptionStimuliSource;
 
+    /**
+    * Component for handling Dodge Inputs.
+    */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PC|Dodge")
+    UUR_InputDodgeComponent* InputDodgeComponent;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, BlueprintNativeEvent)
@@ -433,6 +442,41 @@ public:
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Input bindings
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputMappingContext> DefaultInputMappingPawn;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionMove;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionLook;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionJump;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionCrouch;
+
+    //because of the way the fire input stack works, we need additional input actions for the released event
+    //Maybe rethink necessity of the input stack design
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionFire;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionFireReleased;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionAltFire;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionAltFireReleased;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionThirdFire;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UInputAction> InputActionThirdFireReleased;
 
     UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionNextWeapon;
@@ -929,4 +973,18 @@ public:
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
 
     //~ End TeamInterface
+
+private:
+
+    void OnMoveTriggered(const FInputActionInstance& InputActionInstance);
+    void OnLookTriggered(const FInputActionInstance& InputActionInstance);
+    void OnJumpTriggered(const FInputActionInstance& InputActionInstance);
+    void OnCrouchTriggered(const FInputActionInstance& InputActionInstance);
+    void OnCrouchCompleted(const FInputActionInstance& InputActionInstance);
+    void OnFireTriggered(const FInputActionInstance& InputActionInstance);
+    void OnFireReleased(const FInputActionInstance& InputActionInstance);
+    void OnAltFireTriggered(const FInputActionInstance& InputActionInstance);
+    void OnAltFireReleased(const FInputActionInstance& InputActionInstance);
+    void OnThirdFireTriggered(const FInputActionInstance& InputActionInstance);
+    void OnThirdFireReleased(const FInputActionInstance& InputActionInstance);
 };
