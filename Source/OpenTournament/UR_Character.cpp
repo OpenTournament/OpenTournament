@@ -8,6 +8,7 @@
 #include <Components/SkeletalMeshComponent.h>
 #include <Components/SkinnedMeshComponent.h>
 
+#include "EnhancedInputSubsystems.h"
 #include "GameplayTagsManager.h"
 #include "InputAction.h"
 #include "Camera/CameraComponent.h"
@@ -32,6 +33,7 @@
 #include "UR_LogChannels.h"
 #include "UR_Logging.h"
 #include "UR_PaniniUtils.h"
+#include "UR_InputDodgeComponent.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 #include "UR_Projectile.h"
@@ -43,6 +45,7 @@
 #include "Character/UR_CharacterCustomization.h"
 #include "Character/UR_CharacterMovementComponent.h"
 #include "Character/UR_HealthComponent.h"
+#include "Engine/LocalPlayer.h"
 #include "Interfaces/UR_ActivatableInterface.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,6 +150,8 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer)
     HairMesh->SetupAttachment(GetMesh3P());
     HairMesh->SetLeaderPoseComponent(GetMesh3P());
     HairMesh->bCastHiddenShadow = true;
+
+    InputDodgeComponent = CreateDefaultSubobject<UUR_InputDodgeComponent>(TEXT("InputDodgeComponent"));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -220,14 +225,35 @@ void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    if (auto URInputComponent = Cast<UUR_InputComponent>(InputComponent))
+    if(const auto PlayerController = Cast<APlayerController>(GetController()))
+    {
+        if (UEnhancedInputLocalPlayerSubsystem* InputSystem = PlayerController->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+        {
+            //interface functions like scoreboard/chat should be separate from pawn and get their own mapping context
+            InputSystem->AddMappingContext(DefaultInputMappingPawn, 0);
+        }
+    }
+
+    if (const auto URInputComponent = Cast<UUR_InputComponent>(PlayerInputComponent))
     {
         URInputComponent->BindAction(InputActionNextWeapon, ETriggerEvent::Triggered, this, &AUR_Character::NextWeapon);
         URInputComponent->BindAction(InputActionPreviousWeapon, ETriggerEvent::Triggered, this, &AUR_Character::PrevWeapon);
         URInputComponent->BindAction(InputActionDropWeapon, ETriggerEvent::Triggered, this, &AUR_Character::DropWeapon);
-    }
+        URInputComponent->BindAction(InputActionMove, ETriggerEvent::Triggered, this, &AUR_Character::OnMoveTriggered);
+        URInputComponent->BindAction(InputActionLook, ETriggerEvent::Triggered, this, &AUR_Character::OnLookTriggered);
+        URInputComponent->BindAction(InputActionJump, ETriggerEvent::Triggered, this, &AUR_Character::OnJumpTriggered);
+        URInputComponent->BindAction(InputActionCrouch, ETriggerEvent::Triggered, this, &AUR_Character::OnCrouchTriggered);
+        URInputComponent->BindAction(InputActionCrouch, ETriggerEvent::Completed, this, &AUR_Character::OnCrouchCompleted);
+        URInputComponent->BindAction(InputActionFire, ETriggerEvent::Triggered, this, &AUR_Character::OnFireTriggered);
+        URInputComponent->BindAction(InputActionFireReleased, ETriggerEvent::Triggered, this, &AUR_Character::OnFireReleased);
+        URInputComponent->BindAction(InputActionAltFire, ETriggerEvent::Triggered, this, &AUR_Character::OnAltFireTriggered);
+        URInputComponent->BindAction(InputActionAltFireReleased, ETriggerEvent::Triggered, this, &AUR_Character::OnAltFireReleased);
+        URInputComponent->BindAction(InputActionThirdFire, ETriggerEvent::Triggered, this, &AUR_Character::OnThirdFireTriggered);
+        URInputComponent->BindAction(InputActionThirdFireReleased, ETriggerEvent::Triggered, this, &AUR_Character::OnThirdFireReleased);
 
-    SetupWeaponBindings();
+        SetupWeaponBindings();
+        InputDodgeComponent->SetupInputComponent(URInputComponent);
+    }
 
     // Voice
     // Ping
@@ -511,7 +537,7 @@ void AUR_Character::PlayFootstepEffects(const float WalkingSpeedPercentage) cons
 
 void AUR_Character::SetupWeaponBindings()
 {
-    if (auto URInputComponent = Cast<UUR_InputComponent>(InputComponent))
+    if(auto URInputComponent = Cast<UUR_InputComponent>(InputComponent))
     {
         for (auto WeaponBinding : WeaponBindings)
         {
@@ -1204,15 +1230,6 @@ UUR_InventoryComponent* AUR_Character::GetInventoryComponent()
 
 void AUR_Character::PawnStartFire(uint8 FireModeNum)
 {
-    /*
-    bIsFiring = true;
-
-    if (InventoryComponent && InventoryComponent->ActiveWeapon)
-    {
-        InventoryComponent->ActiveWeapon->LocalStartFire();
-    }
-    */
-
     DesiredFireModeNum.Insert(FireModeNum, 0);
 
     if (InventoryComponent && InventoryComponent->ActiveWeapon)
@@ -1223,15 +1240,6 @@ void AUR_Character::PawnStartFire(uint8 FireModeNum)
 
 void AUR_Character::PawnStopFire(uint8 FireModeNum)
 {
-    /*
-    bIsFiring = false;
-
-    if (InventoryComponent && InventoryComponent->ActiveWeapon)
-    {
-        InventoryComponent->ActiveWeapon->LocalStopFire();
-    }
-    */
-
     DesiredFireModeNum.RemoveSingle(FireModeNum);
 
     if (InventoryComponent && InventoryComponent->ActiveWeapon)
@@ -1488,4 +1496,80 @@ void AUR_Character::SetTeamIndex_Implementation(int32 NewTeamIndex)
     {
         IUR_TeamInterface::Execute_SetTeamIndex(PS, NewTeamIndex);
     }
+}
+
+void AUR_Character::OnMoveTriggered(const FInputActionInstance& InputActionInstance)
+{
+    const FVector Move = InputActionInstance.GetValue().Get<FVector>();
+
+    if (!IsMoveInputIgnored())
+    {
+        MoveForward(Move.X);
+        MoveRight(Move.Y);
+        MoveForward(Move.Z);
+    }
+}
+
+void AUR_Character::OnLookTriggered(const FInputActionInstance& InputActionInstance)
+{
+    const FVector2d Look = InputActionInstance.GetValue().Get<FVector2d>();
+    if(const auto PlayerController = Cast<AUR_PlayerController>(GetController()))
+    {
+        PlayerController->AddYawInput(Look.X);
+        PlayerController->AddPitchInput(Look.Y);
+    }
+}
+
+void AUR_Character::OnJumpTriggered(const FInputActionInstance& InputActionInstance)
+{
+    if (!IsMoveInputIgnored())
+    {
+        bPressedJump = true;
+    }
+}
+
+void AUR_Character::OnCrouchTriggered(const FInputActionInstance& InputActionInstance)
+{
+    if (!IsMoveInputIgnored())
+    {
+        Crouch(false);
+    }
+}
+
+void AUR_Character::OnCrouchCompleted(const FInputActionInstance& InputActionInstance)
+{
+    if (!IsMoveInputIgnored())
+    {
+        UnCrouch(false);
+    }
+}
+
+void AUR_Character::OnFireTriggered(const FInputActionInstance& InputActionInstance)
+{
+    PawnStartFire(0);
+}
+
+void AUR_Character::OnFireReleased(const FInputActionInstance& InputActionInstance)
+{
+    PawnStopFire(0);
+}
+
+void AUR_Character::OnAltFireTriggered(const FInputActionInstance& InputActionInstance)
+{
+    PawnStartFire(1);
+}
+
+void AUR_Character::OnAltFireReleased(const FInputActionInstance& InputActionInstance)
+{
+    PawnStopFire(1);
+}
+
+void AUR_Character::OnThirdFireTriggered(const FInputActionInstance& InputActionInstance)
+{
+    PawnStartFire(2);
+}
+
+void AUR_Character::OnThirdFireReleased(const FInputActionInstance& InputActionInstance)
+{
+    PawnStopFire(2);
 }
