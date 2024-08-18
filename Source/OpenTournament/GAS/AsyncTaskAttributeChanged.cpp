@@ -4,6 +4,8 @@
 
 #include "AsyncTaskAttributeChanged.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(AsyncTaskAttributeChanged)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UAsyncTaskAttributeChanged* UAsyncTaskAttributeChanged::ListenForAttributeChange(UAbilitySystemComponent* AbilitySystemComponent, FGameplayAttribute Attribute)

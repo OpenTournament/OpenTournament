@@ -8,6 +8,8 @@
 
 #include "OpenTournament.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_TriggerZoneBox)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_TriggerZoneBox::AUR_TriggerZoneBox(const FObjectInitializer& ObjectInitializer)

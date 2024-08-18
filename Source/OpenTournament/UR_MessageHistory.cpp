@@ -17,6 +17,8 @@
 
 #include "Slate/UR_RichTextDecorator_CustomStyle.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_MessageHistory)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 DEFINE_LOG_CATEGORY(LogChat);

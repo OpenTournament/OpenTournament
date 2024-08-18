@@ -8,6 +8,8 @@
 #include "TimerManager.h"
 #include "UR_LogChannels.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_FireModeBasic)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_FireModeBasic::StartFire_Implementation()

@@ -37,6 +37,8 @@
 #include "UR_LogChannels.h"
 #include "Messages/CrosshairVerbMessage.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_Weapon)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_Weapon::AUR_Weapon(const FObjectInitializer& ObjectInitializer)

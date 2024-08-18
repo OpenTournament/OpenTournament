@@ -16,6 +16,8 @@
 #include "Misc/AutomationTest.h"
 #endif
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_ControlPoint)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_ControlPoint::AUR_ControlPoint(const FObjectInitializer& ObjectInitializer)

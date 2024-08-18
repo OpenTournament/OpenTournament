@@ -13,6 +13,8 @@
 #include "UR_LogChannels.h"
 #include "Attributes/UR_HealthSet.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_HealthBase)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_HealthBase::AUR_HealthBase()

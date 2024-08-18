@@ -6,6 +6,8 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UR_FunctionLibrary.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_ImpactDecalComponent)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 const FName& CreationTimeParamName = "CreationTime";

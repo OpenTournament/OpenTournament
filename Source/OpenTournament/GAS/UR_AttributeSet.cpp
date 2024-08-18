@@ -8,6 +8,8 @@
 #include "UR_LogChannels.h"
 #include "Net/UnrealNetwork.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_AttributeSet)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_AttributeSet::UUR_AttributeSet()

@@ -6,6 +6,8 @@
 #include "UR_GameplayAbility.h"
 #include "UR_Character.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_TargetType)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_TargetType::GetTargets_Implementation(AUR_Character* TargetingCharacter, AActor* TargetingActor, FGameplayEventData EventData, TArray<FHitResult>& OutHitResults, TArray<AActor*>& OutActors) const

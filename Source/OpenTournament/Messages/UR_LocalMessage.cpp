@@ -8,6 +8,8 @@
 #include "GameFramework/PlayerState.h"
 #include "Kismet/KismetSystemLibrary.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_LocalMessage)
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_LocalMessage::K2_ClientReceive_Implementation(APlayerController* LocalPC, int32 Switch, APlayerState* RelatedPlayer1, APlayerState* RelatedPlayer2, UObject* OptionalObject) const

@@ -11,6 +11,8 @@
 #include <GameFramework/Character.h>
 #include <GameFramework/CharacterMovementComponent.h>
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_AINavigationJumpingComp)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_AINavigationJumpingComp::UUR_AINavigationJumpingComp()

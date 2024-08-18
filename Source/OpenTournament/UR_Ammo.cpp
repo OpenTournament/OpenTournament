@@ -10,6 +10,8 @@
 #include "UR_InventoryComponent.h"
 #include "UR_Weapon.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_Ammo)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_Ammo::AUR_Ammo()

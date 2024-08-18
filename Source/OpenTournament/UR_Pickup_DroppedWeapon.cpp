@@ -13,6 +13,8 @@
 #include "UR_Character.h"
 #include "UR_Weapon.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_Pickup_DroppedWeapon)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_Pickup_DroppedWeapon::AUR_Pickup_DroppedWeapon(const FObjectInitializer& ObjectInitializer)

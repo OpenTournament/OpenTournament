@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "AbilitySystem/UR_AbilitySet.h"
+#include "UR_AbilitySet.h"
 #include "Components/PawnComponent.h"
 #include "Net/Serialization/FastArraySerializer.h"
 

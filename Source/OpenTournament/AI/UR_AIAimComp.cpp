@@ -10,6 +10,8 @@
 #include "Engine/World.h"
 #include "GameFramework/Controller.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_AIAimComp)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_AIAimComp::UUR_AIAimComp()

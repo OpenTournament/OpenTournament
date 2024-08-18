@@ -11,6 +11,8 @@
 #include "UR_PlayerController.h"
 #include "Character/UR_CharacterMovementComponent.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_PCInputDodgeComponent)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_PCInputDodgeComponent::UUR_PCInputDodgeComponent()

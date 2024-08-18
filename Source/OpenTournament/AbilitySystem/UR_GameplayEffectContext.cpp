@@ -19,6 +19,8 @@
 
 class FArchive;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 FUR_GameplayEffectContext* FUR_GameplayEffectContext::ExtractEffectContext(struct FGameplayEffectContextHandle Handle)
 {
     FGameplayEffectContext* BaseEffectContext = Handle.Get();

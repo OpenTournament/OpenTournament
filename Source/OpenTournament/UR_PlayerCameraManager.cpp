@@ -13,6 +13,8 @@
 #include "UR_Character.h"
 #include "UR_FunctionLibrary.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_PlayerCameraManager)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_PlayerCameraManager::AssignViewTarget(AActor* NewTarget, FTViewTarget& VT, struct FViewTargetTransitionParams TransitionParams)

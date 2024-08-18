@@ -45,6 +45,8 @@
 #include "Character/UR_HealthComponent.h"
 #include "Interfaces/UR_ActivatableInterface.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_Character)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer)

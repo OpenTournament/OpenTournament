@@ -4,7 +4,6 @@
 
 #include "UR_GameState.h"
 
-
 #include <TimerManager.h>
 #include <Engine/World.h>
 #include <Net/UnrealNetwork.h>

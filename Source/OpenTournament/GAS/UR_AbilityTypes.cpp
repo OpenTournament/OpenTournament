@@ -9,6 +9,8 @@
 #include "OpenTournament.h"
 #include "UR_AbilitySystemComponent.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_AbilityTypes)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool FUR_GameplayEffectContainerSpec::HasValidEffects() const

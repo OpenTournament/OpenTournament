@@ -9,6 +9,8 @@
 #include <Components/GameFrameworkComponentManager.h>
 #include <UObject/UObjectIterator.h>
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_HUD)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_HUD::AUR_HUD(const FObjectInitializer& ObjectInitializer)

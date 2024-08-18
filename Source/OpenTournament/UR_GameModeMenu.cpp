@@ -18,6 +18,7 @@
 #include "UR_PlayerState.h"
 #include "UR_PlayerController.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_GameModeMenu)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -5,6 +5,8 @@
 #include "UR_CharacterCustomization.h"
 #include <Engine/SkeletalMesh.h>
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_CharacterCustomization)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Helper

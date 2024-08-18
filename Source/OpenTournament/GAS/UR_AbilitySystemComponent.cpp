@@ -13,6 +13,8 @@
 #include "UR_GameData.h"
 #include "UR_LogChannels.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_AbilitySystemComponent)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_AbilitySystemComponent::UUR_AbilitySystemComponent()
