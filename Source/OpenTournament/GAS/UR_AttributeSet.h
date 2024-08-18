@@ -58,14 +58,6 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    UPROPERTY(ReplicatedUsing=OnRep_HealthD, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
-    FGameplayAttributeData Health_D;
-    ATTRIBUTE_ACCESSORS(UUR_AttributeSet, Health_D)
-
-    UPROPERTY(ReplicatedUsing=OnRep_HealthMaxD, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
-    FGameplayAttributeData HealthMax_D;
-    ATTRIBUTE_ACCESSORS(UUR_AttributeSet, HealthMax_D)
-
     UPROPERTY(ReplicatedUsing=OnRep_OverHealth, BlueprintReadWrite, EditInstanceOnly, Category = "CharacterAttributes")
     FGameplayAttributeData OverHealth;
     ATTRIBUTE_ACCESSORS(UUR_AttributeSet, OverHealth)
@@ -146,7 +138,7 @@ public:
     //-------------------------------------------------------------------------------------//
 
     //NOTE: Not sure how to best implement this within the GAS framework...
-    UFUNCTION(BlueprintPure, Category = "CharacterAttributes")
+    UFUNCTION(BlueprintPure, Category = "CharacterAttributes", meta = (DeprecatedFunction))
     virtual float GetEffectiveHealth();
 
 protected:
@@ -157,12 +149,6 @@ protected:
     void AdjustAttributeForMaxChange(FGameplayAttributeData& AffectedAttribute, const FGameplayAttributeData& MaxAttribute, float NewMaxValue, const FGameplayAttribute& AffectedAttributeProperty);
 
     // These OnRep functions exist to make sure that the ability system internal representations are synchronized properly during replication
-    UFUNCTION()
-    virtual void OnRep_HealthD(const FGameplayAttributeData& OldHealth);
-
-    UFUNCTION()
-    virtual void OnRep_HealthMaxD(const FGameplayAttributeData& OldHealthMax);
-
     UFUNCTION()
     virtual void OnRep_OverHealth(const FGameplayAttributeData& OldOverHealth);
 

@@ -857,34 +857,34 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     float DamageToHealth = 0.f;
     float DamageRemaining = Damage;
 
-    if (AttributeSet && AttributeSet->Health_D.GetCurrentValue() > 0.f)
-    {
-        const float CurrentShield = FMath::FloorToFloat(AttributeSet->Shield.GetCurrentValue());
-        if (CurrentShield > 0.f)
-        {
-            DamageToShield = FMath::Min(DamageRemaining, CurrentShield);
-            AttributeSet->SetShield(CurrentShield - DamageToShield);
-            DamageRemaining -= DamageToShield;
-        }
-
-        const float CurrentArmor = FMath::FloorToFloat(AttributeSet->Armor.GetCurrentValue());
-        const float ArmorAbsorption = AttributeSet->ArmorAbsorptionPercent.GetCurrentValue();
-        if (CurrentArmor > 0.f && DamageRemaining > 0.f)
-        {
-            DamageToArmor = FMath::Min(DamageRemaining * ArmorAbsorption, CurrentArmor);
-            DamageToArmor = FMath::FloorToFloat(DamageToArmor);
-            AttributeSet->SetArmor(CurrentArmor - DamageToArmor);
-            DamageRemaining -= DamageToArmor;
-        }
-
-        const float CurrentHealth = AttributeSet->Health_D.GetCurrentValue();
-        if (CurrentHealth > 0.f && DamageRemaining > 0.f)
-        {
-            DamageToHealth = FMath::Min(DamageRemaining, CurrentHealth);
-            // AttributeSet->SetHealth(CurrentHealth - DamageToHealth); // @! TODO HealthComponentFix
-            DamageRemaining -= DamageToHealth;
-        }
-    }
+    // if (AttributeSet && AttributeSet->Health_D.GetCurrentValue() > 0.f)
+    // {
+    //     const float CurrentShield = FMath::FloorToFloat(AttributeSet->Shield.GetCurrentValue());
+    //     if (CurrentShield > 0.f)
+    //     {
+    //         DamageToShield = FMath::Min(DamageRemaining, CurrentShield);
+    //         AttributeSet->SetShield(CurrentShield - DamageToShield);
+    //         DamageRemaining -= DamageToShield;
+    //     }
+    //
+    //     const float CurrentArmor = FMath::FloorToFloat(AttributeSet->Armor.GetCurrentValue());
+    //     const float ArmorAbsorption = AttributeSet->ArmorAbsorptionPercent.GetCurrentValue();
+    //     if (CurrentArmor > 0.f && DamageRemaining > 0.f)
+    //     {
+    //         DamageToArmor = FMath::Min(DamageRemaining * ArmorAbsorption, CurrentArmor);
+    //         DamageToArmor = FMath::FloorToFloat(DamageToArmor);
+    //         AttributeSet->SetArmor(CurrentArmor - DamageToArmor);
+    //         DamageRemaining -= DamageToArmor;
+    //     }
+    //
+    //     const float CurrentHealth = AttributeSet->Health_D.GetCurrentValue();
+    //     if (CurrentHealth > 0.f && DamageRemaining > 0.f)
+    //     {
+    //         DamageToHealth = FMath::Min(DamageRemaining, CurrentHealth);
+    //         // AttributeSet->SetHealth(CurrentHealth - DamageToHealth); // @! TODO HealthComponentFix
+    //         DamageRemaining -= DamageToHealth;
+    //     }
+    // }
 
     GAME_LOG(LogGame, Log, "Damage repartition: Shield(%f), Armor(%f), Health(%f), Extra(%f)", DamageToShield, DamageToArmor, DamageToHealth, DamageRemaining);
 
@@ -968,7 +968,7 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     ////////////////////////////////////////////////////////////
     // Death
 
-    if (AttributeSet && AttributeSet->Health_D.GetCurrentValue() <= 0)
+    if (HealthComponent && HealthComponent->GetHealth() <= 0)
     {
         // Can use DamageRemaining here to GIB
         Die(EventInstigator, DamageEvent, DamageCauser, RepDamageEvent);
@@ -1007,11 +1007,12 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
 
         if (URGameMode->PreventDeath(Killed, Killer, DamageEvent, DamageCauser))
         {
+            // @! TODO HealthComponentFix
             // Make sure we don't stay with <=0 health or IsAlive() would return false.
-            if (AttributeSet->Health_D.GetCurrentValue() <= 0)
-            {
-                //AttributeSet->SetHealth(1); // @! TODO HealthComponentFix
-            }
+            //if (AttributeSet->Health_D.GetCurrentValue() <= 0)
+            //{
+                //AttributeSet->SetHealth(1);
+            //}
             return;
         }
 
