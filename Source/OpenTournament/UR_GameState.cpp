@@ -1,24 +1,36 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_GameState.h"
 
-#include "Net/UnrealNetwork.h"
-#include "Engine/World.h"
-#include "TimerManager.h"
+#include <TimerManager.h>
+#include <Engine/World.h>
+#include <Net/UnrealNetwork.h>
 
+#include "UR_AbilitySystemComponent.h"
+#include "UR_ExperienceManagerComponent.h"
 #include "UR_GameMode.h"
-#include "UR_TeamInfo.h"
 #include "UR_LocalPlayer.h"
 #include "UR_MessageHistory.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
+#include "UR_TeamInfo.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_GameState)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameState::AUR_GameState()
 {
+    PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bStartWithTickEnabled = true;
+
+    AbilitySystemComponent = CreateDefaultSubobject<UUR_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+    AbilitySystemComponent->SetIsReplicated(true);
+    AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+
+    ExperienceManagerComponent = CreateDefaultSubobject<UUR_ExperienceManagerComponent>(TEXT("ExperienceManagerComponent"));
 }
 
 void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -29,6 +41,11 @@ void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     DOREPLIFETIME(ThisClass, ClockReferencePoint);
     DOREPLIFETIME(ThisClass, MatchStateTag);
     DOREPLIFETIME(ThisClass, Winner);
+}
+
+UAbilitySystemComponent* AUR_GameState::GetAbilitySystemComponent() const
+{
+    return AbilitySystemComponent;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +93,7 @@ void AUR_GameState::DefaultTimer()
 
     //NOTE: Super only counts elapsed time during match in progress.
     // We want to count during other states as well, so we can benefit from clock in warmup and endgame.
-    if ( !IsMatchInProgress() )
+    if (!IsMatchInProgress())
     {
         ++ElapsedTime;
         if (GetNetMode() != NM_DedicatedServer)

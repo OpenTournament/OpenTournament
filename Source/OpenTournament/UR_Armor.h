@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -17,12 +17,12 @@ class USoundBase;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UCLASS()
-class OPENTOURNAMENT_API AUR_Armor : public AUR_Pickup
+class OPENTOURNAMENT_API AUR_Armor
+    : public AUR_Pickup
 {
     GENERATED_BODY()
-    
-public:
 
+public:
     AUR_Armor(const FObjectInitializer& ObjectInitializer);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////

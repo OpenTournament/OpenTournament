@@ -14,45 +14,55 @@ class AAIController;
 UCLASS(Blueprintable, Abstract)
 class UUR_BotCreationComponent : public UGameStateComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	UUR_BotCreationComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+    UUR_BotCreationComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-	//~UActorComponent interface
-	virtual void BeginPlay() override;
-	//~End of UActorComponent interface
+    //~UActorComponent interface
+    virtual void BeginPlay() override;
+
+    //~End of UActorComponent interface
 
 private:
-	void OnExperienceLoaded(const UUR_ExperienceDefinition* Experience);
+    void OnExperienceLoaded(const UUR_ExperienceDefinition* Experience);
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category=Teams)
-	int32 NumBotsToCreate = 5;
+    UPROPERTY(EditDefaultsOnly, Category=Teams)
+    int32 NumBotsToCreate = 5;
 
-	UPROPERTY(EditDefaultsOnly, Category=Gameplay)
-	TSubclassOf<AAIController> BotControllerClass;
+    UPROPERTY(EditDefaultsOnly, Category=Gameplay)
+    TSubclassOf<AAIController> BotControllerClass;
 
-	UPROPERTY(EditDefaultsOnly, Category=Gameplay)
-	TArray<FString> RandomBotNames;
+    UPROPERTY(EditDefaultsOnly, Category=Gameplay)
+    TArray<FString> RandomBotNames;
 
-	TArray<FString> RemainingBotNames;
+    TArray<FString> RemainingBotNames;
 
 protected:
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<AAIController>> SpawnedBotList;
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<AAIController>> SpawnedBotList;
 
 #if WITH_SERVER_CODE
+
 public:
-	void Cheat_AddBot() { SpawnOneBot(); }
-	void Cheat_RemoveBot() { RemoveOneBot(); }
+    void Cheat_AddBot()
+    {
+        SpawnOneBot();
+    }
+
+    void Cheat_RemoveBot()
+    {
+        RemoveOneBot();
+    }
 
 protected:
-	virtual void ServerCreateBots();
+    virtual void ServerCreateBots();
 
-	virtual void SpawnOneBot();
-	virtual void RemoveOneBot();
+    virtual void SpawnOneBot();
 
-	FString CreateBotName(int32 PlayerIndex);
+    virtual void RemoveOneBot();
+
+    FString CreateBotName(int32 PlayerIndex);
 #endif
 };

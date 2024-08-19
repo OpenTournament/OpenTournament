@@ -1,64 +1,66 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "AsyncTaskAttributeChanged.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(AsyncTaskAttributeChanged)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UAsyncTaskAttributeChanged* UAsyncTaskAttributeChanged::ListenForAttributeChange(UAbilitySystemComponent* AbilitySystemComponent, FGameplayAttribute Attribute)
 {
-	UAsyncTaskAttributeChanged* WaitForAttributeChangedTask = NewObject<UAsyncTaskAttributeChanged>();
-	WaitForAttributeChangedTask->ASC = AbilitySystemComponent;
-	WaitForAttributeChangedTask->AttributeToListenFor = Attribute;
+    UAsyncTaskAttributeChanged* WaitForAttributeChangedTask = NewObject<UAsyncTaskAttributeChanged>();
+    WaitForAttributeChangedTask->ASC = AbilitySystemComponent;
+    WaitForAttributeChangedTask->AttributeToListenFor = Attribute;
 
-	if (!IsValid(AbilitySystemComponent) || !Attribute.IsValid())
-	{
-		WaitForAttributeChangedTask->RemoveFromRoot();
-		return nullptr;
-	}
+    if (!IsValid(AbilitySystemComponent) || !Attribute.IsValid())
+    {
+        WaitForAttributeChangedTask->RemoveFromRoot();
+        return nullptr;
+    }
 
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(Attribute).AddUObject(WaitForAttributeChangedTask, &UAsyncTaskAttributeChanged::AttributeChanged);
+    AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(Attribute).AddUObject(WaitForAttributeChangedTask, &UAsyncTaskAttributeChanged::AttributeChanged);
 
-	return WaitForAttributeChangedTask;
+    return WaitForAttributeChangedTask;
 }
 
-UAsyncTaskAttributeChanged * UAsyncTaskAttributeChanged::ListenForAttributesChange(UAbilitySystemComponent * AbilitySystemComponent, TArray<FGameplayAttribute> Attributes)
+UAsyncTaskAttributeChanged* UAsyncTaskAttributeChanged::ListenForAttributesChange(UAbilitySystemComponent* AbilitySystemComponent, TArray<FGameplayAttribute> Attributes)
 {
-	UAsyncTaskAttributeChanged* WaitForAttributeChangedTask = NewObject<UAsyncTaskAttributeChanged>();
-	WaitForAttributeChangedTask->ASC = AbilitySystemComponent;
-	WaitForAttributeChangedTask->AttributesToListenFor = Attributes;
+    UAsyncTaskAttributeChanged* WaitForAttributeChangedTask = NewObject<UAsyncTaskAttributeChanged>();
+    WaitForAttributeChangedTask->ASC = AbilitySystemComponent;
+    WaitForAttributeChangedTask->AttributesToListenFor = Attributes;
 
-	if (!IsValid(AbilitySystemComponent) || Attributes.Num() < 1)
-	{
-		WaitForAttributeChangedTask->RemoveFromRoot();
-		return nullptr;
-	}
+    if (!IsValid(AbilitySystemComponent) || Attributes.Num() < 1)
+    {
+        WaitForAttributeChangedTask->RemoveFromRoot();
+        return nullptr;
+    }
 
-	for (FGameplayAttribute Attribute : Attributes)
-	{
-		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(Attribute).AddUObject(WaitForAttributeChangedTask, &UAsyncTaskAttributeChanged::AttributeChanged);
-	}
+    for (FGameplayAttribute Attribute : Attributes)
+    {
+        AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(Attribute).AddUObject(WaitForAttributeChangedTask, &UAsyncTaskAttributeChanged::AttributeChanged);
+    }
 
-	return WaitForAttributeChangedTask;
+    return WaitForAttributeChangedTask;
 }
 
 void UAsyncTaskAttributeChanged::BeginDestroy()
 {
-	if (IsValid(ASC))
-	{
-		ASC->GetGameplayAttributeValueChangeDelegate(AttributeToListenFor).RemoveAll(this);
+    if (IsValid(ASC))
+    {
+        ASC->GetGameplayAttributeValueChangeDelegate(AttributeToListenFor).RemoveAll(this);
 
-		for (FGameplayAttribute Attribute : AttributesToListenFor)
-		{
-			ASC->GetGameplayAttributeValueChangeDelegate(Attribute).RemoveAll(this);
-		}
-	}
+        for (FGameplayAttribute Attribute : AttributesToListenFor)
+        {
+            ASC->GetGameplayAttributeValueChangeDelegate(Attribute).RemoveAll(this);
+        }
+    }
 
-	Super::BeginDestroy();
+    Super::BeginDestroy();
 }
 
-void UAsyncTaskAttributeChanged::AttributeChanged(const FOnAttributeChangeData & Data)
+void UAsyncTaskAttributeChanged::AttributeChanged(const FOnAttributeChangeData& Data)
 {
-	OnAttributeChanged.Broadcast(Data.Attribute, Data.NewValue, Data.OldValue);
+    OnAttributeChanged.Broadcast(Data.Attribute, Data.NewValue, Data.OldValue);
 }

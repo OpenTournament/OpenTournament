@@ -1,4 +1,6 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -6,17 +8,18 @@
 
 #include "AIPerceptionSourceNativeComp.generated.h"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
 * Native wrapper around AIPerceptionStimuliSourceComponent because its native API sucks.
 */
 UCLASS(ClassGroup = AI, meta = (BlueprintSpawnableComponent))
-class OPENTOURNAMENT_API UAIPerceptionSourceNativeComp : public UAIPerceptionStimuliSourceComponent
+class OPENTOURNAMENT_API UAIPerceptionSourceNativeComp
+    : public UAIPerceptionStimuliSourceComponent
 {
     GENERATED_BODY()
 
 public:
-
     void SetAutoRegisterAsSource(bool bAuto)
     {
         bAutoRegisterAsSource = bAuto;

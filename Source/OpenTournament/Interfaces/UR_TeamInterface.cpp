@@ -1,11 +1,13 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_TeamInterface.h"
 #include "Engine/World.h"
 #include "UR_TeamInfo.h"
 #include "UR_GameState.h"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 int32 IUR_TeamInterface::GetTeamIndex_Implementation()
 {

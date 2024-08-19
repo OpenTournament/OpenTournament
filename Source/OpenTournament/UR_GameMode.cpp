@@ -1,34 +1,45 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_GameMode.h"
 
-#include "EngineUtils.h"    // for TActorIterator<>
-#include "Engine/DamageEvents.h"
-#include "GameFramework/Controller.h"
-#include "Kismet/GameplayStatics.h"
-#include "TimerManager.h"
+#include <EngineUtils.h>    // for TActorIterator<>
+#include <TimerManager.h>
+#include <Engine/DamageEvents.h>
+#include <GameFramework/Controller.h>
+#include <Kismet/GameplayStatics.h>
+#include <Misc/CommandLine.h>
 
+#include "UR_Ammo.h"
 #include "UR_Character.h"
 #include "UR_GameState.h"
 #include "UR_InventoryComponent.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 #include "UR_Projectile.h"
-#include "UR_Weapon.h"
-#include "UR_Ammo.h"
 #include "UR_TeamInfo.h"
+#include "UR_Weapon.h"
 
-// Having to include these, only to set the default classes, makes me sad
+#include "UR_AssetManager.h"
+#include "UR_DeveloperSettings.h"
+#include "UR_ExperienceDefinition.h"
+#include "UR_ExperienceManagerComponent.h"
+#include "UR_LogChannels.h"
+#include "UR_PawnData.h"
 #include "UR_Widget_ScoreboardBase.h"
+#include "UR_WorldSettings.h"
 #include "AI/UR_BotController.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_GameMode)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Initialization
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_GameMode::AUR_GameMode()
+    : BotFill(0)
+    , DesiredTeamSize(0)
 {
     ScoreboardClass = UUR_Widget_ScoreboardBase::StaticClass();
     BotControllerClass = AUR_BotController::StaticClass();
@@ -106,6 +117,11 @@ void AUR_GameMode::InitGameState()
             GS->AddNewTeam();
         }
     }
+
+    // Listen for the experience load to complete
+    UUR_ExperienceManagerComponent* ExperienceComponent = GameState->FindComponentByClass<UUR_ExperienceManagerComponent>();
+    check(ExperienceComponent);
+    ExperienceComponent->CallOrRegister_OnExperienceLoaded(FOnGameExperienceLoaded::FDelegate::CreateUObject(this, &ThisClass::OnExperienceLoaded));
 }
 
 void AUR_GameMode::BroadcastSystemMessage(const FString& Msg)
@@ -178,6 +194,41 @@ void AUR_GameMode::GenericPlayerInitialization(AController* C)
             }
         }
     }
+}
+
+const UUR_PawnData* AUR_GameMode::GetPawnDataForController(const AController* InController) const
+{
+    // See if pawn data is already set on the player state
+    if (InController != nullptr)
+    {
+        if (const AUR_PlayerState* GamePS = InController->GetPlayerState<AUR_PlayerState>())
+        {
+            if (const UUR_PawnData* PawnData = GamePS->GetPawnData<UUR_PawnData>())
+            {
+                return PawnData;
+            }
+        }
+    }
+
+    // If not, fall back to the the default for the current experience
+    check(GameState);
+    UUR_ExperienceManagerComponent* ExperienceComponent = GameState->FindComponentByClass<UUR_ExperienceManagerComponent>();
+    check(ExperienceComponent);
+
+    if (ExperienceComponent->IsExperienceLoaded())
+    {
+        const UUR_ExperienceDefinition* Experience = ExperienceComponent->GetCurrentExperienceChecked();
+        if (Experience->DefaultPawnData != nullptr)
+        {
+            return Experience->DefaultPawnData;
+        }
+
+        // Experience is loaded and there's still no pawn data, fall back to the default for now
+        return UUR_AssetManager::Get().GetDefaultPawnData();
+    }
+
+    // Experience not loaded yet, so there is no pawn data to be had
+    return nullptr;
 }
 
 void AUR_GameMode::AssignDefaultTeam(AUR_PlayerState* PS)
@@ -463,7 +514,7 @@ void AUR_GameMode::RegisterKill(AController* Victim, AController* Killer, const 
     if (Victim)
     {
         AUR_PlayerState* VictimPS = Victim->GetPlayerState<AUR_PlayerState>();
-        AUR_PlayerState* KillerPS = NULL;
+        AUR_PlayerState* KillerPS = nullptr;
         FGameplayTagContainer EventTags;
 
         if (VictimPS)
@@ -532,7 +583,7 @@ AActor* AUR_GameMode::IsThereAWinner_Implementation()
     {
         if (GS->Teams.Num() > 1)
         {
-            AUR_TeamInfo* BestTeam = NULL;
+            AUR_TeamInfo* BestTeam = nullptr;
             bool bTie = false;
             for (AUR_TeamInfo* Team : GS->Teams)
             {
@@ -553,7 +604,7 @@ AActor* AUR_GameMode::IsThereAWinner_Implementation()
         }
         else
         {
-            APlayerState* BestPlayer = NULL;
+            APlayerState* BestPlayer = nullptr;
             bool bTie = false;
             for (APlayerState* PS : GS->PlayerArray)
             {
@@ -586,23 +637,23 @@ AActor* AUR_GameMode::ResolveEndGameFocus_Implementation(AActor* Winner)
     {
         return PS->GetPawn();
     }
-    if (AController* C = Cast<AController>(Winner))
+    if (AController* Controller = Cast<AController>(Winner))
     {
-        return C->GetPawn();
+        return Controller->GetPawn();
     }
     if (AUR_TeamInfo* Team = Cast<AUR_TeamInfo>(Winner))
     {
-        AUR_PlayerState* Top = NULL;
+        AUR_PlayerState* TopPlayerState = nullptr;
         for (AUR_PlayerState* PS : Team->Players)
         {
-            if (PS && PS->GetPawn() && (!Top || PS->GetScore() > Top->GetScore()))
+            if (PS && PS->GetPawn() && (!TopPlayerState || PS->GetScore() > TopPlayerState->GetScore()))
             {
-                Top = PS;
+                TopPlayerState = PS;
             }
         }
-        if (Top)
+        if (TopPlayerState)
         {
-            return Top->GetPawn();
+            return TopPlayerState->GetPawn();
         }
     }
     return Winner;
@@ -613,12 +664,12 @@ void AUR_GameMode::TriggerEndMatch_Implementation(AActor* Winner, AActor* Focus)
     if (AUR_GameState* GS = GetGameState<AUR_GameState>())
     {
         // Winner needs to be replicated. Should never be a controller!
-        if (AController* C = Cast<AController>(Winner))
+        if (AController* Controller = Cast<AController>(Winner))
         {
-            if (IsValid(C->PlayerState))
-                GS->Winner = C->PlayerState;
+            if (IsValid(Controller->PlayerState))
+                GS->Winner = Controller->PlayerState;
             else
-                GS->Winner = C->GetPawn();
+                GS->Winner = Controller->GetPawn();
         }
         else
         {
@@ -709,4 +760,31 @@ void AUR_GameMode::OnEndGameTimeUp(AUR_GameState* GS)
 
     // else
     RestartGame();
+}
+
+void AUR_GameMode::OnExperienceLoaded(const UUR_ExperienceDefinition* CurrentExperience)
+{
+    // Spawn any players that are already attached
+    //@TODO: Here we're handling only *player* controllers, but in GetDefaultPawnClassForController_Implementation we skipped all controllers
+    // GetDefaultPawnClassForController_Implementation might only be getting called for players anyways
+    for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+    {
+        APlayerController* PC = Cast<APlayerController>(*Iterator);
+        if ((PC != nullptr) && (PC->GetPawn() == nullptr))
+        {
+            if (PlayerCanRestart(PC))
+            {
+                RestartPlayer(PC);
+            }
+        }
+    }
+}
+
+bool AUR_GameMode::IsExperienceLoaded() const
+{
+    check(GameState);
+    const UUR_ExperienceManagerComponent* ExperienceComponent = GameState->FindComponentByClass<UUR_ExperienceManagerComponent>();
+    check(ExperienceComponent);
+
+    return ExperienceComponent->IsExperienceLoaded();
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,7 +22,7 @@
 UCLASS()
 class OPENTOURNAMENT_API UUR_RichTextBlock : public URichTextBlock
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	UUR_RichTextBlock(const FObjectInitializer& ObjectInitializer);
+    UUR_RichTextBlock(const FObjectInitializer& ObjectInitializer);
 };

@@ -1,4 +1,6 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -6,15 +8,19 @@
 #include "UR_FireModeBasic.h"
 #include "UR_FireModeCharged.generated.h"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 class IUR_FireModeChargedInterface;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
- * 
+ *
  */
 UCLASS(ClassGroup = (FireMode), Meta = (BlueprintSpawnableComponent), HideCategories = ("FireMode|SpinUp"))
 class OPENTOURNAMENT_API UUR_FireModeCharged : public UUR_FireModeBasic
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
     UUR_FireModeCharged()
@@ -45,7 +51,6 @@ public:
     float MaxChargeHoldTime;
 
 public:
-
     /**
     * Hitscan damage of an uncharged shot.
     */
@@ -59,7 +64,6 @@ public:
     float HitscanDamageMax;
 
 public:
-
     UPROPERTY(BlueprintReadOnly)
     TScriptInterface<IUR_FireModeChargedInterface> ChargedInterface;
 
@@ -70,12 +74,14 @@ public:
     }
 
     virtual void StartFire_Implementation() override;
+
     virtual void StopFire_Implementation() override;
+
     virtual float GetTimeUntilIdle_Implementation() override;
+
     virtual float GetCooldownStartTime_Implementation() override;
 
 public:
-
     /**
     * Current charge level.
     * Starts at 1, ends at MaxChargeLevel.
@@ -110,7 +116,6 @@ public:
     }
 
 protected:
-
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
     UPROPERTY()
@@ -159,9 +164,10 @@ protected:
     virtual void OnRep_InitialChargeLevel();
 
     virtual void ServerFire_Implementation(const FSimulatedShotInfo& SimulatedInfo) override;
-    virtual void MulticastFired_Implementation() override;
-    virtual void MulticastFiredHitscan_Implementation(const FHitscanVisualInfo& HitscanInfo) override;
 
+    virtual void MulticastFired_Implementation() override;
+
+    virtual void MulticastFiredHitscan_Implementation(const FHitscanVisualInfo& HitscanInfo) override;
 };
 
 
@@ -176,7 +182,6 @@ class OPENTOURNAMENT_API IUR_FireModeChargedInterface : public IUR_FireModeBasic
     GENERATED_BODY()
 
 public:
-
     /**
     * Called at charge start (1) and every new charge level.
     */
@@ -189,6 +194,4 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic, BlueprintCallable)
     void Overcharged(UUR_FireModeCharged* FireMode);
-
 };
-

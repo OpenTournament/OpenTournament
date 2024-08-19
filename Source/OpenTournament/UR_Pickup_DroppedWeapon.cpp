@@ -1,15 +1,19 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Pickup_DroppedWeapon.h"
 
-#include "Net/UnrealNetwork.h"
-#include "Components/SkeletalMeshComponent.h"
-#include "Components/CapsuleComponent.h"
+#include <UR_Type_WeaponState.h>
 
-#include "UR_Weapon.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Net/UnrealNetwork.h"
+
 #include "UR_Character.h"
+#include "UR_Weapon.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_Pickup_DroppedWeapon)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -1,9 +1,16 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_FireModeBasic.h"
 
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "UR_LogChannels.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_FireModeBasic)
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_FireModeBasic::StartFire_Implementation()
 {
@@ -81,7 +88,7 @@ float UUR_FireModeBasic::GetCooldownStartTime_Implementation()
     {
         return Super::GetCooldownStartTime_Implementation();
     }
-    else if ( GetWorld()->GetTimerManager().TimerExists(CooldownTimerHandle))
+    else if (GetWorld()->GetTimerManager().TimerExists(CooldownTimerHandle))
     {
         return GetWorld()->GetTimeSeconds() - GetWorld()->GetTimerManager().GetTimerElapsed(CooldownTimerHandle);
     }

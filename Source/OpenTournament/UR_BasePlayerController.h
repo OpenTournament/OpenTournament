@@ -1,8 +1,10 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
+
+#include <ModularPlayerController.h>
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
@@ -24,12 +26,12 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FViewTargetChangedSignature, AUR_
  * Base class for MenuPlayerController and URPlayerController.
  */
 UCLASS()
-class OPENTOURNAMENT_API AUR_BasePlayerController : public APlayerController
+class OPENTOURNAMENT_API AUR_BasePlayerController
+    : public AModularPlayerController
 {
     GENERATED_BODY()
 
 public:
-
     AUR_BasePlayerController(const FObjectInitializer& ObjectInitializer);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +53,7 @@ public:
     UFUNCTION(Exec, BlueprintCallable, BlueprintCosmetic)
     void ReturnToMainMenu();
 
-	/////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
     * Reference to the global-game MaterialParameterCollection.
@@ -74,7 +76,10 @@ public:
     virtual void InitUserSettings();
 
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Player|Settings")
-    FORCEINLINE UUR_UserSettings* GetUserSettings() const { return UserSettings; }
+    FORCEINLINE UUR_UserSettings* GetUserSettings() const
+    {
+        return UserSettings;
+    }
 
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Player|Settings")
     virtual void ApplyAllSettings();
@@ -92,5 +97,4 @@ public:
 
     UPROPERTY(BlueprintAssignable)
     FViewTargetChangedSignature OnViewTargetChanged;
-
 };

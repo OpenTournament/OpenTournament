@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -10,8 +10,8 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-UUR_RichTextBlock::UUR_RichTextBlock(const FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer)
+UUR_RichTextBlock::UUR_RichTextBlock(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
 {
     DecoratorClasses.Add(UUR_RichTextDecorator_CustomStyle::StaticClass());
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,6 +18,7 @@
 #include "UR_PlayerState.h"
 #include "UR_PlayerController.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_GameModeMenu)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

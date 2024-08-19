@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -28,6 +28,10 @@ class OPENTOURNAMENT_API UUR_ColorSpectrum : public UWidget
 protected:
 
 	TSharedPtr<SColorSpectrum> MyColorSpectrum;
+
+    //~ Begin UVisual
+    virtual void ReleaseSlateResources(bool bReleaseChildren) override;
+    //~ End UVisual
 
 	//~ Begin UWidget Interface
 	virtual TSharedRef<SWidget> RebuildWidget() override;

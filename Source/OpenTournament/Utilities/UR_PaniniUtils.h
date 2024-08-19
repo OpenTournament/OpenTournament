@@ -1,11 +1,11 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+
 #include "UR_PaniniUtils.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -17,7 +17,7 @@ class UInterface;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * 
+ *
  */
 UCLASS()
 class OPENTOURNAMENT_API UUR_PaniniUtils : public UBlueprintFunctionLibrary
@@ -25,7 +25,6 @@ class OPENTOURNAMENT_API UUR_PaniniUtils : public UBlueprintFunctionLibrary
     GENERATED_BODY()
 
 public:
-
     /**
     * Conventional name of the parameter that enables panini (MF_FirstPersonHandler)
     * We cannot change static switch parameters at runtime so we'll have to use scalar.

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -11,7 +11,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+class AUR_Weapon;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -23,54 +23,51 @@
 * An ammo type can be shared across multiple weapons.
 */
 UCLASS(Blueprintable, NotPlaceable)
-class OPENTOURNAMENT_API AUR_Ammo : public AActor
+class OPENTOURNAMENT_API AUR_Ammo
+    : public AActor
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	AUR_Ammo();
+    AUR_Ammo();
 
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-public:
-
-	/**
-	* Ammo name.
-	* Not sure if useful.
-	*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	FText AmmoName;
-
-	/**
-	* Maximum ammo reachable by picking up ammo packs.
-	* Should be >= WeaponPickupMaxAmmo.
-	*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	int32 MaxAmmo;
-
-	/**
-	* Current ammo amount.
-	*/
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_AmmoCount)
-	int32 AmmoCount;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
+    /**
+    * Ammo name.
+    * Not sure if useful.
+    */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    FText AmmoName;
 
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
-	virtual void StackAmmo(int32 InAmount, AUR_Weapon* FromWeapon = NULL);
+    /**
+    * Maximum ammo reachable by picking up ammo packs.
+    * Should be >= WeaponPickupMaxAmmo.
+    */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    int32 MaxAmmo;
 
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
-	virtual void ConsumeAmmo(int32 Amount = 1);
+    /**
+    * Current ammo amount.
+    */
+    UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_AmmoCount)
+    int32 AmmoCount;
 
-	/**
-	* Set ammo count to desired value regardless of MaxAmmo.
-	* Still hard-capped between 0 and 999.
-	*/
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
-	virtual void SetAmmoCount(int32 NewAmmoCount);
+public:
+    UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
+    virtual void StackAmmo(int32 InAmount, AUR_Weapon* FromWeapon = nullptr);
+
+    UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
+    virtual void ConsumeAmmo(int32 Amount = 1);
+
+    /**
+    * Set ammo count to desired value regardless of MaxAmmo.
+    * Still hard-capped between 0 and 999.
+    */
+    UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
+    virtual void SetAmmoCount(int32 NewAmmoCount);
 
 protected:
-
-	UFUNCTION()
-	virtual void OnRep_AmmoCount(int32 OldAmmoCount);
-
+    UFUNCTION()
+    virtual void OnRep_AmmoCount(int32 OldAmmoCount);
 };

@@ -1,4 +1,6 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -6,6 +8,7 @@
 
 #include "NavLinkCustomNativeComp.generated.h"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
 * Native wrapper around NavLinkCustomComponent because its native API sucks.
@@ -16,9 +19,18 @@ class OPENTOURNAMENT_API UNavLinkCustomNativeComp : public UNavLinkCustomCompone
     GENERATED_BODY()
 
 public:
+    void SetRelativeStart(const FVector& InVector)
+    {
+        LinkRelativeStart = InVector;
+    }
 
-    void SetRelativeStart(const FVector& Val) { LinkRelativeStart = Val; }
-    void SetRelativeEnd(const FVector& Val) { LinkRelativeEnd = Val; }
-    void SetDirection(ENavLinkDirection::Type Val) { LinkDirection = Val; }
+    void SetRelativeEnd(const FVector& InVector)
+    {
+        LinkRelativeEnd = InVector;
+    }
 
+    void SetDirection(const ENavLinkDirection::Type InDirection)
+    {
+        LinkDirection = InDirection;
+    }
 };

@@ -9,6 +9,8 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_ExperienceManager)
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 #if WITH_EDITOR
 
 void UUR_ExperienceManager::OnPlayInEditorBegun()

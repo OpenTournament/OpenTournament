@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -7,6 +7,13 @@
 #include "Widgets/Colors/SColorSpectrum.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+void UUR_ColorSpectrum::ReleaseSlateResources(bool bReleaseChildren)
+{
+    MyColorSpectrum.Get()->Invalidate(EInvalidateWidgetReason::None);
+    MyColorSpectrum.Reset();
+    Super::ReleaseSlateResources(bReleaseChildren);
+}
 
 TSharedRef<SWidget> UUR_ColorSpectrum::RebuildWidget()
 {

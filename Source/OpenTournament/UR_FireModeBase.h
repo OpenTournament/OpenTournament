@@ -1,13 +1,20 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include <CoreMinimal.h>
+#include <Components/ActorComponent.h>
+
 #include "UR_FireModeBase.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 class UFXSystemAsset;
 class IUR_FireModeBaseInterface;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  *
@@ -18,26 +25,9 @@ class OPENTOURNAMENT_API UUR_FireModeBase : public UActorComponent
     GENERATED_BODY()
 
 public:
-    UUR_FireModeBase()
-    {
-        SetAutoActivate(false);
-        bWasActive = false;
+    UUR_FireModeBase();
 
-        PrimaryComponentTick.bStartWithTickEnabled = false;
-        bAutoActivateTick = false;
-
-        SetIsReplicatedByDefault(true);
-
-        Index = 0;
-
-        SpinUpTime = 0.f;
-        SpinDownTime = 0.f;
-        IdleAtSpinPercent = 1.f;
-
-        InitialAmmoCost = 1;
-        MuzzleSocketName = FName(TEXT("Muzzle"));
-        MuzzleFlashScale = 1.f;
-    }
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
     * The blueprint components tree does not support re-ordering of components.
@@ -70,7 +60,6 @@ public:
     float IdleAtSpinPercent;
 
 public:
-
     /**
     * NOTE: The category "FireMode" is intended for configuring how the fire mode behaves.
     *
@@ -108,7 +97,6 @@ public:
     float MuzzleFlashScale;
 
 public:
-
     UPROPERTY(BlueprintReadOnly)
     TScriptInterface<IUR_FireModeBaseInterface> BaseInterface;
 
@@ -127,7 +115,10 @@ public:
 
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     void StartFire();
-    virtual void StartFire_Implementation() {}
+
+    virtual void StartFire_Implementation()
+    {
+    }
 
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     void StopFire();
@@ -144,6 +135,7 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintPure)
     bool IsIndependentFireMode();
+
     virtual bool IsIndependentFireMode_Implementation()
     {
         return false;
@@ -177,6 +169,7 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     void SetRequestIdle(bool bNewRequestIdle);
+
     virtual void SetRequestIdle_Implementation(bool bNewRequestIdle)
     {
         bRequestedIdle = bNewRequestIdle;   //prevent spinup
@@ -190,7 +183,6 @@ public:
     virtual float GetCurrentSpinUpValue();
 
 protected:
-
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
     /**
@@ -253,7 +245,6 @@ protected:
     virtual void OnRep_IsSpinningUp();
 
 public:
-
     // UActorComponent tweaks
 
     /**
@@ -263,11 +254,14 @@ public:
     UPROPERTY(EditAnywhere, Category = "ComponentTick")
     bool bAutoActivateTick;
 
+    UPROPERTY()
     bool bWasActive;
-    virtual void Activate(bool bReset = false) override;
-    virtual void Deactivate() override;
-    virtual void OnRep_IsActive() override;
 
+    virtual void Activate(bool bReset = false) override;
+
+    virtual void Deactivate() override;
+
+    virtual void OnRep_IsActive() override;
 };
 
 
@@ -298,7 +292,6 @@ class OPENTOURNAMENT_API IUR_FireModeBaseInterface
     GENERATED_BODY()
 
 public:
-
     /**
     * Called when the firemode has changed its busy status.
     * Firemode becomes busy when it starts firing.
@@ -316,13 +309,14 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
     float TimeUntilReadyToFire(UUR_FireModeBase* FireMode);
+
     virtual float TimeUntilReadyToFire_Implementation(UUR_FireModeBase* FireMode)
     {
         return FireMode->GetTimeUntilIdle();
     }
 
     // Weapon returns this to indicate unacceptable state, and firing should be discarded.
-    #define TIMEUNTILFIRE_NEVER 10.f
+#define TIMEUNTILFIRE_NEVER 10.f
 
     /**
     * When SpinUpTime > 0, called as the firemode starts spinning up.
@@ -346,5 +340,4 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic, BlueprintCallable)
     void SpinDone(UUR_FireModeBase* FireMode, bool bFullySpinnedUp);
-
 };

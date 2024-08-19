@@ -1,16 +1,18 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_BotController.h"
 
-#include "Engine/World.h"
 #include "TimerManager.h"
-#include "GameFramework/PlayerState.h"
+#include "Engine/World.h"
 #include "GameFramework/GameModeBase.h"
+#include "GameFramework/PlayerState.h"
 
 #include "UR_AIAimComp.h"
 #include "UR_AINavigationJumpingComp.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_BotController)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -15,7 +15,7 @@ class UProjectileMovementComponent;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * 
+ *
  */
 UCLASS(Blueprintable)
 class OPENTOURNAMENT_API AUR_Pickup_Dropped : public AUR_Pickup
@@ -27,8 +27,8 @@ protected:
     virtual void BeginPlay() override;
     virtual bool IsPickupPermitted(const AUR_Character* PickupCharacter) const override;
     virtual void Tick(float DeltaTime) override;
-    
-public:	
+
+public:
     AUR_Pickup_Dropped(const FObjectInitializer& ObjectInitializer);
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)

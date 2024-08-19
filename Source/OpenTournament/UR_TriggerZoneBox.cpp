@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -8,11 +8,13 @@
 
 #include "OpenTournament.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_TriggerZoneBox)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_TriggerZoneBox::AUR_TriggerZoneBox(const FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer),
-    BoxComponent(nullptr)
+AUR_TriggerZoneBox::AUR_TriggerZoneBox(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+    , BoxComponent(nullptr)
 {
     BoxComponent = Cast<UBoxComponent>(CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent")));
     BoxComponent->SetBoxExtent(FVector{ 256.f, 256.f, 256.f });

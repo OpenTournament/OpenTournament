@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -15,19 +15,22 @@ class AUR_Weapon;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * 
+ *
  */
 UCLASS(Blueprintable)
-class OPENTOURNAMENT_API AUR_Pickup_DroppedWeapon : public AUR_Pickup_Dropped
+class OPENTOURNAMENT_API AUR_Pickup_DroppedWeapon
+    : public AUR_Pickup_Dropped
 {
     GENERATED_BODY()
 
 protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
     virtual bool OnPickup_Implementation(AUR_Character* PickupCharacter) override;
+
     virtual void Destroyed() override;
-    
-public:	
+
+public:
     AUR_Pickup_DroppedWeapon(const FObjectInitializer& ObjectInitializer);
 
     /**

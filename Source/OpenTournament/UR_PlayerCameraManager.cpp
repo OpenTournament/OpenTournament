@@ -1,17 +1,19 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c)  Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_PlayerCameraManager.h"
 
-#include "Engine/World.h"
-#include "Kismet/GameplayStatics.h"
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
+#include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "UR_BasePlayerController.h"
 #include "UR_Character.h"
 #include "UR_FunctionLibrary.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_PlayerCameraManager)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

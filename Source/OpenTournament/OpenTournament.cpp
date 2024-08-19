@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -7,14 +7,18 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, OpenTournament, "OpenTournament" );
+class FOpenTournamentGameModule : public FDefaultGameModuleImpl
+{
+	virtual void StartupModule() override
+	{
+	}
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
+	virtual void ShutdownModule() override
+	{
+	}
+};
 
-DEFINE_LOG_CATEGORY(Game);
-DEFINE_LOG_CATEGORY(GameUI);
-DEFINE_LOG_CATEGORY(Net);
-DEFINE_LOG_CATEGORY(LogWeapon);
+IMPLEMENT_PRIMARY_GAME_MODULE( FOpenTournamentGameModule, OpenTournament, "OpenTournament" );
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

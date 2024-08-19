@@ -1,12 +1,12 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
 #include "GameplayTagAssetInterface.h"
+#include "GameFramework/Actor.h"
 
 #include "UR_Type_ExitRotation.h"
 
@@ -34,7 +34,7 @@ class UNavLinkComponent;
 * Destination may be a point in space or another actor (typically another Teleporter).
 * The TargetActor's rotation may be transformed according to the facing of the destination
 * Or preserved in world space.
-* 
+*
 * @! TODO: Issues to address:
 * - DestinationTransform should be invisible. Instead use a Component and bind delegate to Component location update to calculate DestinationTransform
 * - Updating NavMesh and other interfacing with AI
@@ -45,13 +45,12 @@ class UNavLinkComponent;
 */
 UCLASS(Abstract, BlueprintType, Blueprintable, HideCategories = (Actor, Rendering, Replication, Collision, Input, LOD, Cooking))
 class OPENTOURNAMENT_API AUR_Teleporter : public AActor,
-    public IGameplayTagAssetInterface
+                                          public IGameplayTagAssetInterface
 {
     GENERATED_BODY()
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 private:
-
     /*
     * Static Mesh Component - Teleporter Base
     */
@@ -69,7 +68,7 @@ private:
     */
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Teleporter", meta=(AllowPrivateAccess = "true"))
     UAudioComponent* AudioComponent;
-    
+
     /*
     * ParticleSystem Component
     */
@@ -84,10 +83,9 @@ private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleporter", meta = (AllowPrivateAccess = "true"))
     UNavLinkComponent* NavLink;
-    
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
 public:
-    
     AUR_Teleporter(const FObjectInitializer& ObjectInitializer);
 
     virtual void OnConstruction(const FTransform& Transform) override;
@@ -106,16 +104,16 @@ public:
     */
     UFUNCTION()
     void OnTriggerExit(class UPrimitiveComponent* HitComp, class AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-    
+
     /**
     * Try to Teleport the given Actor.
     * This may fail if preconditions are not met.
     */
     UFUNCTION(BlueprintCallable, Category = "Teleporter")
     void Teleport(AActor* Other);
-    
+
     /**
-    * Is this actor permitted to teleport? 
+    * Is this actor permitted to teleport?
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintPure, BlueprintCallable, Category = "Teleporter")
     bool IsPermittedToTeleport(const AActor* TargetActor) const;
@@ -125,7 +123,7 @@ public:
     */
     UFUNCTION()
     bool IsPermittedByGameplayTags(const FGameplayTagContainer& TargetTags) const;
-    
+
     /**
     * Internal Teleport. Actually performs the Teleport.
     * Return true if successful.
@@ -147,7 +145,7 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Teleporter")
     void PlayTeleportEffects();
-    
+
     /**
     * Apply a GameplayTag to a Teleporting Actor
     */
@@ -159,7 +157,7 @@ public:
     */
     UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Teleporter")
     bool IsIgnoredActor(AActor* InActor) const;
-    
+
     /**
     * Set an Actor to be Ignored for the next single teleport.
     * Used to exclude an actor from teleporting
@@ -265,7 +263,7 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Teleporter State API
-    
+
     /**
     * Set the Teleporter Enabled or Disabled
     */
@@ -293,7 +291,7 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, Category = "Teleporter")
     void OnDisabled();
-    
+
     /**
     * Invoking this function will set this Teleporter to use the DestinationTransform.
     * Set the Teleport Destination Transform
@@ -318,7 +316,10 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Gameplay Tags
 
-    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; }
+    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override
+    {
+        TagContainer = GameplayTags;
+    }
 
     /**
     * Gameplay Tags for this Actor
@@ -391,7 +392,7 @@ public:
     FLinearColor TeleporterMaterialColorEvent;
 
     /**
-    * Inactive Color 
+    * Inactive Color
     */
     UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Teleporter|MaterialInstance")
     FLinearColor TeleporterMaterialColorInactive;

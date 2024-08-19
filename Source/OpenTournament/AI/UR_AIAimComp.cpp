@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -6,17 +6,19 @@
 
 #include <GameFramework/Pawn.h>
 
-#include "Engine/World.h"
-#include "TimerManager.h"
-#include "GameFramework/Controller.h"
-#include "GameFramework/Pawn.h"
 #include "AIHelpers.h"
+#include "Engine/World.h"
+#include "GameFramework/Controller.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_AIAimComp)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_AIAimComp::UUR_AIAimComp()
+    : LastAimActor(nullptr)
+    , GoalAimPointTime(0)
 {
-    SetAutoActivate(true);
+    bAutoActivate = true;
 
     bUseTimeDilation = true;
     GoalTolerance = 10.f;

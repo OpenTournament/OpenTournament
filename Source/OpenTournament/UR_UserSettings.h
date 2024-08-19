@@ -1,15 +1,15 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/ObjectMacros.h"
 #include "UObject/Object.h"
+#include "UObject/ObjectMacros.h"
 
 #include "UR_Type_WeaponGroup.h"
-#include "UR_CharacterCustomization.h"
+#include "Character/UR_CharacterCustomization.h"
 
 #include "UR_UserSettings.generated.h"
 
@@ -21,7 +21,7 @@ class AUR_PlayerController;
 
 
 /**
- * 
+ *
  */
 UCLASS(Config = OTUserSettings, ConfigDoNotCheckDefaults, BlueprintType)
 class OPENTOURNAMENT_API UUR_UserSettings : public UObject
@@ -29,7 +29,6 @@ class OPENTOURNAMENT_API UUR_UserSettings : public UObject
     GENERATED_BODY()
 
 public:
-
     UPROPERTY(Config, BlueprintReadWrite)
     int32 NormalFOV;
 
@@ -52,7 +51,6 @@ public:
     FCharacterCustomization CharacterCustomization;
 
 public:
-
     /**
     * Get UserSettings for PlayerController at index.
     */
@@ -75,5 +73,4 @@ public:
     {
         SaveConfig();
     }
-
 };

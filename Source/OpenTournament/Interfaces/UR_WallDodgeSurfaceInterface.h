@@ -1,9 +1,8 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
-#include "CoreMinimal.h"
 #include "UObject/Interface.h"
 
 #include "UR_WallDodgeSurfaceInterface.generated.h"
@@ -15,7 +14,8 @@
  * Interface for WallDodge Surface Actors
  */
 UINTERFACE(BlueprintType)
-class OPENTOURNAMENT_API UUR_WallDodgeSurfaceInterface : public UInterface
+class OPENTOURNAMENT_API UUR_WallDodgeSurfaceInterface
+    : public UInterface
 {
     GENERATED_BODY()
 };
@@ -25,7 +25,6 @@ class IUR_WallDodgeSurfaceInterface
     GENERATED_BODY()
 
 public:
-
     /**
     * Is WallDodge Permitted?
     */

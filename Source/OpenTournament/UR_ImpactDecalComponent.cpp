@@ -1,10 +1,14 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_ImpactDecalComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UR_FunctionLibrary.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_ImpactDecalComponent)
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 const FName& CreationTimeParamName = "CreationTime";
 
@@ -37,7 +41,7 @@ void UUR_ImpactDecalComponent::BeginPlay()
     SetFadeOut(FadeStartDelay, FadeDuration, true);
 }
 
-UUR_ImpactDecalComponent* CreateImpactDecalComponent(class UMaterialInterface* DecalMaterial, FVector DecalSize, UWorld* World, AActor* Actor)
+UUR_ImpactDecalComponent* CreateImpactDecalComponent(class UMaterialInterface* DecalMaterial, const FVector& DecalSize, UWorld* World, AActor* Actor)
 {
     if (World && World->GetNetMode() == NM_DedicatedServer)
     {
@@ -45,11 +49,14 @@ UUR_ImpactDecalComponent* CreateImpactDecalComponent(class UMaterialInterface* D
     }
 
     auto DecalComp = NewObject<UUR_ImpactDecalComponent>(Actor ? Actor : (UObject*)World);
-    DecalComp->bAllowAnyoneToDestroyMe = true;
-    DecalComp->SetDecalMaterial(DecalMaterial);
-    DecalComp->DecalSize = DecalSize;
-    DecalComp->SetUsingAbsoluteScale(true);
-    DecalComp->RegisterComponentWithWorld(World);
+    if (IsValid(DecalComp))
+    {
+        DecalComp->bAllowAnyoneToDestroyMe = true;
+        DecalComp->SetDecalMaterial(DecalMaterial);
+        DecalComp->DecalSize = DecalSize;
+        DecalComp->SetUsingAbsoluteScale(true);
+        DecalComp->RegisterComponentWithWorld(World);
+    }
 
     return DecalComp;
 }

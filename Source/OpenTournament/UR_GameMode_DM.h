@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -12,6 +12,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+// @! TODO Deprecate DM - Decompose to GameStateComponents and prefer Data-Driven Approach
 /**
  * DeathMatch GameMode
  */

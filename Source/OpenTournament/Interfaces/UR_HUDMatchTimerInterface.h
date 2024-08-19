@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -25,7 +25,6 @@ class IUR_HUDMatchTimerInterface
     GENERATED_BODY()
 
 public:
-
     /**
     * Open Match Timer
     */

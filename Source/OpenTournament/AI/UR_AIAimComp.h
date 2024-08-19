@@ -1,11 +1,11 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+
 #include "UR_AIAimComp.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18,7 +18,8 @@ class AController;
  * Aim component for AI controllers.
  */
 UCLASS(HideCategories = (Sockets, Tags, ComponentTick, ComponentReplication, Cooking, AssetUserData, Replication, Collision))
-class OPENTOURNAMENT_API UUR_AIAimComp : public UActorComponent
+class OPENTOURNAMENT_API UUR_AIAimComp
+    : public UActorComponent
 {
     GENERATED_BODY()
 

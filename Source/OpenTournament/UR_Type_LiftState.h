@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -14,7 +14,7 @@
 UENUM()
 enum class ELiftState : uint8
 {
-	Start		UMETA(DisplayName = "Start"),
-	Moving		UMETA(DisplayName = "Moving"),
-	End			UMETA(DisplayName = "End"),
+    Start   UMETA(DisplayName = "Start"),
+    Moving  UMETA(DisplayName = "Moving"),
+    End     UMETA(DisplayName = "End"),
 };

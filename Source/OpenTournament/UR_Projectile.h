@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -31,7 +31,11 @@ struct FReplicatedExplosionInfo
     UPROPERTY()
     FVector HitNormal;
 
-    FReplicatedExplosionInfo() : HitLocation(0, 0, 0), HitNormal(0, 0, 0) {}
+    FReplicatedExplosionInfo()
+        : HitLocation(0, 0, 0)
+        , HitNormal(0, 0, 0)
+    {
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,12 +50,12 @@ public:
 
 protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
     virtual void BeginPlay() override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     // Sphere collision component.
     UPROPERTY(VisibleDefaultsOnly, Category = "Projectile|Collision")
     USphereComponent* CollisionComponent;
@@ -155,7 +159,6 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 protected:
-
     /**
      * Replicate this var to ensure that when projectile explodes on server, it explodes on clients as well.
      * Most of the time however, it is expected to explode on client beforehand.
@@ -178,7 +181,6 @@ protected:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     /**
     * Damage for direct hits and for actors within InnerSplashRadius if applicable.
     */
