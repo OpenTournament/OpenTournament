@@ -4,10 +4,12 @@
 
 #include "UR_Weapon.h"
 
+#include <AbilitySystemGlobals.h>
 #include <GameFramework/GameplayMessageSubsystem.h>
 
-#include "Animation/AnimMontage.h"
+#include "TimerManager.h"
 #include "Animation/AnimInstance.h"
+#include "Animation/AnimMontage.h"
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
@@ -18,24 +20,29 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h" //debug
 #include "Net/UnrealNetwork.h"
-#include "TimerManager.h"
 #include "Particles/ParticleSystemComponent.h"
 
 #include "OpenTournament.h"
-#include "UR_Character.h"
-#include "UR_InventoryComponent.h"
-#include "UR_Projectile.h"
-#include "UR_PlayerController.h"
-#include "UR_FunctionLibrary.h"
-#include "UR_PaniniUtils.h"
+#include "UR_AbilitySystemComponent.h"
 #include "UR_Ammo.h"
+#include "UR_Character.h"
+#include "UR_FunctionLibrary.h"
+#include "UR_InventoryComponent.h"
+#include "UR_PaniniUtils.h"
+//#include "UR_PlayerController.h"
+#include "UR_Projectile.h"
 
 #include "UR_FireModeBasic.h"
 #include "UR_FireModeCharged.h"
 #include "UR_FireModeContinuous.h"
+#include "UR_GameplayStatics.h"
 #include "UR_GameplayTags.h"
 #include "UR_LogChannels.h"
 #include "Messages/CrosshairVerbMessage.h"
+
+// @! TODO : Probably shouldn't need these
+#include "UR_AssetManager.h"
+#include "UR_GameData.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_Weapon)
 
