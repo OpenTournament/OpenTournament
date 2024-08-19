@@ -14,6 +14,8 @@
 #include "UR_Character.h"
 #include "UR_FunctionLibrary.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_FireModeZoom)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_FireModeZoom::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

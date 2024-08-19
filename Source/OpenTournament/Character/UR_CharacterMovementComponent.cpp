@@ -4,14 +4,16 @@
 
 #include "UR_CharacterMovementComponent.h"
 
-#include <Engine/World.h>
 #include <Components/CapsuleComponent.h>
+#include <Engine/World.h>
 
 #include "OpenTournament.h"
-#include "Enums/UR_MovementAction.h"
-#include "Interfaces/UR_WallDodgeSurfaceInterface.h"
 #include "UR_Character.h"
 #include "UR_PlayerController.h"
+#include "Enums/UR_MovementAction.h"
+#include "Interfaces/UR_WallDodgeSurfaceInterface.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_CharacterMovementComponent)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

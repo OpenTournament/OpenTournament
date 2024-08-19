@@ -14,6 +14,8 @@
 #include "UR_UserSettings.h"
 #include "UR_Weapon.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_InventoryComponent)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_InventoryComponent::UUR_InventoryComponent()

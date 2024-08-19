@@ -9,11 +9,12 @@
 #include <AI/NavigationSystemHelpers.h>
 #include <NavMesh/RecastNavMesh.h>
 
-
 #if WITH_EDITORONLY_DATA
 #include <Components/BillboardComponent.h>
 #include "UObject/ConstructorHelpers.h"
 #endif
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_NavLinkGenerator_Falldown)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

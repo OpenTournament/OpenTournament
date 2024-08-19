@@ -12,6 +12,8 @@
 #include "UR_GameState.h"
 #include "UR_PlayerState.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_TeamInfo)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_TeamInfo::AUR_TeamInfo()

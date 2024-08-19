@@ -8,6 +8,8 @@
 #include "UR_GameState.h"
 #include "UR_TeamInfo.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_GameMode_DM)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_GameMode_DM::PlayerKilled_Implementation(AController* Victim, AController* Killer, const FDamageEvent& DamageEvent, AActor* DamageCauser)

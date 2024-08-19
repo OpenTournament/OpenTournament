@@ -8,6 +8,8 @@
 
 #include "UR_BasePlayerController.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_UserSettings)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_UserSettings* UUR_UserSettings::Get(const UObject* WorldContext, int32 PlayerIndex)

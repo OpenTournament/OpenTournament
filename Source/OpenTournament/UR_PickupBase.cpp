@@ -18,6 +18,8 @@
 #include "UR_PlayerController.h"
 #include "UR_LocalMessage.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_PickupBase)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**

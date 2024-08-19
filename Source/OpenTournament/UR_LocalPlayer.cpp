@@ -8,6 +8,8 @@
 
 #include "Engine/World.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_LocalPlayer)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_LocalPlayer::UUR_LocalPlayer(const class FObjectInitializer& ObjectInitializer)

@@ -7,6 +7,8 @@
 #include "Engine.h"
 #include "UnrealClient.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_DelegatesLibrary)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_DelegatesLibrary::UUR_DelegatesLibrary()

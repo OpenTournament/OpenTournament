@@ -10,6 +10,8 @@
 #include "UR_FunctionLibrary.h"
 #include "UR_LogChannels.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_FireModeBase)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_FireModeBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

@@ -10,6 +10,8 @@
 
 #include "UR_BasePlayerController.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_MPC_Global)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_MPC_Global* UUR_MPC_Global::Get(UObject* WorldContext, bool bFallbackToCDO)

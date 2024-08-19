@@ -9,6 +9,8 @@
 #include "TimerManager.h"
 #include "UR_LogChannels.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_FireModeCharged)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_FireModeCharged::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

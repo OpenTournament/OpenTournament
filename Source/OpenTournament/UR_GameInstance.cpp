@@ -9,6 +9,8 @@
 
 #include "Slate/SUR_LoadingScreenWidget.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_GameInstance)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_GameInstance::Init()

@@ -9,6 +9,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_Armor)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Sets default values

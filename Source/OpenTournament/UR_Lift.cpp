@@ -14,6 +14,8 @@
 #include "OpenTournament.h"
 #include "UR_LogChannels.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_Lift)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_Lift::AUR_Lift(const FObjectInitializer& ObjectInitializer)

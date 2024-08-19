@@ -10,6 +10,8 @@
 #include <GameFramework/ProjectileMovementComponent.h>
 #include <Net/UnrealNetwork.h>
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_Pickup_Dropped)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_Pickup_Dropped::AUR_Pickup_Dropped(const FObjectInitializer& ObjectInitializer)

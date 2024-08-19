@@ -30,6 +30,8 @@
 #include "Misc/AutomationTest.h"
 #endif
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_JumpPad)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer)

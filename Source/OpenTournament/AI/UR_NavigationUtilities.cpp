@@ -9,6 +9,8 @@
 #include "AIController.h"
 #include "NavLinkCustomComponent.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_NavigationUtilities)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 // le sigh

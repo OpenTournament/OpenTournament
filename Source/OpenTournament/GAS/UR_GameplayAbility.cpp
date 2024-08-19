@@ -8,6 +8,8 @@
 #include "UR_Character.h"
 #include "UR_TargetType.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_GameplayAbility)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_GameplayAbility::UUR_GameplayAbility()

@@ -16,6 +16,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Particles/ParticleSystemComponent.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_Projectile)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 //NOTE: Maybe a BouncingProjectile subclass would be appropriate.

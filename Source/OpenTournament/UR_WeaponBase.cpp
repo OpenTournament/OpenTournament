@@ -12,6 +12,8 @@
 #include "UR_Character.h"
 #include "UR_Weapon.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_WeaponBase)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_WeaponBase::AUR_WeaponBase()

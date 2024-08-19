@@ -12,6 +12,8 @@
 #include "UR_AIAimComp.h"
 #include "UR_AINavigationJumpingComp.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_BotController)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_BotController::AUR_BotController()
