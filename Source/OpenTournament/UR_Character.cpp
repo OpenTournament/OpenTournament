@@ -32,6 +32,7 @@
 #include "UR_LogChannels.h"
 #include "UR_Logging.h"
 #include "UR_PaniniUtils.h"
+#include "UR_PawnExtensionComponent.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 #include "UR_Projectile.h"
@@ -139,6 +140,11 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer)
     AIPerceptionStimuliSource->SetAutoRegisterAsSource(true);
     AIPerceptionStimuliSource->SetRegisterAsSourceForSenses({ UAISense_Sight::StaticClass() });
 
+    // Pawn Extension
+    PawnExtComponent = CreateDefaultSubobject<UUR_PawnExtensionComponent>(TEXT("PawnExtensionComponent"));
+    PawnExtComponent->OnAbilitySystemInitialized_RegisterAndCall(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &ThisClass::OnAbilitySystemInitialized));
+    PawnExtComponent->OnAbilitySystemUninitialized_Register(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &ThisClass::OnAbilitySystemUninitialized));
+
     // Health
     HealthComponent = CreateDefaultSubobject<UUR_HealthComponent>(TEXT("HealthComponent"));
     HealthComponent->OnDeathStarted.AddDynamic(this, &ThisClass::OnDeathStarted);
@@ -210,6 +216,21 @@ UAbilitySystemComponent* AUR_Character::GetAbilitySystemComponent() const
 UUR_AbilitySystemComponent* AUR_Character::GetGameAbilitySystemComponent() const
 {
     return Cast<UUR_AbilitySystemComponent>(AbilitySystemComponent);
+}
+
+void AUR_Character::OnAbilitySystemInitialized()
+{
+    UUR_AbilitySystemComponent* ASC = GetGameAbilitySystemComponent();
+    check(ASC);
+
+    HealthComponent->InitializeWithAbilitySystem(ASC);
+
+    InitializeGameplayTags();
+}
+
+void AUR_Character::OnAbilitySystemUninitialized()
+{
+    HealthComponent->UninitializeFromAbilitySystem();
 }
 
 UInputComponent* AUR_Character::CreatePlayerInputComponent()
@@ -857,27 +878,31 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     float DamageToHealth = 0.f;
     float DamageRemaining = Damage;
 
-    // if (AttributeSet && AttributeSet->Health_D.GetCurrentValue() > 0.f)
+    // @! TODO : This block should probably not be handled in our Character but instead via DamageExecution or GameplayEffect
+    // if (HealthComponent && !HealthComponent->IsDeadOrDying())
     // {
-    //     const float CurrentShield = FMath::FloorToFloat(AttributeSet->Shield.GetCurrentValue());
-    //     if (CurrentShield > 0.f)
+    //     if (AttributeSet)
     //     {
-    //         DamageToShield = FMath::Min(DamageRemaining, CurrentShield);
-    //         AttributeSet->SetShield(CurrentShield - DamageToShield);
-    //         DamageRemaining -= DamageToShield;
+    //         const float CurrentShield = FMath::FloorToFloat(AttributeSet->Shield.GetCurrentValue());
+    //         if (CurrentShield > 0.f)
+    //         {
+    //             DamageToShield = FMath::Min(DamageRemaining, CurrentShield);
+    //             AttributeSet->SetShield(CurrentShield - DamageToShield);
+    //             DamageRemaining -= DamageToShield;
+    //         }
+    //
+    //         const float CurrentArmor = FMath::FloorToFloat(AttributeSet->Armor.GetCurrentValue());
+    //         const float ArmorAbsorption = AttributeSet->ArmorAbsorptionPercent.GetCurrentValue();
+    //         if (CurrentArmor > 0.f && DamageRemaining > 0.f)
+    //         {
+    //             DamageToArmor = FMath::Min(DamageRemaining * ArmorAbsorption, CurrentArmor);
+    //             DamageToArmor = FMath::FloorToFloat(DamageToArmor);
+    //             AttributeSet->SetArmor(CurrentArmor - DamageToArmor);
+    //             DamageRemaining -= DamageToArmor;
+    //         }
     //     }
     //
-    //     const float CurrentArmor = FMath::FloorToFloat(AttributeSet->Armor.GetCurrentValue());
-    //     const float ArmorAbsorption = AttributeSet->ArmorAbsorptionPercent.GetCurrentValue();
-    //     if (CurrentArmor > 0.f && DamageRemaining > 0.f)
-    //     {
-    //         DamageToArmor = FMath::Min(DamageRemaining * ArmorAbsorption, CurrentArmor);
-    //         DamageToArmor = FMath::FloorToFloat(DamageToArmor);
-    //         AttributeSet->SetArmor(CurrentArmor - DamageToArmor);
-    //         DamageRemaining -= DamageToArmor;
-    //     }
-    //
-    //     const float CurrentHealth = AttributeSet->Health_D.GetCurrentValue();
+    //     const float CurrentHealth = HealthComponent->GetHealth();
     //     if (CurrentHealth > 0.f && DamageRemaining > 0.f)
     //     {
     //         DamageToHealth = FMath::Min(DamageRemaining, CurrentHealth);
@@ -968,7 +993,7 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     ////////////////////////////////////////////////////////////
     // Death
 
-    if (HealthComponent && HealthComponent->GetHealth() <= 0)
+    if (HealthComponent && !HealthComponent->IsDeadOrDying())
     {
         // Can use DamageRemaining here to GIB
         Die(EventInstigator, DamageEvent, DamageCauser, RepDamageEvent);
@@ -1005,23 +1030,18 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
     {
         AController* Killed = GetController();
 
-        if (URGameMode->PreventDeath(Killed, Killer, DamageEvent, DamageCauser))
-        {
-            // @! TODO HealthComponentFix
+        // @! TODO : Commenting out this block, as this approach should probably be handled in another way via GAS GameplayEffect
+        //if (URGameMode->PreventDeath(Killed, Killer, DamageEvent, DamageCauser))
+        //{
             // Make sure we don't stay with <=0 health or IsAlive() would return false.
             //if (AttributeSet->Health_D.GetCurrentValue() <= 0)
             //{
                 //AttributeSet->SetHealth(1);
             //}
-            return;
-        }
+            //return;
+        //}
 
         URGameMode->PlayerKilled(Killed, Killer, DamageEvent, DamageCauser);
-    }
-
-    if (AttributeSet)
-    {
-        //AttributeSet->SetHealth(0); // @! TODO HealthComponentFix
     }
 
     // Clear inventory

@@ -17,6 +17,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_PawnExtensionComponent;
 class APlayerController;
 class UAnimationMontage;
 class UGameplayEffect;
@@ -730,6 +731,9 @@ public:
 
     virtual UUR_AbilitySystemComponent* GetGameAbilitySystemComponent() const;
 
+    virtual void OnAbilitySystemInitialized();
+    virtual void OnAbilitySystemUninitialized();
+
     /** Grant a GameplayAbility */
     UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Character")
     void Server_GiveAbility(TSubclassOf<UUR_GameplayAbility> InAbility, const int32 InAbilityLevel = 1);
@@ -773,6 +777,9 @@ public:
     /** Passive gameplay effects applied on creation */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character|Abilities")
     TArray<TSubclassOf<UGameplayEffect>> PassiveGameplayEffects;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lyra|Character", Meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UUR_PawnExtensionComponent> PawnExtComponent;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Health & Damage
