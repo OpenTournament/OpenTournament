@@ -437,5 +437,8 @@
 			"Name": "CommonLoadingScreen",
 			"Enabled": true
 		}
+	],
+	"TargetPlatforms": [
+		"Windows"
 	]
 }
