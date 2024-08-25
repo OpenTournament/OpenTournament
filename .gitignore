@@ -67,6 +67,11 @@ OpenTournament\.sln
 Source/LastSaved
 Config/DefaultEditorPerProjectUserSettings.ini
 
+#Allow Application Icons
+!Build/**/*.ico
+!Build/**/*.icns
+!Build/**/*.png
+
 # Ignore Source Files Installed from Asset Packs
 SourceFiles/InPlace
 SourceFiles/RootMotion
