@@ -216,9 +216,9 @@ void UUR_CheatManager::DamageTarget(float DamageAmount)
         FHitResult TargetHitResult;
         AActor* TargetActor = GetTarget(GamePC, TargetHitResult);
 
-        if (UUR_AbilitySystemComponent* UR_TargetASC = Cast<UUR_AbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor)))
+        if (UUR_AbilitySystemComponent* TargetASC = Cast<UUR_AbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor)))
         {
-            ApplySetByCallerDamage(UR_TargetASC, DamageAmount);
+            ApplySetByCallerDamage(TargetASC, DamageAmount);
             GamePC->ClientMessage(CheatString);
         }
     }
