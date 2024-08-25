@@ -30,12 +30,12 @@ public class OpenTournament : ModuleRules
                 "OpenTournament/Interfaces",
                 "OpenTournament/Messages",
                 "OpenTournament/Player",
-                "OpenTournament/Settings",
+                //"OpenTournament/Settings",
                 "OpenTournament/Slate",
                 "OpenTournament/System",
                 "OpenTournament/UI",
                 "OpenTournament/Utilities",
-                "OpenTournament/Weapons",
+                //"OpenTournament/Weapons",
                 "OpenTournament/Widgets"
             }
         );
@@ -136,7 +136,7 @@ public class OpenTournament : ModuleRules
                 "ModularGameplayActors"
             }
         );
-        
+
         SetupGameplayDebuggerSupport(Target);
         SetupIrisSupport(Target);
     }
