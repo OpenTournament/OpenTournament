@@ -332,7 +332,11 @@ public:
     // Override to update Physics Movement GameplayTags
     virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 
+    virtual void PossessedBy(AController* NewController) override;
     virtual void UnPossessed() override;
+
+    virtual void OnRep_Controller() override;
+    virtual void OnRep_PlayerState() override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Camera Management

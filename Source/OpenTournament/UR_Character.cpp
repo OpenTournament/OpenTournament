@@ -310,6 +310,15 @@ void AUR_Character::UpdateTeamColor_Implementation()
 
 void AUR_Character::UnPossessed()
 {
+    AController* const OldController = Controller;
+
+    // Stop listening for changes from the old controller
+    // const FGenericTeamId OldTeamID = MyTeamID;
+    // if (ILyraTeamAgentInterface* ControllerAsTeamProvider = Cast<ILyraTeamAgentInterface>(OldController))
+    // {
+    //     ControllerAsTeamProvider->GetTeamChangedDelegateChecked().RemoveAll(this);
+    // }
+
     Super::UnPossessed();
 
     // Force stop firing
@@ -318,8 +327,25 @@ void AUR_Character::UnPossessed()
         InventoryComponent->ActiveWeapon->Deactivate();
     }
     DesiredFireModeNum.Empty();
+
+    PawnExtComponent->HandleControllerChanged();
+
+    // Determine what the new team ID should be afterwards
+    //MyTeamID = DetermineNewTeamAfterPossessionEnds(OldTeamID);
+    //ConditionalBroadcastTeamChanged(this, OldTeamID, MyTeamID);
 }
 
+void AUR_Character::OnRep_Controller()
+{
+    Super::OnRep_Controller();
+    PawnExtComponent->HandleControllerChanged();
+}
+
+void AUR_Character::OnRep_PlayerState()
+{
+    Super::OnRep_PlayerState();
+    PawnExtComponent->HandlePlayerStateReplicated();
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Camera
@@ -438,6 +464,22 @@ void AUR_Character::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 
     UpdateMovementPhysicsGameplayTags(PrevMovementMode);
 
     Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+}
+
+void AUR_Character::PossessedBy(AController* NewController)
+{
+    Super::PossessedBy(NewController);
+    PawnExtComponent->HandleControllerChanged();
+
+    // const FGenericTeamId OldTeamID = MyTeamID;
+    //
+    // // Grab the current team ID and listen for future changes
+    // if (ILyraTeamAgentInterface* ControllerAsTeamProvider = Cast<ILyraTeamAgentInterface>(NewController))
+    // {
+    //     MyTeamID = ControllerAsTeamProvider->GetGenericTeamId();
+    //     ControllerAsTeamProvider->GetTeamChangedDelegateChecked().AddDynamic(this, &ThisClass::OnControllerChangedTeam);
+    // }
+    // ConditionalBroadcastTeamChanged(this, OldTeamID, MyTeamID);
 }
 
 void AUR_Character::RegisterZoomInterface(TScriptInterface<IUR_ActivatableInterface> NewZoomInterface)
@@ -1174,7 +1216,7 @@ void AUR_Character::UninitAndDestroy()
     {
         if (GameASC->GetAvatarActor() == this)
         {
-            //PawnExtComponent->UninitializeAbilitySystem();
+            PawnExtComponent->UninitializeAbilitySystem();
         }
     }
 
