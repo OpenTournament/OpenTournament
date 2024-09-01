@@ -8,8 +8,14 @@
 #include "Abilities/GameplayAbility.h"
 
 #include "UR_AbilityTypes.h"
+#include "UR_Ability_GameActivationGroup.h"
+#include "UR_Ability_GameActivationPolicy.h"
 
 #include "UR_GameplayAbility.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+class UUR_AbilitySystemComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -45,9 +51,30 @@ class OPENTOURNAMENT_API UUR_GameplayAbility : public UGameplayAbility
 {
     GENERATED_BODY()
 
+    friend class UR_GameplayAbilitySystemComponent;
+
 public:
     // Constructor and overrides
-    UUR_GameplayAbility();
+    UUR_GameplayAbility(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+    //
+
+    EGameAbilityActivationPolicy GetActivationPolicy() const { return ActivationPolicy; }
+    EGameAbilityActivationGroup GetActivationGroup() const { return ActivationGroup; }
+
+    UFUNCTION(BlueprintCallable, Category = "OT|Ability")
+    UUR_AbilitySystemComponent* GetGameAbilitySystemComponentFromActorInfo() const;
+
+    // Returns true if the requested activation group is a valid transition.
+    UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "OT|Ability", Meta = (ExpandBoolAsExecs = "ReturnValue"))
+    bool CanChangeActivationGroup(EGameAbilityActivationGroup NewGroup) const;
+
+    // Tries to change the activation group.  Returns true if it successfully changed.
+    UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "OT|Ability", Meta = (ExpandBoolAsExecs = "ReturnValue"))
+    bool ChangeActivationGroup(EGameAbilityActivationGroup NewGroup);
+
+
+    //
 
     /** Map of gameplay tags to gameplay effect containers */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = GameplayEffects)
@@ -73,4 +100,16 @@ public:
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Ability")
     FUR_GameplayAbilityData Data;
+
+    //
+protected:
+
+    // Defines how this ability is meant to activate.
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Lyra|Ability Activation")
+    EGameAbilityActivationPolicy ActivationPolicy;
+
+    // Defines the relationship between this ability activating and other abilities activating.
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Lyra|Ability Activation")
+    EGameAbilityActivationGroup ActivationGroup;
+
 };

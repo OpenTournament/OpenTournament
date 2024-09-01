@@ -4,13 +4,16 @@
 
 #include "UR_AbilitySystemComponent.h"
 
+#include <Engine/World.h>
+
 #include "AbilitySystemGlobals.h"
 #include "UR_AssetManager.h"
 
-#include "UR_Character.h"
-#include "UR_GameplayAbility.h"
 #include "UR_AttributeSet.h"
+#include "UR_Character.h"
 #include "UR_GameData.h"
+#include "UR_GameplayAbility.h"
+#include "UR_GlobalAbilitySystem.h"
 #include "UR_LogChannels.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_AbilitySystemComponent)
@@ -65,6 +68,144 @@ void UUR_AbilitySystemComponent::ClearAbilityInput()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+void UUR_AbilitySystemComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    if (UUR_GlobalAbilitySystem* GlobalAbilitySystem = UWorld::GetSubsystem<UUR_GlobalAbilitySystem>(GetWorld()))
+    {
+        GlobalAbilitySystem->UnregisterASC(this);
+    }
+
+    Super::EndPlay(EndPlayReason);
+}
+
+
+void UUR_AbilitySystemComponent::CancelAbilitiesByFunc(TShouldCancelAbilityFunc ShouldCancelFunc, bool bReplicateCancelAbility)
+{
+    ABILITYLIST_SCOPE_LOCK();
+    for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
+    {
+        if (!AbilitySpec.IsActive())
+        {
+            continue;
+        }
+
+        UUR_GameplayAbility* AbilityCDO = Cast<UUR_GameplayAbility>(AbilitySpec.Ability);
+        if (!AbilityCDO)
+        {
+            UE_LOG(LogGameAbilitySystem, Error, TEXT("CancelAbilitiesByFunc: Non-UR_GameplayAbility %s was Granted to ASC. Skipping."), *AbilitySpec.Ability.GetName());
+            continue;
+        }
+
+        if (AbilityCDO->GetInstancingPolicy() != EGameplayAbilityInstancingPolicy::NonInstanced)
+        {
+            // Cancel all the spawned instances, not the CDO.
+            TArray<UGameplayAbility*> Instances = AbilitySpec.GetAbilityInstances();
+            for (UGameplayAbility* IterAbilityInstance : Instances)
+            {
+                UUR_GameplayAbility* GameAbilityInstance = CastChecked<UUR_GameplayAbility>(IterAbilityInstance);
+
+                if (ShouldCancelFunc(GameAbilityInstance, AbilitySpec.Handle))
+                {
+                    if (GameAbilityInstance->CanBeCanceled())
+                    {
+                        GameAbilityInstance->CancelAbility(AbilitySpec.Handle, AbilityActorInfo.Get(), GameAbilityInstance->GetCurrentActivationInfo(), bReplicateCancelAbility);
+                    }
+                    else
+                    {
+                        UE_LOG(LogGameAbilitySystem, Error, TEXT("CancelAbilitiesByFunc: Can't cancel ability [%s] because CanBeCanceled is false."), *GameAbilityInstance->GetName());
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Cancel the non-instanced ability CDO.
+            if (ShouldCancelFunc(AbilityCDO, AbilitySpec.Handle))
+            {
+                // Non-instanced abilities can always be canceled.
+                check(AbilityCDO->CanBeCanceled());
+                AbilityCDO->CancelAbility(AbilitySpec.Handle, AbilityActorInfo.Get(), FGameplayAbilityActivationInfo(), bReplicateCancelAbility);
+            }
+        }
+    }
+}
+
+bool UUR_AbilitySystemComponent::IsActivationGroupBlocked(EGameAbilityActivationGroup InGroup) const
+{
+    bool bBlocked = false;
+
+    switch (InGroup)
+    {
+        case EGameAbilityActivationGroup::Independent:
+            // Independent abilities are never blocked.
+                bBlocked = false;
+        break;
+
+        case EGameAbilityActivationGroup::Exclusive_Replaceable:
+        case EGameAbilityActivationGroup::Exclusive_Blocking:
+            // Exclusive abilities can activate if nothing is blocking.
+            bBlocked = (ActivationGroupCounts[(uint8)EGameAbilityActivationGroup::Exclusive_Blocking] > 0);
+        break;
+
+        default:
+            checkf(false, TEXT("IsActivationGroupBlocked: Invalid ActivationGroup [%d]\n"), (uint8)InGroup);
+        break;
+    }
+
+    return bBlocked;
+}
+
+void UUR_AbilitySystemComponent::AddAbilityToActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InGameAbility)
+{
+    check(InGameAbility);
+    check(ActivationGroupCounts[(uint8)InGroup] < INT32_MAX);
+
+    ActivationGroupCounts[(uint8)InGroup]++;
+
+    const bool bReplicateCancelAbility = false;
+
+    switch (InGroup)
+    {
+        case EGameAbilityActivationGroup::Independent:
+            // Independent abilities do not cancel any other abilities.
+                break;
+
+        case EGameAbilityActivationGroup::Exclusive_Replaceable:
+        case EGameAbilityActivationGroup::Exclusive_Blocking:
+            CancelActivationGroupAbilities(EGameAbilityActivationGroup::Exclusive_Replaceable, InGameAbility, bReplicateCancelAbility);
+        break;
+
+        default:
+            checkf(false, TEXT("AddAbilityToActivationGroup: Invalid ActivationGroup [%d]\n"), (uint8)InGroup);
+        break;
+    }
+
+    const int32 ExclusiveCount = ActivationGroupCounts[(uint8)EGameAbilityActivationGroup::Exclusive_Replaceable] + ActivationGroupCounts[(uint8)EGameAbilityActivationGroup::Exclusive_Blocking];
+    if (!ensure(ExclusiveCount <= 1))
+    {
+        UE_LOG(LogGameAbilitySystem, Error, TEXT("AddAbilityToActivationGroup: Multiple exclusive abilities are running."));
+    }
+}
+
+void UUR_AbilitySystemComponent::RemoveAbilityFromActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* LyraAbility)
+{
+    check(LyraAbility);
+    check(ActivationGroupCounts[(uint8)InGroup] > 0);
+
+    ActivationGroupCounts[(uint8)InGroup]--;
+
+}
+
+void UUR_AbilitySystemComponent::CancelActivationGroupAbilities(EGameAbilityActivationGroup Group, UUR_GameplayAbility* IgnoreLyraAbility, bool bReplicateCancelAbility)
+{
+    auto ShouldCancelFunc = [this, Group, IgnoreLyraAbility](const UUR_GameplayAbility* LyraAbility, FGameplayAbilitySpecHandle Handle)
+    {
+        return ((LyraAbility->GetActivationGroup() == Group) && (LyraAbility != IgnoreLyraAbility));
+    };
+
+    CancelAbilitiesByFunc(ShouldCancelFunc, bReplicateCancelAbility);
+}
 
 void UUR_AbilitySystemComponent::AddDynamicTagGameplayEffect(const FGameplayTag& Tag)
 {

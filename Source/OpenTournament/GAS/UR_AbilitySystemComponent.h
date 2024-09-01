@@ -5,11 +5,13 @@
 #pragma once
 
 #include "AbilitySystemComponent.h"
+#include "UR_Ability_GameActivationGroup.h"
 
 #include "UR_AbilitySystemComponent.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_GameplayAbility;
 class UUR_AbilityTagRelationshipMapping;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -28,6 +30,7 @@ public:
     // Constructors and overrides
     UUR_AbilitySystemComponent();
 
+    // @! TODO: Deprecate - Unused
     /** Returns a list of currently active ability instances that match the tags */
     void GetActiveAbilitiesWithTags(const FGameplayTagContainer& GameplayTagContainer, TArray<UGameplayAbility*>& ActiveAbilities) const;
 
@@ -40,6 +43,20 @@ public:
     void ClearAbilityInput();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //~UActorComponent interface
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+    //~End of UActorComponent interface
+
+    typedef TFunctionRef<bool(const UUR_GameplayAbility* InGameAbility, FGameplayAbilitySpecHandle Handle)> TShouldCancelAbilityFunc;
+    void CancelAbilitiesByFunc(TShouldCancelAbilityFunc ShouldCancelFunc, bool bReplicateCancelAbility);
+
+
+    bool IsActivationGroupBlocked(EGameAbilityActivationGroup InGroup) const;
+    void AddAbilityToActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InGameAbility);
+    void RemoveAbilityFromActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* LyraAbility);
+    void CancelActivationGroupAbilities(EGameAbilityActivationGroup Group, UUR_GameplayAbility* IgnoreLyraAbility, bool bReplicateCancelAbility);
+
 
     // Uses a gameplay effect to add the specified dynamic granted tag.
     void AddDynamicTagGameplayEffect(const FGameplayTag& Tag);
@@ -64,6 +81,9 @@ public:
 
     // Handles to abilities that have their input held.
     TArray<FGameplayAbilitySpecHandle> InputHeldSpecHandles;
+
+    // Number of abilities running in each activation group.
+    int32 ActivationGroupCounts[(uint8)EGameAbilityActivationGroup::MAX];
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
