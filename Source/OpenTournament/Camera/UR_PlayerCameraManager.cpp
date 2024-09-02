@@ -4,10 +4,10 @@
 
 #include "UR_PlayerCameraManager.h"
 
-#include "Camera/CameraActor.h"
-#include "Camera/CameraComponent.h"
-#include "Engine/World.h"
-#include "Kismet/GameplayStatics.h"
+#include <Camera/CameraActor.h>
+#include <Camera/CameraComponent.h>
+#include <Engine/World.h>
+#include <Kismet/GameplayStatics.h>
 
 #include "UR_BasePlayerController.h"
 #include "UR_Character.h"
@@ -93,7 +93,7 @@ UCameraComponent* AUR_PlayerCameraManager::GetCurrentCameraComponent()
             // PlayerController case
             if (auto PC = Cast<APlayerController>(Actor))
             {
-                return NULL;
+                return nullptr;
             }
 
             // Default AActor case
@@ -111,7 +111,7 @@ UCameraComponent* AUR_PlayerCameraManager::GetCurrentCameraComponent()
             }
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +122,7 @@ AUR_PlayerCameraManager* AUR_PlayerCameraManager::UR_GetLocalPlayerCameraManager
     {
         return Cast<AUR_PlayerCameraManager>(PC->PlayerCameraManager);
     }
-    return NULL;
+    return nullptr;
 }
 
 AUR_PlayerCameraManager* AUR_PlayerCameraManager::UR_GetPlayerCameraManager(const APlayerController* InPlayerController)
@@ -131,5 +131,5 @@ AUR_PlayerCameraManager* AUR_PlayerCameraManager::UR_GetPlayerCameraManager(cons
     {
         return Cast<AUR_PlayerCameraManager>(InPlayerController->PlayerCameraManager);
     }
-    return NULL;
+    return nullptr;
 }
