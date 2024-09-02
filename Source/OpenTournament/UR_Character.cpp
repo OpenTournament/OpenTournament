@@ -779,6 +779,20 @@ void AUR_Character::OnEndCrouchEffects()
     UGameplayStatics::PlaySound2D(GetWorld(), CrouchTransitionSound, 1.0f, 1.f);
 }
 
+void AUR_Character::ToggleCrouch()
+{
+    const UUR_CharacterMovementComponent* MovementComponent = CastChecked<UUR_CharacterMovementComponent>(GetCharacterMovement());
+
+    if (bIsCrouched || MovementComponent->bWantsToCrouch)
+    {
+        UnCrouch();
+    }
+    else if (MovementComponent->IsMovingOnGround())
+    {
+        Crouch();
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool AUR_Character::IsDodgeCapable_Implementation() const

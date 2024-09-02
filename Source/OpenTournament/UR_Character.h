@@ -17,6 +17,8 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_CameraComponent;
+class USpringArmComponent;
 class UUR_PawnExtensionComponent;
 class APlayerController;
 class UAnimationMontage;
@@ -230,7 +232,7 @@ public:
     * We'll probably have to add another smoothing mechanism for the AimOffset.
     */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-    class USpringArmComponent* FirstPersonCamArm;
+    USpringArmComponent* FirstPersonCamArm;
 
     /**
     * First person Camera
@@ -242,7 +244,7 @@ public:
     * Character's first-person mesh (arms; seen only by self)
     */
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Mesh")
-    class USkeletalMeshComponent* MeshFirstPerson;
+    USkeletalMeshComponent* MeshFirstPerson;
 
     /**
     * Audio content for Movement etc.
@@ -260,19 +262,19 @@ public:
     * Spring arm for third person camera
     */
     UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
-    class USpringArmComponent* ThirdPersonArm;
+    USpringArmComponent* ThirdPersonArm;
 
     /**
     * Third person camera.
     */
     UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
-    class UCameraComponent* ThirdPersonCamera;
+    UCameraComponent* ThirdPersonCamera;
 
     /*
     * Hair mesh (third person).
     */
     UPROPERTY(VisibleDefaultsOnly, Category = "Mesh")
-    class USkeletalMeshComponent* HairMesh;
+    USkeletalMeshComponent* HairMesh;
 
     /**
     * AI Perception Source
@@ -559,6 +561,8 @@ public:
     */
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Character|Crouch")
     virtual void OnEndCrouchEffects();
+
+    void ToggleCrouch();
 
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Character|Crouch")
     float PriorCrouchTime;
