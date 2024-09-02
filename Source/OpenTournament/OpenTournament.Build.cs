@@ -21,6 +21,7 @@ public class OpenTournament : ModuleRules
                 "OpenTournament/AbilitySystem",
                 "OpenTournament/AnnouncementSystem",
                 "OpenTournament/AI",
+                "OpenTournament/Camera",
                 "OpenTournament/Character",
                 "OpenTournament/Data",
                 "OpenTournament/Enums",
