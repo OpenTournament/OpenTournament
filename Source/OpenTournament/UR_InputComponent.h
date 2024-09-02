@@ -6,13 +6,14 @@
 
 #include <EnhancedInputComponent.h>
 
-#include "CoreMinimal.h"
-#include "Components/InputComponent.h"
+#include <UR_InputConfig.h>
 
 #include "UR_InputComponent.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UEnhancedInputLocalPlayerSubsystem;
+class UUR_InputConfig;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,14 +23,29 @@
  *
  * Used for weapon group bindings.
  */
-UCLASS()
+UCLASS(Config = Input)
 class OPENTOURNAMENT_API UUR_InputComponent
     : public UEnhancedInputComponent
-    //: public UInputComponent
 {
     GENERATED_BODY()
 
 public:
+
+    UUR_InputComponent(const FObjectInitializer& ObjectInitializer);
+
+    void AddInputMappings(const UUR_InputConfig* InputConfig, UEnhancedInputLocalPlayerSubsystem* InputSubsystem) const;
+    void RemoveInputMappings(const UUR_InputConfig* InputConfig, UEnhancedInputLocalPlayerSubsystem* InputSubsystem) const;
+
+    template<class UserClass, typename FuncType>
+    void BindNativeAction(const UUR_InputConfig* InputConfig, const FGameplayTag& InputTag, ETriggerEvent TriggerEvent, UserClass* Object, FuncType Func, bool bLogIfNotFound);
+
+    template<class UserClass, typename PressedFuncType, typename ReleasedFuncType>
+    void BindAbilityActions(const UUR_InputConfig* InputConfig, UserClass* Object, PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc, TArray<uint32>& BindHandles);
+
+    void RemoveBinds(TArray<uint32>& BindHandles);
+
+    ////
+
     template <class DelegateType, class UserClass, typename... VarTypes>
     FInputKeyBinding& BindKeyParameterized(const FInputChord Chord, const EInputEvent KeyEvent, UserClass* Object, typename DelegateType::template TUObjectMethodDelegate<UserClass>::FMethodPtr Func, VarTypes... Vars)
     {
@@ -63,3 +79,36 @@ public:
         return false;
     }
 };
+
+
+template<class UserClass, typename FuncType>
+void UUR_InputComponent::BindNativeAction(const UUR_InputConfig* InputConfig, const FGameplayTag& InputTag, ETriggerEvent TriggerEvent, UserClass* Object, FuncType Func, bool bLogIfNotFound)
+{
+    check(InputConfig);
+    if (const UInputAction* IA = InputConfig->FindNativeInputActionForTag(InputTag, bLogIfNotFound))
+    {
+        BindAction(IA, TriggerEvent, Object, Func);
+    }
+}
+
+template<class UserClass, typename PressedFuncType, typename ReleasedFuncType>
+void UUR_InputComponent::BindAbilityActions(const UUR_InputConfig* InputConfig, UserClass* Object, PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc, TArray<uint32>& BindHandles)
+{
+    check(InputConfig);
+
+    for (const FGameInputAction& Action : InputConfig->AbilityInputActions)
+    {
+        if (Action.InputAction && Action.InputTag.IsValid())
+        {
+            if (PressedFunc)
+            {
+                BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Triggered, Object, PressedFunc, Action.InputTag).GetHandle());
+            }
+
+            if (ReleasedFunc)
+            {
+                BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Completed, Object, ReleasedFunc, Action.InputTag).GetHandle());
+            }
+        }
+    }
+}
