@@ -15,7 +15,11 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class AUR_PlayerController;
+class AUR_Character;
 class UUR_AbilitySystemComponent;
+class UUR_CameraMode;
+class UUR_HeroComponent;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -59,11 +63,23 @@ public:
 
     //
 
-    EGameAbilityActivationPolicy GetActivationPolicy() const { return ActivationPolicy; }
-    EGameAbilityActivationGroup GetActivationGroup() const { return ActivationGroup; }
-
     UFUNCTION(BlueprintCallable, Category = "OT|Ability")
     UUR_AbilitySystemComponent* GetGameAbilitySystemComponentFromActorInfo() const;
+
+    UFUNCTION(BlueprintCallable, Category = "OT|Ability")
+    AUR_PlayerController* GetGamePlayerControllerFromActorInfo() const;
+
+    UFUNCTION(BlueprintCallable, Category = "OT|Ability")
+    AController* GetControllerFromActorInfo() const;
+
+    UFUNCTION(BlueprintCallable, Category = "OT|Ability")
+    AUR_Character* GetGameCharacterFromActorInfo() const;
+
+    UFUNCTION(BlueprintCallable, Category = "OT|Ability")
+    UUR_HeroComponent* GetHeroComponentFromActorInfo() const;
+
+    EGameAbilityActivationPolicy GetActivationPolicy() const { return ActivationPolicy; }
+    EGameAbilityActivationGroup GetActivationGroup() const { return ActivationGroup; }
 
     // Returns true if the requested activation group is a valid transition.
     UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "OT|Ability", Meta = (ExpandBoolAsExecs = "ReturnValue"))
@@ -73,6 +89,13 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "OT|Ability", Meta = (ExpandBoolAsExecs = "ReturnValue"))
     bool ChangeActivationGroup(EGameAbilityActivationGroup NewGroup);
 
+    // Sets the ability's camera mode.
+    UFUNCTION(BlueprintCallable, Category = "OT|Ability")
+    void SetCameraMode(TSubclassOf<UUR_CameraMode> CameraMode);
+
+    // Clears the ability's camera mode.  Automatically called if needed when the ability ends.
+    UFUNCTION(BlueprintCallable, Category = "OT|Ability")
+    void ClearCameraMode();
 
     //
 
@@ -105,11 +128,18 @@ public:
 protected:
 
     // Defines how this ability is meant to activate.
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Lyra|Ability Activation")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "OT|Ability Activation")
     EGameAbilityActivationPolicy ActivationPolicy;
 
     // Defines the relationship between this ability activating and other abilities activating.
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Lyra|Ability Activation")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "OT|Ability Activation")
     EGameAbilityActivationGroup ActivationGroup;
+
+    // If true, extra information should be logged when this ability is canceled. This is temporary, used for tracking a bug.
+    UPROPERTY(EditDefaultsOnly, Category = "Advanced")
+    bool bLogCancellation;
+
+    // Current camera mode set by the ability.
+    TSubclassOf<UUR_CameraMode> ActiveCameraMode;
 
 };

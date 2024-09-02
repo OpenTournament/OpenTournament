@@ -10,7 +10,10 @@
 
 #include "UR_AbilitySystemComponent.h"
 #include "UR_Character.h"
+#include "UR_HeroComponent.h"
+#include "UR_PlayerController.h"
 #include "UR_TargetType.h"
+#include "Camera/UR_CameraMode.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_GameplayAbility)
 
@@ -44,6 +47,52 @@ UUR_GameplayAbility::UUR_GameplayAbility(const FObjectInitializer& ObjectInitial
     //bLogCancelation = false;
 
     //ActiveCameraMode = nullptr;
+}
+
+AUR_PlayerController* UUR_GameplayAbility::GetGamePlayerControllerFromActorInfo() const
+{
+    return (CurrentActorInfo ? Cast<AUR_PlayerController>(CurrentActorInfo->PlayerController.Get()) : nullptr);
+
+}
+
+AController* UUR_GameplayAbility::GetControllerFromActorInfo() const
+{
+    if (CurrentActorInfo)
+    {
+        if (AController* PC = CurrentActorInfo->PlayerController.Get())
+        {
+            return PC;
+        }
+
+        // Look for a player controller or pawn in the owner chain.
+        AActor* TestActor = CurrentActorInfo->OwnerActor.Get();
+        while (TestActor)
+        {
+            if (AController* C = Cast<AController>(TestActor))
+            {
+                return C;
+            }
+
+            if (const APawn* Pawn = Cast<APawn>(TestActor))
+            {
+                return Pawn->GetController();
+            }
+
+            TestActor = TestActor->GetOwner();
+        }
+    }
+
+    return nullptr;
+}
+
+AUR_Character* UUR_GameplayAbility::GetGameCharacterFromActorInfo() const
+{
+    return (CurrentActorInfo ? Cast<AUR_Character>(CurrentActorInfo->AvatarActor.Get()) : nullptr);
+}
+
+UUR_HeroComponent* UUR_GameplayAbility::GetHeroComponentFromActorInfo() const
+{
+    return (CurrentActorInfo ? UUR_HeroComponent::FindHeroComponent(CurrentActorInfo->AvatarActor.Get()) : nullptr);
 }
 
 UUR_AbilitySystemComponent* UUR_GameplayAbility::GetGameAbilitySystemComponentFromActorInfo() const
@@ -102,6 +151,32 @@ bool UUR_GameplayAbility::ChangeActivationGroup(EGameAbilityActivationGroup NewG
     }
 
     return true;
+}
+
+void UUR_GameplayAbility::SetCameraMode(TSubclassOf<UUR_CameraMode> CameraMode)
+{
+    ENSURE_ABILITY_IS_INSTANTIATED_OR_RETURN(SetCameraMode, );
+
+    if (UUR_HeroComponent* HeroComponent = GetHeroComponentFromActorInfo())
+    {
+        HeroComponent->SetAbilityCameraMode(CameraMode, CurrentSpecHandle);
+        ActiveCameraMode = CameraMode;
+    }
+}
+
+void UUR_GameplayAbility::ClearCameraMode()
+{
+    ENSURE_ABILITY_IS_INSTANTIATED_OR_RETURN(ClearCameraMode, );
+
+    if (ActiveCameraMode)
+    {
+        if (UUR_HeroComponent* HeroComponent = GetHeroComponentFromActorInfo())
+        {
+            HeroComponent->ClearAbilityCameraMode(CurrentSpecHandle);
+        }
+
+        ActiveCameraMode = nullptr;
+    }
 }
 
 FUR_GameplayEffectContainerSpec UUR_GameplayAbility::MakeEffectContainerSpecFromContainer(const FUR_GameplayEffectContainer& Container, const FGameplayEventData& EventData, int32 OverrideGameplayLevel)
