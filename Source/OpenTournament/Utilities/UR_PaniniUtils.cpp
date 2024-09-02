@@ -11,7 +11,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 
 #include "UR_MPC_Global.h"
-#include "UR_PlayerCameraManager.h"
+#include "Camera/UR_PlayerCameraManager.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -97,7 +97,8 @@ FVector UUR_PaniniUtils::CalcMFShrinkWeapon(const UObject* WorldContext, const F
         CameraManager->GetCameraViewPoint_Direct(CamLoc, CamRot);
 
         FVector Offset = WorldPos - CamLoc;
-        Offset = FMath::Lerp(
+        Offset = FMath::Lerp
+        (
             Offset.GetSafeNormal() * Params.PushMin,
             Offset.GetSafeNormal() * Params.PushMax,
             (Offset.Size() + (FMath::Tan(0.5f * CameraManager->GetFOVAngle() * PI / 180.f) * Params.DistanceBias)) / Params.DistanceNormalize
