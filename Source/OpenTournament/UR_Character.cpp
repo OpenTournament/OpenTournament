@@ -8,17 +8,18 @@
 #include <Components/SkeletalMeshComponent.h>
 #include <Components/SkinnedMeshComponent.h>
 
-#include "GameplayTagsManager.h"
-#include "InputAction.h"
+#include <GameplayTagsManager.h>
+#include <InputAction.h>
+#include <Components/CapsuleComponent.h>
+#include <Engine/DamageEvents.h>
+#include <GameFramework/GameState.h>
+#include <GameFramework/SpringArmComponent.h>
+#include <Kismet/GameplayStatics.h>
+#include <Kismet/KismetMathLibrary.h>
+#include <Net/UnrealNetwork.h>
+#include <Perception/AISense_Sight.h>
+
 #include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "Engine/DamageEvents.h"
-#include "GameFramework/GameState.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
-#include "Net/UnrealNetwork.h"
-#include "Perception/AISense_Sight.h"
 
 #include "OpenTournament.h"
 #include "UR_AbilitySystemComponent.h"
