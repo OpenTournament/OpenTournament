@@ -60,7 +60,7 @@ public:
     //~ End IGameFrameworkInitStateInterface interface
 
     /** Returns the pawn extension component if one exists on the specified actor. */
-    UFUNCTION(BlueprintPure, Category = "UR_|Pawn")
+    UFUNCTION(BlueprintPure, Category = "OT|Pawn")
     static UUR_PawnExtensionComponent* FindPawnExtensionComponent(const AActor* Actor)
     {
         return (Actor ? Actor->FindComponentByClass<UUR_PawnExtensionComponent>() : nullptr);
@@ -77,7 +77,7 @@ public:
     void SetPawnData(const UUR_PawnData* InPawnData);
 
     /** Gets the current ability system component, which may be owned by a different actor */
-    UFUNCTION(BlueprintPure, Category = "UR_|Pawn")
+    UFUNCTION(BlueprintPure, Category = "OT|Pawn")
     UUR_AbilitySystemComponent* GetUR_AbilitySystemComponent() const
     {
         return AbilitySystemComponent;
@@ -121,7 +121,7 @@ protected:
     FSimpleMulticastDelegate OnAbilitySystemUninitialized;
 
     /** Pawn data used to create the pawn. Specified from a spawn function or on a placed instance. */
-    UPROPERTY(EditInstanceOnly, ReplicatedUsing = OnRep_PawnData, Category = "UR_|Pawn")
+    UPROPERTY(EditInstanceOnly, ReplicatedUsing = OnRep_PawnData, Category = "OT|Pawn")
     TObjectPtr<const UUR_PawnData> PawnData;
 
     /** Pointer to the ability system component that is cached for convenience. */
