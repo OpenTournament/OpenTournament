@@ -28,6 +28,7 @@ public class OpenTournament : ModuleRules
                 "OpenTournament/GameFeatures",
                 "OpenTournament/GameModes",
                 "OpenTournament/GAS",
+                "OpenTournament/Input",
                 "OpenTournament/Interfaces",
                 "OpenTournament/Messages",
                 "OpenTournament/Player",
