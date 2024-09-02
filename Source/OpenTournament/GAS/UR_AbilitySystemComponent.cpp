@@ -131,6 +131,47 @@ void UUR_AbilitySystemComponent::CancelAbilitiesByFunc(TShouldCancelAbilityFunc 
     }
 }
 
+void UUR_AbilitySystemComponent::CancelInputActivatedAbilities(bool bReplicateCancelAbility)
+{
+    auto ShouldCancelFunc = [this](const UUR_GameplayAbility* LyraAbility, FGameplayAbilitySpecHandle Handle)
+    {
+        const EGameAbilityActivationPolicy ActivationPolicy = LyraAbility->GetActivationPolicy();
+        return ((ActivationPolicy == EGameAbilityActivationPolicy::OnInputTriggered) || (ActivationPolicy == EGameAbilityActivationPolicy::WhileInputActive));
+    };
+
+    CancelAbilitiesByFunc(ShouldCancelFunc, bReplicateCancelAbility);
+}
+
+void UUR_AbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
+{
+    if (InputTag.IsValid())
+    {
+        for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
+        {
+            if (AbilitySpec.Ability && (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag)))
+            {
+                InputPressedSpecHandles.AddUnique(AbilitySpec.Handle);
+                InputHeldSpecHandles.AddUnique(AbilitySpec.Handle);
+            }
+        }
+    }
+}
+
+void UUR_AbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& InputTag)
+{
+    if (InputTag.IsValid())
+    {
+        for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
+        {
+            if (AbilitySpec.Ability && (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag)))
+            {
+                InputReleasedSpecHandles.AddUnique(AbilitySpec.Handle);
+                InputHeldSpecHandles.Remove(AbilitySpec.Handle);
+            }
+        }
+    }
+}
+
 bool UUR_AbilitySystemComponent::IsActivationGroupBlocked(EGameAbilityActivationGroup InGroup) const
 {
     bool bBlocked = false;
@@ -188,20 +229,20 @@ void UUR_AbilitySystemComponent::AddAbilityToActivationGroup(EGameAbilityActivat
     }
 }
 
-void UUR_AbilitySystemComponent::RemoveAbilityFromActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* LyraAbility)
+void UUR_AbilitySystemComponent::RemoveAbilityFromActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InAbility)
 {
-    check(LyraAbility);
+    check(InAbility);
     check(ActivationGroupCounts[(uint8)InGroup] > 0);
 
     ActivationGroupCounts[(uint8)InGroup]--;
 
 }
 
-void UUR_AbilitySystemComponent::CancelActivationGroupAbilities(EGameAbilityActivationGroup Group, UUR_GameplayAbility* IgnoreLyraAbility, bool bReplicateCancelAbility)
+void UUR_AbilitySystemComponent::CancelActivationGroupAbilities(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InIgnoreLyraAbility, bool bReplicateCancelAbility)
 {
-    auto ShouldCancelFunc = [this, Group, IgnoreLyraAbility](const UUR_GameplayAbility* LyraAbility, FGameplayAbilitySpecHandle Handle)
+    auto ShouldCancelFunc = [this, InGroup, InIgnoreLyraAbility](const UUR_GameplayAbility* InLyraAbility, FGameplayAbilitySpecHandle Handle)
     {
-        return ((LyraAbility->GetActivationGroup() == Group) && (LyraAbility != IgnoreLyraAbility));
+        return ((InLyraAbility->GetActivationGroup() == InGroup) && (InLyraAbility != InIgnoreLyraAbility));
     };
 
     CancelAbilitiesByFunc(ShouldCancelFunc, bReplicateCancelAbility);

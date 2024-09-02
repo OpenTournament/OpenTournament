@@ -51,10 +51,14 @@ public:
     typedef TFunctionRef<bool(const UUR_GameplayAbility* InGameAbility, FGameplayAbilitySpecHandle Handle)> TShouldCancelAbilityFunc;
     void CancelAbilitiesByFunc(TShouldCancelAbilityFunc ShouldCancelFunc, bool bReplicateCancelAbility);
 
+    void CancelInputActivatedAbilities(bool bReplicateCancelAbility);
+
+    void AbilityInputTagPressed(const FGameplayTag& InputTag);
+    void AbilityInputTagReleased(const FGameplayTag& InputTag);
 
     bool IsActivationGroupBlocked(EGameAbilityActivationGroup InGroup) const;
     void AddAbilityToActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InGameAbility);
-    void RemoveAbilityFromActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* LyraAbility);
+    void RemoveAbilityFromActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InAbility);
     void CancelActivationGroupAbilities(EGameAbilityActivationGroup Group, UUR_GameplayAbility* IgnoreLyraAbility, bool bReplicateCancelAbility);
 
 
