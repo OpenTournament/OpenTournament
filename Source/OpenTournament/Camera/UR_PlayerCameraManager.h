@@ -4,16 +4,20 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "Camera/PlayerCameraManager.h"
+#include <Camera/PlayerCameraManager.h>
+
 #include "UR_PlayerCameraManager.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+#define OT_CAMERA_DEFAULT_FOV		(90.0f)
+#define OT_CAMERA_DEFAULT_PITCH_MIN	(-89.0f)
+#define OT_CAMERA_DEFAULT_PITCH_MAX	(89.0f)
+
 /**
  *
  */
-UCLASS()
+UCLASS(notplaceable)
 class OPENTOURNAMENT_API AUR_PlayerCameraManager : public APlayerCameraManager
 {
     GENERATED_BODY()
