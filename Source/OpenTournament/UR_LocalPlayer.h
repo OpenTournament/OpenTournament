@@ -24,7 +24,7 @@ class OPENTOURNAMENT_API UUR_LocalPlayer : public UCommonLocalPlayer, public IUR
 {
     GENERATED_BODY()
 
-    UUR_LocalPlayer(const FObjectInitializer& ObjectInitializer);
+    UUR_LocalPlayer();
 
 public:
     /**
