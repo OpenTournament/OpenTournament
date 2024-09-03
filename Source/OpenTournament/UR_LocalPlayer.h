@@ -4,7 +4,9 @@
 
 #pragma once
 
-#include "Engine/LocalPlayer.h"
+#include <CommonLocalPlayer.h>
+
+#include "UR_TeamAgentInterface.h"
 
 #include "UR_LocalPlayer.generated.h"
 
@@ -18,7 +20,7 @@ class UUR_MessageHistory;
  *
  */
 UCLASS(BlueprintType)
-class OPENTOURNAMENT_API UUR_LocalPlayer : public ULocalPlayer
+class OPENTOURNAMENT_API UUR_LocalPlayer : public UCommonLocalPlayer, public IUR_TeamAgentInterface
 {
     GENERATED_BODY()
 
