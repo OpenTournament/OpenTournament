@@ -78,7 +78,7 @@ public:
 
     /** Gets the current ability system component, which may be owned by a different actor */
     UFUNCTION(BlueprintPure, Category = "OT|Pawn")
-    UUR_AbilitySystemComponent* GetUR_AbilitySystemComponent() const
+    UUR_AbilitySystemComponent* GetGameAbilitySystemComponent() const
     {
         return AbilitySystemComponent;
     }

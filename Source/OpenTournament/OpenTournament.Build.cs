@@ -35,6 +35,7 @@ public class OpenTournament : ModuleRules
                 //"OpenTournament/Settings",
                 "OpenTournament/Slate",
                 "OpenTournament/System",
+                "OpenTournament/Teams",
                 "OpenTournament/UI",
                 "OpenTournament/Utilities",
                 //"OpenTournament/Weapons",

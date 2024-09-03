@@ -44,15 +44,14 @@ UUR_GameplayAbility::UUR_GameplayAbility(const FObjectInitializer& ObjectInitial
     ActivationPolicy = EGameAbilityActivationPolicy::OnInputTriggered;
     ActivationGroup = EGameAbilityActivationGroup::Independent;
 
-    //bLogCancelation = false;
+    bLogCancellation = false;
 
-    //ActiveCameraMode = nullptr;
+    ActiveCameraMode = nullptr;
 }
 
 AUR_PlayerController* UUR_GameplayAbility::GetGamePlayerControllerFromActorInfo() const
 {
     return (CurrentActorInfo ? Cast<AUR_PlayerController>(CurrentActorInfo->PlayerController.Get()) : nullptr);
-
 }
 
 AController* UUR_GameplayAbility::GetControllerFromActorInfo() const
