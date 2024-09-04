@@ -37,6 +37,7 @@
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 #include "UR_Projectile.h"
+#include "UR_TeamAgentInterface.h"
 #include "UR_UserSettings.h"
 #include "UR_Weapon.h"
 #include "AbilitySystem/Attributes/UR_HealthSet.h"
@@ -211,7 +212,12 @@ void AUR_Character::Tick(float DeltaTime)
 
 UAbilitySystemComponent* AUR_Character::GetAbilitySystemComponent() const
 {
-    return AbilitySystemComponent;
+    if (PawnExtComponent == nullptr)
+    {
+        return nullptr;
+    }
+
+    return PawnExtComponent->GetGameAbilitySystemComponent();
 }
 
 UUR_AbilitySystemComponent* AUR_Character::GetGameAbilitySystemComponent() const
@@ -243,6 +249,10 @@ UInputComponent* AUR_Character::CreatePlayerInputComponent()
 void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+    PawnExtComponent->SetupPlayerInputComponent();
+
+    //
 
     if (auto URInputComponent = Cast<UUR_InputComponent>(InputComponent))
     {
@@ -314,11 +324,11 @@ void AUR_Character::UnPossessed()
     AController* const OldController = Controller;
 
     // Stop listening for changes from the old controller
-    // const FGenericTeamId OldTeamID = MyTeamID;
-    // if (ILyraTeamAgentInterface* ControllerAsTeamProvider = Cast<ILyraTeamAgentInterface>(OldController))
-    // {
-    //     ControllerAsTeamProvider->GetTeamChangedDelegateChecked().RemoveAll(this);
-    // }
+    const FGenericTeamId OldTeamID = MyTeamID;
+    if (IUR_TeamAgentInterface* ControllerAsTeamProvider = Cast<IUR_TeamAgentInterface>(OldController))
+    {
+        ControllerAsTeamProvider->GetTeamChangedDelegateChecked().RemoveAll(this);
+    }
 
     Super::UnPossessed();
 
@@ -472,15 +482,15 @@ void AUR_Character::PossessedBy(AController* NewController)
     Super::PossessedBy(NewController);
     PawnExtComponent->HandleControllerChanged();
 
-    // const FGenericTeamId OldTeamID = MyTeamID;
-    //
-    // // Grab the current team ID and listen for future changes
-    // if (ILyraTeamAgentInterface* ControllerAsTeamProvider = Cast<ILyraTeamAgentInterface>(NewController))
-    // {
-    //     MyTeamID = ControllerAsTeamProvider->GetGenericTeamId();
-    //     ControllerAsTeamProvider->GetTeamChangedDelegateChecked().AddDynamic(this, &ThisClass::OnControllerChangedTeam);
-    // }
-    // ConditionalBroadcastTeamChanged(this, OldTeamID, MyTeamID);
+    const FGenericTeamId OldTeamID = MyTeamID;
+
+    // Grab the current team ID and listen for future changes
+    if (IUR_TeamAgentInterface* ControllerAsTeamProvider = Cast<IUR_TeamAgentInterface>(NewController))
+    {
+        MyTeamID = ControllerAsTeamProvider->GetGenericTeamId();
+        ControllerAsTeamProvider->GetTeamChangedDelegateChecked().AddDynamic(this, &ThisClass::OnControllerChangedTeam);
+    }
+    ConditionalBroadcastTeamChanged(this, OldTeamID, MyTeamID);
 }
 
 void AUR_Character::RegisterZoomInterface(TScriptInterface<IUR_ActivatableInterface> NewZoomInterface)
@@ -1568,4 +1578,16 @@ void AUR_Character::SetTeamIndex_Implementation(int32 NewTeamIndex)
     {
         IUR_TeamInterface::Execute_SetTeamIndex(PS, NewTeamIndex);
     }
+}
+
+void AUR_Character::OnControllerChangedTeam(UObject* TeamAgent, int32 OldTeam, int32 NewTeam)
+{
+    const FGenericTeamId MyOldTeamID = MyTeamID;
+    MyTeamID = IntegerToGenericTeamId(NewTeam);
+    ConditionalBroadcastTeamChanged(this, MyOldTeamID, MyTeamID);
+}
+
+void AUR_Character::OnRep_MyTeamID(FGenericTeamId OldTeamID)
+{
+    ConditionalBroadcastTeamChanged(this, OldTeamID, MyTeamID);
 }

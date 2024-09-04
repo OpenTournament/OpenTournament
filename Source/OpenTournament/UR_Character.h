@@ -9,6 +9,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayTagAssetInterface.h"
 
+#include "UR_TeamAgentInterface.h"
 #include "Enums/UR_MovementAction.h"
 #include "Enums/UR_Type_DodgeDirection.h"
 #include "Interfaces/UR_TeamInterface.h"
@@ -185,9 +186,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPickupEventSignature, AUR_Pickup*, 
 UCLASS()
 class OPENTOURNAMENT_API AUR_Character
     : public AModularCharacter
-      , public IAbilitySystemInterface
-      , public IGameplayTagAssetInterface
-      , public IUR_TeamInterface
+    , public IAbilitySystemInterface
+    , public IGameplayTagAssetInterface
+    , public IUR_TeamInterface
+    , public IUR_TeamAgentInterface
 {
     GENERATED_BODY()
 
@@ -944,4 +946,13 @@ public:
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
 
     //~ End TeamInterface
+
+    UPROPERTY(ReplicatedUsing = OnRep_MyTeamID)
+    FGenericTeamId MyTeamID;
+
+    UFUNCTION()
+    void OnControllerChangedTeam(UObject* TeamAgent, int32 OldTeam, int32 NewTeam);
+
+    UFUNCTION()
+    void OnRep_MyTeamID(FGenericTeamId OldTeamID);
 };
