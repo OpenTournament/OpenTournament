@@ -767,6 +767,9 @@ void AUR_GameMode::OnExperienceLoaded(const UUR_ExperienceDefinition* CurrentExp
     // Spawn any players that are already attached
     //@TODO: Here we're handling only *player* controllers, but in GetDefaultPawnClassForController_Implementation we skipped all controllers
     // GetDefaultPawnClassForController_Implementation might only be getting called for players anyways
+
+    auto NumControllers = GetWorld()->GetNumControllers();
+
     for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
     {
         APlayerController* PC = Cast<APlayerController>(*Iterator);
