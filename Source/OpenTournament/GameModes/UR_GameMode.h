@@ -10,6 +10,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class AUR_PlayerState;
 class UUR_PawnData;
 class UUR_ExperienceDefinition;
 class AUR_GameState;
@@ -72,49 +73,62 @@ public:
     AUR_GameMode();
 
 #pragma region AGameModeBaseInterface
-
     virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
-
+    virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
+    virtual APawn* SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform) override;
+    virtual bool ShouldSpawnAtStartSpot(AController* Player) override;
+    virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
+    virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+    virtual void FinishRestartPlayer(AController* NewPlayer, const FRotator& StartRotation) override;
+    virtual bool PlayerCanRestart_Implementation(APlayerController* Player) override;
     virtual void InitGameState() override;
-
-    virtual void GenericPlayerInitialization(AController* C) override;
-
+    virtual bool UpdatePlayerStartSpot(AController* Player, const FString& Portal, FString& OutErrorMessage) override;
+    virtual void GenericPlayerInitialization(AController* NewPlayer) override;
+    virtual void FailedToRestartPlayer(AController* NewPlayer) override;
 #pragma endregion AGameModeBaseInterface
 
+    // Restart (respawn) the specified player or bot next frame
+    // - If bForceReset is true, the controller will be reset this frame (abandoning the currently possessed pawn, if any)
+    UFUNCTION(BlueprintCallable)
+    void RequestPlayerRestartNextFrame(AController* Controller, bool bForceReset = false);
+
+    // Agnostic version of PlayerCanRestart that can be used for both player bots and players
+    virtual bool ControllerCanRestart(AController* Controller);
 
     UFUNCTION(BlueprintCallable, Category = "OT|Pawn")
     const UUR_PawnData* GetPawnDataForController(const AController* InController) const;
+
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Classes
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Classes")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Classes", meta = (DeprecatedProperty))
     TSubclassOf<AUR_TeamInfo> TeamInfoClass;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Classes")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Classes", meta = (DeprecatedProperty))
     TSubclassOf<UUR_Widget_ScoreboardBase> ScoreboardClass;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Classes")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Classes", meta = (DeprecatedProperty))
     TSubclassOf<AUR_BotController> BotControllerClass;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Configuration
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters", meta = (DeprecatedProperty))
     int32 GoalScore;
 
-    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters", meta = (DeprecatedProperty))
     int32 TimeLimit;
 
-    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters", meta = (DeprecatedProperty))
     int32 OvertimeExtraTime;
 
-    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters", meta = (DeprecatedProperty))
     TArray<FStartingWeaponEntry> StartingWeapons;
 
-    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters", meta = (DeprecatedProperty))
     int32 MaxPlayers;
 
     /**
@@ -122,25 +136,25 @@ public:
     *  0 = disable
     * -1 = use map minimum recommended players from map settings (TODO)
     */
-    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|Bots")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|Bots", meta = (DeprecatedProperty))
     int32 BotFill;
 
-    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|TeamGame")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|TeamGame", meta = (DeprecatedProperty))
     int32 NumTeams;
 
-    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|TeamGame")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|TeamGame", meta = (DeprecatedProperty))
     FString TeamsFillMode;
 
-    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters", meta = (DeprecatedProperty))
     float SelfDamage;
 
-    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|TeamGame")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|TeamGame", meta = (DeprecatedProperty))
     float TeamDamageDirect;
 
-    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|TeamGame")
+    UPROPERTY(Config, BlueprintReadWrite, EditDefaultsOnly, Category = "Parameters|TeamGame", meta = (DeprecatedProperty))
     float TeamDamageRetaliate;
 
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, meta = (DeprecatedProperty))
     int32 DesiredTeamSize;
 
     UFUNCTION(BlueprintCallable)

@@ -25,8 +25,13 @@
 #include "UR_DeveloperSettings.h"
 #include "UR_ExperienceDefinition.h"
 #include "UR_ExperienceManagerComponent.h"
+#include "UR_GameSession.h"
+#include "UR_HUD.h"
 #include "UR_LogChannels.h"
 #include "UR_PawnData.h"
+#include "UR_PawnExtensionComponent.h"
+#include "UR_PlayerBotController.h"
+#include "UR_PlayerSpawningManagerComponent.h"
 #include "UR_Widget_ScoreboardBase.h"
 #include "UR_WorldSettings.h"
 #include "AI/UR_BotController.h"
@@ -41,6 +46,14 @@ AUR_GameMode::AUR_GameMode()
     : BotFill(0)
     , DesiredTeamSize(0)
 {
+    GameStateClass = AUR_GameState::StaticClass();
+    GameSessionClass = AUR_GameSession::StaticClass();
+    PlayerControllerClass = AUR_PlayerController::StaticClass();
+    //ReplaySpectatorPlayerControllerClass = ALyraReplayPlayerController::StaticClass();
+    PlayerStateClass = AUR_PlayerState::StaticClass();
+    DefaultPawnClass = AUR_Character::StaticClass();
+    HUDClass = AUR_HUD::StaticClass();
+
     ScoreboardClass = UUR_Widget_ScoreboardBase::StaticClass();
     BotControllerClass = AUR_BotController::StaticClass();
 
@@ -99,6 +112,100 @@ void AUR_GameMode::InitGame(const FString& MapName, const FString& OptionsMeh, F
     }
 }
 
+UClass* AUR_GameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
+{
+    if (const UUR_PawnData* PawnData = GetPawnDataForController(InController))
+    {
+        if (PawnData->PawnClass)
+        {
+            return PawnData->PawnClass;
+        }
+    }
+
+    return Super::GetDefaultPawnClassForController_Implementation(InController);
+}
+
+APawn* AUR_GameMode::SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform)
+{
+    FActorSpawnParameters SpawnInfo;
+    SpawnInfo.Instigator = GetInstigator();
+    SpawnInfo.ObjectFlags |= RF_Transient;	// Never save the default player pawns into a map.
+    SpawnInfo.bDeferConstruction = true;
+
+    if (UClass* PawnClass = GetDefaultPawnClassForController(NewPlayer))
+    {
+        if (APawn* SpawnedPawn = GetWorld()->SpawnActor<APawn>(PawnClass, SpawnTransform, SpawnInfo))
+        {
+            if (UUR_PawnExtensionComponent* PawnExtComp = UUR_PawnExtensionComponent::FindPawnExtensionComponent(SpawnedPawn))
+            {
+                if (const UUR_PawnData* PawnData = GetPawnDataForController(NewPlayer))
+                {
+                    PawnExtComp->SetPawnData(PawnData);
+                }
+                else
+                {
+                    UE_LOG(LogGame, Error, TEXT("Game mode was unable to set PawnData on the spawned pawn [%s]."), *GetNameSafe(SpawnedPawn));
+                }
+            }
+
+            SpawnedPawn->FinishSpawning(SpawnTransform);
+
+            return SpawnedPawn;
+        }
+        else
+        {
+            UE_LOG(LogGame, Error, TEXT("Game mode was unable to spawn Pawn of class [%s] at [%s]."), *GetNameSafe(PawnClass), *SpawnTransform.ToHumanReadableString());
+        }
+    }
+    else
+    {
+        UE_LOG(LogGame, Error, TEXT("Game mode was unable to spawn Pawn due to NULL pawn class."));
+    }
+
+    return nullptr;
+}
+
+bool AUR_GameMode::ShouldSpawnAtStartSpot(AController* Player)
+{
+    // We never want to use the start spot, always use the spawn management component.
+    return false;
+}
+
+void AUR_GameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+{
+    // Delay starting new players until the experience has been loaded
+    // (players who log in prior to that will be started by OnExperienceLoaded)
+    if (IsExperienceLoaded())
+    {
+        Super::HandleStartingNewPlayer_Implementation(NewPlayer);
+    }
+}
+
+AActor* AUR_GameMode::ChoosePlayerStart_Implementation(AController* Player)
+{
+    if (UUR_PlayerSpawningManagerComponent* PlayerSpawningComponent = GameState->FindComponentByClass<UUR_PlayerSpawningManagerComponent>())
+    {
+        return PlayerSpawningComponent->ChoosePlayerStart(Player);
+    }
+
+    return Super::ChoosePlayerStart_Implementation(Player);
+}
+
+void AUR_GameMode::FinishRestartPlayer(AController* NewPlayer, const FRotator& StartRotation)
+{
+    if (UUR_PlayerSpawningManagerComponent* PlayerSpawningComponent = GameState->FindComponentByClass<UUR_PlayerSpawningManagerComponent>())
+    {
+        PlayerSpawningComponent->FinishRestartPlayer(NewPlayer, StartRotation);
+    }
+
+    Super::FinishRestartPlayer(NewPlayer, StartRotation);
+}
+
+bool AUR_GameMode::PlayerCanRestart_Implementation(APlayerController* Player)
+{
+    return ControllerCanRestart(Player);
+}
+
 void AUR_GameMode::InitGameState()
 {
     Super::InitGameState();
@@ -124,6 +231,13 @@ void AUR_GameMode::InitGameState()
     ExperienceComponent->CallOrRegister_OnExperienceLoaded(FOnGameExperienceLoaded::FDelegate::CreateUObject(this, &ThisClass::OnExperienceLoaded));
 }
 
+bool AUR_GameMode::UpdatePlayerStartSpot(AController* Player, const FString& Portal, FString& OutErrorMessage)
+{
+    // Do nothing, we'll wait until PostLogin when we try to spawn the player for real.
+    // Doing anything right now is no good, systems like team assignment haven't even occurred yet.
+    return true;
+}
+
 void AUR_GameMode::BroadcastSystemMessage(const FString& Msg)
 {
     for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
@@ -142,21 +256,21 @@ void AUR_GameMode::OnPostLogin(AController* NewPlayer)
 {
     Super::OnPostLogin(NewPlayer);
 
-    if (NewPlayer)
-    {
-        if (auto PS = NewPlayer->GetPlayerState<APlayerState>())
-        {
-            BroadcastSystemMessage(FString::Printf(TEXT("%s has joined."), *PS->GetPlayerName()));
-
-            if (PS->IsABot())
-            {
-                NumBots++;
-            }
-        }
-
-        if (NewPlayer->IsA<APlayerController>())
-            CheckBotsDeferred();
-    }
+    // if (NewPlayer)
+    // {
+    //     if (auto PS = NewPlayer->GetPlayerState<APlayerState>())
+    //     {
+    //         BroadcastSystemMessage(FString::Printf(TEXT("%s has joined."), *PS->GetPlayerName()));
+    //
+    //         if (PS->IsABot())
+    //         {
+    //             NumBots++;
+    //         }
+    //     }
+    //
+    //     if (NewPlayer->IsA<APlayerController>())
+    //         CheckBotsDeferred();
+    // }
 }
 
 void AUR_GameMode::Logout(AController* Exiting)
@@ -184,16 +298,90 @@ void AUR_GameMode::GenericPlayerInitialization(AController* C)
 {
     Super::GenericPlayerInitialization(C);
 
-    if (C && C->PlayerState && !C->PlayerState->IsOnlyASpectator())
+    // if (C && C->PlayerState && !C->PlayerState->IsOnlyASpectator())
+    // {
+    //     if (AUR_PlayerState* PS = Cast<AUR_PlayerState>(C->PlayerState))
+    //     {
+    //         if (NumTeams > 0)
+    //         {
+    //             AssignDefaultTeam(PS);
+    //         }
+    //     }
+    // }
+}
+
+void AUR_GameMode::FailedToRestartPlayer(AController* NewPlayer)
+{
+    Super::FailedToRestartPlayer(NewPlayer);
+
+    // If we tried to spawn a pawn and it failed, lets try again *note* check if there's actually a pawn class
+    // before we try this forever.
+    if (UClass* PawnClass = GetDefaultPawnClassForController(NewPlayer))
     {
-        if (AUR_PlayerState* PS = Cast<AUR_PlayerState>(C->PlayerState))
+        if (APlayerController* NewPC = Cast<APlayerController>(NewPlayer))
         {
-            if (NumTeams > 0)
+            // If it's a player don't loop forever, maybe something changed and they can no longer restart if so stop trying.
+            if (PlayerCanRestart(NewPC))
             {
-                AssignDefaultTeam(PS);
+                RequestPlayerRestartNextFrame(NewPlayer, false);
+            }
+            else
+            {
+                UE_LOG(LogGame, Verbose, TEXT("FailedToRestartPlayer(%s) and PlayerCanRestart returned false, so we're not going to try again."), *GetPathNameSafe(NewPlayer));
             }
         }
+        else
+        {
+            RequestPlayerRestartNextFrame(NewPlayer, false);
+        }
     }
+    else
+    {
+        UE_LOG(LogGame, Verbose, TEXT("FailedToRestartPlayer(%s) but there's no pawn class so giving up."), *GetPathNameSafe(NewPlayer));
+    }
+}
+
+void AUR_GameMode::RequestPlayerRestartNextFrame(AController* Controller, bool bForceReset)
+{
+    if (bForceReset && (Controller != nullptr))
+    {
+        Controller->Reset();
+    }
+
+    if (APlayerController* PC = Cast<APlayerController>(Controller))
+    {
+        GetWorldTimerManager().SetTimerForNextTick(PC, &APlayerController::ServerRestartPlayer_Implementation);
+    }
+    else if (AUR_PlayerBotController* BotController = Cast<AUR_PlayerBotController>(Controller))
+    {
+        GetWorldTimerManager().SetTimerForNextTick(BotController, &AUR_PlayerBotController::ServerRestartController);
+    }
+}
+
+bool AUR_GameMode::ControllerCanRestart(AController* Controller)
+{
+    if (APlayerController* PC = Cast<APlayerController>(Controller))
+    {
+        if (!Super::PlayerCanRestart_Implementation(PC))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        // Bot version of Super::PlayerCanRestart_Implementation
+        if ((Controller == nullptr) || Controller->IsPendingKillPending())
+        {
+            return false;
+        }
+    }
+
+    if (UUR_PlayerSpawningManagerComponent* PlayerSpawningComponent = GameState->FindComponentByClass<UUR_PlayerSpawningManagerComponent>())
+    {
+        return PlayerSpawningComponent->ControllerCanRestart(Controller);
+    }
+
+    return true;
 }
 
 const UUR_PawnData* AUR_GameMode::GetPawnDataForController(const AController* InController) const
