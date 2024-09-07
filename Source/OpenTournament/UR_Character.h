@@ -770,7 +770,7 @@ public:
     * Attribute Set
     */
     UPROPERTY()
-    UUR_AttributeSet* AttributeSet;
+    TObjectPtr<const UUR_AttributeSet> AttributeSet;
 
     // Health attribute set used by this actor.
     UPROPERTY()

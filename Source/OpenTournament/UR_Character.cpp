@@ -178,13 +178,6 @@ void AUR_Character::BeginPlay()
 
     Super::BeginPlay();
 
-    if (AttributeSet)
-    {
-        AttributeSet->SetArmor(100.f);
-        AttributeSet->SetArmorMax(100.f);
-        AttributeSet->SetShieldMax(100.f);
-    }
-
     UUR_PaniniUtils::TogglePaniniProjection(GetMesh1P(), true, true);
 
     if (GetNetMode() == NM_DedicatedServer)
