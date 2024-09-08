@@ -4,12 +4,11 @@
 
 #include "UR_InputModifiers.h"
 
-#include "EnhancedPlayerInput.h"
-#include "GameFramework/PlayerController.h"
+#include <EnhancedPlayerInput.h>
+#include <GameFramework/PlayerController.h>
+
 #include "Input/UR_AimSensitivityData.h"
 #include "Player/UR_LocalPlayer.h"
-
-#include "UR_LocalPlayer.h"
 #include "Settings/UR_SettingsShared.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_InputModifiers)
