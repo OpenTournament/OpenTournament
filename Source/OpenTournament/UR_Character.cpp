@@ -168,6 +168,8 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     DOREPLIFETIME(ThisClass, DodgeDirection);
     DOREPLIFETIME(ThisClass, InventoryComponent);
     DOREPLIFETIME(ThisClass, AbilitySystemComponent);
+    DOREPLIFETIME(ThisClass, AbilitySystemComponent);
+    DOREPLIFETIME(ThisClass, MyTeamID)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
