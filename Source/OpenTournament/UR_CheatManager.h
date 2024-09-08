@@ -56,6 +56,9 @@ class OPENTOURNAMENT_API UUR_CheatManager : public UCheatManager
     virtual void UnlimitedHealth(int32 Enabled = -1);
 
     UFUNCTION(exec, Category = "Cheat")
+    void Cheat_GameReload();
+
+    UFUNCTION(exec, Category = "Cheat")
     void Cheat_Loaded();
 
     UPROPERTY(Config)
