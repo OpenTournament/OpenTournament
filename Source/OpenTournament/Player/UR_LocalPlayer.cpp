@@ -31,9 +31,12 @@ void UUR_LocalPlayer::PostInitProperties()
 {
     Super::PostInitProperties();
 
-    if (UUR_SettingsLocal* LocalSettings = GetLocalSettings())
+    if (!HasAnyFlags(RF_ClassDefaultObject))
     {
-        LocalSettings->OnAudioOutputDeviceChanged.AddUObject(this, &ThisClass::OnAudioOutputDeviceChanged);
+        if (UUR_SettingsLocal* LocalSettings = GetLocalSettings())
+        {
+            LocalSettings->OnAudioOutputDeviceChanged.AddUObject(this, &ThisClass::OnAudioOutputDeviceChanged);
+        }
     }
 }
 
@@ -73,6 +76,7 @@ FOnGameTeamIndexChangedDelegate* UUR_LocalPlayer::GetOnTeamIndexChangedDelegate(
 
 UUR_SettingsLocal* UUR_LocalPlayer::GetLocalSettings() const
 {
+   // return Cast<UUR_SettingsLocal>(GEngine->GetGameUserSettings());
     return UUR_SettingsLocal::Get();
 }
 
