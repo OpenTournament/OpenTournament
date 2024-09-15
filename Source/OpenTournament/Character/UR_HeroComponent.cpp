@@ -140,7 +140,9 @@ bool UUR_HeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manag
         // Wait for player state and extension component
         AUR_PlayerState* PS = GetPlayerState<AUR_PlayerState>();
 
-        return PS && Manager->HasFeatureReachedInitState(Pawn, UUR_PawnExtensionComponent::NAME_ActorFeatureName, URGameplayTags::InitState_DataInitialized);
+        const auto bResult = PS && Manager->HasFeatureReachedInitState(Pawn, UUR_PawnExtensionComponent::NAME_ActorFeatureName, URGameplayTags::InitState_DataInitialized);
+
+        return bResult;
     }
     else if (CurrentState == URGameplayTags::InitState_DataInitialized && DesiredState == URGameplayTags::InitState_GameplayReady)
     {
@@ -250,7 +252,7 @@ void UUR_HeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompon
     UEnhancedInputLocalPlayerSubsystem* Subsystem = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
     check(Subsystem);
 
-    Subsystem->ClearAllMappings();
+    //Subsystem->ClearAllMappings();
 
     if (const UUR_PawnExtensionComponent* PawnExtComp = UUR_PawnExtensionComponent::FindPawnExtensionComponent(Pawn))
     {
@@ -260,7 +262,7 @@ void UUR_HeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompon
             {
                 for (const FInputMappingContextAndPriority& Mapping : DefaultInputMappings)
                 {
-                    if (UInputMappingContext* IMC = Mapping.InputMapping.Get())
+                    if (const UInputMappingContext* IMC = Mapping.InputMapping.Get())
                     {
                         if (Mapping.bRegisterWithSettings)
                         {
@@ -284,7 +286,7 @@ void UUR_HeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompon
                 if (ensureMsgf(InputComponent, TEXT("Unexpected Input Component class! The Gameplay Abilities will not be bound to their inputs. Change the input component to UUR_InputComponent or a subclass of it.")))
                 {
                     // Add the key mappings that may have been set by the player
-                    InputComponent->AddInputMappings(InputConfig, Subsystem);
+                    //InputComponent->AddInputMappings(InputConfig, Subsystem);
 
                     // This is where we actually bind and input action to a gameplay tag, which means that Gameplay Ability Blueprints will
                     // be triggered directly by these input actions Triggered events.
