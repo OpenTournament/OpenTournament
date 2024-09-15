@@ -180,18 +180,19 @@ void UUR_HealthSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackDa
     }
 
     // If health has actually changed activate callbacks
-    if (GetHealth() != HealthBeforeAttributeChange)
+    const float CurrentHealth = GetHealth();
+    if (CurrentHealth != HealthBeforeAttributeChange)
     {
         OnHealthChanged.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, HealthBeforeAttributeChange, GetHealth());
     }
 
-    if ((GetHealth() <= 0.0f) && !bOutOfHealth)
+    if ((CurrentHealth <= 0.0f) && !bOutOfHealth)
     {
         OnOutOfHealth.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, HealthBeforeAttributeChange, GetHealth());
     }
 
     // Check health again in case an event above changed it.
-    bOutOfHealth = (GetHealth() <= 0.0f);
+    bOutOfHealth = (CurrentHealth <= 0.0f);
 }
 
 void UUR_HealthSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
