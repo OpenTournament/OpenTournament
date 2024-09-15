@@ -22,7 +22,7 @@
 #include "UR_Weapon.h"
 
 #include "UR_AssetManager.h"
-#include "UR_DeveloperSettings.h"
+#include "Development/UR_DeveloperSettings.h"
 #include "UR_ExperienceDefinition.h"
 #include "UR_ExperienceManagerComponent.h"
 #include "UR_GameSession.h"
@@ -212,7 +212,7 @@ void AUR_GameMode::InitGameState()
 
     if (AUR_GameState* GS = GetGameState<AUR_GameState>())
     {
-        for (auto Team : GS->Teams)
+        for (const auto& Team : GS->Teams)
         {
             Team->Destroy();
         }
@@ -242,8 +242,10 @@ void AUR_GameMode::BroadcastSystemMessage(const FString& Msg)
 {
     for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
     {
-        if (It->IsValid())
+        if (It->IsValid() && !It->IsStale())
+        {
             It->Get()->ClientMessage(Msg);
+        }
     }
 }
 

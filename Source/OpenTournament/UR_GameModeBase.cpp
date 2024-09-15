@@ -9,7 +9,7 @@
 #include <Misc/CommandLine.h>
 
 #include "UR_AssetManager.h"
-#include "UR_DeveloperSettings.h"
+#include "Development/UR_DeveloperSettings.h"
 #include "UR_ExperienceDefinition.h"
 #include "UR_ExperienceManagerComponent.h"
 #include "UR_WorldSettings.h"
