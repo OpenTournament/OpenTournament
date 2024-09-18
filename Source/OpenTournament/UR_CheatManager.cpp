@@ -9,6 +9,7 @@
 #include "UR_AbilitySystemComponent.h"
 #include "UR_AssetManager.h"
 #include "UR_Character.h"
+#include "Development/UR_DeveloperSettings.h"
 #include "UR_ExperienceManagerComponent.h"
 #include "UR_GameData.h"
 #include "UR_GameMode.h"
