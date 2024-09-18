@@ -52,7 +52,4 @@ private:
 
     UPROPERTY(EditDefaultsOnly)
     TArray<FName> ActionNames;
-
-    UPROPERTY()
-    APlayerController* OwningPlayer;
 };

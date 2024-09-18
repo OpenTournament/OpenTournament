@@ -9,6 +9,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayTagAssetInterface.h"
 
+#include "UR_TeamAgentInterface.h"
 #include "Enums/UR_MovementAction.h"
 #include "Enums/UR_Type_DodgeDirection.h"
 #include "Interfaces/UR_TeamInterface.h"
@@ -17,6 +18,9 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_CameraComponent;
+class USpringArmComponent;
+class UUR_PawnExtensionComponent;
 class APlayerController;
 class UAnimationMontage;
 class UGameplayEffect;
@@ -182,9 +186,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPickupEventSignature, AUR_Pickup*, 
 UCLASS()
 class OPENTOURNAMENT_API AUR_Character
     : public AModularCharacter
-      , public IAbilitySystemInterface
-      , public IGameplayTagAssetInterface
-      , public IUR_TeamInterface
+    , public IAbilitySystemInterface
+    , public IGameplayTagAssetInterface
+    , public IUR_TeamInterface
+    , public IUR_TeamAgentInterface
 {
     GENERATED_BODY()
 
@@ -229,7 +234,7 @@ public:
     * We'll probably have to add another smoothing mechanism for the AimOffset.
     */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-    class USpringArmComponent* FirstPersonCamArm;
+    USpringArmComponent* FirstPersonCamArm;
 
     /**
     * First person Camera
@@ -241,7 +246,7 @@ public:
     * Character's first-person mesh (arms; seen only by self)
     */
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Mesh")
-    class USkeletalMeshComponent* MeshFirstPerson;
+    USkeletalMeshComponent* MeshFirstPerson;
 
     /**
     * Audio content for Movement etc.
@@ -259,19 +264,19 @@ public:
     * Spring arm for third person camera
     */
     UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
-    class USpringArmComponent* ThirdPersonArm;
+    USpringArmComponent* ThirdPersonArm;
 
     /**
     * Third person camera.
     */
     UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
-    class UCameraComponent* ThirdPersonCamera;
+    UCameraComponent* ThirdPersonCamera;
 
     /*
     * Hair mesh (third person).
     */
     UPROPERTY(VisibleDefaultsOnly, Category = "Mesh")
-    class USkeletalMeshComponent* HairMesh;
+    USkeletalMeshComponent* HairMesh;
 
     /**
     * AI Perception Source
@@ -331,7 +336,11 @@ public:
     // Override to update Physics Movement GameplayTags
     virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 
+    virtual void PossessedBy(AController* NewController) override;
     virtual void UnPossessed() override;
+
+    virtual void OnRep_Controller() override;
+    virtual void OnRep_PlayerState() override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Camera Management
@@ -555,6 +564,8 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Character|Crouch")
     virtual void OnEndCrouchEffects();
 
+    void ToggleCrouch();
+
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Character|Crouch")
     float PriorCrouchTime;
 
@@ -730,6 +741,9 @@ public:
 
     virtual UUR_AbilitySystemComponent* GetGameAbilitySystemComponent() const;
 
+    virtual void OnAbilitySystemInitialized();
+    virtual void OnAbilitySystemUninitialized();
+
     /** Grant a GameplayAbility */
     UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Character")
     void Server_GiveAbility(TSubclassOf<UUR_GameplayAbility> InAbility, const int32 InAbilityLevel = 1);
@@ -756,7 +770,7 @@ public:
     * Attribute Set
     */
     UPROPERTY()
-    UUR_AttributeSet* AttributeSet;
+    TObjectPtr<const UUR_AttributeSet> AttributeSet;
 
     // Health attribute set used by this actor.
     UPROPERTY()
@@ -773,6 +787,9 @@ public:
     /** Passive gameplay effects applied on creation */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character|Abilities")
     TArray<TSubclassOf<UGameplayEffect>> PassiveGameplayEffects;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lyra|Character", Meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UUR_PawnExtensionComponent> PawnExtComponent;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // @section Health & Damage
@@ -929,4 +946,13 @@ public:
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
 
     //~ End TeamInterface
+
+    UPROPERTY(ReplicatedUsing = OnRep_MyTeamID)
+    FGenericTeamId MyTeamID;
+
+    UFUNCTION()
+    void OnControllerChangedTeam(UObject* TeamAgent, int32 OldTeam, int32 NewTeam);
+
+    UFUNCTION()
+    void OnRep_MyTeamID(FGenericTeamId OldTeamID);
 };

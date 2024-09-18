@@ -8,17 +8,18 @@
 #include <Components/SkeletalMeshComponent.h>
 #include <Components/SkinnedMeshComponent.h>
 
-#include "GameplayTagsManager.h"
-#include "InputAction.h"
+#include <GameplayTagsManager.h>
+#include <InputAction.h>
+#include <Components/CapsuleComponent.h>
+#include <Engine/DamageEvents.h>
+#include <GameFramework/GameState.h>
+#include <GameFramework/SpringArmComponent.h>
+#include <Kismet/GameplayStatics.h>
+#include <Kismet/KismetMathLibrary.h>
+#include <Net/UnrealNetwork.h>
+#include <Perception/AISense_Sight.h>
+
 #include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "Engine/DamageEvents.h"
-#include "GameFramework/GameState.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
-#include "Net/UnrealNetwork.h"
-#include "Perception/AISense_Sight.h"
 
 #include "OpenTournament.h"
 #include "UR_AbilitySystemComponent.h"
@@ -32,9 +33,11 @@
 #include "UR_LogChannels.h"
 #include "UR_Logging.h"
 #include "UR_PaniniUtils.h"
+#include "UR_PawnExtensionComponent.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 #include "UR_Projectile.h"
+#include "UR_TeamAgentInterface.h"
 #include "UR_UserSettings.h"
 #include "UR_Weapon.h"
 #include "AbilitySystem/Attributes/UR_HealthSet.h"
@@ -139,6 +142,11 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer)
     AIPerceptionStimuliSource->SetAutoRegisterAsSource(true);
     AIPerceptionStimuliSource->SetRegisterAsSourceForSenses({ UAISense_Sight::StaticClass() });
 
+    // Pawn Extension
+    PawnExtComponent = CreateDefaultSubobject<UUR_PawnExtensionComponent>(TEXT("PawnExtensionComponent"));
+    PawnExtComponent->OnAbilitySystemInitialized_RegisterAndCall(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &ThisClass::OnAbilitySystemInitialized));
+    PawnExtComponent->OnAbilitySystemUninitialized_Register(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &ThisClass::OnAbilitySystemUninitialized));
+
     // Health
     HealthComponent = CreateDefaultSubobject<UUR_HealthComponent>(TEXT("HealthComponent"));
     HealthComponent->OnDeathStarted.AddDynamic(this, &ThisClass::OnDeathStarted);
@@ -160,6 +168,8 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     DOREPLIFETIME(ThisClass, DodgeDirection);
     DOREPLIFETIME(ThisClass, InventoryComponent);
     DOREPLIFETIME(ThisClass, AbilitySystemComponent);
+    DOREPLIFETIME(ThisClass, AbilitySystemComponent);
+    DOREPLIFETIME(ThisClass, MyTeamID)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -169,10 +179,6 @@ void AUR_Character::BeginPlay()
     InitializeGameplayTagsManager();
 
     Super::BeginPlay();
-
-    AttributeSet->SetArmor(100.f);
-    AttributeSet->SetArmorMax(100.f);
-    AttributeSet->SetShieldMax(100.f);
 
     UUR_PaniniUtils::TogglePaniniProjection(GetMesh1P(), true, true);
 
@@ -204,12 +210,32 @@ void AUR_Character::Tick(float DeltaTime)
 
 UAbilitySystemComponent* AUR_Character::GetAbilitySystemComponent() const
 {
-    return AbilitySystemComponent;
+    if (PawnExtComponent == nullptr)
+    {
+        return nullptr;
+    }
+
+    return PawnExtComponent->GetGameAbilitySystemComponent();
 }
 
 UUR_AbilitySystemComponent* AUR_Character::GetGameAbilitySystemComponent() const
 {
     return Cast<UUR_AbilitySystemComponent>(AbilitySystemComponent);
+}
+
+void AUR_Character::OnAbilitySystemInitialized()
+{
+    UUR_AbilitySystemComponent* ASC = GetGameAbilitySystemComponent();
+    check(ASC);
+
+    HealthComponent->InitializeWithAbilitySystem(ASC);
+
+    InitializeGameplayTags();
+}
+
+void AUR_Character::OnAbilitySystemUninitialized()
+{
+    HealthComponent->UninitializeFromAbilitySystem();
 }
 
 UInputComponent* AUR_Character::CreatePlayerInputComponent()
@@ -221,6 +247,10 @@ UInputComponent* AUR_Character::CreatePlayerInputComponent()
 void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+    PawnExtComponent->SetupPlayerInputComponent();
+
+    //
 
     if (auto URInputComponent = Cast<UUR_InputComponent>(InputComponent))
     {
@@ -289,6 +319,15 @@ void AUR_Character::UpdateTeamColor_Implementation()
 
 void AUR_Character::UnPossessed()
 {
+    AController* const OldController = Controller;
+
+    // Stop listening for changes from the old controller
+    const FGenericTeamId OldTeamID = MyTeamID;
+    if (IUR_TeamAgentInterface* ControllerAsTeamProvider = Cast<IUR_TeamAgentInterface>(OldController))
+    {
+        ControllerAsTeamProvider->GetTeamChangedDelegateChecked().RemoveAll(this);
+    }
+
     Super::UnPossessed();
 
     // Force stop firing
@@ -297,8 +336,25 @@ void AUR_Character::UnPossessed()
         InventoryComponent->ActiveWeapon->Deactivate();
     }
     DesiredFireModeNum.Empty();
+
+    PawnExtComponent->HandleControllerChanged();
+
+    // Determine what the new team ID should be afterwards
+    //MyTeamID = DetermineNewTeamAfterPossessionEnds(OldTeamID);
+    //ConditionalBroadcastTeamChanged(this, OldTeamID, MyTeamID);
 }
 
+void AUR_Character::OnRep_Controller()
+{
+    Super::OnRep_Controller();
+    PawnExtComponent->HandleControllerChanged();
+}
+
+void AUR_Character::OnRep_PlayerState()
+{
+    Super::OnRep_PlayerState();
+    PawnExtComponent->HandlePlayerStateReplicated();
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Camera
@@ -417,6 +473,22 @@ void AUR_Character::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 
     UpdateMovementPhysicsGameplayTags(PrevMovementMode);
 
     Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+}
+
+void AUR_Character::PossessedBy(AController* NewController)
+{
+    Super::PossessedBy(NewController);
+    PawnExtComponent->HandleControllerChanged();
+
+    const FGenericTeamId OldTeamID = MyTeamID;
+
+    // Grab the current team ID and listen for future changes
+    if (IUR_TeamAgentInterface* ControllerAsTeamProvider = Cast<IUR_TeamAgentInterface>(NewController))
+    {
+        MyTeamID = ControllerAsTeamProvider->GetGenericTeamId();
+        ControllerAsTeamProvider->GetTeamChangedDelegateChecked().AddDynamic(this, &ThisClass::OnControllerChangedTeam);
+    }
+    ConditionalBroadcastTeamChanged(this, OldTeamID, MyTeamID);
 }
 
 void AUR_Character::RegisterZoomInterface(TScriptInterface<IUR_ActivatableInterface> NewZoomInterface)
@@ -715,6 +787,20 @@ void AUR_Character::OnEndCrouchEffects()
     UGameplayStatics::PlaySound2D(GetWorld(), CrouchTransitionSound, 1.0f, 1.f);
 }
 
+void AUR_Character::ToggleCrouch()
+{
+    const UUR_CharacterMovementComponent* MovementComponent = CastChecked<UUR_CharacterMovementComponent>(GetCharacterMovement());
+
+    if (bIsCrouched || MovementComponent->bWantsToCrouch)
+    {
+        UnCrouch();
+    }
+    else if (MovementComponent->IsMovingOnGround())
+    {
+        Crouch();
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool AUR_Character::IsDodgeCapable_Implementation() const
@@ -857,27 +943,31 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     float DamageToHealth = 0.f;
     float DamageRemaining = Damage;
 
-    // if (AttributeSet && AttributeSet->Health_D.GetCurrentValue() > 0.f)
+    // @! TODO : This block should probably not be handled in our Character but instead via DamageExecution or GameplayEffect
+    // if (HealthComponent && !HealthComponent->IsDeadOrDying())
     // {
-    //     const float CurrentShield = FMath::FloorToFloat(AttributeSet->Shield.GetCurrentValue());
-    //     if (CurrentShield > 0.f)
+    //     if (AttributeSet)
     //     {
-    //         DamageToShield = FMath::Min(DamageRemaining, CurrentShield);
-    //         AttributeSet->SetShield(CurrentShield - DamageToShield);
-    //         DamageRemaining -= DamageToShield;
+    //         const float CurrentShield = FMath::FloorToFloat(AttributeSet->Shield.GetCurrentValue());
+    //         if (CurrentShield > 0.f)
+    //         {
+    //             DamageToShield = FMath::Min(DamageRemaining, CurrentShield);
+    //             AttributeSet->SetShield(CurrentShield - DamageToShield);
+    //             DamageRemaining -= DamageToShield;
+    //         }
+    //
+    //         const float CurrentArmor = FMath::FloorToFloat(AttributeSet->Armor.GetCurrentValue());
+    //         const float ArmorAbsorption = AttributeSet->ArmorAbsorptionPercent.GetCurrentValue();
+    //         if (CurrentArmor > 0.f && DamageRemaining > 0.f)
+    //         {
+    //             DamageToArmor = FMath::Min(DamageRemaining * ArmorAbsorption, CurrentArmor);
+    //             DamageToArmor = FMath::FloorToFloat(DamageToArmor);
+    //             AttributeSet->SetArmor(CurrentArmor - DamageToArmor);
+    //             DamageRemaining -= DamageToArmor;
+    //         }
     //     }
     //
-    //     const float CurrentArmor = FMath::FloorToFloat(AttributeSet->Armor.GetCurrentValue());
-    //     const float ArmorAbsorption = AttributeSet->ArmorAbsorptionPercent.GetCurrentValue();
-    //     if (CurrentArmor > 0.f && DamageRemaining > 0.f)
-    //     {
-    //         DamageToArmor = FMath::Min(DamageRemaining * ArmorAbsorption, CurrentArmor);
-    //         DamageToArmor = FMath::FloorToFloat(DamageToArmor);
-    //         AttributeSet->SetArmor(CurrentArmor - DamageToArmor);
-    //         DamageRemaining -= DamageToArmor;
-    //     }
-    //
-    //     const float CurrentHealth = AttributeSet->Health_D.GetCurrentValue();
+    //     const float CurrentHealth = HealthComponent->GetHealth();
     //     if (CurrentHealth > 0.f && DamageRemaining > 0.f)
     //     {
     //         DamageToHealth = FMath::Min(DamageRemaining, CurrentHealth);
@@ -968,7 +1058,7 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     ////////////////////////////////////////////////////////////
     // Death
 
-    if (HealthComponent && HealthComponent->GetHealth() <= 0)
+    if (HealthComponent && !HealthComponent->IsDeadOrDying())
     {
         // Can use DamageRemaining here to GIB
         Die(EventInstigator, DamageEvent, DamageCauser, RepDamageEvent);
@@ -1005,23 +1095,18 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
     {
         AController* Killed = GetController();
 
-        if (URGameMode->PreventDeath(Killed, Killer, DamageEvent, DamageCauser))
-        {
-            // @! TODO HealthComponentFix
+        // @! TODO : Commenting out this block, as this approach should probably be handled in another way via GAS GameplayEffect
+        //if (URGameMode->PreventDeath(Killed, Killer, DamageEvent, DamageCauser))
+        //{
             // Make sure we don't stay with <=0 health or IsAlive() would return false.
             //if (AttributeSet->Health_D.GetCurrentValue() <= 0)
             //{
                 //AttributeSet->SetHealth(1);
             //}
-            return;
-        }
+            //return;
+        //}
 
         URGameMode->PlayerKilled(Killed, Killer, DamageEvent, DamageCauser);
-    }
-
-    if (AttributeSet)
-    {
-        //AttributeSet->SetHealth(0); // @! TODO HealthComponentFix
     }
 
     // Clear inventory
@@ -1154,7 +1239,7 @@ void AUR_Character::UninitAndDestroy()
     {
         if (GameASC->GetAvatarActor() == this)
         {
-            //PawnExtComponent->UninitializeAbilitySystem();
+            PawnExtComponent->UninitializeAbilitySystem();
         }
     }
 
@@ -1491,4 +1576,16 @@ void AUR_Character::SetTeamIndex_Implementation(int32 NewTeamIndex)
     {
         IUR_TeamInterface::Execute_SetTeamIndex(PS, NewTeamIndex);
     }
+}
+
+void AUR_Character::OnControllerChangedTeam(UObject* TeamAgent, int32 OldTeam, int32 NewTeam)
+{
+    const FGenericTeamId MyOldTeamID = MyTeamID;
+    MyTeamID = IntegerToGenericTeamId(NewTeam);
+    ConditionalBroadcastTeamChanged(this, MyOldTeamID, MyTeamID);
+}
+
+void AUR_Character::OnRep_MyTeamID(FGenericTeamId OldTeamID)
+{
+    ConditionalBroadcastTeamChanged(this, OldTeamID, MyTeamID);
 }

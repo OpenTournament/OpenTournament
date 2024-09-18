@@ -8,7 +8,7 @@ The **Open Tournament Project** is a community-led effort to develop a new game 
 
 ## Legal
 
-* Code is (c) 2019-2021 Open Tournament Team. Usage is subject to our license.
+* Code is (c) 2019-2024 Open Tournament Team. Usage is subject to our license.
 * Other content may fall under different licenses and is used with permission only for Open Tournament.
 * This is a public repository with access available for contributors to Open Tournament.
 * Please do not share or redistribute in any form without approval from project leadership.

@@ -10,9 +10,9 @@
 #include "UR_Character.h"
 #include "UR_InventoryComponent.h"
 #include "UR_MPC_Global.h"
-#include "UR_PlayerCameraManager.h"
 #include "UR_PlayerInput.h"
 #include "UR_UserSettings.h"
+#include "Camera/UR_PlayerCameraManager.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_BasePlayerController)
 
@@ -39,10 +39,10 @@ void AUR_BasePlayerController::PostInitializeComponents()
 
 void AUR_BasePlayerController::InitInputSystem()
 {
-    if (PlayerInput == nullptr)
-    {
-        PlayerInput = NewObject<UUR_PlayerInput>(this);
-    }
+    // if (PlayerInput == nullptr)
+    // {
+    //     PlayerInput = NewObject<UUR_PlayerInput>(this);
+    // }
 
     Super::InitInputSystem();
 }

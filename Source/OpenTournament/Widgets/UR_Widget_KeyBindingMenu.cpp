@@ -20,7 +20,6 @@ class UUR_PlayerInput;
 
 UUR_Widget_KeyBindingMenu::UUR_Widget_KeyBindingMenu(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
-    , OwningPlayer(nullptr)
 {
 }
 
@@ -39,9 +38,12 @@ void UUR_Widget_KeyBindingMenu::OnCloseButtonClicked()
 //TODO: remove
 void UUR_Widget_KeyBindingMenu::OpenMenu()
 {
-    OwningPlayer = GetOwningPlayer();
-    OwningPlayer->SetInputMode(FInputModeUIOnly());
-    OwningPlayer->bShowMouseCursor = true;
+    auto OwningPlayer = GetOwningPlayer();
+    if (OwningPlayer)
+    {
+        OwningPlayer->SetInputMode(FInputModeUIOnly());
+        OwningPlayer->bShowMouseCursor = true;
+    }
     AddToViewport();
 }
 
@@ -49,7 +51,7 @@ void UUR_Widget_KeyBindingMenu::NativeOnInitialized()
 {
     Super::NativeOnInitialized();
 
-    if (CloseButton != nullptr)
+    if (CloseButton)
     {
         CloseButton->OnClicked.AddDynamic(this, &ThisClass::OnCloseButtonClicked);
     }
@@ -67,7 +69,10 @@ void UUR_Widget_KeyBindingMenu::CreateKeyBindObject(FName Name, FKey Key)
     NewKeyBind->Name = Name;
     NewKeyBind->Key = Key;
 
-    ControlsList->AddItem(NewKeyBind);
+    if (ControlsList)
+    {
+        ControlsList->AddItem(NewKeyBind);
+    }
 }
 
 void UUR_Widget_KeyBindingMenu::PopulateKeyBindingList()
@@ -75,12 +80,17 @@ void UUR_Widget_KeyBindingMenu::PopulateKeyBindingList()
     const UInputSettings* ProjectDefaults = GetDefault<UInputSettings>();
 
     const AUR_BasePlayerController* PC = Cast<AUR_BasePlayerController>(GetOwningPlayer());
-    UUR_PlayerInput* UserSettings = PC->GetPlayerInput();
+    const UUR_PlayerInput* UserInputSettings = PC->GetPlayerInput();
+    if (!UserInputSettings)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Missing UserSettings"));
+        return;
+    }
 
     TArray<FInputAxisKeyMapping> AxisMappings;
     for (const FName& AxisName : AxisNames)
     {
-        if (UserSettings->FindUserAxisMappings(AxisName, AxisMappings))
+        if (UserInputSettings->FindUserAxisMappings(AxisName, AxisMappings))
         {
             CreateKeyBindObject(AxisName, AxisMappings[0].Key);
         }
@@ -94,7 +104,7 @@ void UUR_Widget_KeyBindingMenu::PopulateKeyBindingList()
     TArray<FInputActionKeyMapping> ActionMappings;
     for (const FName& ActionName : ActionNames)
     {
-        if (UserSettings->FindUserActionMappings(ActionName, ActionMappings))
+        if (UserInputSettings->FindUserActionMappings(ActionName, ActionMappings))
         {
             CreateKeyBindObject(ActionName, ActionMappings[0].Key);
         }

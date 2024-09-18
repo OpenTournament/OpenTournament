@@ -13,8 +13,8 @@
 class APawn;
 class UUR_AbilitySet;
 class UUR_AbilityTagRelationshipMapping;
-//class ULyraCameraMode;
-//class ULyraInputConfig;
+class UUR_CameraMode;
+class UUR_InputConfig;
 class UObject;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,11 +48,11 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Game|Abilities")
     TObjectPtr<UUR_AbilityTagRelationshipMapping> TagRelationshipMapping;
 
-    // // Input configuration used by player controlled pawns to create input mappings and bind input actions.
-    // UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Game|Input")
-    // TObjectPtr<ULyraInputConfig> InputConfig;
-    //
-    // // Default camera mode used by player controlled pawns.
-    // UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Game|Camera")
-    // TSubclassOf<ULyraCameraMode> DefaultCameraMode;
+    // Input configuration used by player controlled pawns to create input mappings and bind input actions.
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Game|Input")
+    TObjectPtr<UUR_InputConfig> InputConfig;
+
+    // Default camera mode used by player controlled pawns.
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Game|Camera")
+    TSubclassOf<UUR_CameraMode> DefaultCameraMode;
 };

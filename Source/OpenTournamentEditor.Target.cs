@@ -1,15 +1,16 @@
 // Copyright (c) Open Tournament Project, All Rights Reserved.
 
 using UnrealBuildTool;
+using System.Collections.Generic;
 
 public class OpenTournamentEditorTarget : TargetRules
 {
     public OpenTournamentEditorTarget(TargetInfo Target) : base(Target)
     {
-	    IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
-        DefaultBuildSettings = BuildSettingsVersion.Latest;
         Type = TargetType.Editor;
-        LinkType = TargetLinkType.Modular;
-        ExtraModuleNames.Add("OpenTournament");
+
+        ExtraModuleNames.AddRange(new string[] { "OpenTournament", "OpenTournamentEditor" });
+
+        OpenTournamentTarget.ApplySharedOpenTournamentTargetSettings(this);
     }
 }

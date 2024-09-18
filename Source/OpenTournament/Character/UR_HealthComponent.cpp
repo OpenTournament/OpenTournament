@@ -6,19 +6,19 @@
 
 #include "GameplayEffectExtension.h"
 #include "Engine/World.h"
-#include "Net/UnrealNetwork.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "GameFramework/PlayerState.h"
+#include "Net/UnrealNetwork.h"
 
-#include "UR_AttributeSet.h"
-#include "UR_LogChannels.h"
-#include "System/UR_AssetManager.h"
-#include "System/UR_GameData.h"
-#include "UR_GameplayTags.h"
 #include "UR_AbilitySystemComponent.h"
+#include "UR_AttributeSet.h"
+#include "UR_GameplayTags.h"
+#include "UR_LogChannels.h"
 #include "AbilitySystem/Attributes/UR_HealthSet.h"
 #include "Messages/GameVerbMessage.h"
 #include "Messages/GameVerbMessageHelpers.h"
+#include "System/UR_AssetManager.h"
+#include "System/UR_GameData.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_HealthComponent)
 

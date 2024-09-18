@@ -9,8 +9,10 @@
 #include "UR_AbilitySystemComponent.h"
 #include "UR_AssetManager.h"
 #include "UR_Character.h"
-#include "UR_DeveloperSettings.h"
+#include "Development/UR_DeveloperSettings.h"
+#include "UR_ExperienceManagerComponent.h"
 #include "UR_GameData.h"
+#include "UR_GameMode.h"
 #include "UR_GameplayTags.h"
 #include "UR_HealthComponent.h"
 #include "UR_InventoryComponent.h"
@@ -155,6 +157,37 @@ void UUR_CheatManager::UnlimitedHealth(int32 Enabled)
     }
 }
 
+void UUR_CheatManager::Cheat_GameReload()
+{
+    const FString CheatString = FString::Printf(TEXT("Cheat_GameReload"));
+
+    if (AUR_PlayerController* GamePC = Cast<AUR_PlayerController>(GetOuterAPlayerController()))
+    {
+        if (GamePC->GetNetMode() == NM_Client)
+        {
+            // Automatically send cheat to server for convenience.
+            GamePC->ServerCheat(CheatString);
+            return;
+        }
+
+        if (auto World = GamePC->GetWorld())
+        {
+            if (auto GameMode = Cast<AUR_GameMode>(World->GetAuthGameMode()))
+            {
+                if (auto GameState = World->GetGameState())
+                {
+                    if (const UUR_ExperienceManagerComponent* ExperienceComponent = GameState->FindComponentByClass<UUR_ExperienceManagerComponent>())
+                    {
+                        GameMode->OnExperienceLoaded(ExperienceComponent->GetCurrentExperienceChecked());
+                    }
+                }
+            }
+        }
+    }
+
+
+}
+
 void UUR_CheatManager::Cheat_Loaded()
 {
     if (AUR_Character* URCharacter = Cast<AUR_Character>(GetOuterAPlayerController()->GetPawn()))
@@ -216,9 +249,9 @@ void UUR_CheatManager::DamageTarget(float DamageAmount)
         FHitResult TargetHitResult;
         AActor* TargetActor = GetTarget(GamePC, TargetHitResult);
 
-        if (UUR_AbilitySystemComponent* UR_TargetASC = Cast<UUR_AbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor)))
+        if (UUR_AbilitySystemComponent* TargetASC = Cast<UUR_AbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor)))
         {
-            ApplySetByCallerDamage(UR_TargetASC, DamageAmount);
+            ApplySetByCallerDamage(TargetASC, DamageAmount);
             GamePC->ClientMessage(CheatString);
         }
     }
