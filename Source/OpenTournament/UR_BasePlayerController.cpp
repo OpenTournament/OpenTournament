@@ -39,10 +39,10 @@ void AUR_BasePlayerController::PostInitializeComponents()
 
 void AUR_BasePlayerController::InitInputSystem()
 {
-    if (PlayerInput == nullptr)
-    {
-        PlayerInput = NewObject<UUR_PlayerInput>(this);
-    }
+    // if (PlayerInput == nullptr)
+    // {
+    //     PlayerInput = NewObject<UUR_PlayerInput>(this);
+    // }
 
     Super::InitInputSystem();
 }
