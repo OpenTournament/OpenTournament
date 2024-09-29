@@ -112,10 +112,16 @@ protected:
 
 	virtual void HandleHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
 	virtual void HandleMaxHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
-	virtual void HandleOutOfHealth(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
+    virtual void HandleOutOfHealth(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
 
 	UFUNCTION()
 	virtual void OnRep_DeathState(EGameDeathState OldDeathState);
+
+    // Send the "GameplayEvent.Death" gameplay event through the owner's ability system.  This can be used to trigger a death gameplay ability.
+    void GameplayEventOutOfHealth(float DamageMagnitude, AActor* DamageInstigator, const FGameplayEffectSpec* DamageEffectSpec) const;
+
+    // Send a standardized verb message that other systems can observe
+    void BroadcastOutOfHealth(AActor* DamageInstigator, const FGameplayEffectSpec* DamageEffectSpec) const;
 
 protected:
 
