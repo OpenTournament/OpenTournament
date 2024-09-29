@@ -126,8 +126,7 @@ void UUR_HealthSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackDa
 
 #if !UE_BUILD_SHIPPING
     // Godmode and unlimited health stop death unless it's a self destruct
-    if (!bIsDamageFromSelfDestruct &&
-        (Data.Target.HasMatchingGameplayTag(URGameplayTags::Cheat_GodMode) || Data.Target.HasMatchingGameplayTag(URGameplayTags::Cheat_UnlimitedHealth)))
+    if (!bIsDamageFromSelfDestruct && HasUnlimitedHealthOrGodMode(Data))
     {
         MinimumHealth = 1.0f;
     }
@@ -243,4 +242,9 @@ void UUR_HealthSet::ClampAttribute(const FGameplayAttribute& Attribute, float& N
         // Do not allow max health to drop below 1.
         NewValue = FMath::Max(NewValue, 1.0f);
     }
+}
+
+bool UUR_HealthSet::HasUnlimitedHealthOrGodMode(const FGameplayEffectModCallbackData& Data) const
+{
+    return (Data.Target.HasMatchingGameplayTag(URGameplayTags::Cheat_GodMode) || Data.Target.HasMatchingGameplayTag(URGameplayTags::Cheat_UnlimitedHealth));
 }

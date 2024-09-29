@@ -70,6 +70,8 @@ protected:
 
     void ClampAttribute(const FGameplayAttribute& Attribute, float& NewValue) const;
 
+    bool HasUnlimitedHealthOrGodMode(const FGameplayEffectModCallbackData& Data) const;
+
 private:
     // The current health attribute.  The health will be capped by the max health attribute.  Health is hidden from modifiers so only executions can modify it.
     UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health, Category = "Game|Health", Meta = (HideFromModifiers, AllowPrivateAccess = true))
