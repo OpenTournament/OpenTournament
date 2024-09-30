@@ -105,6 +105,14 @@ public:
     UFUNCTION()
     bool PrevWeapon();
 
+    TArray<AUR_Weapon*> GetEligibleWeapons();
+
+    int32 GetDesiredWeaponIndex(const TArray<AUR_Weapon*>& AvailableWeapons) const;
+
+    static int32 CalculateNewIndex(int32 CurrentIndex, int32 Offset, int32 NumItems);
+
+    bool CycleSwitchWeapon(int32 Offset);
+
     /**
     * Players only - select preferred available weapon according to user settings.
     */
