@@ -22,6 +22,11 @@
 
 UUR_AbilitySystemComponent::UUR_AbilitySystemComponent()
 {
+    InputPressedSpecHandles.Reset();
+    InputReleasedSpecHandles.Reset();
+    InputHeldSpecHandles.Reset();
+
+    FMemory::Memset(ActivationGroupCounts, 0, sizeof(ActivationGroupCounts));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

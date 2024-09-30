@@ -49,6 +49,8 @@ public:
     //~End of UActorComponent interface
 
     typedef TFunctionRef<bool(const UUR_GameplayAbility* InGameAbility, FGameplayAbilitySpecHandle Handle)> TShouldCancelAbilityFunc;
+
+    using TShouldCancelAbilityFunc = TFunctionRef<bool(const UUR_GameplayAbility* InGameAbility, FGameplayAbilitySpecHandle Handle)>;
     void CancelAbilitiesByFunc(TShouldCancelAbilityFunc ShouldCancelFunc, bool bReplicateCancelAbility);
 
     void CancelInputActivatedAbilities(bool bReplicateCancelAbility);
