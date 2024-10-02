@@ -4,27 +4,27 @@
 
 #include "UR_HeroComponent.h"
 
-#include "Components/GameFrameworkComponentDelegates.h"
-#include "Logging/MessageLog.h"
 #include "EnhancedInputSubsystems.h"
-#include "Components/GameFrameworkComponentManager.h"
-#include "PlayerMappableInputConfig.h"
-#include "UserSettings/EnhancedInputUserSettings.h"
 #include "InputMappingContext.h"
+#include "PlayerMappableInputConfig.h"
+#include "Components/GameFrameworkComponentDelegates.h"
+#include "Components/GameFrameworkComponentManager.h"
+#include "Logging/MessageLog.h"
+#include "UserSettings/EnhancedInputUserSettings.h"
 
+#include "UR_Character.h"
+#include "UR_GameplayTags.h"
+#include "UR_InputComponent.h"
+#include "UR_LocalPlayer.h"
 #include "UR_LogChannels.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
-#include "UR_LocalPlayer.h"
-#include "Character/UR_PawnExtensionComponent.h"
+#include "Camera/UR_CameraComponent.h"
+#include "Camera/UR_CameraMode.h"
 #include "Character/UR_PawnData.h"
-#include "UR_Character.h"
+#include "Character/UR_PawnExtensionComponent.h"
 #include "GAS/UR_AbilitySystemComponent.h"
 #include "Input/UR_InputConfig.h"
-#include "UR_InputComponent.h"
-#include "Camera/UR_CameraComponent.h"
-#include "UR_GameplayTags.h"
-#include "Camera/UR_CameraMode.h"
 
 
 #if WITH_EDITOR
@@ -82,6 +82,7 @@ void UUR_HeroComponent::OnRegister()
     }
 }
 
+#pragma optimize("", off)
 bool UUR_HeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState, FGameplayTag DesiredState) const
 {
     check(Manager);
@@ -193,6 +194,7 @@ void UUR_HeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Ma
         }
     }
 }
+#pragma optimize("", on)
 
 void UUR_HeroComponent::OnActorInitStateChanged(const FActorInitStateChangedParams& Params)
 {
@@ -200,7 +202,7 @@ void UUR_HeroComponent::OnActorInitStateChanged(const FActorInitStateChangedPara
     {
         if (Params.FeatureState == URGameplayTags::InitState_DataInitialized)
         {
-            // If the extension component says all all other components are initialized, try to progress to next state
+            // If the extension component says all other components are initialized, try to progress to next state
             CheckDefaultInitialization();
         }
     }
@@ -233,6 +235,7 @@ void UUR_HeroComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
     Super::EndPlay(EndPlayReason);
 }
 
+#pragma optimize("", off)
 void UUR_HeroComponent::InitializePlayerInput(UInputComponent* PlayerInputComponent)
 {
     check(PlayerInputComponent);
@@ -252,7 +255,7 @@ void UUR_HeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompon
     UEnhancedInputLocalPlayerSubsystem* Subsystem = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
     check(Subsystem);
 
-    //Subsystem->ClearAllMappings();
+    Subsystem->ClearAllMappings();
 
     if (const UUR_PawnExtensionComponent* PawnExtComp = UUR_PawnExtensionComponent::FindPawnExtensionComponent(Pawn))
     {
@@ -262,7 +265,7 @@ void UUR_HeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompon
             {
                 for (const FInputMappingContextAndPriority& Mapping : DefaultInputMappings)
                 {
-                    if (const UInputMappingContext* IMC = Mapping.InputMapping.Get())
+                    if (UInputMappingContext* IMC = Mapping.InputMapping.Get())
                     {
                         if (Mapping.bRegisterWithSettings)
                         {
@@ -286,7 +289,7 @@ void UUR_HeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompon
                 if (ensureMsgf(InputComponent, TEXT("Unexpected Input Component class! The Gameplay Abilities will not be bound to their inputs. Change the input component to UUR_InputComponent or a subclass of it.")))
                 {
                     // Add the key mappings that may have been set by the player
-                    //InputComponent->AddInputMappings(InputConfig, Subsystem);
+                    InputComponent->AddInputMappings(InputConfig, Subsystem);
 
                     // This is where we actually bind and input action to a gameplay tag, which means that Gameplay Ability Blueprints will
                     // be triggered directly by these input actions Triggered events.
@@ -311,6 +314,8 @@ void UUR_HeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompon
     UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(const_cast<APlayerController*>(PC), NAME_BindInputsNow);
     UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(const_cast<APawn*>(Pawn), NAME_BindInputsNow);
 }
+#pragma optimize("", on)
+
 
 void UUR_HeroComponent::AddAdditionalInputConfig(const UUR_InputConfig* InputConfig)
 {
