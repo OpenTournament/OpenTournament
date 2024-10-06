@@ -53,16 +53,17 @@ public:
 
     //~UActorComponent interface
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
     //~End of UActorComponent interface
 
     //~ILoadingProcessInterface interface
     virtual bool ShouldShowLoadingScreen(FString& OutReason) const override;
-
     //~End of ILoadingProcessInterface
 
     // Tries to set the current experience, either a UI or gameplay one
     void SetCurrentExperience(FPrimaryAssetId ExperienceId);
+
+    // Get the current experience, for debugging purposes
+    TObjectPtr<const UUR_ExperienceDefinition> GetCurrentExperience() const { return CurrentExperience.Get(); };
 
     // Ensures the delegate is called once the experience has been loaded,
     // before others are called.

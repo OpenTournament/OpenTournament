@@ -16,6 +16,7 @@
 #include "UR_GameplayTags.h"
 #include "UR_HealthComponent.h"
 #include "UR_InventoryComponent.h"
+#include "UR_PawnData.h"
 #include "UR_PawnExtensionComponent.h"
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
@@ -117,6 +118,42 @@ void UUR_CheatManager::God()
             {
                 GameASC->AddDynamicTagGameplayEffect(Tag);
                 GetOuterAPlayerController()->ClientMessage(TEXT("God mode on"));
+            }
+        }
+    }
+}
+
+void UUR_CheatManager::GetGameExperience()
+{
+    if (AUR_PlayerController* GamePC = Cast<AUR_PlayerController>(GetOuterAPlayerController()))
+    {
+        if (auto World = GamePC->GetWorld())
+        {
+            if (auto GameState = World->GetGameState())
+            {
+                if (auto ExperienceComponent = Cast<UUR_ExperienceManagerComponent>(GameState->GetComponentByClass(UUR_ExperienceManagerComponent::StaticClass())))
+                {
+                    auto Experience = ExperienceComponent->GetCurrentExperience();
+                    UE_LOG(LogGameCheat, Log, TEXT("CurrentExperience: %s"), *Experience.GetName());
+                }
+            }
+        }
+    }
+}
+
+void UUR_CheatManager::GetPawnData()
+{
+    if (AUR_PlayerController* GamePC = Cast<AUR_PlayerController>(GetOuterAPlayerController()))
+    {
+        if (auto PS = GamePC->GetGamePlayerState())
+        {
+            if (const UUR_PawnData* PawnData = PS->GetPawnData<UUR_PawnData>())
+            {
+                UE_LOG(LogGameCheat, Log, TEXT("Retrieved PawnData for Current Pawn: %s"), *PawnData->GetName());
+            }
+            else
+            {
+                UE_LOG(LogGameCheat, Warning, TEXT("Unable to retrieve PawnData for Current Pawn!"));
             }
         }
     }
