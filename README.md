@@ -31,7 +31,7 @@ The **Open Tournament Project** is an ongoing experiment in open and community-l
 
 ## **Resources and Links**
 
-- **Official Website**: [www.opentournamentgame.com](https://www.opentournamentgame.com)  
+- **Official Website**: [opentournamentgame.com](https://opentournamentgame.com)  
   Stay updated with the latest news and developments.
   
 - **Social & Additional Sites**:  
