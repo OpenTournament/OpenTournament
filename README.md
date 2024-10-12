@@ -6,7 +6,7 @@ The **Open Tournament Project** is a community-driven initiative to create a new
 
 ## **Legal Information**
 
-- The codebase is © **Open Tournament Team**. Usage is subject to our license.
+- The codebase is © Open Tournament Games. Usage is subject to our license.
 - Additional content (such as art, audio, and other assets) may be subject to different licenses and are used with permission exclusively for Open Tournament.
 - This repository is public and accessible to contributors of Open Tournament.
 - **Important:** Please do not share or redistribute any content from this project without prior approval.
