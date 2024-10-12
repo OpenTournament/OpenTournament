@@ -2,7 +2,7 @@
 
 ## **Overview**
 
-The **Open Tournament Project** is a community-driven initiative to create a new first-person shooter (FPS) game that draws inspiration from classic titles like *Unreal Tournament*, *Quake*, and other iconic games in the genre. Our goal is to modernize and expand upon the timeless gameplay mechanics of these classics while fostering a collaborative open development environment.
+The **Open Tournament Project** is a community-driven initiative to create a new first-person shooter (FPS) game that draws inspiration from classic titles like *Unreal Tournament*, *Quake*, and other iconic games in the genre. Our goal is to polish and expand upon the timeless gameplay mechanics of these classics while fostering a collaborative open development environment.
 
 ## **Legal Information**
 
