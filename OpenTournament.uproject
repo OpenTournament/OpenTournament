@@ -388,16 +388,6 @@
 			"Enabled": true
 		},
 		{
-			"Name": "PluginDownloader",
-			"Enabled": false,
-			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/b5ff499954db477eb46af6537f1f9c1b"
-		},
-		{
-			"Name": "VoxelFree",
-			"Enabled": false,
-			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/c61d1941c8664436be42d649404a10e0"
-		},
-		{
 			"Name": "CommonUI",
 			"Enabled": true
 		},
@@ -408,6 +398,10 @@
 		{
 			"Name": "AssetSearch",
 			"Enabled": true
+		},
+		{
+			"Name": "BUIValidator",
+			"Enabled": false
 		}
 	]
 }
