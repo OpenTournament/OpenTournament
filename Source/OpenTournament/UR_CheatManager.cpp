@@ -9,7 +9,6 @@
 #include "UR_AbilitySystemComponent.h"
 #include "UR_AssetManager.h"
 #include "UR_Character.h"
-#include "Development/UR_DeveloperSettings.h"
 #include "UR_ExperienceManagerComponent.h"
 #include "UR_GameData.h"
 #include "UR_GameMode.h"
@@ -21,6 +20,7 @@
 #include "UR_PlayerController.h"
 #include "UR_PlayerState.h"
 #include "UR_Weapon.h"
+#include "Development/UR_DeveloperSettings.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_CheatManager)
 
