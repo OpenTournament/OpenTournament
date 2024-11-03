@@ -418,6 +418,22 @@
 		{
 			"Name": "BUIValidator",
 			"Enabled": false
+		},
+		{
+			"Name": "ControlFlows",
+			"Enabled": true
+		},
+		{
+			"Name": "OnlineFramework",
+			"Enabled": true
+		},
+		{
+			"Name": "SignificanceManager",
+			"Enabled": true
+		},
+		{
+			"Name": "UIExtension",
+			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [
