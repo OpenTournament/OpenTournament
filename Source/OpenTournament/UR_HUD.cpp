@@ -6,6 +6,8 @@
 
 #include <AbilitySystemComponent.h>
 #include <AbilitySystemGlobals.h>
+#include <Blueprint/UserWidget.h>
+#include <Blueprint/WidgetBlueprintLibrary.h>
 #include <Components/GameFrameworkComponentManager.h>
 #include <UObject/UObjectIterator.h>
 
@@ -72,6 +74,25 @@ void AUR_HUD::GetDebugActorList(TArray<AActor*>& InOutList)
                     AddActorToDebugList(OwnerActor, InOutList, World);
                 }
             }
+        }
+    }
+}
+
+void AUR_HUD::ShowHUD()
+{
+    Super::ShowHUD();
+
+    TArray<UUserWidget*> WidgetsToHide;
+    UWidgetBlueprintLibrary::GetAllWidgetsOfClass(this, WidgetsToHide, UUserWidget::StaticClass(), false);
+
+    for (UUserWidget* Widget : WidgetsToHide)
+    {
+        if (Widget && Widget->IsInViewport())
+        {
+            // This will probably screw up any widgets that might actually be interactable,
+            // but this should only be relevant for HUD
+            auto VisibilityState = bShowHUD ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Hidden;
+            Widget->SetVisibility(VisibilityState);
         }
     }
 }

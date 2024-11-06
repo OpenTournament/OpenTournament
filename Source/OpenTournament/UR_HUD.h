@@ -41,6 +41,7 @@ public:
 
     //~AHUD interface
     virtual void GetDebugActorList(TArray<AActor*>& InOutList) override;
+    virtual void ShowHUD() override;
     //~End of AHUD interface
 
     /**
