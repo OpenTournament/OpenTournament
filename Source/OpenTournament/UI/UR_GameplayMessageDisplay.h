@@ -11,7 +11,7 @@
 
 
 UCLASS(Blueprintable)
-class OPENTOURNAMENT_API UUR_GameplayMessageDisplay : public UUR_ActivatableWidget
+class OPENTOURNAMENT_API UUR_GameplayMessageDisplay : public UCommonUserWidget
 {
     GENERATED_BODY()
 
@@ -23,8 +23,8 @@ protected:
     UFUNCTION(BlueprintImplementableEvent)
     void MessageReceived(FGameplayTag Tag, const FGameVerbMessage& Message);
 
-    virtual void NativeOnActivated() override;
-    virtual void NativeOnDeactivated() override;
+    virtual void NativeConstruct() override;
+    virtual void NativeDestruct() override;
 
 private:
 

@@ -12,6 +12,7 @@
 
 #include "UR_AbilitySystemComponent.h"
 #include "UR_AttributeSet.h"
+#include "UR_ExperienceManagerComponent.h"
 #include "UR_GameplayTags.h"
 #include "UR_LogChannels.h"
 #include "AbilitySystem/Attributes/UR_HealthSet.h"
@@ -96,6 +97,12 @@ void UUR_HealthComponent::InitializeWithAbilitySystem(UUR_AbilitySystemComponent
 
 	OnHealthChanged.Broadcast(this, HealthSet->GetHealth(), HealthSet->GetHealth(), nullptr);
 	OnMaxHealthChanged.Broadcast(this, HealthSet->GetHealth(), HealthSet->GetHealth(), nullptr);
+
+    if(auto GameState = GetWorld()->GetGameState())
+    {
+        UUR_ExperienceManagerComponent* ExperienceComponent = GameState->FindComponentByClass<UUR_ExperienceManagerComponent>();
+        ExperienceComponent->CallOrRegister_OnExperienceLoaded(FOnGameExperienceLoaded::FDelegate::CreateUObject(this, &ThisClass::OnExperienceLoaded));
+    }
 }
 
 void UUR_HealthComponent::UninitializeFromAbilitySystem()
@@ -195,6 +202,26 @@ void UUR_HealthComponent::HandleOutOfHealth(AActor* DamageInstigator, AActor* Da
 	}
 
 #endif // #if WITH_SERVER_CODE
+}
+
+void UUR_HealthComponent::OnExperienceLoaded(const UUR_ExperienceDefinition* Uur_ExperienceDefinition)
+{
+    UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(GetWorld());
+
+    FGameVerbMessage Message;
+    Message.Verb = FGameplayTag::RequestGameplayTag("Gameplay.MaxHealth.Change"); //not sure about this, maybe define tags elsewhere so more than the attribute set can use it?
+    Message.Instigator = this;
+    Message.Target = this;
+    Message.Magnitude = GetMaxHealth();
+
+    MessageSystem.BroadcastMessage(Message.Verb, Message);
+
+    Message.Verb = FGameplayTag::RequestGameplayTag("Gameplay.Health.Change"); //not sure about this, maybe define tags elsewhere so more than the attribute set can use it?
+    Message.Instigator = this;
+    Message.Target = this;
+    Message.Magnitude = GetHealth();
+
+    MessageSystem.BroadcastMessage(Message.Verb, Message);
 }
 
 void UUR_HealthComponent::OnRep_DeathState(EGameDeathState OldDeathState)
