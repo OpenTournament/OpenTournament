@@ -33,7 +33,7 @@ public:
 
 #if WITH_EDITOR
     virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
-#endif WITH_EDITOR
+#endif //WITH_EDITOR
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
