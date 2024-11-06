@@ -3,8 +3,11 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_ColorSpectrum.h"
+
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/Colors/SColorSpectrum.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_ColorSpectrum)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -17,11 +20,11 @@ void UUR_ColorSpectrum::ReleaseSlateResources(bool bReleaseChildren)
 
 TSharedRef<SWidget> UUR_ColorSpectrum::RebuildWidget()
 {
-	MyColorSpectrum = SNew(SColorSpectrum)
-		.SelectedColor_UObject(this, &UUR_ColorSpectrum::GetColorHSV)
-		.OnValueChanged(BIND_UOBJECT_DELEGATE(FOnLinearColorValueChanged, HandleColorSpectrumValueChanged))
-		.OnMouseCaptureBegin(BIND_UOBJECT_DELEGATE(FSimpleDelegate, HandleOnMouseCaptureBegin))
-		.OnMouseCaptureEnd(BIND_UOBJECT_DELEGATE(FSimpleDelegate, HandleOnMouseCaptureEnd));
+    MyColorSpectrum = SNew(SColorSpectrum)
+        .SelectedColor_UObject(this, &ThisClass::GetColorHSV)
+        .OnValueChanged(BIND_UOBJECT_DELEGATE(FOnLinearColorValueChanged, HandleColorSpectrumValueChanged))
+        .OnMouseCaptureBegin(BIND_UOBJECT_DELEGATE(FSimpleDelegate, HandleOnMouseCaptureBegin))
+        .OnMouseCaptureEnd(BIND_UOBJECT_DELEGATE(FSimpleDelegate, HandleOnMouseCaptureEnd));
 
-	return MyColorSpectrum.ToSharedRef();
+    return MyColorSpectrum.ToSharedRef();
 }

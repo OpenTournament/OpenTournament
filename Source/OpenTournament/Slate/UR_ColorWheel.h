@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "Components/Widget.h"
+
 #include "UR_ColorSpectrum.h"	//FOnMouseCapture events, FOnColorChangedEvent
+
 #include "UR_ColorWheel.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
