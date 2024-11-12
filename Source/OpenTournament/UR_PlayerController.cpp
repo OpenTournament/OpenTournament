@@ -302,7 +302,7 @@ void AUR_PlayerController::SetTeamIndex_Implementation(int32 NewTeamIndex)
 
 void AUR_PlayerController::OnMoveTriggered(const FInputActionInstance& InputActionInstance)
 {
-    const FVector Move = InputActionInstance.GetValue().Get<FVector>();
+    const FVector2D Move = InputActionInstance.GetValue().Get<FVector2D>();
     if (URCharacter)
     {
         if (InputDodgeComponent)
@@ -313,13 +313,11 @@ void AUR_PlayerController::OnMoveTriggered(const FInputActionInstance& InputActi
 
         URCharacter->MoveForward(Move.X);
         URCharacter->MoveRight(Move.Y);
-        URCharacter->MoveForward(Move.Z);
     }
     else if (const auto Spectator = GetSpectatorPawn())
     {
         Spectator->MoveForward(Move.X);
         Spectator->MoveRight(Move.Y);
-        Spectator->MoveForward(Move.Z);
     }
 }
 

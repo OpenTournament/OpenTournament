@@ -89,6 +89,7 @@ void AUR_HUD::ShowHUD()
     {
         if (Widget && Widget->IsInViewport())
         {
+            // @! TODO : Replace with behavior in UR_UIManagerSubsystem
             // This will probably screw up any widgets that might actually be interactable,
             // but this should only be relevant for HUD
             auto VisibilityState = bShowHUD ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Hidden;

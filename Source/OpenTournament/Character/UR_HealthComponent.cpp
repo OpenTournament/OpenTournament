@@ -4,8 +4,6 @@
 
 #include "Character/UR_HealthComponent.h"
 
-#include "GameplayEffectExtension.h"
-#include "Engine/World.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "GameFramework/PlayerState.h"
 #include "Net/UnrealNetwork.h"
@@ -95,10 +93,10 @@ void UUR_HealthComponent::InitializeWithAbilitySystem(UUR_AbilitySystemComponent
 
     ClearGameplayTags();
 
-	OnHealthChanged.Broadcast(this, HealthSet->GetHealth(), HealthSet->GetHealth(), nullptr);
-	OnMaxHealthChanged.Broadcast(this, HealthSet->GetHealth(), HealthSet->GetHealth(), nullptr);
+    OnHealthChanged.Broadcast(this, HealthSet->GetHealth(), HealthSet->GetHealth(), nullptr);
+    OnMaxHealthChanged.Broadcast(this, HealthSet->GetHealth(), HealthSet->GetHealth(), nullptr);
 
-    if(auto GameState = GetWorld()->GetGameState())
+    if (auto GameState = GetWorld()->GetGameState())
     {
         UUR_ExperienceManagerComponent* ExperienceComponent = GameState->FindComponentByClass<UUR_ExperienceManagerComponent>();
         ExperienceComponent->CallOrRegister_OnExperienceLoaded(FOnGameExperienceLoaded::FDelegate::CreateUObject(this, &ThisClass::OnExperienceLoaded));
@@ -167,8 +165,42 @@ void UUR_HealthComponent::HandleOutOfHealth(AActor* DamageInstigator, AActor* Da
 #if WITH_SERVER_CODE
     if (AbilitySystemComponent && DamageEffectSpec)
     {
+        // Send the "GameplayEvent.Death" gameplay event through the owner's ability system.  This can be used to trigger a death gameplay ability.
+        {
+            FGameplayEventData Payload;
+            Payload.EventTag = URGameplayTags::GameplayEvent_Death;
+            Payload.Instigator = DamageInstigator;
+            Payload.Target = AbilitySystemComponent->GetAvatarActor();
+            Payload.OptionalObject = DamageEffectSpec->Def;
+            Payload.ContextHandle = DamageEffectSpec->GetEffectContext();
+            Payload.InstigatorTags = *DamageEffectSpec->CapturedSourceTags.GetAggregatedTags();
+            Payload.TargetTags = *DamageEffectSpec->CapturedTargetTags.GetAggregatedTags();
+            Payload.EventMagnitude = DamageMagnitude;
+    if (AbilitySystemComponent && DamageEffectSpec)
+    {
         GameplayEventOutOfHealth(DamageMagnitude, DamageInstigator, DamageEffectSpec);
         BroadcastOutOfHealth(DamageInstigator, DamageEffectSpec);
+
+            FScopedPredictionWindow NewScopedWindow(AbilitySystemComponent, true);
+            AbilitySystemComponent->HandleGameplayEvent(Payload.EventTag, &Payload);
+        }
+        //@TODO: assist messages (could compute from damage dealt elsewhere)?
+    }
+
+        // Send a standardized verb message that other systems can observe
+        {
+            FGameVerbMessage Message;
+            Message.Verb = TAG_Game_Elimination_Message;
+            Message.Instigator = DamageInstigator;
+            Message.InstigatorTags = *DamageEffectSpec->CapturedSourceTags.GetAggregatedTags();
+            Message.Target = UGameVerbMessageHelpers::GetPlayerStateFromObject(AbilitySystemComponent->GetAvatarActor());
+            Message.TargetTags = *DamageEffectSpec->CapturedTargetTags.GetAggregatedTags();
+            //@TODO: Fill out context tags, and any non-ability-system source/instigator tags
+            //@TODO: Determine if it's an opposing team kill, self-own, team kill, etc...
+
+            UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(GetWorld());
+            MessageSystem.BroadcastMessage(Message.Verb, Message);
+        }
 
         //@TODO: assist messages (could compute from damage dealt elsewhere)?
     }
@@ -287,6 +319,19 @@ void UUR_HealthComponent::FinishDeath()
 
 void UUR_HealthComponent::DamageSelfDestruct(bool bFellOutOfWorld)
 {
+    if ((DeathState == EGameDeathState::NotDead) && AbilitySystemComponent)
+    {
+        const TSubclassOf<UGameplayEffect> DamageGE = UUR_AssetManager::GetSubclass(UUR_GameData::Get().DamageGameplayEffect_SetByCaller);
+        if (!DamageGE)
+        {
+            UE_LOG
+            (LogGame,
+                Error,
+                TEXT("UR_HealthComponent: DamageSelfDestruct failed for owner [%s]. Unable to find gameplay effect [%s]."),
+                *GetNameSafe(GetOwner()),
+                *UUR_GameData::Get().DamageGameplayEffect_SetByCaller.GetAssetName());
+            return;
+        }
     if ((DeathState == EGameDeathState::NotDead) && AbilitySystemComponent)
     {
         const TSubclassOf<UGameplayEffect> DamageGE = UUR_AssetManager::GetSubclass(UUR_GameData::Get().DamageGameplayEffect_SetByCaller);

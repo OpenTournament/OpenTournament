@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "Containers/Ticker.h"
-#include "GameUIManagerSubsystem.h"
+#include <GameUIManagerSubsystem.h>
+#include <Containers/Ticker.h>
 
 #include "UR_UIManagerSubsystem.generated.h"
 

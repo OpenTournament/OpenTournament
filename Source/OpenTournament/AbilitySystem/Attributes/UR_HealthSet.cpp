@@ -29,8 +29,8 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Gameplay_MaxHealth_Change, "Gameplay.MaxHealth.Change
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_HealthSet::UUR_HealthSet()
-	: Health(100.0f)
-	, MaxHealth(100.0f)
+    : Health(100.0f)
+    , MaxHealth(100.0f)
 {
     bOutOfHealth = false;
     MaxHealthBeforeAttributeChange = 0.0f;
@@ -183,7 +183,7 @@ void UUR_HealthSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackDa
         Message.Verb = TAG_Gameplay_MaxHealth_Change;
         Message.Instigator = Data.EffectSpec.GetEffectContext().GetEffectCauser();
         Message.InstigatorTags = *Data.EffectSpec.CapturedSourceTags.GetAggregatedTags();
-        Message.Target =  Data.Target;
+        Message.Target = Data.Target;
         Message.TargetTags = *Data.EffectSpec.CapturedTargetTags.GetAggregatedTags();
         Message.Magnitude = GetMaxHealth();
 
@@ -201,7 +201,7 @@ void UUR_HealthSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackDa
         Message.Verb = TAG_Gameplay_Health_Change;
         Message.Instigator = Data.EffectSpec.GetEffectContext().GetEffectCauser();
         Message.InstigatorTags = *Data.EffectSpec.CapturedSourceTags.GetAggregatedTags();
-        Message.Target =  Data.Target;
+        Message.Target = Data.Target;
         Message.TargetTags = *Data.EffectSpec.CapturedTargetTags.GetAggregatedTags();
         Message.Magnitude = CurrentHealth;
 
@@ -229,7 +229,7 @@ void UUR_HealthSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute,
 {
     Super::PostAttributeBaseChange(Attribute, OldValue, NewValue);
 
-    if(Attribute == GetMaxHealthAttribute())
+    if (Attribute == GetMaxHealthAttribute())
     {
         FGameVerbMessage Message;
         Message.Verb = TAG_Gameplay_MaxHealth_Change;
@@ -238,7 +238,7 @@ void UUR_HealthSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute,
         UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(GetWorld());
         MessageSystem.BroadcastMessage(Message.Verb, Message);
     }
-    else if(Attribute == GetHealthAttribute())
+    else if (Attribute == GetHealthAttribute())
     {
         FGameVerbMessage Message;
         Message.Verb = TAG_Gameplay_Health_Change;
