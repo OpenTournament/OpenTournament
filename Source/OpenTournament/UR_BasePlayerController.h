@@ -7,6 +7,7 @@
 #include <ModularPlayerController.h>
 
 #include "CoreMinimal.h"
+#include "CommonPlayerController.h"
 #include "GameFramework/PlayerController.h"
 #include "UR_BasePlayerController.generated.h"
 
@@ -27,7 +28,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FViewTargetChangedSignature, AUR_
  */
 UCLASS()
 class OPENTOURNAMENT_API AUR_BasePlayerController
-    : public AModularPlayerController
+    : public ACommonPlayerController
 {
     GENERATED_BODY()
 
