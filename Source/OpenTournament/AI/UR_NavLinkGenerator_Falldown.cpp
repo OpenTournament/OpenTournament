@@ -104,9 +104,10 @@ void AUR_NavLinkGenerator_Falldown::Regenerate()
     AgentRadius = NavMesh->AgentRadius;
 
     FRecastDebugGeometry Geometry;
+    FNavTileRef NavTile = FNavTileRef();
     Geometry.bGatherNavMeshEdges = 0;
     NavMesh->BeginBatchQuery();
-    NavMesh->GetDebugGeometryForTile(Geometry, -1);
+    NavMesh->GetDebugGeometryForTile(Geometry, NavTile);
     NavMesh->FinishBatchQuery();
 
     InternalRebuild(Geometry);
@@ -167,8 +168,8 @@ void AUR_NavLinkGenerator_Falldown::InternalRebuild(FRecastDebugGeometry& Geomet
 
     while (Geometry.NavMeshEdges.Num() > 0)
     {
-        const FVector A = Geometry.NavMeshEdges.Pop(false);
-        const FVector B = Geometry.NavMeshEdges.Pop(false);
+        const FVector A = Geometry.NavMeshEdges.Pop(EAllowShrinking::No);
+        const FVector B = Geometry.NavMeshEdges.Pop(EAllowShrinking::No);
         const FVector& C = FindTriangleInGeometry(Geometry, A, B);
         const FVector& Normal = ComputeEdgeNormalFromTriangle(A, B, C);
         auto& Contour = AllContours.Emplace_GetRef();
@@ -341,7 +342,7 @@ void AUR_NavLinkGenerator_Falldown::InternalRebuild(FRecastDebugGeometry& Geomet
             FNavPoint* FirstDestination = nullptr;
             while (KeepPoints.Num() > 0)
             {
-                FNavPoint* Point = KeepPoints.Pop(false);
+                FNavPoint* Point = KeepPoints.Pop(EAllowShrinking::No);
                 if (TestPoint(*Point))
                 {
                     FirstDestination = Point;
@@ -450,12 +451,12 @@ void AUR_NavLinkGenerator_Falldown::GatherContour(TArray<FVector>& Edges, FEdgeC
         if ((i % 2) == 0)
         {
             Seg.B = Edges[i + 1];
-            Edges.RemoveAt(i, 2, false);
+            Edges.RemoveAt(i, 2, EAllowShrinking::No);
         }
         else
         {
             Seg.B = Edges[i - 1];
-            Edges.RemoveAt(i - 1, 2, false);
+            Edges.RemoveAt(i - 1, 2, EAllowShrinking::No);
         }
 
         Seg.ComputeNormalFromPrevious(Prev);

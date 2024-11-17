@@ -8,8 +8,7 @@ public class OpenTournament : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         ShadowVariableWarningLevel = WarningLevel.Error;
-
-        //PrivatePCHHeaderFile = "OpenTournament.h";
+        IWYUSupport = IWYUSupport.KeepAsIs;
 
         // Reference:
         // https://docs.unrealengine.com/en-US/Programming/BuildTools/UnrealBuildTool/ModuleFiles/index.html
