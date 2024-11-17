@@ -184,13 +184,14 @@ FString UUR_LocalPlayer::GetNickname() const
             }
             case NM_Client:
             {
-                if (GPlayInEditorID == 1)
+                auto ID = static_cast<int>(UE::GetPlayInEditorID());
+                if (ID == 1)
                 {
                     return PlayerName;
                 }
                 else
                 {
-                    return FString::Printf(TEXT("Client %d"), static_cast<int>(GPlayInEditorID));
+                    return FString::Printf(TEXT("Client %d"), ID);
                 }
             }
 

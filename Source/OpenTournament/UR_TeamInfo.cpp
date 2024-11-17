@@ -23,7 +23,7 @@ AUR_TeamInfo::AUR_TeamInfo()
     bReplicates = true;
     bAlwaysRelevant = true;
     SetReplicatingMovement(false);
-    NetUpdateFrequency = 1;
+    SetNetUpdateFrequency(1);
     bNetLoadOnClient = false;
 }
 

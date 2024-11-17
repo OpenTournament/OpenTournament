@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include <AssetRegistry/AssetData.h>
 #include <GameFramework/WorldSettings.h>
+
+#include <AssetRegistry/AssetData.h>
 
 #include "UR_WorldSettings.generated.h"
 

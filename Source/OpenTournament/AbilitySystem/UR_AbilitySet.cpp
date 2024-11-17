@@ -99,7 +99,7 @@ void UUR_AbilitySet::GiveToAbilitySystem(UUR_AbilitySystemComponent* InASC, FUR_
 
         FGameplayAbilitySpec AbilitySpec(AbilityCDO, AbilityToGrant.AbilityLevel);
         AbilitySpec.SourceObject = SourceObject;
-        AbilitySpec.DynamicAbilityTags.AddTag(AbilityToGrant.InputTag);
+        AbilitySpec.GetDynamicSpecSourceTags().AddTag(AbilityToGrant.InputTag);
 
         const FGameplayAbilitySpecHandle AbilitySpecHandle = InASC->GiveAbility(AbilitySpec);
 

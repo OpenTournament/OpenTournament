@@ -138,7 +138,7 @@ public:
     /**
     * Do Jump
     */
-    virtual bool DoJump(bool bReplayingMoves) override;
+    virtual bool DoJump(bool bReplayingMoves, float DeltaTime) override;
 
     /**
     * Flag. Are we jumping?
