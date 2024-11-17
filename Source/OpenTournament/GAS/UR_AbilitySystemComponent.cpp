@@ -97,7 +97,7 @@ void UUR_AbilitySystemComponent::CancelAbilitiesByFunc(TShouldCancelAbilityFunc 
             continue;
         }
 
-        if (AbilityCDO->GetInstancingPolicy() != EGameplayAbilityInstancingPolicy::NonInstanced)
+        if (AbilityCDO->GetInstancingPolicy() != EGameplayAbilityInstancingPolicy::InstancedPerActor)
         {
             // Cancel all the spawned instances, not the CDO.
             TArray<UGameplayAbility*> Instances = AbilitySpec.GetAbilityInstances();
@@ -148,7 +148,7 @@ void UUR_AbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Inpu
     {
         for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
         {
-            if (AbilitySpec.Ability && (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag)))
+            if (AbilitySpec.Ability && (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag)))
             {
                 InputPressedSpecHandles.AddUnique(AbilitySpec.Handle);
                 InputHeldSpecHandles.AddUnique(AbilitySpec.Handle);
@@ -163,7 +163,7 @@ void UUR_AbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& Inp
     {
         for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
         {
-            if (AbilitySpec.Ability && (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag)))
+            if (AbilitySpec.Ability && (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag)))
             {
                 InputReleasedSpecHandles.AddUnique(AbilitySpec.Handle);
                 InputHeldSpecHandles.Remove(AbilitySpec.Handle);

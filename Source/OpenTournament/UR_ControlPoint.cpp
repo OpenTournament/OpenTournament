@@ -271,18 +271,3 @@ bool AUR_ControlPoint::CanEditChange(const FProperty* InProperty) const
     return ParentVal;
 }
 #endif
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-#if WITH_DEV_AUTOMATION_TESTS
-
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOpenTournamentControlPointTest, "OpenTournament.Feature.Levels.LevelFeatures.Actor", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
-
-bool FOpenTournamentControlPointTest::RunTest(const FString& Parameters)
-{
-    // TODO : Automated Tests
-
-    return true;
-}
-
-#endif // WITH_DEV_AUTOMATION_TESTS

@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include <AssetRegistry/AssetData.h>
 #include <GameFramework/WorldSettings.h>
+
+#include <AssetRegistry/AssetData.h>
 
 #include "UR_WorldSettings.generated.h"
 
@@ -47,7 +48,7 @@ struct FMapInfo
 /**
  * The default world settings object, used primarily to set the default gameplay experience to use when playing on this map
  * Custom WorldSettings class - this is a good place to put per-map options that the C++ gameplay code can easily access.
- * Typically this would include things like map description, thumbnail, music, initial camera location...
+ * Typically, this would include things like map description, thumbnail, music, initial camera location...
  *
  */
 UCLASS()
@@ -76,9 +77,6 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     TSoftObjectPtr<USoundBase> Music;
-
-    UPROPERTY()
-    UAudioComponent* MusicComponent;
 
     UFUNCTION()
     void OnMusicLoaded();
