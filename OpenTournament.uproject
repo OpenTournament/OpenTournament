@@ -437,6 +437,6 @@
 		}
 	],
 	"TargetPlatforms": [
-		"Windows"
+		"Mac"
 	]
 }
