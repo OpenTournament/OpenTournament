@@ -70,7 +70,7 @@ public:
     * Check for Errors to find instances where this actor is configured incorrectly.
     */
     virtual void CheckForErrors() override;
-#endif WITH_EDITOR
+#endif // WITH_EDITOR
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 

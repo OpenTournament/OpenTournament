@@ -205,7 +205,7 @@ FString UUR_LocalPlayer::GetNickname() const
             }
         }
     }
-#endif WITH_EDITOR
+#endif // WITH_EDITOR
 
     return PlayerName;
 }
