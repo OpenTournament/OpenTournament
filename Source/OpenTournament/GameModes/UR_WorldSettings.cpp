@@ -26,16 +26,6 @@ AUR_WorldSettings::AUR_WorldSettings(const FObjectInitializer& ObjectInitializer
 {
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
-    MusicComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("MusicComponent"));
-    MusicComponent->SetupAttachment(RootComponent); //is attachment mandatory?
-    //MusicComponent->SoundClassOverride = MusicSoundClass; //TODO
-    MusicComponent->bAllowSpatialization = false;
-    MusicComponent->bShouldRemainActiveIfDropped = true;    //never reset if cut out by priority
-    MusicComponent->bIsUISound = true;  //continue when game paused
-    MusicComponent->bSuppressSubtitles = true;  //???
-    //MusicComponent->bIgnoreForFlushing = true;    //not sure about this
-    MusicComponent->bIsMusic = true;    //what does this do???
-
     MapInfo.DisplayName = "MyLevel";
 
 #if WITH_EDITORONLY_DATA
@@ -90,7 +80,7 @@ void AUR_WorldSettings::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (MusicComponent && !IsNetMode(NM_DedicatedServer))
+    if (!IsNetMode(NM_DedicatedServer))
     {
         if (const UAssetManager* Manager = UAssetManager::GetIfInitialized())
         {
@@ -106,8 +96,7 @@ void AUR_WorldSettings::BeginPlay()
 
 void AUR_WorldSettings::OnMusicLoaded()
 {
-    MusicComponent->SetSound(Music.Get());
-    MusicComponent->Play();
+    // @! TODO : Play music from some kind of Music system
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +104,9 @@ void AUR_WorldSettings::OnMusicLoaded()
 AUR_WorldSettings* AUR_WorldSettings::GetWorldSettings(UObject* WorldContext)
 {
     if (WorldContext && WorldContext->GetWorld())
+    {
         return Cast<AUR_WorldSettings>(WorldContext->GetWorld()->K2_GetWorldSettings());
+    }
 
     return nullptr;
 }

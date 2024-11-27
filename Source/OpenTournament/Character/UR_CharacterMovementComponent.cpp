@@ -408,7 +408,7 @@ void UUR_CharacterMovementComponent::CheckJumpInput(float DeltaTime)
         {
             if ((MovementMode == MOVE_Walking) || (MovementMode == MOVE_Falling))
             {
-                if (DoJump(CharacterOwner->bClientUpdating))
+                if (DoJump(CharacterOwner->bClientUpdating, DeltaTime))
                 {
                     bIsJumping = true;
                     URCharacterOwner->UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ URCharacterOwner->GetMovementActionGameplayTag(EMovementAction::Jumping) });
@@ -469,11 +469,11 @@ void UUR_CharacterMovementComponent::CheckJumpInput(float DeltaTime)
     }
 }
 
-bool UUR_CharacterMovementComponent::DoJump(bool bReplayingMoves)
+bool UUR_CharacterMovementComponent::DoJump(bool bReplayingMoves, float DeltaTime)
 {
     if (CharacterOwner && CharacterOwner->CanJump())
     {
-        const auto bIsFallingAndMultiJumpCapable = IsFalling() ? CharacterOwner->JumpMaxCount > 1 : Super::DoJump(bReplayingMoves);
+        const auto bIsFallingAndMultiJumpCapable = IsFalling() ? CharacterOwner->JumpMaxCount > 1 : Super::DoJump(bReplayingMoves, DeltaTime);
         if (bIsFallingAndMultiJumpCapable)
         {
             return true;

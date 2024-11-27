@@ -144,6 +144,17 @@ APawn* AUR_GameMode::SpawnDefaultPawnAtTransform_Implementation(AController* New
                 }
                 else
                 {
+                    //maybe experience was not loaded, try again when experience has been loaded
+                    UUR_ExperienceManagerComponent* ExperienceComponent = GameState->FindComponentByClass<UUR_ExperienceManagerComponent>();
+                    check(ExperienceComponent);
+                    ExperienceComponent->CallOrRegister_OnExperienceLoaded_HighPriority(FOnGameExperienceLoaded::FDelegate::CreateWeakLambda(this, [this, NewPlayer, PawnExtComp](const auto* Experience)
+                    {
+                        if (const UUR_PawnData* PawnData = GetPawnDataForController(NewPlayer))
+                        {
+                            PawnExtComp->SetPawnData(PawnData);
+                        }
+                    }));
+
                     UE_LOG(LogGame, Error, TEXT("Game mode was unable to set PawnData on the spawned pawn [%s]."), *GetNameSafe(SpawnedPawn));
                 }
             }

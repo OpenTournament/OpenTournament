@@ -76,7 +76,7 @@ void UUR_MessageHistory::OnViewTargetChanged(class AUR_BasePlayerController* PC,
 void UUR_MessageHistory::Append(const FMessageHistoryEntry& Entry)
 {
     if (History.Num() >= MESSAGES_HISTORY_MAX)
-        History.RemoveAt(0, 1, false);
+        History.RemoveAt(0, 1, EAllowShrinking::No);
 
     History.Emplace(Entry);
 

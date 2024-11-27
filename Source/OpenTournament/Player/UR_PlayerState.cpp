@@ -57,7 +57,7 @@ AUR_PlayerState::AUR_PlayerState(const FObjectInitializer& ObjectInitializer)
     CombatSet = CreateDefaultSubobject<UUR_CombatSet>(TEXT("CombatSet"));
 
     // AbilitySystemComponent needs to be updated at a high frequency.
-    NetUpdateFrequency = 100.0f;
+    SetNetUpdateFrequency(100.0);
 }
 
 void AUR_PlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -367,7 +367,7 @@ void AUR_PlayerState::InternalOnTeamChanged(AUR_PlayerState* PS, int32 OldTeamIn
         {
             // if we have no team or an unhandled team number, try to prioritize the standard,
             // aka. Enemy on team0 and Enemy2 on team1. Ally ends up on team3 which is wrong though.
-            FName Last = ParamNames.Pop(false);
+            FName Last = ParamNames.Pop(EAllowShrinking::No);
             ParamNames.Insert(Last, 0);
         }
         if (NewTeamIndex >= 1)

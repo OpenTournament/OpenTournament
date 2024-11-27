@@ -30,10 +30,10 @@ USoundBase* UUR_AnnouncementSubsystem::GetAnnouncementSound(const FGameplayTag& 
 {
     USoundBase* AnnouncementSound{ };
 
-    if (AnnouncementVoiceClass)
+    if (AnnouncementVoiceClass.IsValid() && IsValid(AnnouncementVoiceClass.Get()))
     {
         // Ensure the AnnouncementVoice is set
-        AnnouncementVoice = AnnouncementVoiceClass.Get();
+        AnnouncementVoice = Cast<UUR_AnnouncementVoice>(AnnouncementVoiceClass.Get()->GetDefaultObject());
         if (AnnouncementVoice)
         {
             AnnouncementSound = AnnouncementVoice->GetAnnouncementSound(GameplayTag);

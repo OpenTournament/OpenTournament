@@ -59,7 +59,7 @@ public:
     * Class of AnnouncementVoice used
     */
     UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "AnnouncementSystem")
-    TSoftObjectPtr<UUR_AnnouncementVoice> AnnouncementVoiceClass;
+    TSoftClassPtr<UUR_AnnouncementVoice> AnnouncementVoiceClass;
 
     /**
     * Announcement Voice

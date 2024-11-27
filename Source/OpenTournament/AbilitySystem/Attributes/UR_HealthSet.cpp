@@ -23,12 +23,14 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Gameplay_DamageImmunity, "Gameplay.DamageImmunity");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Gameplay_DamageSelfDestruct, "Gameplay.Damage.SelfDestruct");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Gameplay_FellOutOfWorld, "Gameplay.Damage.FellOutOfWorld");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Game_Damage_Message, "Game.Damage.Message");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Gameplay_Health_Change, "Gameplay.Health.Change");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Gameplay_MaxHealth_Change, "Gameplay.MaxHealth.Change");
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_HealthSet::UUR_HealthSet()
-	: Health(100.0f)
-	, MaxHealth(100.0f)
+    : Health(100.0f)
+    , MaxHealth(100.0f)
 {
     bOutOfHealth = false;
     MaxHealthBeforeAttributeChange = 0.0f;
@@ -177,6 +179,17 @@ void UUR_HealthSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackDa
 
         // Notify on any requested max health changes
         OnMaxHealthChanged.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, MaxHealthBeforeAttributeChange, GetMaxHealth());
+
+        FGameVerbMessage Message;
+        Message.Verb = TAG_Gameplay_MaxHealth_Change;
+        Message.Instigator = Data.EffectSpec.GetEffectContext().GetEffectCauser();
+        Message.InstigatorTags = *Data.EffectSpec.CapturedSourceTags.GetAggregatedTags();
+        Message.Target = Data.Target;
+        Message.TargetTags = *Data.EffectSpec.CapturedTargetTags.GetAggregatedTags();
+        Message.Magnitude = GetMaxHealth();
+
+        UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(GetWorld());
+        MessageSystem.BroadcastMessage(Message.Verb, Message);
     }
 
     // If health has actually changed activate callbacks
@@ -184,6 +197,17 @@ void UUR_HealthSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackDa
     if (CurrentHealth != HealthBeforeAttributeChange)
     {
         OnHealthChanged.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, HealthBeforeAttributeChange, GetHealth());
+
+        FGameVerbMessage Message;
+        Message.Verb = TAG_Gameplay_Health_Change;
+        Message.Instigator = Data.EffectSpec.GetEffectContext().GetEffectCauser();
+        Message.InstigatorTags = *Data.EffectSpec.CapturedSourceTags.GetAggregatedTags();
+        Message.Target = Data.Target;
+        Message.TargetTags = *Data.EffectSpec.CapturedTargetTags.GetAggregatedTags();
+        Message.Magnitude = CurrentHealth;
+
+        UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(GetWorld());
+        MessageSystem.BroadcastMessage(Message.Verb, Message);
     }
 
     if ((CurrentHealth <= 0.0f) && !bOutOfHealth)
@@ -200,6 +224,30 @@ void UUR_HealthSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, 
     Super::PreAttributeBaseChange(Attribute, NewValue);
 
     ClampAttribute(Attribute, NewValue);
+}
+
+void UUR_HealthSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) const
+{
+    Super::PostAttributeBaseChange(Attribute, OldValue, NewValue);
+
+    if (Attribute == GetMaxHealthAttribute())
+    {
+        FGameVerbMessage Message;
+        Message.Verb = TAG_Gameplay_MaxHealth_Change;
+        Message.Magnitude = GetMaxHealth();
+
+        UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(GetWorld());
+        MessageSystem.BroadcastMessage(Message.Verb, Message);
+    }
+    else if (Attribute == GetHealthAttribute())
+    {
+        FGameVerbMessage Message;
+        Message.Verb = TAG_Gameplay_Health_Change;
+        Message.Magnitude = GetMaxHealth();
+
+        UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(GetWorld());
+        MessageSystem.BroadcastMessage(Message.Verb, Message);
+    }
 }
 
 void UUR_HealthSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)

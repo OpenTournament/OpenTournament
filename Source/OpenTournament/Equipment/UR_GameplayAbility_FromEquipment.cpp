@@ -43,7 +43,7 @@ EDataValidationResult UUR_GameplayAbility_FromEquipment::IsDataValid(FDataValida
 {
     EDataValidationResult Result = Super::IsDataValid(Context);
 
-    if (InstancingPolicy == EGameplayAbilityInstancingPolicy::NonInstanced)
+    if (InstancingPolicy == EGameplayAbilityInstancingPolicy::InstancedPerActor)
     {
         Context.AddError(NSLOCTEXT("OT", "EquipmentAbilityMustBeInstanced", "Equipment ability must be instanced"));
         Result = EDataValidationResult::Invalid;

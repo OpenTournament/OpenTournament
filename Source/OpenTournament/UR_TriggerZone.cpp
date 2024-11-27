@@ -186,20 +186,3 @@ bool AUR_TriggerZone::CanEditChange(const FProperty* InProperty) const
     return ParentVal;
 }
 #endif
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-#if WITH_DEV_AUTOMATION_TESTS
-
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOpenTournamentTriggerZoneTest, "OpenTournament.Feature.Levels.LevelFeatures.Actor", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
-
-bool FOpenTournamentTriggerZoneTest::RunTest(const FString& Parameters)
-{
-    // TODO : Automated Tests
-
-    return true;
-}
-
-#undef LOCTEXT_NAMESPACE
-
-#endif // WITH_DEV_AUTOMATION_TESTS
