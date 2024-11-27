@@ -46,7 +46,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FReceiveSystemMessageSignature, cons
 UCLASS(Config = Game)
 class OPENTOURNAMENT_API AUR_PlayerController
     : public AUR_BasePlayerController
-      , public IUR_TeamInterface
+    , public IUR_TeamInterface
 {
     GENERATED_BODY()
 
@@ -67,6 +67,8 @@ public:
     virtual void SetupInputComponent() override;
 
     virtual void ProcessPlayerInput(const float DeltaTime, const bool bGamePaused) override;
+    virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
+
 
     virtual void SetPawn(APawn* InPawn) override;
 

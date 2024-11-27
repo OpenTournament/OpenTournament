@@ -7,6 +7,7 @@
 #include <EngineUtils.h>
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "UR_AbilitySystemComponent.h"
 #include "Components/AudioComponent.h"
 #include "GameFramework/SpectatorPawn.h"
 
@@ -184,6 +185,16 @@ void AUR_PlayerController::ProcessPlayerInput(const float DeltaTime, const bool 
             InputDodgeComponent->ProcessPlayerInput(DeltaTime, bGamePaused);
         }
     }
+}
+
+void AUR_PlayerController::PostProcessInput(const float DeltaTime, const bool bGamePaused)
+{
+    if (UUR_AbilitySystemComponent* ASC = GetGameAbilitySystemComponent())
+    {
+        ASC->ProcessAbilityInput(DeltaTime, bGamePaused);
+    }
+
+    Super::PostProcessInput(DeltaTime, bGamePaused);
 }
 
 void AUR_PlayerController::SetPawn(APawn* InPawn)
