@@ -30,6 +30,7 @@ public class CommonUser : ModuleRules
 				"Core",
 				"CoreOnline",
 				"GameplayTags",
+				"OnlineSubsystemUtils",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -42,7 +43,7 @@ public class CommonUser : ModuleRules
 		{
 			PublicDependencyModuleNames.Add("OnlineServicesInterface");
 		}
-		PrivateDependencyModuleNames.Add("OnlineSubsystemUtils");
+
 		PublicDefinitions.Add("COMMONUSER_OSSV1=" + (bUseOnlineSubsystemV1 ? "1" : "0"));
 
 		PrivateDependencyModuleNames.AddRange(
