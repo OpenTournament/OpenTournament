@@ -5,6 +5,9 @@
 #pragma once
 
 #include "AbilitySystemComponent.h"
+
+#include <NativeGameplayTags.h>
+
 #include "UR_Ability_GameActivationGroup.h"
 
 #include "UR_AbilitySystemComponent.generated.h"
@@ -16,6 +19,9 @@ class UUR_AbilityTagRelationshipMapping;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+OPENTOURNAMENT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Gameplay_AbilityInputBlocked);
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Subclass of ability system component with game-specific data
@@ -27,8 +33,8 @@ class OPENTOURNAMENT_API UUR_AbilitySystemComponent : public UAbilitySystemCompo
     GENERATED_BODY()
 
 public:
-    // Constructors and overrides
-    UUR_AbilitySystemComponent();
+
+    UUR_AbilitySystemComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
     // @! TODO: Deprecate - Unused
     /** Returns a list of currently active ability instances that match the tags */
@@ -39,8 +45,6 @@ public:
 
     /** Version of function in AbilitySystemGlobals that returns correct type */
     static UUR_AbilitySystemComponent* GetAbilitySystemComponentFromActor(const AActor* Actor, bool LookForComponent = false);
-
-    void ClearAbilityInput();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -58,11 +62,13 @@ public:
     void AbilityInputTagPressed(const FGameplayTag& InputTag);
     void AbilityInputTagReleased(const FGameplayTag& InputTag);
 
+    void ProcessAbilityInput(float DeltaTime, bool bGamePaused);
+    void ClearAbilityInput();
+
     bool IsActivationGroupBlocked(EGameAbilityActivationGroup InGroup) const;
     void AddAbilityToActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InGameAbility);
     void RemoveAbilityFromActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InAbility);
-    void CancelActivationGroupAbilities(EGameAbilityActivationGroup Group, UUR_GameplayAbility* IgnoreLyraAbility, bool bReplicateCancelAbility);
-
+    void CancelActivationGroupAbilities(EGameAbilityActivationGroup Group, UUR_GameplayAbility* IgnoreGameAbility, bool bReplicateCancelAbility);
 
     // Uses a gameplay effect to add the specified dynamic granted tag.
     void AddDynamicTagGameplayEffect(const FGameplayTag& Tag);

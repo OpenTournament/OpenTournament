@@ -4,11 +4,9 @@
 
 #include "UR_AbilitySystemComponent.h"
 
-#include <Engine/World.h>
+#include <AbilitySystemGlobals.h>
 
-#include "AbilitySystemGlobals.h"
 #include "UR_AssetManager.h"
-
 #include "UR_AttributeSet.h"
 #include "UR_Character.h"
 #include "UR_GameData.h"
@@ -20,7 +18,12 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-UUR_AbilitySystemComponent::UUR_AbilitySystemComponent()
+UE_DEFINE_GAMEPLAY_TAG(TAG_Gameplay_AbilityInputBlocked, "Gameplay.AbilityInputBlocked");
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+UUR_AbilitySystemComponent::UUR_AbilitySystemComponent(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
 {
     InputPressedSpecHandles.Reset();
     InputReleasedSpecHandles.Reset();
@@ -63,13 +66,6 @@ int32 UUR_AbilitySystemComponent::GetDefaultAbilityLevel() const
 UUR_AbilitySystemComponent* UUR_AbilitySystemComponent::GetAbilitySystemComponentFromActor(const AActor* Actor, bool LookForComponent)
 {
     return Cast<UUR_AbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Actor, LookForComponent));
-}
-
-void UUR_AbilitySystemComponent::ClearAbilityInput()
-{
-    InputPressedSpecHandles.Reset();
-    InputReleasedSpecHandles.Reset();
-    InputHeldSpecHandles.Reset();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -138,9 +134,9 @@ void UUR_AbilitySystemComponent::CancelAbilitiesByFunc(TShouldCancelAbilityFunc 
 
 void UUR_AbilitySystemComponent::CancelInputActivatedAbilities(bool bReplicateCancelAbility)
 {
-    auto ShouldCancelFunc = [this](const UUR_GameplayAbility* LyraAbility, FGameplayAbilitySpecHandle Handle)
+    auto ShouldCancelFunc = [this](const UUR_GameplayAbility* GameAbility, FGameplayAbilitySpecHandle Handle)
     {
-        const EGameAbilityActivationPolicy ActivationPolicy = LyraAbility->GetActivationPolicy();
+        const EGameAbilityActivationPolicy ActivationPolicy = GameAbility->GetActivationPolicy();
         return ((ActivationPolicy == EGameAbilityActivationPolicy::OnInputTriggered) || (ActivationPolicy == EGameAbilityActivationPolicy::WhileInputActive));
     };
 
@@ -175,6 +171,110 @@ void UUR_AbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& Inp
             }
         }
     }
+}
+
+void UUR_AbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGamePaused)
+{
+	if (HasMatchingGameplayTag(TAG_Gameplay_AbilityInputBlocked))
+	{
+		ClearAbilityInput();
+		return;
+	}
+
+	static TArray<FGameplayAbilitySpecHandle> AbilitiesToActivate;
+	AbilitiesToActivate.Reset();
+
+	//@TODO: See if we can use FScopedServerAbilityRPCBatcher ScopedRPCBatcher in some of these loops
+
+	//
+	// Process all abilities that activate when the input is held.
+	//
+	for (const FGameplayAbilitySpecHandle& SpecHandle : InputHeldSpecHandles)
+	{
+		if (const FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
+		{
+			if (AbilitySpec->Ability && !AbilitySpec->IsActive())
+			{
+				const UUR_GameplayAbility* AbilityCDO = Cast<UUR_GameplayAbility>(AbilitySpec->Ability);
+				if (AbilityCDO && AbilityCDO->GetActivationPolicy() == EGameAbilityActivationPolicy::WhileInputActive)
+				{
+					AbilitiesToActivate.AddUnique(AbilitySpec->Handle);
+				}
+			}
+		}
+	}
+
+	//
+	// Process all abilities that had their input pressed this frame.
+	//
+	for (const FGameplayAbilitySpecHandle& SpecHandle : InputPressedSpecHandles)
+	{
+		if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
+		{
+			if (AbilitySpec->Ability)
+			{
+				AbilitySpec->InputPressed = true;
+
+				if (AbilitySpec->IsActive())
+				{
+					// Ability is active so pass along the input event.
+					AbilitySpecInputPressed(*AbilitySpec);
+				}
+				else
+				{
+					const UUR_GameplayAbility* AbilityCDO = Cast<UUR_GameplayAbility>(AbilitySpec->Ability);
+
+					if (AbilityCDO && AbilityCDO->GetActivationPolicy() == EGameAbilityActivationPolicy::OnInputTriggered)
+					{
+						AbilitiesToActivate.AddUnique(AbilitySpec->Handle);
+					}
+				}
+			}
+		}
+	}
+
+	//
+	// Try to activate all the abilities that are from presses and holds.
+	// We do it all at once so that held inputs don't activate the ability
+	// and then also send a input event to the ability because of the press.
+	//
+	for (const FGameplayAbilitySpecHandle& AbilitySpecHandle : AbilitiesToActivate)
+	{
+		TryActivateAbility(AbilitySpecHandle);
+	}
+
+	//
+	// Process all abilities that had their input released this frame.
+	//
+	for (const FGameplayAbilitySpecHandle& SpecHandle : InputReleasedSpecHandles)
+	{
+		if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
+		{
+			if (AbilitySpec->Ability)
+			{
+				AbilitySpec->InputPressed = false;
+
+				if (AbilitySpec->IsActive())
+				{
+					// Ability is active so pass along the input event.
+					AbilitySpecInputReleased(*AbilitySpec);
+				}
+			}
+		}
+	}
+
+	//
+	// Clear the cached ability handles.
+	//
+	InputPressedSpecHandles.Reset();
+	InputReleasedSpecHandles.Reset();
+}
+
+void UUR_AbilitySystemComponent::ClearAbilityInput()
+{
+    InputPressedSpecHandles.Reset();
+    InputReleasedSpecHandles.Reset();
+    InputHeldSpecHandles.Reset();
 }
 
 bool UUR_AbilitySystemComponent::IsActivationGroupBlocked(EGameAbilityActivationGroup InGroup) const
@@ -240,14 +340,13 @@ void UUR_AbilitySystemComponent::RemoveAbilityFromActivationGroup(EGameAbilityAc
     check(ActivationGroupCounts[(uint8)InGroup] > 0);
 
     ActivationGroupCounts[(uint8)InGroup]--;
-
 }
 
-void UUR_AbilitySystemComponent::CancelActivationGroupAbilities(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InIgnoreLyraAbility, bool bReplicateCancelAbility)
+void UUR_AbilitySystemComponent::CancelActivationGroupAbilities(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InIgnoreGameAbility, bool bReplicateCancelAbility)
 {
-    auto ShouldCancelFunc = [this, InGroup, InIgnoreLyraAbility](const UUR_GameplayAbility* InLyraAbility, FGameplayAbilitySpecHandle Handle)
+    auto ShouldCancelFunc = [this, InGroup, InIgnoreGameAbility](const UUR_GameplayAbility* InGameAbility, FGameplayAbilitySpecHandle Handle)
     {
-        return ((InLyraAbility->GetActivationGroup() == InGroup) && (InLyraAbility != InIgnoreLyraAbility));
+        return ((InGameAbility->GetActivationGroup() == InGroup) && (InGameAbility != InIgnoreGameAbility));
     };
 
     CancelAbilitiesByFunc(ShouldCancelFunc, bReplicateCancelAbility);
