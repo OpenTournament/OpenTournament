@@ -405,13 +405,13 @@ void UUR_HeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 
         if (Value.X != 0.0f)
         {
-            const FVector MovementDirection = MovementRotation.RotateVector(FVector::RightVector);
+            const FVector MovementDirection = MovementRotation.RotateVector(FVector::ForwardVector);
             Pawn->AddMovementInput(MovementDirection, Value.X);
         }
 
         if (Value.Y != 0.0f)
         {
-            const FVector MovementDirection = MovementRotation.RotateVector(FVector::ForwardVector);
+            const FVector MovementDirection = MovementRotation.RotateVector(FVector::RightVector);
             Pawn->AddMovementInput(MovementDirection, Value.Y);
         }
     }
