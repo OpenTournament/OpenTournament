@@ -3,12 +3,15 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_AttributeSet.h"
-
 #include "UR_AbilitySystemComponent.h"
 #include "UR_LogChannels.h"
+#include "UR_GameplayTags.h"
 #include "Net/UnrealNetwork.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_AttributeSet)
+
+UE_DEFINE_GAMEPLAY_TAG(TAG_Gameplay_Armor_Change, "Gameplay.Armor.Change");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Gameplay_MaxArmor_Change, "Gameplay.MaxArmor.Change");
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

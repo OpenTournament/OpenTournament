@@ -207,14 +207,14 @@ void UUR_HealthComponent::OnExperienceLoaded(const UUR_ExperienceDefinition* Uur
     UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(GetWorld());
 
     FGameVerbMessage Message;
-    Message.Verb = FGameplayTag::RequestGameplayTag("Gameplay.MaxHealth.Change"); //not sure about this, maybe define tags elsewhere so more than the attribute set can use it?
+    Message.Verb = TAG_Gameplay_MaxHealth_Change;
     Message.Instigator = this;
     Message.Target = this;
     Message.Magnitude = GetMaxHealth();
 
     MessageSystem.BroadcastMessage(Message.Verb, Message);
 
-    Message.Verb = FGameplayTag::RequestGameplayTag("Gameplay.Health.Change"); //not sure about this, maybe define tags elsewhere so more than the attribute set can use it?
+    Message.Verb = TAG_Gameplay_Health_Change;
     Message.Instigator = this;
     Message.Target = this;
     Message.Magnitude = GetHealth();
