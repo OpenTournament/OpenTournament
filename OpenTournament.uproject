@@ -7,7 +7,13 @@
 		{
 			"Name": "OpenTournament",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+            "AdditionalDependencies": [
+                "Engine",
+                "GameplayAbilities",
+                "AIModule",
+                "UMG"
+            ]
 		}
 	],
 	"Plugins": [
@@ -437,6 +443,7 @@
 		}
 	],
 	"TargetPlatforms": [
-		"Windows"
+		"Windows",
+        "Linux"
 	]
 }
