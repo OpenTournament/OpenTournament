@@ -7,8 +7,17 @@
 		{
 			"Name": "OpenTournament",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		}
+			"LoadingPhase": "Default",
+            "AdditionalDependencies": [
+                "DeveloperSettings",
+                "Engine"
+            ]
+		},
+        {
+            "Name": "OpenTournamentEditor",
+            "Type": "Editor",
+            "LoadingPhase": "PostEngineInit"
+        }
 	],
 	"Plugins": [
 		{
