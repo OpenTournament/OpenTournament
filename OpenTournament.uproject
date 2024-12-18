@@ -10,8 +10,9 @@
 			"LoadingPhase": "Default",
             "AdditionalDependencies": [
                 "Engine",
-                "GameplayAbilities",
                 "AIModule",
+                "DeveloperSettings",
+                "GameplayAbilities",
                 "UMG"
             ]
 		}
@@ -439,6 +440,14 @@
 		},
 		{
 			"Name": "UIExtension",
+			"Enabled": true
+		},
+		//{
+		//	"Name": "AsyncMixin",
+		//	"Enabled": true
+		//},
+		{
+			"Name": "DataRegistry",
 			"Enabled": true
 		}
 	],

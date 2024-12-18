@@ -93,8 +93,6 @@ public class OpenTournament : ModuleRules
             new string[]
             {
                 "InputCore",
-                "Slate",
-                "SlateCore",
                 "RenderCore",
                 "DeveloperSettings",
                 "EnhancedInput",
