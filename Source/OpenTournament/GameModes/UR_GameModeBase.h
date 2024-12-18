@@ -27,7 +27,7 @@ public:
     AUR_GameModeBase();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-    // Chat components centralizartion
+    // Chat components centralization
     //TODO: might be better as a subsystem
 
     TArray<class UUR_ChatComponent*> ChatComponents;
