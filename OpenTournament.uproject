@@ -12,12 +12,7 @@
                 "DeveloperSettings",
                 "Engine"
             ]
-		},
-        {
-            "Name": "OpenTournamentEditor",
-            "Type": "Editor",
-            "LoadingPhase": "PostEngineInit"
-        }
+		}
 	],
 	"Plugins": [
 		{
@@ -454,6 +449,7 @@
 		}
 	],
 	"TargetPlatforms": [
-		"Windows"
+		"Win64",
+        "Linux"
 	]
 }
