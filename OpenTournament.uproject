@@ -10,8 +10,9 @@
 			"LoadingPhase": "Default",
             "AdditionalDependencies": [
                 "Engine",
-                "GameplayAbilities",
                 "AIModule",
+                "DeveloperSettings",
+                "GameplayAbilities",
                 "UMG"
             ]
 		}
@@ -440,10 +441,14 @@
 		{
 			"Name": "UIExtension",
 			"Enabled": true
+		},
+		{
+			"Name": "DataRegistry",
+			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [
-		"Windows",
+		"Win64",
         "Linux"
 	]
 }

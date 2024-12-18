@@ -17,16 +17,16 @@ public class OpenTournament : ModuleRules
             new string[]
             {
                 "OpenTournament",
+                "OpenTournament/AI",
                 "OpenTournament/AbilitySystem",
                 "OpenTournament/AnnouncementSystem",
-                "OpenTournament/AI",
                 "OpenTournament/Camera",
                 "OpenTournament/Character",
                 "OpenTournament/Data",
                 "OpenTournament/Enums",
+                "OpenTournament/GAS",
                 "OpenTournament/GameFeatures",
                 "OpenTournament/GameModes",
-                "OpenTournament/GAS",
                 "OpenTournament/Input",
                 "OpenTournament/Interfaces",
                 "OpenTournament/Messages",
@@ -54,12 +54,11 @@ public class OpenTournament : ModuleRules
             {
                 "AIModule",
                 "ApplicationCore",
-                //"AsyncMixin",
+                "CinematicCamera",
                 "ControlFlows",
                 "Core",
                 "CoreOnline",
                 "CoreUObject",
-                "CinematicCamera",
                 "DeveloperSettings",
                 "Engine",
                 "EngineSettings",
@@ -79,10 +78,10 @@ public class OpenTournament : ModuleRules
                 "PhysicsCore",
                 "PropertyPath",
                 "ReplicationGraph",
+                "SignificanceManager",
                 "Slate",
                 "SlateCore",
-                "SignificanceManager",
-                "SoundFieldRendering", // Linux needs a symbold that it cannot find so we try to link this library by force.
+                "SoundFieldRendering",
                 "UIExtension",
                 "UMG"
             }
@@ -92,30 +91,23 @@ public class OpenTournament : ModuleRules
         (
             new string[]
             {
-                "InputCore",
-                "Slate",
-                "SlateCore",
-                "RenderCore",
-                "DeveloperSettings",
-                "EnhancedInput",
-                "RHI",
-                "Projects",
-                "Gauntlet",
-                "UMG",
+				"AudioMixer",
+                "AudioModulation",
+                "ClientPilot",
                 "CommonUI",
                 "CommonInput",
                 "CommonGame",
                 "CommonUser",
+                "DTLSHandlerComponent",
+                "EnhancedInput",
                 "GameSettings",
                 "GameSubtitles",
                 "GameplayMessageRuntime",
-                "AudioMixer",
+                "Gauntlet",
+                "RenderCore",
                 "NetworkReplayStreaming",
-                "UIExtension",
-                "ClientPilot",
-                "AudioModulation",
-                "EngineSettings",
-                "DTLSHandlerComponent",
+                "Projects",
+                "RHI"
             }
         );
 
