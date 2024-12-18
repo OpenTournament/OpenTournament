@@ -324,19 +324,6 @@ void UUR_HealthComponent::DamageSelfDestruct(bool bFellOutOfWorld)
         const TSubclassOf<UGameplayEffect> DamageGE = UUR_AssetManager::GetSubclass(UUR_GameData::Get().DamageGameplayEffect_SetByCaller);
         if (!DamageGE)
         {
-            UE_LOG
-            (LogGame,
-                Error,
-                TEXT("UR_HealthComponent: DamageSelfDestruct failed for owner [%s]. Unable to find gameplay effect [%s]."),
-                *GetNameSafe(GetOwner()),
-                *UUR_GameData::Get().DamageGameplayEffect_SetByCaller.GetAssetName());
-            return;
-        }
-    if ((DeathState == EGameDeathState::NotDead) && AbilitySystemComponent)
-    {
-        const TSubclassOf<UGameplayEffect> DamageGE = UUR_AssetManager::GetSubclass(UUR_GameData::Get().DamageGameplayEffect_SetByCaller);
-        if (!DamageGE)
-        {
             UE_LOG(LogGame, Error, TEXT("UR_HealthComponent: DamageSelfDestruct failed for owner [%s]. Unable to find gameplay effect [%s]."), *GetNameSafe(GetOwner()), *UUR_GameData::Get().DamageGameplayEffect_SetByCaller.GetAssetName());
             return;
         }
