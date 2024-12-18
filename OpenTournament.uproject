@@ -442,17 +442,13 @@
 			"Name": "UIExtension",
 			"Enabled": true
 		},
-		//{
-		//	"Name": "AsyncMixin",
-		//	"Enabled": true
-		//},
 		{
 			"Name": "DataRegistry",
 			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [
-		"Windows",
+		"Win64",
         "Linux"
 	]
 }
