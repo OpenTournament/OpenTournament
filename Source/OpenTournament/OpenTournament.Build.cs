@@ -87,8 +87,9 @@ public class OpenTournament : ModuleRules
             }
         );
 
-        PrivateDependencyModuleNames.AddRange(
-            new[]
+        PrivateDependencyModuleNames.AddRange
+        (
+            new []
             {
                 "AudioMixer",
                 "AudioModulation",
@@ -114,17 +115,17 @@ public class OpenTournament : ModuleRules
             }
         );
 
-		if (Target.bBuildEditor)
-		{
+		    if (Target.bBuildEditor)
+		    {
             PublicDependencyModuleNames.AddRange(
-				new []
-				{
-					"UnrealEd",
-					"DataValidation"
-				}
-			);
-		}
-
+				        new []
+				        {
+					          "UnrealEd",
+					          "DataValidation"
+				        }
+			      );
+		    }
+    
         SetupGameplayDebuggerSupport(Target);
         SetupIrisSupport(Target);
 
