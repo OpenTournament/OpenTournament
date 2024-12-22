@@ -91,54 +91,41 @@ public class OpenTournament : ModuleRules
         (
             new []
             {
-				"AudioMixer",
+                "AudioMixer",
                 "AudioModulation",
                 "ClientPilot",
-                "CommonUI",
-                "CommonInput",
-                "CommonGame",
-                "CommonUser",
-                "DTLSHandlerComponent",
-                "EnhancedInput",
-                "GameSettings",
-                "GameSubtitles",
-                "GameplayMessageRuntime",
-                "Gauntlet",
-                "RenderCore",
-                "NetworkReplayStreaming",
-                "Projects",
-                "RHI"
-            }
-        );
-
-		if (Target.bBuildEditor)
-		{
-            PublicDependencyModuleNames.AddRange(
-				new []
-				{
-					"UnrealEd",
-					"DataValidation"
-				}
-			);
-		}
-
-        PrivateDependencyModuleNames.AddRange(
-            new []
-            {
-                //"AudioModulation",
                 "CommonGame",
                 "CommonInput",
                 "CommonLoadingScreen",
                 "CommonUI",
                 "CommonUser",
+                "DTLSHandlerComponent",
                 "EnhancedInput",
                 "GameFeatures",
+                "GameSettings",
+                "GameSubtitles",
                 "GameplayMessageRuntime",
+                "Gauntlet",
                 "ModularGameplay",
-                "ModularGameplayActors"
+                "ModularGameplayActors",
+                "NetworkReplayStreaming",
+                "Projects",
+                "RHI",
+                "RenderCore"
             }
         );
 
+		    if (Target.bBuildEditor)
+		    {
+            PublicDependencyModuleNames.AddRange(
+				        new []
+				        {
+					          "UnrealEd",
+					          "DataValidation"
+				        }
+			      );
+		    }
+    
         SetupGameplayDebuggerSupport(Target);
         SetupIrisSupport(Target);
 
