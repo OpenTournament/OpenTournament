@@ -4,7 +4,7 @@ using UnrealBuildTool;
 
 public class OpenTournament : ModuleRules
 {
-    public OpenTournament(ReadOnlyTargetRules Target) : base(Target)
+    public OpenTournament(ReadOnlyTargetRules target) : base(target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         ShadowVariableWarningLevel = WarningLevel.Error;
@@ -14,7 +14,7 @@ public class OpenTournament : ModuleRules
         // https://docs.unrealengine.com/en-US/Programming/BuildTools/UnrealBuildTool/ModuleFiles/index.html
         PublicIncludePaths.AddRange
         (
-            new string[]
+            new []
             {
                 "OpenTournament",
                 "OpenTournament/AI",
@@ -50,7 +50,7 @@ public class OpenTournament : ModuleRules
 
         PublicDependencyModuleNames.AddRange
         (
-            new string[]
+            new []
             {
                 "AIModule",
                 "ApplicationCore",
@@ -89,7 +89,7 @@ public class OpenTournament : ModuleRules
 
         PrivateDependencyModuleNames.AddRange
         (
-            new string[]
+            new []
             {
 				"AudioMixer",
                 "AudioModulation",
@@ -114,7 +114,7 @@ public class OpenTournament : ModuleRules
 		if (Target.bBuildEditor)
 		{
             PublicDependencyModuleNames.AddRange(
-				new string[]
+				new []
 				{
 					"UnrealEd",
 					"DataValidation"
@@ -123,7 +123,7 @@ public class OpenTournament : ModuleRules
 		}
 
         PrivateDependencyModuleNames.AddRange(
-            new string[]
+            new []
             {
                 //"AudioModulation",
                 "CommonGame",
