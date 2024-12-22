@@ -87,27 +87,30 @@ public class OpenTournament : ModuleRules
             }
         );
 
-        PrivateDependencyModuleNames.AddRange
-        (
-            new []
+        PrivateDependencyModuleNames.AddRange(
+            new[]
             {
-				"AudioMixer",
+                "AudioMixer",
                 "AudioModulation",
                 "ClientPilot",
-                "CommonUI",
-                "CommonInput",
                 "CommonGame",
+                "CommonInput",
+                "CommonLoadingScreen",
+                "CommonUI",
                 "CommonUser",
                 "DTLSHandlerComponent",
                 "EnhancedInput",
+                "GameFeatures",
                 "GameSettings",
                 "GameSubtitles",
                 "GameplayMessageRuntime",
                 "Gauntlet",
-                "RenderCore",
+                "ModularGameplay",
+                "ModularGameplayActors",
                 "NetworkReplayStreaming",
                 "Projects",
-                "RHI"
+                "RHI",
+                "RenderCore"
             }
         );
 
@@ -121,23 +124,6 @@ public class OpenTournament : ModuleRules
 				}
 			);
 		}
-
-        PrivateDependencyModuleNames.AddRange(
-            new []
-            {
-                //"AudioModulation",
-                "CommonGame",
-                "CommonInput",
-                "CommonLoadingScreen",
-                "CommonUI",
-                "CommonUser",
-                "EnhancedInput",
-                "GameFeatures",
-                "GameplayMessageRuntime",
-                "ModularGameplay",
-                "ModularGameplayActors"
-            }
-        );
 
         SetupGameplayDebuggerSupport(Target);
         SetupIrisSupport(Target);
