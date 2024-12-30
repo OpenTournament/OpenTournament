@@ -1,10 +1,12 @@
 // Copyright (c) Open Tournament Project, All Rights Reserved.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 using UnrealBuildTool;
 
 public class OpenTournament : ModuleRules
 {
-    public OpenTournament(ReadOnlyTargetRules Target) : base(Target)
+    public OpenTournament(ReadOnlyTargetRules target) : base(target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         ShadowVariableWarningLevel = WarningLevel.Error;
@@ -14,7 +16,7 @@ public class OpenTournament : ModuleRules
         // https://docs.unrealengine.com/en-US/Programming/BuildTools/UnrealBuildTool/ModuleFiles/index.html
         PublicIncludePaths.AddRange
         (
-            new string[]
+            new []
             {
                 "OpenTournament",
                 "OpenTournament/AbilitySystem",
@@ -50,7 +52,7 @@ public class OpenTournament : ModuleRules
 
         PublicDependencyModuleNames.AddRange
         (
-            new string[]
+            new []
             {
                 "AIModule",
                 "ApplicationCore",
@@ -84,7 +86,7 @@ public class OpenTournament : ModuleRules
                 "Slate",
                 "SlateCore",
                 "SignificanceManager",
-                "SoundFieldRendering", // Linux needs a symbold that it cannot find so we try to link this library by force.
+                "SoundFieldRendering", // Linux needs a symbol that it cannot find so we try to link this library by force.
                 "UIExtension",
                 "UMG"
             }
@@ -92,7 +94,7 @@ public class OpenTournament : ModuleRules
 
         PrivateDependencyModuleNames.AddRange
         (
-            new string[]
+            new []
             {
                 "InputCore",
                 "Slate",
@@ -126,7 +128,7 @@ public class OpenTournament : ModuleRules
 		if (Target.bBuildEditor)
 		{
             PublicDependencyModuleNames.AddRange(
-				new string[]
+				new []
 				{
 					"UnrealEd",
 					"DataValidation"
@@ -135,7 +137,7 @@ public class OpenTournament : ModuleRules
 		}
 
         PrivateDependencyModuleNames.AddRange(
-            new string[]
+            new []
             {
                 //"AudioModulation",
                 "CommonGame",
