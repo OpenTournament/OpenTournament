@@ -459,6 +459,7 @@
 	],
 	"TargetPlatforms": [
 		"Win64",
-		"Linux"
+		"Linux",
+		"Windows"
 	]
 }
