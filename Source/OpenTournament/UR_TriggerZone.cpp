@@ -186,3 +186,5 @@ bool AUR_TriggerZone::CanEditChange(const FProperty* InProperty) const
     return ParentVal;
 }
 #endif
+
+#undef LOCTEXT_NAMESPACE
