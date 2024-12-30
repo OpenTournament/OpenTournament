@@ -43,11 +43,11 @@ dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggest
 # ReSharper properties
 resharper_align_multiline_expression_braces = true
 resharper_align_ternary = none
-resharper_blank_lines_around_function_declaration = 1
+resharper_blank_lines_around_function_declaration = 0
 resharper_blank_lines_around_single_line_function_definition = 1
 resharper_cpp_align_multiline_argument = false
 resharper_cpp_brace_style = next_line
-resharper_cpp_max_line_length = 220
+resharper_cpp_max_line_length = 400
 resharper_cpp_wrap_arguments_style = chop_if_long
 resharper_cpp_wrap_lines = false
 resharper_disable_space_changes_before_trailing_comment = true
