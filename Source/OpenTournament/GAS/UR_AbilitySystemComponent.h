@@ -5,6 +5,7 @@
 #pragma once
 
 #include "AbilitySystemComponent.h"
+#include "UR_Ability_GameActivationGroup.h"
 
 #include <NativeGameplayTags.h>
 

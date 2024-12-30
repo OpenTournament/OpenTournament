@@ -19,6 +19,7 @@ public class OpenTournament : ModuleRules
             new []
             {
                 "OpenTournament",
+                "OpenTournament/AI",
                 "OpenTournament/AbilitySystem",
                 "OpenTournament/AnnouncementSystem",
                 "OpenTournament/AI",
@@ -26,6 +27,7 @@ public class OpenTournament : ModuleRules
                 "OpenTournament/Character",
                 "OpenTournament/Data",
                 "OpenTournament/Enums",
+                "OpenTournament/GAS",
                 "OpenTournament/GameFeatures",
                 "OpenTournament/GameModes",
                 "OpenTournament/GAS",
@@ -83,6 +85,7 @@ public class OpenTournament : ModuleRules
                 "PhysicsCore",
                 "PropertyPath",
                 "ReplicationGraph",
+                "SignificanceManager",
                 "Slate",
                 "SlateCore",
                 "SignificanceManager",
@@ -145,11 +148,19 @@ public class OpenTournament : ModuleRules
                 "CommonLoadingScreen",
                 "CommonUI",
                 "CommonUser",
+                "DTLSHandlerComponent",
                 "EnhancedInput",
                 "GameFeatures",
+                "GameSettings",
+                "GameSubtitles",
                 "GameplayMessageRuntime",
+                "Gauntlet",
                 "ModularGameplay",
-                "ModularGameplayActors"
+                "ModularGameplayActors",
+                "NetworkReplayStreaming",
+                "Projects",
+                "RHI",
+                "RenderCore"
             }
         );
 

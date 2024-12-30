@@ -8,10 +8,13 @@
 			"Name": "OpenTournament",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"DeveloperSettings",
-				"Engine"
-			]
+            "AdditionalDependencies": [
+                "Engine",
+                "AIModule",
+                "DeveloperSettings",
+                "GameplayAbilities",
+                "UMG"
+            ]
 		}
 	],
 	"Plugins": [
