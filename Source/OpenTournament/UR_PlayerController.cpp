@@ -16,7 +16,9 @@
 #include "UR_CheatManager.h"
 #include "UR_FunctionLibrary.h"
 #include "UR_GameMode.h"
+#include "UR_GameplayTags.h"
 #include "UR_HUD.h"
+#include "UR_InputComponent.h"
 #include "UR_LocalPlayer.h"
 #include "UR_LogChannels.h"
 #include "UR_MessageHistory.h"
@@ -47,9 +49,6 @@ AUR_PlayerController::AUR_PlayerController(const FObjectInitializer& ObjectIniti
     MusicVolumeScalar = 1.0;
     MusicComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("MusicComponent"));
     MusicComponent->SetupAttachment(RootComponent);
-
-    BaseTurnRate = 45.f;
-    BaseLookUpRate = 45.f;
 
     // @! TODO Should we add via BP instead ?
     InputDodgeComponent = CreateDefaultSubobject<UUR_PCInputDodgeComponent>(TEXT("InputDodgeComponent"));
@@ -129,51 +128,6 @@ void AUR_PlayerController::SetPlayer(UPlayer* InPlayer)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AUR_PlayerController::InitInputSystem()
-{
-    if (PlayerInput == nullptr)
-    {
-        // PlayerInput = NewObject<UUTPlayerInput>(this, UUTPlayerInput::StaticClass());
-    }
-
-    Super::InitInputSystem();
-}
-
-void AUR_PlayerController::SetupInputComponent()
-{
-    Super::SetupInputComponent();
-
-    if (UEnhancedInputLocalPlayerSubsystem* InputSystem = GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
-    {
-        //TODO: Perhaps a better idea to handle input by pawn so each pawn can separately decide what input actions/mappings it needs
-        //probably starts being useful once it's possible to switch pawns during the game, i.e. vehicles
-        InputSystem->AddMappingContext(DefaultInputMapping, 0);
-
-        //interface functions like scoreboard/chat should be separate from pawn and get their own mapping context
-        InputSystem->AddMappingContext(DefaultInterfaceMapping, 0);
-    }
-
-    UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
-    //Bind our Input Actions here depending on them being assigned on the PC
-    if(EnhancedInputComponent)
-    {
-        EnhancedInputComponent->BindAction(InputActionMove, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnMoveTriggered);
-        EnhancedInputComponent->BindAction(InputActionLook, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnLookTriggered);
-        EnhancedInputComponent->BindAction(InputActionJump, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnJumpTriggered);
-        EnhancedInputComponent->BindAction(InputActionCrouch, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnCrouchTriggered);
-        EnhancedInputComponent->BindAction(InputActionCrouch, ETriggerEvent::Completed, this, &AUR_PlayerController::OnCrouchCompleted);
-        EnhancedInputComponent->BindAction(InputActionFire, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnFireTriggered);
-        EnhancedInputComponent->BindAction(InputActionFireReleased, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnFireReleased);
-        EnhancedInputComponent->BindAction(InputActionAltFire, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnAltFireTriggered);
-        EnhancedInputComponent->BindAction(InputActionAltFireReleased, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnAltFireReleased);
-        EnhancedInputComponent->BindAction(InputActionThirdFire, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnThirdFireTriggered);
-        EnhancedInputComponent->BindAction(InputActionThirdFireReleased, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnThirdFireReleased);
-        EnhancedInputComponent->BindAction(InputActionToggleScoreboard, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnToggleScoreboardTriggered);
-        EnhancedInputComponent->BindAction(InputActionHoldScoreboard, ETriggerEvent::Triggered, this, &AUR_PlayerController::OnHoldScoreboardTriggered);
-        EnhancedInputComponent->BindAction(InputActionHoldScoreboard, ETriggerEvent::Completed, this, &AUR_PlayerController::OnHoldScoreboardCompleted);
-    }
-}
-
 void AUR_PlayerController::ProcessPlayerInput(const float DeltaTime, const bool bGamePaused)
 {
     if (InputEnabled())
@@ -245,27 +199,36 @@ void AUR_PlayerController::StartFire(uint8 FireModeNum)
 void AUR_PlayerController::Say(const FString& Message)
 {
     if (ChatComponent)
+    {
         ChatComponent->Send(Message, false);
+    }
 }
 
 void AUR_PlayerController::TeamSay(const FString& Message)
 {
     if (ChatComponent)
+    {
         ChatComponent->Send(Message, true);
+    }
 }
 
 void AUR_PlayerController::ClientMessage_Implementation(const FString& S, FName Type, float MsgLifeTime)
 {
     if (OnReceiveSystemMessage.IsBound())
+    {
         OnReceiveSystemMessage.Broadcast(S);
+    }
     else if (Cast<ULocalPlayer>(Player))    //Super crashes if called during shutdown and fails CastChecked
+    {
         Super::ClientMessage_Implementation(S, Type, MsgLifeTime);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_PlayerController::ShowScoreboard()
 {
+    // @! TODO: Don't do this here
     if (!ScoreboardWidget)
     {
         if (auto GameModeCDO = UUR_FunctionLibrary::GetGameModeDefaultObject<AUR_GameMode>(this))
@@ -285,6 +248,7 @@ void AUR_PlayerController::ShowScoreboard()
 
 void AUR_PlayerController::HideScoreboard()
 {
+    // @! TODO: Don't do this here
     if (ScoreboardWidget)
     {
         ScoreboardWidget->RemoveFromParent();
@@ -311,6 +275,7 @@ void AUR_PlayerController::SetTeamIndex_Implementation(int32 NewTeamIndex)
     }
 }
 
+/*
 void AUR_PlayerController::OnMoveTriggered(const FInputActionInstance& InputActionInstance)
 {
     const FVector2D Move = InputActionInstance.GetValue().Get<FVector2D>();
@@ -331,6 +296,7 @@ void AUR_PlayerController::OnMoveTriggered(const FInputActionInstance& InputActi
         Spectator->MoveRight(Move.Y);
     }
 }
+*/
 
 void AUR_PlayerController::OnLookTriggered(const FInputActionInstance& InputActionInstance)
 {

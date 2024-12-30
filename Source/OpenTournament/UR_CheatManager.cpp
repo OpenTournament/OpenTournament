@@ -15,10 +15,13 @@
 #include "UR_GameMode.h"
 #include "UR_GameplayTags.h"
 #include "UR_HealthComponent.h"
+#include "UR_HeroComponent.h"
 #include "UR_InventoryComponent.h"
+#include "UR_LogChannels.h"
 #include "UR_PawnData.h"
 #include "UR_PawnExtensionComponent.h"
 #include "UR_PlayerController.h"
+#include "UR_PlayerInput.h"
 #include "UR_PlayerState.h"
 #include "UR_Weapon.h"
 #include "Development/UR_DeveloperSettings.h"
@@ -253,6 +256,41 @@ void UUR_CheatManager::Cheat_AddScore(int32 InValue)
         {
             PS->SetScore(PS->GetScore() + InValue);
         }
+    }
+}
+
+void UUR_CheatManager::Cheat_GetInitState()
+{
+    const FString CheatString = FString::Printf(TEXT("GetInitState"));
+
+    if (AUR_PlayerController* GamePC = Cast<AUR_PlayerController>(GetOuterAPlayerController()))
+    {
+        if (GamePC->GetNetMode() == NM_Client)
+        {
+            // Automatically send cheat to server for convenience.
+            GamePC->ServerCheat(CheatString);
+            //return;
+        }
+
+        if (auto Character = GamePC->GetPawn())
+        {
+            if (auto HeroComponent = Character->FindComponentByClass<UUR_HeroComponent>())
+            {
+                auto InitState = HeroComponent->GetInitState();
+                UE_LOG(LogGame, Warning, TEXT("HeroComponent InitState: %s"), *InitState.ToString());
+            }
+            if (auto PEC = Character->FindComponentByClass<UUR_PawnExtensionComponent>())
+            {
+                auto InitState = PEC->GetInitState();
+                UE_LOG(LogGame, Warning, TEXT("PawnExtensionComponent InitState: %s"), *InitState.ToString());
+            }
+            if (auto InputComponent = GamePC->GetPlayerInput())
+            {
+                auto AxisMappings = InputComponent->AxisMappings;
+                UE_LOG(LogGame, Warning, TEXT("PlayerInputComponent InitState: %d"), AxisMappings.Num());
+            }
+        }
+
     }
 }
 

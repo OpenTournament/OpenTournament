@@ -73,6 +73,9 @@ class OPENTOURNAMENT_API UUR_CheatManager : public UCheatManager
     UFUNCTION(exec, Category = "Cheat")
     void Cheat_AddScore(int32 InValue = 1);
 
+    UFUNCTION(Exec, Category = "Cheat")
+    void Cheat_GetInitState();
+
     // Applies the specified damage amount to the owning player.
     UFUNCTION(Exec, BlueprintAuthorityOnly)
     virtual void DamageSelf(float DamageAmount);

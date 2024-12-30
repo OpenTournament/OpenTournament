@@ -157,7 +157,7 @@ public:
     /**
     * Actually try to calculate & apply our Dodge velocity. True if successful
     */
-    bool PerformDodge(FVector& DodgeDir, FVector& DodgeCross);
+    bool PerformDodge(const FVector& DodgeDir, const FVector& DodgeCross);
 
     /**
      * Modify Velocity (inherited from UCharacterMovementComponent) for Dodge
@@ -167,7 +167,7 @@ public:
     /**
      * Modify Velocity (inherited from UCharacterMovementComponent) for WallDodge
      */
-    void PerformWallDodgeImpulse(FVector& DodgeDir, FVector& DodgeCross);
+    void PerformWallDodgeImpulse(const FVector& DodgeDir, const FVector& DodgeCross);
 
     /**
      * Find VelocityZ based on Configurable Movement Parameters.

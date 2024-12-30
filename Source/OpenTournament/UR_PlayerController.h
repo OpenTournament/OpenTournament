@@ -62,9 +62,7 @@ public:
 
     virtual void SetPlayer(UPlayer* InPlayer) override;
 
-    virtual void InitInputSystem() override;
-
-    virtual void SetupInputComponent() override;
+    //virtual void SetupInputComponent() override;
 
     virtual void ProcessPlayerInput(const float DeltaTime, const bool bGamePaused) override;
     virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
@@ -110,6 +108,7 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /*
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
     TObjectPtr<UInputMappingContext> DefaultInputMapping;
 
@@ -153,20 +152,7 @@ public:
 
     UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UInputAction> InputActionHoldScoreboard;
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-    * Base turn rate, in deg/sec. Other scaling may affect final turn rate.
     */
-    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Camera")
-    float BaseTurnRate;
-
-    /**
-    * Base look up/down rate, in deg/sec. Other scaling may affect final rate.
-    */
-    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Camera")
-    float BaseLookUpRate;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -278,7 +264,7 @@ public:
 
 private:
 
-    void OnMoveTriggered(const FInputActionInstance& InputActionInstance);
+    //void OnMoveTriggered(const FInputActionInstance& InputActionInstance);
     void OnLookTriggered(const FInputActionInstance& InputActionInstance);
     void OnJumpTriggered(const FInputActionInstance& InputActionInstance);
     void OnCrouchTriggered(const FInputActionInstance& InputActionInstance);

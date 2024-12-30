@@ -15,10 +15,11 @@
 //class UUR_InputConfig;
 
 UUR_InputComponent::UUR_InputComponent(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
 {
 }
 
-void UUR_InputComponent::AddInputMappings(const UUR_InputConfig* InputConfig, UEnhancedInputLocalPlayerSubsystem* InputSubsystem) const
+void UUR_InputComponent::AddInputMappings(const UUR_InputConfig* InputConfig, const UEnhancedInputLocalPlayerSubsystem* InputSubsystem) const
 {
     check(InputConfig);
     check(InputSubsystem);
@@ -26,7 +27,7 @@ void UUR_InputComponent::AddInputMappings(const UUR_InputConfig* InputConfig, UE
     // Here you can handle any custom logic to add something from your input config if required
 }
 
-void UUR_InputComponent::RemoveInputMappings(const UUR_InputConfig* InputConfig, UEnhancedInputLocalPlayerSubsystem* InputSubsystem) const
+void UUR_InputComponent::RemoveInputMappings(const UUR_InputConfig* InputConfig, const UEnhancedInputLocalPlayerSubsystem* InputSubsystem) const
 {
     check(InputConfig);
     check(InputSubsystem);
@@ -36,7 +37,7 @@ void UUR_InputComponent::RemoveInputMappings(const UUR_InputConfig* InputConfig,
 
 void UUR_InputComponent::RemoveBinds(TArray<uint32>& BindHandles)
 {
-    for (uint32 Handle : BindHandles)
+    for (const auto& Handle : BindHandles)
     {
         RemoveBindingByHandle(Handle);
     }

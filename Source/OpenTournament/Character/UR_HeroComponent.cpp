@@ -235,7 +235,6 @@ void UUR_HeroComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
     Super::EndPlay(EndPlayReason);
 }
 
-#pragma optimize("", off)
 void UUR_HeroComponent::InitializePlayerInput(UInputComponent* PlayerInputComponent)
 {
     check(PlayerInputComponent);
@@ -314,8 +313,6 @@ void UUR_HeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompon
     UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(const_cast<APlayerController*>(PC), NAME_BindInputsNow);
     UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(const_cast<APawn*>(Pawn), NAME_BindInputsNow);
 }
-#pragma optimize("", on)
-
 
 void UUR_HeroComponent::AddAdditionalInputConfig(const UUR_InputConfig* InputConfig)
 {

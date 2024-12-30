@@ -7,6 +7,7 @@
 #include <ModularCharacter.h>
 
 #include "AbilitySystemInterface.h"
+#include "GameplayCueInterface.h"
 #include "GameplayTagAssetInterface.h"
 
 #include "UR_TeamAgentInterface.h"
@@ -38,6 +39,63 @@ class UUR_DamageType;
 class UAIPerceptionSourceNativeComp;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * FGameReplicatedAcceleration: Compressed representation of acceleration
+ */
+USTRUCT()
+struct FGameReplicatedAcceleration
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    uint8 AccelXYRadians = 0;	// Direction of XY accel component, quantized to represent [0, 2*pi]
+
+    UPROPERTY()
+    uint8 AccelXYMagnitude = 0;	//Accel rate of XY component, quantized to represent [0, MaxAcceleration]
+
+    UPROPERTY()
+    int8 AccelZ = 0;	// Raw Z accel rate component, quantized to represent [-MaxAcceleration, MaxAcceleration]
+};
+
+/** The type we use to send FastShared movement updates. */
+USTRUCT()
+struct FSharedRepMovement
+{
+    GENERATED_BODY()
+
+    FSharedRepMovement();
+
+    bool FillForCharacter(ACharacter* Character);
+    bool Equals(const FSharedRepMovement& Other, ACharacter* Character) const;
+
+    bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess);
+
+    UPROPERTY(Transient)
+    FRepMovement RepMovement;
+
+    UPROPERTY(Transient)
+    float RepTimeStamp = 0.0f;
+
+    UPROPERTY(Transient)
+    uint8 RepMovementMode = 0;
+
+    UPROPERTY(Transient)
+    bool bProxyIsJumpForceApplied = false;
+
+    UPROPERTY(Transient)
+    bool bIsCrouched = false;
+};
+
+template<>
+struct TStructOpsTypeTraits<FSharedRepMovement> : public TStructOpsTypeTraitsBase2<FSharedRepMovement>
+{
+    enum
+    {
+        WithNetSerializer = true,
+        WithNetSharedSerialization = true,
+    };
+};
 
 USTRUCT(BlueprintType)
 struct FCharacterVoice
@@ -183,10 +241,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPickupEventSignature, AUR_Pickup*, 
 /**
  *
  */
-UCLASS()
+UCLASS(Config = Game, Meta = (ShortTooltip = "The base character pawn class used by this project."))
 class OPENTOURNAMENT_API AUR_Character
     : public AModularCharacter
     , public IAbilitySystemInterface
+    , public IGameplayCueInterface
     , public IGameplayTagAssetInterface
     , public IUR_TeamInterface
     , public IUR_TeamAgentInterface
@@ -196,7 +255,7 @@ class OPENTOURNAMENT_API AUR_Character
 public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    AUR_Character(const FObjectInitializer& ObjectInitializer);
+    AUR_Character(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -321,8 +380,6 @@ public:
 
     virtual void Tick(float DeltaTime) override;
 
-    virtual UInputComponent* CreatePlayerInputComponent() override;
-
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
     virtual void CalcCamera(float DeltaTime, struct FMinimalViewInfo& OutResult) override;
@@ -335,6 +392,8 @@ public:
 
     // Override to update Physics Movement GameplayTags
     virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
+
+    void SetMovementModeTag(EMovementMode MovementMode, uint8 CustomMovementMode, bool bTagEnabled);
 
     virtual void PossessedBy(AController* NewController) override;
     virtual void UnPossessed() override;
@@ -397,18 +456,6 @@ public:
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Axis movement
-
-    /**
-    * Handles Input in Forward vector (Forward/Backward)
-    * @param InValue normalized scalar of MovementInput to pass as InputVector to MovementComponent
-    */
-    virtual void MoveForward(const float InValue);
-
-    /**
-    * Handles Input in CrossOfForward horizontal vector (Right/Left)
-    * @param InValue normalized scalar of MovementInput to pass as InputVector to MovementComponent
-    */
-    virtual void MoveRight(const float InValue);
 
     /**
     * Handles Input in CrossOfForward vertical vector (Up/Down)
@@ -549,14 +596,13 @@ public:
     // Crouch
 
     virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+    virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
 
     /**
     * Effects on Starting a Crouch
     */
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Character|Crouch")
     virtual void OnStartCrouchEffects();
-
-    virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
 
     /**
     * Effects on Ending a Crouch
@@ -607,13 +653,7 @@ public:
     * Also requested by AI code.
     */
     UFUNCTION(BlueprintCallable, Category = "Character|Dodge")
-    virtual void Dodge(FVector DodgeDir, FVector DodgeCross);
-
-    /**
-    * Perform a Dodge. Testing purposes only.
-    */
-    UFUNCTION(BlueprintCallable, Category = "Character|Dodge")
-    void DodgeTest(const EDodgeDirection InDodgeDirection);
+    virtual void Dodge(const FVector& DodgeDir, const FVector& DodgeCross);
 
     /**
     * Hook for sounds / effects OnDodge
@@ -677,13 +717,16 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
     FGameplayTagContainer GameplayTags;
 
+#pragma region IGameplayTagAssetInterface
     /**
     * Get Character's GameplayTags
     */
-    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override
-    {
-        TagContainer = GameplayTags;
-    }
+    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override;
+    virtual bool HasMatchingGameplayTag(FGameplayTag TagToCheck) const override;
+    virtual bool HasAllMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
+    virtual bool HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
+
+#pragma endregion // IGameplayTagAssetInterface
 
     /**
     * Update Movement GameplayTags pertaining to Physics
@@ -693,7 +736,7 @@ public:
     /**
     * Update Character GameplayTags
     */
-    UFUNCTION(BlueprintCallable, Category = "GameplayTags")
+    UFUNCTION(BlueprintCallable, Category = "GameplayTags", meta = (DeprecatedFunction))
     void UpdateGameplayTags(const FGameplayTagContainer& TagsToRemove, const FGameplayTagContainer& TagsToAdd);
 
     /**
@@ -737,7 +780,7 @@ public:
     // GAS
 
     // Implement IAbilitySystemInterface
-    UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+    virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
     virtual UUR_AbilitySystemComponent* GetGameAbilitySystemComponent() const;
 
@@ -760,10 +803,11 @@ public:
     UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Character")
     void Server_SetAbilityLevel(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel = 1);
 
+    // @! TODO Deprecate - Use GetAbilitySystemComponent
     /*
     * Ability System Component
     */
-    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Abilities")
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, Category = "Character|Abilities", meta = (DeprecatedProperty))
     UUR_AbilitySystemComponent* AbilitySystemComponent;
 
     /**
@@ -799,6 +843,8 @@ public:
     * Take Damage override.
     */
     virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+    virtual void FellOutOfWorld(const class UDamageType& DamageType) override;
 
     UFUNCTION(NetMulticast, Unreliable)
     void MulticastDamageEvent(const FReplicatedDamageEvent RepDamageEvent);

@@ -33,8 +33,8 @@ public:
 
     UUR_InputComponent(const FObjectInitializer& ObjectInitializer);
 
-    void AddInputMappings(const UUR_InputConfig* InputConfig, UEnhancedInputLocalPlayerSubsystem* InputSubsystem) const;
-    void RemoveInputMappings(const UUR_InputConfig* InputConfig, UEnhancedInputLocalPlayerSubsystem* InputSubsystem) const;
+    void AddInputMappings(const UUR_InputConfig* InputConfig, const UEnhancedInputLocalPlayerSubsystem* InputSubsystem) const;
+    void RemoveInputMappings(const UUR_InputConfig* InputConfig, const UEnhancedInputLocalPlayerSubsystem* InputSubsystem) const;
 
     template<class UserClass, typename FuncType>
     void BindNativeAction(const UUR_InputConfig* InputConfig, const FGameplayTag& InputTag, ETriggerEvent TriggerEvent, UserClass* Object, FuncType Func, bool bLogIfNotFound);
