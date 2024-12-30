@@ -219,6 +219,12 @@ void UUR_PawnExtensionComponent::SetupPlayerInputComponent()
 
 void UUR_PawnExtensionComponent::CheckDefaultInitialization()
 {
+    const APawn* Pawn = GetPawn<APawn>();
+    if (!IsValid(Pawn))
+    {
+        return;
+    }
+
     // Before checking our progress, try progressing any other features we might depend on
     CheckDefaultInitializationForImplementers();
 

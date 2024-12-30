@@ -6,7 +6,6 @@
 
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
-#include "PlayerMappableInputConfig.h"
 #include "Components/GameFrameworkComponentDelegates.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Logging/MessageLog.h"
@@ -26,24 +25,24 @@
 #include "GAS/UR_AbilitySystemComponent.h"
 #include "Input/UR_InputConfig.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_HeroComponent)
 
 #if WITH_EDITOR
 #include "Misc/UObjectToken.h"
 #endif	// WITH_EDITOR
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_HeroComponent)
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 namespace GameHero
 {
-    static const float LookYawRate = 300.0f;
-    static const float LookPitchRate = 165.0f;
+    static constexpr float LookYawRate = 300.0f;
+    static constexpr float LookPitchRate = 165.0f;
 };
 
 const FName UUR_HeroComponent::NAME_BindInputsNow("BindInputsNow");
 const FName UUR_HeroComponent::NAME_ActorFeatureName("Hero");
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_HeroComponent::UUR_HeroComponent(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -82,7 +81,6 @@ void UUR_HeroComponent::OnRegister()
     }
 }
 
-#pragma optimize("", off)
 bool UUR_HeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState, FGameplayTag DesiredState) const
 {
     check(Manager);
@@ -194,7 +192,6 @@ void UUR_HeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Ma
         }
     }
 }
-#pragma optimize("", on)
 
 void UUR_HeroComponent::OnActorInitStateChanged(const FActorInitStateChangedParams& Params)
 {
@@ -353,7 +350,7 @@ bool UUR_HeroComponent::IsReadyToBindInputs() const
     return bReadyToBindInputs;
 }
 
-void UUR_HeroComponent::Input_AbilityInputTagPressed(FGameplayTag InputTag)
+void UUR_HeroComponent::Input_AbilityInputTagPressed(const FGameplayTag InputTag)
 {
     if (const APawn* Pawn = GetPawn<APawn>())
     {
@@ -367,7 +364,7 @@ void UUR_HeroComponent::Input_AbilityInputTagPressed(FGameplayTag InputTag)
     }
 }
 
-void UUR_HeroComponent::Input_AbilityInputTagReleased(FGameplayTag InputTag)
+void UUR_HeroComponent::Input_AbilityInputTagReleased(const FGameplayTag InputTag)
 {
     const APawn* Pawn = GetPawn<APawn>();
     if (!Pawn)
@@ -402,13 +399,13 @@ void UUR_HeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 
         if (Value.X != 0.0f)
         {
-            const FVector MovementDirection = MovementRotation.RotateVector(FVector::ForwardVector);
+            const FVector MovementDirection = MovementRotation.RotateVector(FVector::RightVector);
             Pawn->AddMovementInput(MovementDirection, Value.X);
         }
 
         if (Value.Y != 0.0f)
         {
-            const FVector MovementDirection = MovementRotation.RotateVector(FVector::RightVector);
+            const FVector MovementDirection = MovementRotation.RotateVector(FVector::ForwardVector);
             Pawn->AddMovementInput(MovementDirection, Value.Y);
         }
     }
@@ -469,6 +466,30 @@ void UUR_HeroComponent::Input_Crouch(const FInputActionValue& InputActionValue)
     }
 }
 
+void UUR_HeroComponent::Input_Dash(const FInputActionValue& InputActionValue)
+{
+    APawn* Pawn = GetPawn<APawn>();
+    AController* Controller = Pawn ? Pawn->GetController() : nullptr;
+
+    if (Controller)
+    {
+        const FVector2D Value = InputActionValue.Get<FVector2D>();
+        const FRotator MovementRotation(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
+
+        if (Value.X != 0.0f)
+        {
+            const FVector MovementDirection = MovementRotation.RotateVector(FVector::RightVector);
+            Pawn->AddMovementInput(MovementDirection, Value.X);
+        }
+
+        if (Value.Y != 0.0f)
+        {
+            const FVector MovementDirection = MovementRotation.RotateVector(FVector::ForwardVector);
+            Pawn->AddMovementInput(MovementDirection, Value.Y);
+        }
+    }
+}
+
 void UUR_HeroComponent::Input_AutoRun(const FInputActionValue& InputActionValue)
 {
     if (APawn* Pawn = GetPawn<APawn>())
@@ -505,7 +526,7 @@ TSubclassOf<UUR_CameraMode> UUR_HeroComponent::DetermineCameraMode() const
     return nullptr;
 }
 
-void UUR_HeroComponent::SetAbilityCameraMode(TSubclassOf<UUR_CameraMode> CameraMode, const FGameplayAbilitySpecHandle& OwningSpecHandle)
+void UUR_HeroComponent::SetAbilityCameraMode(const TSubclassOf<UUR_CameraMode>& CameraMode, const FGameplayAbilitySpecHandle& OwningSpecHandle)
 {
     if (CameraMode)
     {

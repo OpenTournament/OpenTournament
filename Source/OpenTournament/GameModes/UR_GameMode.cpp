@@ -58,7 +58,7 @@ AUR_GameMode::AUR_GameMode()
     BotControllerClass = AUR_BotController::StaticClass();
 
     GoalScore = 10;
-    TimeLimit = 300;
+    TimeLimit = -1;
     OvertimeExtraTime = 120;
 
     MaxPlayers = 10;
@@ -91,11 +91,14 @@ void AUR_GameMode::InitGame(const FString& MapName, const FString& OptionsMeh, F
     Super::InitGame(MapName, Options, ErrorMessage);
 
     GoalScore = UGameplayStatics::GetIntOption(Options, TEXT("GoalScore"), GoalScore);
-    TimeLimit = UGameplayStatics::GetIntOption(Options, TEXT("TimeLimit"), TimeLimit);
+
+    TimeLimit = UGameplayStatics::GetIntOption(Options, TEXT("TimeLimit"), TimeLimit); // @! TODO TimedGameStateComponent
     OvertimeExtraTime = UGameplayStatics::GetIntOption(Options, TEXT("OvertimeExtraTime"), OvertimeExtraTime);
+
     MaxPlayers = UGameplayStatics::GetIntOption(Options, TEXT("MaxPlayers"), MaxPlayers);
     BotFill = UGameplayStatics::GetIntOption(Options, TEXT("BotFill"), BotFill);
-    NumTeams = UGameplayStatics::GetIntOption(Options, TEXT("NumTeams"), NumTeams);
+    NumTeams = UGameplayStatics::GetIntOption(Options, TEXT("NumTeams"), NumTeams); // @! TODO TeamGameComponent
+
     TeamsFillMode = UGameplayStatics::ParseOption(Options, TEXT("TeamsFillMode"));
     SelfDamage = UUR_FunctionLibrary::GetFloatOption(Options, TEXT("SelfDamage"), SelfDamage);
     TeamDamageDirect = UUR_FunctionLibrary::GetFloatOption(Options, TEXT("TeamDamageDirect"), TeamDamageDirect);
@@ -103,7 +106,7 @@ void AUR_GameMode::InitGame(const FString& MapName, const FString& OptionsMeh, F
 
     if (NumTeams > 0)
     {
-        DesiredTeamSize = FMath::CeilToInt((float)MaxPlayers / (float)NumTeams);
+        DesiredTeamSize = FMath::CeilToInt(static_cast<float>(MaxPlayers) / static_cast<float>(NumTeams));
     }
     else
     {
