@@ -1,5 +1,7 @@
 // Copyright (c) Open Tournament Project, All Rights Reserved.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 using UnrealBuildTool;
 
 public class OpenTournament : ModuleRules
@@ -20,6 +22,7 @@ public class OpenTournament : ModuleRules
                 "OpenTournament/AI",
                 "OpenTournament/AbilitySystem",
                 "OpenTournament/AnnouncementSystem",
+                "OpenTournament/AI",
                 "OpenTournament/Camera",
                 "OpenTournament/Character",
                 "OpenTournament/Data",
@@ -27,6 +30,7 @@ public class OpenTournament : ModuleRules
                 "OpenTournament/GAS",
                 "OpenTournament/GameFeatures",
                 "OpenTournament/GameModes",
+                "OpenTournament/GAS",
                 "OpenTournament/Input",
                 "OpenTournament/Interfaces",
                 "OpenTournament/Messages",
@@ -54,11 +58,14 @@ public class OpenTournament : ModuleRules
             {
                 "AIModule",
                 "ApplicationCore",
-                "CinematicCamera",
+                "AsyncMixin",
+				"CommonLoadingScreen",
                 "ControlFlows",
                 "Core",
                 "CoreOnline",
                 "CoreUObject",
+                "CinematicCamera",
+				"DataRegistry",
                 "DeveloperSettings",
                 "Engine",
                 "EngineSettings",
@@ -81,7 +88,8 @@ public class OpenTournament : ModuleRules
                 "SignificanceManager",
                 "Slate",
                 "SlateCore",
-                "SoundFieldRendering",
+                "SignificanceManager",
+                "SoundFieldRendering", // Linux needs a symbol that it cannot find so we try to link this library by force.
                 "UIExtension",
                 "UMG"
             }
@@ -91,9 +99,50 @@ public class OpenTournament : ModuleRules
         (
             new []
             {
-                "AudioMixer",
-                "AudioModulation",
+                "InputCore",
+                "Slate",
+                "SlateCore",
+                "RenderCore",
+                "DeveloperSettings",
+                "EnhancedInput",
+                "RHI",
+                "Projects",
+                "Gauntlet",
+                "UMG",
+				"AudioMixer",
+                "CommonUI",
+                "CommonInput",
+                "CommonGame",
+                "CommonUser",
+                "GameSettings",
+                "GameSubtitles",
+                "GameplayMessageRuntime",
+				"Json",
+				"NetCore",
+                "NetworkReplayStreaming",
+                "UIExtension",
                 "ClientPilot",
+                "AudioModulation",
+                "EngineSettings",
+                "DTLSHandlerComponent",
+            }
+        );
+
+		if (Target.bBuildEditor)
+		{
+            PublicDependencyModuleNames.AddRange(
+				new []
+				{
+					"UnrealEd",
+					"DataValidation"
+				}
+			);
+		}
+
+        PrivateDependencyModuleNames.AddRange(
+            new []
+            {
+                //"AudioModulation",
                 "CommonGame",
                 "CommonInput",
                 "CommonLoadingScreen",
@@ -115,17 +164,6 @@ public class OpenTournament : ModuleRules
             }
         );
 
-		    if (Target.bBuildEditor)
-		    {
-            PublicDependencyModuleNames.AddRange(
-				        new []
-				        {
-					          "UnrealEd",
-					          "DataValidation"
-				        }
-			      );
-		    }
-    
         SetupGameplayDebuggerSupport(Target);
         SetupIrisSupport(Target);
 

@@ -51,6 +51,12 @@ class OPENTOURNAMENT_API UUR_CheatManager : public UCheatManager
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
+    UFUNCTION(Exec)
+    void GetGameExperience();
+
+    UFUNCTION(Exec)
+    void GetPawnData();
+
     // Prevents the owning player from dropping below 1 health.
     UFUNCTION(Exec, BlueprintAuthorityOnly)
     virtual void UnlimitedHealth(int32 Enabled = -1);
@@ -66,6 +72,9 @@ class OPENTOURNAMENT_API UUR_CheatManager : public UCheatManager
 
     UFUNCTION(exec, Category = "Cheat")
     void Cheat_AddScore(int32 InValue = 1);
+
+    UFUNCTION(Exec, Category = "Cheat")
+    void Cheat_GetInitState();
 
     // Applies the specified damage amount to the owning player.
     UFUNCTION(Exec, BlueprintAuthorityOnly)

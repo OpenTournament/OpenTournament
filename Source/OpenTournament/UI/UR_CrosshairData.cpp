@@ -44,6 +44,6 @@ EDataValidationResult UUR_CrosshairData::IsDataValid(FDataValidationContext& Con
 
     return Super::IsDataValid(Context);
 }
-#endif //WITH_EDITOR
+#endif // WITH_EDITOR
 
 #undef LOCTEXT_NAMESPACE

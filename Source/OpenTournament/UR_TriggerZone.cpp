@@ -16,7 +16,7 @@
 
 #if WITH_EDITOR
 #include "Misc/MapErrors.h"
-#endif //WITH_EDITOR
+#endif // WITH_EDITOR
 
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
@@ -80,7 +80,7 @@ void AUR_TriggerZone::CheckForErrors()
     }
 }
 
-#endif //WITH_EDITOR
+#endif // WITH_EDITOR
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -186,3 +186,5 @@ bool AUR_TriggerZone::CanEditChange(const FProperty* InProperty) const
     return ParentVal;
 }
 #endif
+
+#undef LOCTEXT_NAMESPACE

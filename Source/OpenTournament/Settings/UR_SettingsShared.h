@@ -466,7 +466,7 @@ private:
 
     /** If true then the vertical look axis should be inverted */
     UPROPERTY()
-    bool bInvertVerticalAxis = false;
+    bool bInvertVerticalAxis = true;
 
     /** If true then the horizontal look axis should be inverted */
     UPROPERTY()

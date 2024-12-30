@@ -16,7 +16,7 @@ EDataValidationResult UUR_AnnouncementVoice::IsDataValid(FDataValidationContext&
 {
     return Super::IsDataValid(Context);
 }
-#endif //WITH_EDITOR
+#endif // WITH_EDITOR
 
 USoundBase* UUR_AnnouncementVoice::GetAnnouncementSound(const FGameplayTag& GameplayTag)
 {

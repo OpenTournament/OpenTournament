@@ -4,11 +4,13 @@
 
 #pragma once
 
-#include <GameplayAbilitySpecHandle.h>
-#include <Components/GameFrameworkInitStateInterface.h>
 #include <Components/PawnComponent.h>
+#include <Components/GameFrameworkInitStateInterface.h>
+
+#include <GameplayAbilitySpecHandle.h>
 #include <GameFeatures/GameFeatureAction_AddInputContextMapping.h>
 
+#include "InputActionValue.h"
 #include "UR_HeroComponent.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +55,7 @@ public:
     }
 
     /** Overrides the camera from an active gameplay ability */
-    void SetAbilityCameraMode(TSubclassOf<UUR_CameraMode> CameraMode, const FGameplayAbilitySpecHandle& OwningSpecHandle);
+    void SetAbilityCameraMode(const TSubclassOf<UUR_CameraMode>& CameraMode, const FGameplayAbilitySpecHandle& OwningSpecHandle);
 
     /** Clears the camera override if it is set */
     void ClearAbilityCameraMode(const FGameplayAbilitySpecHandle& OwningSpecHandle);
@@ -89,27 +91,22 @@ public:
 
     //~ End IGameFrameworkInitStateInterface interface
 
-protected:
+//was protected:
+public:
     virtual void OnRegister() override;
-
     virtual void BeginPlay() override;
-
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
     virtual void InitializePlayerInput(UInputComponent* PlayerInputComponent);
 
-    void Input_AbilityInputTagPressed(FGameplayTag InputTag);
-
-    void Input_AbilityInputTagReleased(FGameplayTag InputTag);
+    void Input_AbilityInputTagPressed(const FGameplayTag InputTag);
+    void Input_AbilityInputTagReleased(const FGameplayTag InputTag);
 
     void Input_Move(const FInputActionValue& InputActionValue);
-
     void Input_LookMouse(const FInputActionValue& InputActionValue);
-
     void Input_LookStick(const FInputActionValue& InputActionValue);
-
     void Input_Crouch(const FInputActionValue& InputActionValue);
-
+    void Input_Dash(const FInputActionValue& InputActionValue);
     void Input_AutoRun(const FInputActionValue& InputActionValue);
 
     TSubclassOf<UUR_CameraMode> DetermineCameraMode() const;

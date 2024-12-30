@@ -6,14 +6,12 @@
 
 #include <EngineUtils.h>
 #include <AssetRegistry/IAssetRegistry.h>
-#include <Components/AudioComponent.h>
 #include <Engine/AssetManager.h>
 #include <Engine/StreamableManager.h>
 #include <GameFramework/PlayerStart.h>
 #include <Logging/MessageLog.h>
 #include <Misc/Paths.h>
 #include <Misc/UObjectToken.h>
-#include <Sound/SoundBase.h>
 
 #include "UR_LogChannels.h"
 

@@ -176,10 +176,16 @@ void UUR_HealthComponent::HandleOutOfHealth(AActor* DamageInstigator, AActor* Da
             Payload.InstigatorTags = *DamageEffectSpec->CapturedSourceTags.GetAggregatedTags();
             Payload.TargetTags = *DamageEffectSpec->CapturedTargetTags.GetAggregatedTags();
             Payload.EventMagnitude = DamageMagnitude;
+    if (AbilitySystemComponent && DamageEffectSpec)
+    {
+        GameplayEventOutOfHealth(DamageMagnitude, DamageInstigator, DamageEffectSpec);
+        BroadcastOutOfHealth(DamageInstigator, DamageEffectSpec);
 
             FScopedPredictionWindow NewScopedWindow(AbilitySystemComponent, true);
             AbilitySystemComponent->HandleGameplayEvent(Payload.EventTag, &Payload);
         }
+        //@TODO: assist messages (could compute from damage dealt elsewhere)?
+    }
 
         // Send a standardized verb message that other systems can observe
         {
@@ -318,12 +324,7 @@ void UUR_HealthComponent::DamageSelfDestruct(bool bFellOutOfWorld)
         const TSubclassOf<UGameplayEffect> DamageGE = UUR_AssetManager::GetSubclass(UUR_GameData::Get().DamageGameplayEffect_SetByCaller);
         if (!DamageGE)
         {
-            UE_LOG
-            (LogGame,
-                Error,
-                TEXT("UR_HealthComponent: DamageSelfDestruct failed for owner [%s]. Unable to find gameplay effect [%s]."),
-                *GetNameSafe(GetOwner()),
-                *UUR_GameData::Get().DamageGameplayEffect_SetByCaller.GetAssetName());
+            UE_LOG(LogGame, Error, TEXT("UR_HealthComponent: DamageSelfDestruct failed for owner [%s]. Unable to find gameplay effect [%s]."), *GetNameSafe(GetOwner()), *UUR_GameData::Get().DamageGameplayEffect_SetByCaller.GetAssetName());
             return;
         }
 
@@ -348,4 +349,35 @@ void UUR_HealthComponent::DamageSelfDestruct(bool bFellOutOfWorld)
         Spec->SetSetByCallerMagnitude(URGameplayTags::SetByCaller_Damage, DamageAmount);
         AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*Spec);
     }
+}
+
+void UUR_HealthComponent::GameplayEventOutOfHealth(float DamageMagnitude, AActor* DamageInstigator, const FGameplayEffectSpec* DamageEffectSpec) const
+{
+    FGameplayEventData Payload;
+    Payload.EventTag = URGameplayTags::GameplayEvent_Death;
+    Payload.Instigator = DamageInstigator;
+    Payload.Target = AbilitySystemComponent->GetAvatarActor();
+    Payload.OptionalObject = DamageEffectSpec->Def;
+    Payload.ContextHandle = DamageEffectSpec->GetEffectContext();
+    Payload.InstigatorTags = *DamageEffectSpec->CapturedSourceTags.GetAggregatedTags();
+    Payload.TargetTags = *DamageEffectSpec->CapturedTargetTags.GetAggregatedTags();
+    Payload.EventMagnitude = DamageMagnitude;
+
+    FScopedPredictionWindow NewScopedWindow(AbilitySystemComponent, true);
+    AbilitySystemComponent->HandleGameplayEvent(Payload.EventTag, &Payload);
+}
+
+void UUR_HealthComponent::BroadcastOutOfHealth(AActor* DamageInstigator, const FGameplayEffectSpec* DamageEffectSpec) const
+{
+    FGameVerbMessage Message;
+    Message.Verb = TAG_Game_Elimination_Message;
+    Message.Instigator = DamageInstigator;
+    Message.InstigatorTags = *DamageEffectSpec->CapturedSourceTags.GetAggregatedTags();
+    Message.Target = UGameVerbMessageHelpers::GetPlayerStateFromObject(AbilitySystemComponent->GetAvatarActor());
+    Message.TargetTags = *DamageEffectSpec->CapturedTargetTags.GetAggregatedTags();
+    //@TODO: Fill out context tags, and any non-ability-system source/instigator tags
+    //@TODO: Determine if it's an opposing team kill, self-own, team kill, etc...
+
+    UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(GetWorld());
+    MessageSystem.BroadcastMessage(Message.Verb, Message);
 }

@@ -45,7 +45,7 @@ class OPENTOURNAMENT_API AUR_GameState
     GENERATED_BODY()
 
 protected:
-    AUR_GameState();
+    AUR_GameState(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 

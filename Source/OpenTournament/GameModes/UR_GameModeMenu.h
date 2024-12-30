@@ -11,9 +11,9 @@
 #include "UR_GameModeMenu.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// Forward declaration
+// Forward declarations
 
-class UAudioComponent;
+// TODO
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -33,10 +33,4 @@ public:
     virtual void RestartGame() override;
 
     virtual void RestartPlayer(AController* Player) override;
-
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
-    USoundBase* MenuMusic;
-
-    UPROPERTY()
-    UAudioComponent* MusicComponent;
 };

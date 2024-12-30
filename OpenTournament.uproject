@@ -443,12 +443,26 @@
 			"Enabled": true
 		},
 		{
+			"Name": "AsyncMixin",
+			"Enabled": true
+		},
+		{
 			"Name": "DataRegistry",
 			"Enabled": true
+		},
+		{
+			"Name": "Fab",
+			"Enabled": false,
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Mac",
+				"Linux"
+			]
 		}
 	],
 	"TargetPlatforms": [
 		"Win64",
-        "Linux"
+		"Linux",
+		"Windows"
 	]
 }

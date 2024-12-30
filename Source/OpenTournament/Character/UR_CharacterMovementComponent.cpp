@@ -487,7 +487,7 @@ bool UUR_CharacterMovementComponent::CanDodge() const
     return CanEverJump() && (DodgeResetTime <= 0.f);
 }
 
-bool UUR_CharacterMovementComponent::PerformDodge(FVector& DodgeDir, FVector& DodgeCross)
+bool UUR_CharacterMovementComponent::PerformDodge(const FVector& DodgeDir, const FVector& DodgeCross)
 {
     if (!HasValidData())
     {
@@ -526,7 +526,9 @@ bool UUR_CharacterMovementComponent::PerformDodge(FVector& DodgeDir, FVector& Do
             }
 
             // We found a WallDodge permitting surface, now a valid WallDodge angle?
-            SetWallDodgeDirection(DodgeDir, DodgeCross, HitResult);
+            FVector WallDodgeDirection = DodgeDir;
+            FVector WallDodgeCross = DodgeCross;
+            SetWallDodgeDirection(WallDodgeDirection, WallDodgeCross, HitResult);
 
             DodgeResetTime = GetWorld()->TimeSeconds + WallDodgeResetInterval;
             CurrentWallDodgeCount++;
@@ -534,7 +536,7 @@ bool UUR_CharacterMovementComponent::PerformDodge(FVector& DodgeDir, FVector& Do
             // Trigger Falling Damage, if any
             URCharacterOwner->Landed(HitResult);
 
-            PerformWallDodgeImpulse(DodgeDir, DodgeCross);
+            PerformWallDodgeImpulse(WallDodgeDirection, WallDodgeCross);
 
             URCharacterOwner->OnWallDodge(URCharacterOwner->GetActorLocation(), Velocity);
         }
@@ -578,7 +580,7 @@ void UUR_CharacterMovementComponent::PerformDodgeImpulse(const FVector& DodgeDir
     Velocity.Z = DodgeImpulseVertical;
 }
 
-void UUR_CharacterMovementComponent::PerformWallDodgeImpulse(FVector& DodgeDir, FVector& DodgeCross)
+void UUR_CharacterMovementComponent::PerformWallDodgeImpulse(const FVector& DodgeDir, const FVector& DodgeCross)
 {
     Velocity = WallDodgeImpulseHorizontal * DodgeDir + (Velocity | DodgeCross) * DodgeCross;
     Velocity.Z = 0.f;

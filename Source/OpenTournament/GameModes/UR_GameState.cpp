@@ -21,7 +21,8 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_GameState::AUR_GameState()
+AUR_GameState::AUR_GameState(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
 {
     PrimaryActorTick.bCanEverTick = true;
     PrimaryActorTick.bStartWithTickEnabled = true;

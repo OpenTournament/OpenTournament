@@ -99,6 +99,7 @@ void UCommonGameInstance::Init()
 	if (ensure(SessionSubsystem))
 	{
 		SessionSubsystem->OnUserRequestedSessionEvent.AddUObject(this, &UCommonGameInstance::OnUserRequestedSession);
+		SessionSubsystem->OnDestroySessionRequestedEvent.AddUObject(this, &UCommonGameInstance::OnDestroySessionRequested);
 	}
 }
 
@@ -135,6 +136,15 @@ void UCommonGameInstance::OnUserRequestedSession(const FPlatformUserId& Platform
 	{
 		HandleSystemMessage(FCommonUserTags::SystemMessage_Error, NSLOCTEXT("CommonGame", "Warning_RequestedSessionFailed", "Requested Session Failed"), RequestedSessionResult.ErrorText);
 	}
+}
+
+void UCommonGameInstance::OnDestroySessionRequested(const FPlatformUserId& PlatformUserId, const FName& SessionName)
+{
+	// When a session destroy is requested, please make sure that your project is in the right state to destroy the session and transition out of it
+
+	UE_LOG(LogCommonGame, Verbose, TEXT("[%hs] PlatformUserId:%d, SessionName: %s)"), __FUNCTION__, PlatformUserId.GetInternalId(), *SessionName.ToString());
+
+	ReturnToMainMenu();
 }
 
 void UCommonGameInstance::SetRequestedSession(UCommonSession_SearchResult* InRequestedSession)

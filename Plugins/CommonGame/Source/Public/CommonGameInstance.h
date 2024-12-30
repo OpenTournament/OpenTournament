@@ -50,6 +50,9 @@ public:
 	/** Handles user accepting a session invite from an external source (for example, a platform overlay). Intended to be overridden per game. */
 	virtual void OnUserRequestedSession(const FPlatformUserId& PlatformUserId, UCommonSession_SearchResult* InRequestedSession, const FOnlineResultInformation& RequestedSessionResult);
 
+	/** Handles OSS request that the session be destroyed */
+	virtual void OnDestroySessionRequested(const FPlatformUserId& PlatformUserId, const FName& SessionName);
+
 	/** Get the requested session */
 	UCommonSession_SearchResult* GetRequestedSession() const { return RequestedSession; }
 	/** Set (or clear) the requested session. When this is set, the requested session flow begins. */
