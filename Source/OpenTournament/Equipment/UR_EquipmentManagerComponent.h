@@ -32,8 +32,7 @@ struct FUR_AppliedEquipmentEntry : public FFastArraySerializerItem
     GENERATED_BODY()
 
     FUR_AppliedEquipmentEntry()
-    {
-    }
+    {}
 
     FString GetDebugString() const;
 
@@ -63,22 +62,17 @@ struct FUR_EquipmentList : public FFastArraySerializer
 
     FUR_EquipmentList()
         : OwnerComponent(nullptr)
-    {
-    }
+    {}
 
     FUR_EquipmentList(UActorComponent* InOwnerComponent)
         : OwnerComponent(InOwnerComponent)
-    {
-    }
+    {}
 
 public:
     //~FFastArraySerializer contract
     void PreReplicatedRemove(const TArrayView<int32> RemovedIndices, int32 FinalSize);
-
     void PostReplicatedAdd(const TArrayView<int32> AddedIndices, int32 FinalSize);
-
     void PostReplicatedChange(const TArrayView<int32> ChangedIndices, int32 FinalSize);
-
     //~End of FFastArraySerializer contract
 
     bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)

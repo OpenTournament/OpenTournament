@@ -33,7 +33,7 @@ public:
     UUR_PawnData(const FObjectInitializer& ObjectInitializer);
 
 public:
-    // Class to instantiate for this pawn (should usually derive from ALyraPawn or ALyraCharacter).
+    // Class to instantiate for this pawn (should usually derive from AUR_Pawn or AUR_Character).
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Game|Pawn")
     TSubclassOf<APawn> PawnClass;
 

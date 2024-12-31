@@ -7,9 +7,11 @@
 #include <Components/CapsuleComponent.h>
 #include <Engine/World.h>
 
+#include "AbilitySystemGlobals.h"
 #include "OpenTournament.h"
 #include "UR_Character.h"
-#include "UR_PlayerController.h"
+//#include "UR_PlayerController.h"
+#include "AbilitySystemComponent.h"
 #include "Enums/UR_MovementAction.h"
 #include "Interfaces/UR_WallDodgeSurfaceInterface.h"
 
@@ -17,31 +19,42 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-UUR_CharacterMovementComponent::UUR_CharacterMovementComponent(const class FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer),
-    bIsDodging(false),
-    DodgeResetTime(0.0f),
-    DodgeResetInterval(0.35f),
-    DodgeImpulseHorizontal(1500.f),
-    DodgeImpulseVertical(525.f),
-    DodgeLandingSpeedScale(0.1f),
-    bCanSlopeBoost(true),
-    SlopeBoostAssistVelocityZThreshold(8.f),
-    SlopeBoostScale(1.15f),
-    SlopeImpactNormalZ(0.2f),
-    SlopeSlideRadiusScale(1.0f),
-    bCanWallDodge(true),
-    WallDodgeBehavior(EWallDodgeBehavior::DisallowSurface),
-    WallDodgeTraceDistance(54.5f),
-    WallDodgeMinimumNormal(0.5f),
-    WallDodgeImpulseHorizontal(1500.f),
-    WallDodgeImpulseVertical(525.f),
-    WallDodgeResetInterval(0.2f),
-    bCanBoostDodge(false),
-    WallDodgeVelocityZPreservationThreshold(-10000.f),
-    WallDodgeFallingVelocityCancellationThreshold(0.f),
-    CurrentWallDodgeCount(0),
-    MaxWallDodges(1)
+UE_DEFINE_GAMEPLAY_TAG(TAG_Gameplay_MovementStopped, "Gameplay.MovementStopped");
+
+namespace URCharacter
+{
+    static float GroundTraceDistance = 100000.0f;
+    FAutoConsoleVariableRef CVar_GroundTraceDistance(TEXT("URCharacter.GroundTraceDistance"), GroundTraceDistance, TEXT("Distance to trace down when generating ground information."), ECVF_Cheat);
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+UUR_CharacterMovementComponent::UUR_CharacterMovementComponent(const class FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+  , bIsDodging(false)
+  , DodgeResetTime(0.0f)
+  , DodgeResetInterval(0.35f)
+  , DodgeImpulseHorizontal(1500.f)
+  , DodgeImpulseVertical(525.f)
+  , DodgeLandingSpeedScale(0.1f)
+  , bCanSlopeBoost(true)
+  , SlopeBoostAssistVelocityZThreshold(8.f)
+  , SlopeBoostScale(1.15f)
+  , SlopeImpactNormalZ(0.2f)
+  , SlopeSlideRadiusScale(1.0f)
+  , bCanWallDodge(true)
+  , WallDodgeBehavior(EWallDodgeBehavior::DisallowSurface)
+  , WallDodgeTraceDistance(54.5f)
+  , WallDodgeMinimumNormal(0.5f)
+  , WallDodgeImpulseHorizontal(1500.f)
+  , WallDodgeImpulseVertical(525.f)
+  , WallDodgeResetInterval(0.2f)
+  , bCanBoostDodge(false)
+  , WallDodgeVelocityZPreservationThreshold(-10000.f)
+  , WallDodgeFallingVelocityCancellationThreshold(0.f)
+  , CurrentWallDodgeCount(0)
+  , MaxWallDodges(1)
 {
     MaxWalkSpeed = 1000.f;
     MaxWalkSpeedCrouched = 400.f;
@@ -319,13 +332,13 @@ void UUR_CharacterMovementComponent::ProcessLanded(const FHitResult& Hit, float 
             Velocity *= DodgeLandingSpeedScale;
             DodgeResetTime = GetWorld()->TimeSeconds + DodgeResetInterval; // Get Server adjusted Time
             bIsDodging = false;
-            Owner->UpdateGameplayTags(FGameplayTagContainer{ Owner->GetMovementActionGameplayTag(EMovementAction::Dodging) }, FGameplayTagContainer{});
+            Owner->UpdateGameplayTags(FGameplayTagContainer{ Owner->GetMovementActionGameplayTag(EMovementAction::Dodging) }, FGameplayTagContainer{ });
         }
 
         if (bIsJumping)
         {
             bIsJumping = false;
-            Owner->UpdateGameplayTags(FGameplayTagContainer{ Owner->GetMovementActionGameplayTag(EMovementAction::Jumping) }, FGameplayTagContainer{});
+            Owner->UpdateGameplayTags(FGameplayTagContainer{ Owner->GetMovementActionGameplayTag(EMovementAction::Jumping) }, FGameplayTagContainer{ });
         }
     }
 
@@ -363,7 +376,7 @@ FVector UUR_CharacterMovementComponent::HandleSlopeBoosting(const FVector& Slide
         }
         else if (bCanSlopeBoost && (((CharacterOwner->GetActorLocation() - Hit.ImpactPoint).Size2D() > SlopeSlideRadiusScale * PawnRadius) || (Hit.ImpactNormal.Z > SlopeImpactNormalZ)))
         {
-            if (Result.Z > Delta.Z*Time)
+            if (Result.Z > Delta.Z * Time)
             {
                 if (Result.Z > 0.f)
                 {
@@ -373,11 +386,11 @@ FVector UUR_CharacterMovementComponent::HandleSlopeBoosting(const FVector& Slide
                     const float ClampedVelocityZ = FMath::Clamp(ScaledVelocityZ, 0.f, 1.f);
                     const float SlopeScale = FMath::Lerp(1.f, SlopeBoostScale, ClampedVelocityZ);
 
-                    Result.Z = FMath::Max(Result.Z * SlopeScale, Delta.Z*Time);
+                    Result.Z = FMath::Max(Result.Z * SlopeScale, Delta.Z * Time);
                 }
                 else
                 {
-                    Result.Z = FMath::Max(Result.Z * 1.f, Delta.Z*Time);
+                    Result.Z = FMath::Max(Result.Z * 1.f, Delta.Z * Time);
                 }
             }
         }
@@ -411,7 +424,7 @@ void UUR_CharacterMovementComponent::CheckJumpInput(float DeltaTime)
                 if (DoJump(CharacterOwner->bClientUpdating, DeltaTime))
                 {
                     bIsJumping = true;
-                    URCharacterOwner->UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ URCharacterOwner->GetMovementActionGameplayTag(EMovementAction::Jumping) });
+                    URCharacterOwner->UpdateGameplayTags(FGameplayTagContainer{ }, FGameplayTagContainer{ URCharacterOwner->GetMovementActionGameplayTag(EMovementAction::Jumping) });
                 }
 
                 // If we didn't perform a jump, reset the bPressedJump flag to prevent OnJump effects
@@ -555,7 +568,7 @@ bool UUR_CharacterMovementComponent::PerformDodge(const FVector& DodgeDir, const
 
     if (bIsDodging)
     {
-        URCharacterOwner->UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ URCharacterOwner->GetMovementActionGameplayTag(EMovementAction::Dodging) });
+        URCharacterOwner->UpdateGameplayTags(FGameplayTagContainer{ }, FGameplayTagContainer{ URCharacterOwner->GetMovementActionGameplayTag(EMovementAction::Dodging) });
     }
 
     if (!IsMovingOnGround())
@@ -674,4 +687,104 @@ void UUR_CharacterMovementComponent::ClearDodgeInput()
     {
         URCharacterOwner->DodgeDirection = EDodgeDirection::None;
     }
+}
+
+void UUR_CharacterMovementComponent::SimulateMovement(float DeltaTime)
+{
+    if (bHasReplicatedAcceleration)
+    {
+        // Preserve our replicated acceleration
+        const FVector OriginalAcceleration = Acceleration;
+        Super::SimulateMovement(DeltaTime);
+        Acceleration = OriginalAcceleration;
+    }
+    else
+    {
+        Super::SimulateMovement(DeltaTime);
+    }
+}
+
+bool UUR_CharacterMovementComponent::CanAttemptJump() const
+{
+    // Same as UCharacterMovementComponent's implementation but without the crouch check
+    return IsJumpAllowed() && (IsMovingOnGround() || IsFalling()); // Falling included for double-jump and non-zero jump hold time, but validated by character.
+}
+
+const FUR_CharacterGroundInfo& UUR_CharacterMovementComponent::GetGroundInfo()
+{
+    if (!CharacterOwner || (GFrameCounter == CachedGroundInfo.LastUpdateFrame))
+    {
+        return CachedGroundInfo;
+    }
+
+    if (MovementMode == MOVE_Walking)
+    {
+        CachedGroundInfo.GroundHitResult = CurrentFloor.HitResult;
+        CachedGroundInfo.GroundDistance = 0.0f;
+    }
+    else
+    {
+        const UCapsuleComponent* CapsuleComp = CharacterOwner->GetCapsuleComponent();
+        check(CapsuleComp);
+
+        const float CapsuleHalfHeight = CapsuleComp->GetUnscaledCapsuleHalfHeight();
+        const ECollisionChannel CollisionChannel = (UpdatedComponent ? UpdatedComponent->GetCollisionObjectType() : ECC_Pawn);
+        const FVector TraceStart(GetActorLocation());
+        const FVector TraceEnd(TraceStart.X, TraceStart.Y, (TraceStart.Z - URCharacter::GroundTraceDistance - CapsuleHalfHeight));
+
+        FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(UR_CharacterMovementComponent_GetGroundInfo), false, CharacterOwner);
+        FCollisionResponseParams ResponseParam;
+        InitCollisionParams(QueryParams, ResponseParam);
+
+        FHitResult HitResult;
+        GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, CollisionChannel, QueryParams, ResponseParam);
+
+        CachedGroundInfo.GroundHitResult = HitResult;
+        CachedGroundInfo.GroundDistance = URCharacter::GroundTraceDistance;
+
+        if (MovementMode == MOVE_NavWalking)
+        {
+            CachedGroundInfo.GroundDistance = 0.0f;
+        }
+        else if (HitResult.bBlockingHit)
+        {
+            CachedGroundInfo.GroundDistance = FMath::Max((HitResult.Distance - CapsuleHalfHeight), 0.0f);
+        }
+    }
+
+    CachedGroundInfo.LastUpdateFrame = GFrameCounter;
+
+    return CachedGroundInfo;
+}
+
+void UUR_CharacterMovementComponent::SetReplicatedAcceleration(const FVector& InAcceleration)
+{
+    bHasReplicatedAcceleration = true;
+    Acceleration = InAcceleration;
+}
+
+FRotator UUR_CharacterMovementComponent::GetDeltaRotation(float DeltaTime) const
+{
+    if (UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(GetOwner()))
+    {
+        if (ASC->HasMatchingGameplayTag(TAG_Gameplay_MovementStopped))
+        {
+            return FRotator(0, 0, 0);
+        }
+    }
+
+    return Super::GetDeltaRotation(DeltaTime);
+}
+
+float UUR_CharacterMovementComponent::GetMaxSpeed() const
+{
+    if (UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(GetOwner()))
+    {
+        if (ASC->HasMatchingGameplayTag(TAG_Gameplay_MovementStopped))
+        {
+            return 0;
+        }
+    }
+
+    return Super::GetMaxSpeed();
 }

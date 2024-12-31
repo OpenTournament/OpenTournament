@@ -832,7 +832,7 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character|Abilities")
     TArray<TSubclassOf<UGameplayEffect>> PassiveGameplayEffects;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lyra|Character", Meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game|Character", Meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UUR_PawnExtensionComponent> PawnExtComponent;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////

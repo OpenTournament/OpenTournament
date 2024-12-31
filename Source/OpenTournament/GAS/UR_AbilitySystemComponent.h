@@ -37,21 +37,13 @@ public:
 
     UUR_AbilitySystemComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-    // @! TODO: Deprecate - Unused
-    /** Returns a list of currently active ability instances that match the tags */
-    void GetActiveAbilitiesWithTags(const FGameplayTagContainer& GameplayTagContainer, TArray<UGameplayAbility*>& ActiveAbilities) const;
+#pragma region UActorComponentInterface
 
-    /** Returns the default level used for ability activations, derived from the character */
-    int32 GetDefaultAbilityLevel() const;
-
-    /** Version of function in AbilitySystemGlobals that returns correct type */
-    static UUR_AbilitySystemComponent* GetAbilitySystemComponentFromActor(const AActor* Actor, bool LookForComponent = false);
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //~UActorComponent interface
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-    //~End of UActorComponent interface
+
+#pragma endregion // UActorComponentInterface
+
+    virtual void InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor) override;
 
     typedef TFunctionRef<bool(const UUR_GameplayAbility* InGameAbility, FGameplayAbilitySpecHandle Handle)> TShouldCancelAbilityFunc;
 
@@ -127,7 +119,4 @@ protected:
     int32 ActivationGroupCounts[static_cast<uint8>(EGameAbilityActivationGroup::MAX)];
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    UFUNCTION(BlueprintPure, meta = (DeprecatedFunction))
-    static const class UUR_AttributeSet* GetURAttributeSetFromActor(const AActor* Actor, bool LookForComponent = false);
 };

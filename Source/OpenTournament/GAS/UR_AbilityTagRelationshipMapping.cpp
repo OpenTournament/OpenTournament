@@ -2,7 +2,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "AbilitySystem/UR_AbilityTagRelationshipMapping.h"
+#include "GAS/UR_AbilityTagRelationshipMapping.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_AbilityTagRelationshipMapping)
 

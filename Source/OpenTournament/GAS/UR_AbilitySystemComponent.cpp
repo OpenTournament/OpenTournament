@@ -14,6 +14,7 @@
 #include "UR_GameplayAbility.h"
 #include "UR_GlobalAbilitySystem.h"
 #include "UR_LogChannels.h"
+#include "Animation/UR_AnimInstance.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_AbilitySystemComponent)
 
@@ -35,42 +36,6 @@ UUR_AbilitySystemComponent::UUR_AbilitySystemComponent(const FObjectInitializer&
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void UUR_AbilitySystemComponent::GetActiveAbilitiesWithTags(const FGameplayTagContainer& GameplayTagContainer, TArray<UGameplayAbility*>& ActiveAbilities) const
-{
-    TArray<FGameplayAbilitySpec*> AbilitiesToActivate;
-    GetActivatableGameplayAbilitySpecsByAllMatchingTags(GameplayTagContainer, AbilitiesToActivate, false);
-
-    // Iterate the list of all ability specs
-    for (FGameplayAbilitySpec* Spec : AbilitiesToActivate)
-    {
-        // Iterate all instances on this ability spec
-        TArray<UGameplayAbility*> AbilityInstances = Spec->GetAbilityInstances();
-
-        for (UGameplayAbility* ActiveAbility : AbilityInstances)
-        {
-            ActiveAbilities.Add(Cast<UGameplayAbility>(ActiveAbility));
-        }
-    }
-}
-
-int32 UUR_AbilitySystemComponent::GetDefaultAbilityLevel() const
-{
-    AUR_Character* OwningCharacter = Cast<AUR_Character>(GetOwnerActor());
-
-    if (OwningCharacter)
-    {
-        //return OwningCharacter->GetCharacterLevel();
-    }
-    return 1;
-}
-
-UUR_AbilitySystemComponent* UUR_AbilitySystemComponent::GetAbilitySystemComponentFromActor(const AActor* Actor, bool LookForComponent)
-{
-    return Cast<UUR_AbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Actor, LookForComponent));
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
 void UUR_AbilitySystemComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     if (UUR_GlobalAbilitySystem* GlobalAbilitySystem = UWorld::GetSubsystem<UUR_GlobalAbilitySystem>(GetWorld()))
@@ -81,6 +46,51 @@ void UUR_AbilitySystemComponent::EndPlay(const EEndPlayReason::Type EndPlayReaso
     Super::EndPlay(EndPlayReason);
 }
 
+void UUR_AbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor)
+{
+    FGameplayAbilityActorInfo* ActorInfo = AbilityActorInfo.Get();
+    check(ActorInfo);
+    check(InOwnerActor);
+
+    const bool bHasNewPawnAvatar = Cast<APawn>(InAvatarActor) && (InAvatarActor != ActorInfo->AvatarActor);
+
+    Super::InitAbilityActorInfo(InOwnerActor, InAvatarActor);
+
+    if (bHasNewPawnAvatar)
+    {
+        // Notify all abilities that a new pawn avatar has been set
+        for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
+        {
+            PRAGMA_DISABLE_DEPRECATION_WARNINGS
+                        ensureMsgf(AbilitySpec.Ability && AbilitySpec.Ability->GetInstancingPolicy() != EGameplayAbilityInstancingPolicy::NonInstanced, TEXT("InitAbilityActorInfo: All Abilities should be Instanced (NonInstanced is being deprecated due to usability issues)."));
+            PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+            TArray<UGameplayAbility*> Instances = AbilitySpec.GetAbilityInstances();
+            for (UGameplayAbility* AbilityInstance : Instances)
+            {
+                UUR_GameplayAbility* GameAbilityInstance = Cast<UUR_GameplayAbility>(AbilityInstance);
+                if (GameAbilityInstance)
+                {
+                    // Ability instances may be missing for replays
+                    GameAbilityInstance->OnPawnAvatarSet();
+                }
+            }
+        }
+
+        // Register with the global system once we actually have a pawn avatar. We wait until this time since some globally-applied effects may require an avatar.
+        if (UUR_GlobalAbilitySystem* GlobalAbilitySystem = UWorld::GetSubsystem<UUR_GlobalAbilitySystem>(GetWorld()))
+        {
+            GlobalAbilitySystem->RegisterASC(this);
+        }
+
+        if (UUR_AnimInstance* AnimInst = Cast<UUR_AnimInstance>(ActorInfo->GetAnimInstance()))
+        {
+            AnimInst->InitializeWithAbilitySystem(this);
+        }
+
+        TryActivateAbilitiesOnSpawn();
+    }
+}
 
 void UUR_AbilitySystemComponent::CancelAbilitiesByFunc(TShouldCancelAbilityFunc ShouldCancelFunc, bool bReplicateCancelAbility)
 {
@@ -95,39 +105,30 @@ void UUR_AbilitySystemComponent::CancelAbilitiesByFunc(TShouldCancelAbilityFunc 
         UUR_GameplayAbility* AbilityCDO = Cast<UUR_GameplayAbility>(AbilitySpec.Ability);
         if (!AbilityCDO)
         {
-            UE_LOG(LogGameAbilitySystem, Error, TEXT("CancelAbilitiesByFunc: Non-UR_GameplayAbility %s was Granted to ASC. Skipping."), *AbilitySpec.Ability.GetName());
+            UE_LOG(LogGameAbilitySystem, Error, TEXT("CancelAbilitiesByFunc: Non-URGameplayAbility %s was Granted to ASC. Skipping."), *AbilitySpec.Ability.GetName());
             continue;
         }
 
-        if (AbilityCDO->GetInstancingPolicy() != EGameplayAbilityInstancingPolicy::InstancedPerActor)
-        {
-            // Cancel all the spawned instances, not the CDO.
-            TArray<UGameplayAbility*> Instances = AbilitySpec.GetAbilityInstances();
-            for (UGameplayAbility* IterAbilityInstance : Instances)
-            {
-                UUR_GameplayAbility* GameAbilityInstance = CastChecked<UUR_GameplayAbility>(IterAbilityInstance);
+        PRAGMA_DISABLE_DEPRECATION_WARNINGS
+        ensureMsgf(AbilitySpec.Ability->GetInstancingPolicy() != EGameplayAbilityInstancingPolicy::NonInstanced, TEXT("CancelAbilitiesByFunc: All Abilities should be Instanced (NonInstanced is being deprecated due to usability issues)."));
+        PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
-                if (ShouldCancelFunc(GameAbilityInstance, AbilitySpec.Handle))
-                {
-                    if (GameAbilityInstance->CanBeCanceled())
-                    {
-                        GameAbilityInstance->CancelAbility(AbilitySpec.Handle, AbilityActorInfo.Get(), GameAbilityInstance->GetCurrentActivationInfo(), bReplicateCancelAbility);
-                    }
-                    else
-                    {
-                        UE_LOG(LogGameAbilitySystem, Error, TEXT("CancelAbilitiesByFunc: Can't cancel ability [%s] because CanBeCanceled is false."), *GameAbilityInstance->GetName());
-                    }
-                }
-            }
-        }
-        else
+        // Cancel all the spawned instances.
+        TArray<UGameplayAbility*> Instances = AbilitySpec.GetAbilityInstances();
+        for (UGameplayAbility* AbilityInstance : Instances)
         {
-            // Cancel the non-instanced ability CDO.
-            if (ShouldCancelFunc(AbilityCDO, AbilitySpec.Handle))
+            UUR_GameplayAbility* GameAbilityInstance = CastChecked<UUR_GameplayAbility>(AbilityInstance);
+
+            if (ShouldCancelFunc(GameAbilityInstance, AbilitySpec.Handle))
             {
-                // Non-instanced abilities can always be canceled.
-                check(AbilityCDO->CanBeCanceled());
-                AbilityCDO->CancelAbility(AbilitySpec.Handle, AbilityActorInfo.Get(), FGameplayAbilityActivationInfo(), bReplicateCancelAbility);
+                if (GameAbilityInstance->CanBeCanceled())
+                {
+                    GameAbilityInstance->CancelAbility(AbilitySpec.Handle, AbilityActorInfo.Get(), GameAbilityInstance->GetCurrentActivationInfo(), bReplicateCancelAbility);
+                }
+                else
+                {
+                    UE_LOG(LogGameAbilitySystem, Error, TEXT("CancelAbilitiesByFunc: Can't cancel ability [%s] because CanBeCanceled is false."), *GameAbilityInstance->GetName());
+                }
             }
         }
     }
@@ -310,7 +311,7 @@ void UUR_AbilitySystemComponent::AddAbilityToActivationGroup(EGameAbilityActivat
 
     ActivationGroupCounts[static_cast<uint8>(InGroup)]++;
 
-    const bool bReplicateCancelAbility = false;
+    constexpr bool bReplicateCancelAbility = false;
 
     switch (InGroup)
     {
@@ -402,8 +403,6 @@ void UUR_AbilitySystemComponent::GetAbilityTargetData(const FGameplayAbilitySpec
         OutTargetDataHandle = ReplicatedData->TargetData;
     }
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_AbilitySystemComponent::SetTagRelationshipMapping(UUR_AbilityTagRelationshipMapping* NewMapping)
 {
@@ -527,6 +526,11 @@ void UUR_AbilitySystemComponent::HandleChangeAbilityCanBeCanceled(const FGamepla
     //@TODO: Apply any special logic like blocking input or movement
 }
 
+void UUR_AbilitySystemComponent::ClientNotifyAbilityFailed_Implementation(const UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason)
+{
+    HandleAbilityFailed(Ability, FailureReason);
+}
+
 void UUR_AbilitySystemComponent::HandleAbilityFailed(const UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason)
 {
     //UE_LOG(LogGameAbilitySystem, Warning, TEXT("Ability %s failed to activate (tags: %s)"), *GetPathNameSafe(Ability), *FailureReason.ToString());
@@ -537,18 +541,4 @@ void UUR_AbilitySystemComponent::HandleAbilityFailed(const UGameplayAbility* Abi
     }
 }
 
-void UUR_AbilitySystemComponent::ClientNotifyAbilityFailed_Implementation(const UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason)
-{
-    HandleAbilityFailed(Ability, FailureReason);
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
-const UUR_AttributeSet* UUR_AbilitySystemComponent::GetURAttributeSetFromActor(const AActor* Actor, bool LookForComponent)
-{
-    if (const auto ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Actor, LookForComponent))
-    {
-        return ASC->GetSet<UUR_AttributeSet>();
-    }
-    return nullptr;
-}
