@@ -4,16 +4,16 @@
 
 #include "UR_GameplayEffectContext.h"
 
-#include "AbilitySystem/UR_AbilitySourceInterface.h"
+#include "GAS/UR_AbilitySourceInterface.h"
 #include "Engine/HitResult.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_GameplayEffectContext)
 
 #if UE_WITH_IRIS
 #include "Iris/ReplicationState/PropertyNetSerializerInfoRegistry.h"
 #include "Serialization/GameplayEffectContextNetSerializer.h"
 #endif
-
-#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_GameplayEffectContext)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

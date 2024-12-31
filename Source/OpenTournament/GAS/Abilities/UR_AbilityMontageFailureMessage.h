@@ -6,7 +6,6 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-//#include "NativeGameplayTags.h"
 
 #include "UR_AbilityMontageFailureMessage.generated.h"
 
@@ -15,10 +14,6 @@
 class AActor;
 class APlayerController;
 class UAnimMontage;
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-//UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_ABILITY_PLAY_MONTAGE_FAILURE_MESSAGE, "Ability.PlayMontageOnActivateFail.Message");
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

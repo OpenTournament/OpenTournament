@@ -6,8 +6,8 @@
 
 #include "Engine/World.h"
 
-#include "AbilitySystem/UR_AbilitySourceInterface.h"
-#include "AbilitySystem/UR_GameplayEffectContext.h"
+#include "GAS/UR_AbilitySourceInterface.h"
+#include "GAS/UR_GameplayEffectContext.h"
 #include "AbilitySystem/Attributes/UR_CombatSet.h"
 #include "AbilitySystem/Attributes/UR_HealthSet.h"
 //#include "Teams/UR_TeamSubsystem.h"
