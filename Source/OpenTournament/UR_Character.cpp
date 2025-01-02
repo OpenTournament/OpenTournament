@@ -130,9 +130,11 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer)
     ThirdPersonCamera->SetupAttachment(ThirdPersonArm);
 
     // Create the attribute set, this replicates by default
+    /* Should not be needed anymore because we get the sets through the pawn data being set
     AttributeSet = CreateDefaultSubobject<UUR_AttributeSet>(TEXT("AttributeSet"));
     HealthSet = CreateDefaultSubobject<UUR_HealthSet>(TEXT("HealthSet"));
     CombatSet = CreateDefaultSubobject<UUR_CombatSet>(TEXT("CombatSet"));
+    */
 
     // Create the ASC
     AbilitySystemComponent = CreateDefaultSubobject<UUR_AbilitySystemComponent>("AbilitySystemComponent");
@@ -167,7 +169,6 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
     DOREPLIFETIME(ThisClass, DodgeDirection);
     DOREPLIFETIME(ThisClass, InventoryComponent);
-    DOREPLIFETIME(ThisClass, AbilitySystemComponent);
     DOREPLIFETIME(ThisClass, AbilitySystemComponent);
     DOREPLIFETIME(ThisClass, MyTeamID)
 }
@@ -228,7 +229,15 @@ void AUR_Character::OnAbilitySystemInitialized()
     UUR_AbilitySystemComponent* ASC = GetGameAbilitySystemComponent();
     check(ASC);
 
+    //TODO: Is health component even needed if we handle health through the ability system?
+    //if we decide to keep the health component we will most likely also need a component for the other ability sets as well
     HealthComponent->InitializeWithAbilitySystem(ASC);
+
+    // TEMP: base values for our attributes should probably come from the experience somehow and need to make their way here
+    ASC->SetNumericAttributeBase(UUR_HealthSet::GetMaxHealthAttribute(), 100);
+    ASC->SetNumericAttributeBase(UUR_HealthSet::GetHealthAttribute(), 100);
+    ASC->SetNumericAttributeBase(UUR_AttributeSet::GetArmorMaxAttribute(), 100);
+    ASC->SetNumericAttributeBase(UUR_AttributeSet::GetArmorAttribute(), 100);
 
     InitializeGameplayTags();
 }

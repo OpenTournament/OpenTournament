@@ -123,8 +123,6 @@ protected:
 
     virtual void HandleOutOfHealth(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
 
-    void OnExperienceLoaded(const UUR_ExperienceDefinition* Uur_ExperienceDefinition);
-
     UFUNCTION()
     virtual void OnRep_DeathState(EGameDeathState OldDeathState);
 
