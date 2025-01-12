@@ -1,4 +1,6 @@
-# **Open Tournament**
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/105cd2b2-6841-41fe-8d5c-8b9c2c391b8e" alt="Open Tournament LogoType">
+</div>
 
 ## **Overview**
 
