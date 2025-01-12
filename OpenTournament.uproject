@@ -412,7 +412,6 @@
 		},
 		{
 			"Name": "CommonUI",
-			"Name": "CommonUI",
 			"Enabled": true
 		},
 		{
