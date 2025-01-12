@@ -412,6 +412,7 @@
 		},
 		{
 			"Name": "CommonUI",
+			"Name": "CommonUI",
 			"Enabled": true
 		},
 		{
@@ -433,6 +434,10 @@
 		{
 			"Name": "OnlineFramework",
 			"Enabled": true
+		},
+		{
+			"Name": "BUIValidator",
+			"Enabled": false
 		},
 		{
 			"Name": "SignificanceManager",
