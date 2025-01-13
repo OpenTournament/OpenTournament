@@ -435,10 +435,6 @@
 			"Enabled": true
 		},
 		{
-			"Name": "BUIValidator",
-			"Enabled": false
-		},
-		{
 			"Name": "SignificanceManager",
 			"Enabled": true
 		},
