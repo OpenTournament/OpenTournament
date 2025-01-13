@@ -4,7 +4,7 @@
 
 ## **Overview**
 
-The **Open Tournament Project** is a community-driven initiative to create a new first-person shooter (FPS) game that draws inspiration from classic titles like *Unreal Tournament*, *Quake*, and other iconic games in the FPS genre. Our goal is to polish and expand upon the timeless gameplay mechanics of these classics while fostering a collaborative open development environment.
+The **Open Tournament Project** is a community-driven initiative to create a new first-person shooter (FPS) game that draws inspiration from classic titles like *Unreal Tournament*, *Quake*, and other iconic games in the genre. Our goal is to polish and expand upon the timeless gameplay mechanics of these classics while fostering a collaborative open development environment.
 
 ## **Legal Information**
 
@@ -19,24 +19,24 @@ The **Open Tournament Project** is an ongoing experiment in open and community-l
 
 ### **Step-by-Step to Get Involved:**
 
-1. **Register as a Developer**:  
+1. **Register as a Developer**:
    Help us track developer interest, skillsets, and contact information by [filling out this form](https://forms.gle/s7qcsKLuVVm1WzgB7).
 
-2. **Follow our Set-Up Guide**:  
+2. **Follow our Set-Up Guide**:
    Follow our detailed [Developer Quickstart Guide](https://github.com/OpenTournament/OpenTournament/wiki/Developer-Quickstart-Guide) to get your environment ready for contributing.
 
-3. **Join Our Discord Community**:  
+3. **Join Our Discord Community**:
    For real-time communication, collaboration, and support, join our [Discord server](https://discord.gg/Rw8evNT).
 
-4. **Browse Current Issues**:  
+4. **Browse Current Issues**:
    Check out the [Open Tournament Issues](https://github.com/OpenTournament/OpenTournament/issues) page to find tasks and ongoing development work that you could contribute to.
 
 ## **Resources and Links**
 
-- **Official Website**: [opentournamentgame.com](https://opentournamentgame.com)  
+- **Official Website**: [opentournamentgame.com](https://opentournamentgame.com)
   Stay updated with the latest news and developments.
-  
-- **Social & Additional Sites**:  
+
+- **Social & Additional Sites**:
   Find more Open Tournament links via our [LinkTree](https://www.linktr.ee/OpenTournamentGame).
 
 ---

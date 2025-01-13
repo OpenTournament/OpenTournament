@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -7,15 +7,17 @@
 #include "Engine/World.h"
 #include "GameFramework/DamageType.h"
 
-#include "UR_FunctionLibrary.h"
-#include "UR_ChatComponent.h"
-#include "UR_PlayerState.h"
-#include "UR_GameState.h"
-#include "UR_PlayerController.h"
-#include "UR_Pickup.h"
 #include "UR_Character.h"
+#include "UR_ChatComponent.h"
+#include "UR_FunctionLibrary.h"
+#include "UR_GameState.h"
+#include "UR_Pickup.h"
+#include "UR_PlayerController.h"
+#include "UR_PlayerState.h"
 
 #include "Slate/UR_RichTextDecorator_CustomStyle.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_MessageHistory)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -74,7 +76,7 @@ void UUR_MessageHistory::OnViewTargetChanged(class AUR_BasePlayerController* PC,
 void UUR_MessageHistory::Append(const FMessageHistoryEntry& Entry)
 {
     if (History.Num() >= MESSAGES_HISTORY_MAX)
-        History.RemoveAt(0, 1, false);
+        History.RemoveAt(0, 1, EAllowShrinking::No);
 
     History.Emplace(Entry);
 
@@ -87,11 +89,17 @@ void UUR_MessageHistory::OnReceiveChatMessage(const FString& SenderName, const F
     Entry.Time = FDateTime::Now();
 
     if (TeamIndex >= 0)
+    {
         Entry.Type = MessageType::TeamChat;
+    }
     else if (TeamIndex == CHAT_INDEX_SPEC)
+    {
         Entry.Type = MessageType::SpecChat;
+    }
     else
+    {
         Entry.Type = MessageType::GlobalChat;
+    }
 
     Entry.Parts = { FText::FromString(SenderName), FText::FromString(Message) };
     Entry.Colors = {
@@ -111,7 +119,7 @@ void UUR_MessageHistory::OnReceiveSystemMessage(const FString& Message)
     Entry.Time = FDateTime::Now();
     Entry.Type = MessageType::System;
     Entry.Parts = { FText::FromString(Message) };
-    Entry.Colors = {};
+    Entry.Colors = { };
     Append(Entry);
 
     UE_LOG(LogMessages, Log, TEXT("[Sys] %s"), *Message);

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -7,15 +7,15 @@
 #include "Components/MeshComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInstanceConstant.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 #include "UR_MPC_Global.h"
-#include "UR_PlayerCameraManager.h"
+#include "Camera/UR_PlayerCameraManager.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void UUR_PaniniUtils::TogglePaniniProjection(USceneComponent* Component, bool bEnablePanini, bool bPropagateToChildren)
+void UUR_PaniniUtils::TogglePaniniProjection(USceneComponent* Component, const bool bEnablePanini, const bool bPropagateToChildren)
 {
     if (!Component)
     {
@@ -34,7 +34,7 @@ void UUR_PaniniUtils::TogglePaniniProjection(USceneComponent* Component, bool bE
         // For now I prefer doing nothing here rather than providing inconsistent behavior.
         return;
     }
-    else if (auto MeshComp = Cast<UMeshComponent>(Component))
+    else if (const auto MeshComp = Cast<UMeshComponent>(Component))
     {
         MeshComp->SetScalarParameterValueOnMaterials(PaniniParameterName(), bEnablePanini ? 1.f : 0.f);
     }
@@ -66,14 +66,14 @@ void UUR_PaniniUtils::TogglePaniniProjection(USceneComponent* Component, bool bE
 
 FVector UUR_PaniniUtils::CalcPaniniProjection(const UObject* WorldContext, const FVector& WorldPos)
 {
-    if (auto CameraManager = AUR_PlayerCameraManager::UR_GetLocalPlayerCameraManager(WorldContext))
+    if (const auto CameraManager = AUR_PlayerCameraManager::UR_GetLocalPlayerCameraManager(WorldContext))
     {
         FVector NewPos = CalcMFShrinkWeapon(CameraManager, WorldPos);
 
         FVector CamLoc;
         FRotator CamRot;
         CameraManager->GetCameraViewPoint_Direct(CamLoc, CamRot);
-        FTransform CameraTransform(CamRot, CamLoc);
+        const FTransform CameraTransform(CamRot, CamLoc);
 
         const FPaniniMaterialParameters& Params = UUR_MPC_Global::GetPaniniParameters(CameraManager);
 
@@ -88,7 +88,7 @@ FVector UUR_PaniniUtils::CalcPaniniProjection(const UObject* WorldContext, const
 
 FVector UUR_PaniniUtils::CalcMFShrinkWeapon(const UObject* WorldContext, const FVector& WorldPos)
 {
-    if (auto CameraManager = AUR_PlayerCameraManager::UR_GetLocalPlayerCameraManager(WorldContext))
+    if (const auto CameraManager = AUR_PlayerCameraManager::UR_GetLocalPlayerCameraManager(WorldContext))
     {
         const FPaniniMaterialParameters& Params = UUR_MPC_Global::GetPaniniParameters(CameraManager);
 
@@ -97,7 +97,8 @@ FVector UUR_PaniniUtils::CalcMFShrinkWeapon(const UObject* WorldContext, const F
         CameraManager->GetCameraViewPoint_Direct(CamLoc, CamRot);
 
         FVector Offset = WorldPos - CamLoc;
-        Offset = FMath::Lerp(
+        Offset = FMath::Lerp
+        (
             Offset.GetSafeNormal() * Params.PushMin,
             Offset.GetSafeNormal() * Params.PushMax,
             (Offset.Size() + (FMath::Tan(0.5f * CameraManager->GetFOVAngle() * PI / 180.f) * Params.DistanceBias)) / Params.DistanceNormalize

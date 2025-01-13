@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -9,18 +9,21 @@
 
 #include "OpenTournament.h"
 #include "UR_Character.h"
+#include "UR_LogChannels.h"
 #include "UR_TriggerZone.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #endif
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_ControlPoint)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_ControlPoint::AUR_ControlPoint(const FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer),
-    bRequiredTagsExact(false),
-    bExcludedTagsExact(true)
+AUR_ControlPoint::AUR_ControlPoint(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+    , bRequiredTagsExact(false)
+    , bExcludedTagsExact(true)
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = false;
@@ -65,7 +68,7 @@ void AUR_ControlPoint::ActorEnter(AActor* InActor)
 {
     if (IsPermittedToControl(InActor))
     {
-        GAME_LOG(Game, Log, "ControlPoint (%s) Actor (%s) permitted", *GetName(), *InActor->GetName());
+        GAME_LOG(LogGame, Log, "ControlPoint (%s) Actor (%s) permitted", *GetName(), *InActor->GetName());
 
         OnActorEnter(InActor);
     }
@@ -85,7 +88,7 @@ void AUR_ControlPoint::ActorExit(AActor* InActor)
 {
     if (IsActorInZone(InActor))
     {
-        GAME_LOG(Game, Log, "ControlPoint (%s) Actor (%s) Exited", *GetName(), *InActor->GetName());
+        GAME_LOG(LogGame, Log, "ControlPoint (%s) Actor (%s) Exited", *GetName(), *InActor->GetName());
 
         OnActorExit(InActor);
     }
@@ -145,7 +148,7 @@ bool AUR_ControlPoint::IsPermittedToControl_Implementation(const AActor* TargetA
 {
     if (!TargetActor->GetClass()->IsChildOf(TriggerZoneActorClass))
     {
-        GAME_LOG(Game, Log, "ControlPoint Error. ActorClass was invalid.");
+        GAME_LOG(LogGame, Log, "ControlPoint Error. ActorClass was invalid.");
         return false;
     }
 
@@ -268,18 +271,3 @@ bool AUR_ControlPoint::CanEditChange(const FProperty* InProperty) const
     return ParentVal;
 }
 #endif
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-#if WITH_DEV_AUTOMATION_TESTS
-
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOpenTournamentControlPointTest, "OpenTournament.Feature.Levels.LevelFeatures.Actor", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
-
-bool FOpenTournamentControlPointTest::RunTest(const FString& Parameters)
-{
-    // TODO : Automated Tests
-
-    return true;
-}
-
-#endif // WITH_DEV_AUTOMATION_TESTS

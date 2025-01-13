@@ -9,10 +9,9 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_PawnData::UUR_PawnData(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+    : Super(ObjectInitializer)
+    , PawnClass(nullptr)
 {
-	PawnClass = nullptr;
-	//InputConfig = nullptr;
-	//DefaultCameraMode = nullptr;
+    InputConfig = nullptr;
+    DefaultCameraMode = nullptr;
 }
-

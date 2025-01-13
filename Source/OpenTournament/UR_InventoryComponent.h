@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -7,9 +7,8 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 
-//TODO: move enum EWeaponState to a shared header
-#include "UR_Weapon.h"
 #include "UR_Type_WeaponGroup.h"
+#include "UR_Type_WeaponState.h"
 
 #include "UR_InventoryComponent.generated.h"
 
@@ -22,25 +21,32 @@ class AUR_Weapon;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FActiveWeaponChangedSignature, UUR_InventoryComponent*, Inv, AUR_Weapon*, Active, AUR_Weapon*, OldActive);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FDesiredWeaponChangedSignature, UUR_InventoryComponent*, Inv, AUR_Weapon*, Desired, AUR_Weapon*, OldDesired);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAmmoUpdatedSignature, UUR_InventoryComponent*, Inv, AUR_Ammo*, Ammo);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWeaponGroupsUpdatedSignature, UUR_InventoryComponent*, Inv);
 
 
 /**
  * InventoryComponent is the base component for use by actors to have an inventory.
  */
-UCLASS(DefaultToInstanced, BlueprintType, meta = (Tooltip = "A InventoryComponent is a reusable component that can be added to any actor to give it an Inventory.", ShortTooltip = "A InventoryComponent is a reusable component that can be added to any actor to give it an Inventory."), hideCategories = (UR, Character, Collision, Cooking))
+UCLASS(DefaultToInstanced,
+    BlueprintType,
+    meta = (Tooltip = "A InventoryComponent is a reusable component that can be added to any actor to give it an Inventory.", ShortTooltip =
+        "A InventoryComponent is a reusable component that can be added to any actor to give it an Inventory."),
+    hideCategories = (UR, Character, Collision, Cooking))
 class OPENTOURNAMENT_API UUR_InventoryComponent : public UActorComponent
 {
     GENERATED_BODY()
 
 protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
     virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
 public:
-
     UUR_InventoryComponent();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +71,9 @@ public:
 
     UPROPERTY(BlueprintReadOnly, Category = "InventoryComponent")
     AUR_Weapon* ActiveWeapon;
+
+    UFUNCTION(BlueprintPure, BlueprintCallable)
+    AUR_Weapon* GetActiveWeapon() const;
 
     /**
     * User current desired weapon.
@@ -95,6 +104,14 @@ public:
 
     UFUNCTION()
     bool PrevWeapon();
+
+    TArray<AUR_Weapon*> GetEligibleWeapons();
+
+    int32 GetDesiredWeaponIndex(const TArray<AUR_Weapon*>& AvailableWeapons) const;
+
+    static int32 CalculateNewIndex(int32 CurrentIndex, int32 Offset, int32 NumItems);
+
+    bool CycleSwitchWeapon(int32 Offset);
 
     /**
     * Players only - select preferred available weapon according to user settings.
@@ -135,7 +152,6 @@ public:
     void Clear();
 
 protected:
-
     UFUNCTION()
     virtual void OnRep_WeaponArray();
 
@@ -143,7 +159,6 @@ protected:
     virtual void OnRep_DesiredWeapon(AUR_Weapon* OldDesired);
 
 public:
-
     UPROPERTY(BlueprintAssignable)
     FActiveWeaponChangedSignature OnActiveWeaponChanged;
 

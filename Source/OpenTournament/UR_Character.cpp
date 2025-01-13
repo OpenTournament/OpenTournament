@@ -1,56 +1,96 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Character.h"
 
+#include <TimerManager.h>
 #include <Components/SkeletalMeshComponent.h>
 #include <Components/SkinnedMeshComponent.h>
 
-#include "Net/UnrealNetwork.h"
-#include "Animation/AnimInstance.h"
+#include <GameplayTagsManager.h>
+#include <InputAction.h>
+#include <Components/CapsuleComponent.h>
+#include <Engine/DamageEvents.h>
+#include <GameFramework/GameState.h>
+#include <GameFramework/SpringArmComponent.h>
+#include <Kismet/GameplayStatics.h>
+#include <Kismet/KismetMathLibrary.h>
+#include <Net/UnrealNetwork.h>
+#include <Perception/AISense_Sight.h>
+
 #include "Camera/CameraComponent.h"
-#include "Engine/DamageEvents.h"
-#include "GameFramework/GameState.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "GameplayTagsManager.h"
-#include "Components/CapsuleComponent.h"
-#include <Components/SkeletalMeshComponent.h>
-#include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
-#include "Perception/AISense_Sight.h"
 
 #include "OpenTournament.h"
-#include "Interfaces/UR_ActivatableInterface.h"
-#include "UR_InventoryComponent.h"
-#include "UR_CharacterMovementComponent.h"
-#include "UR_AttributeSet.h"
 #include "UR_AbilitySystemComponent.h"
-#include "UR_GameplayAbility.h"
-#include "UR_PlayerController.h"
-#include "UR_GameMode.h"
-#include "UR_GameplayTags.h"
-#include "UR_Weapon.h"
-#include "UR_Projectile.h"
-#include "UR_PlayerState.h"
-#include "UR_InputComponent.h"
-#include "UR_UserSettings.h"
+#include "UR_AttributeSet.h"
 #include "UR_DamageType.h"
+#include "UR_GameMode.h"
+#include "UR_GameplayAbility.h"
+#include "UR_GameplayTags.h"
+#include "UR_HeroComponent.h"
+#include "UR_InputComponent.h"
+#include "UR_InventoryComponent.h"
+#include "UR_LogChannels.h"
+#include "UR_Logging.h"
 #include "UR_PaniniUtils.h"
+#include "UR_PawnExtensionComponent.h"
+#include "UR_PlayerController.h"
+#include "UR_PlayerState.h"
+#include "UR_Projectile.h"
+#include "UR_TeamAgentInterface.h"
+#include "UR_UserSettings.h"
+#include "UR_Weapon.h"
+#include "AbilitySystem/Attributes/UR_HealthSet.h"
 #include "AI/AIPerceptionSourceNativeComp.h"
-#include "UR_CharacterCustomization.h"
+#include "Attributes/UR_CombatSet.h"
+#include "Character/UR_CharacterCustomization.h"
+#include "Character/UR_CharacterMovementComponent.h"
+#include "Character/UR_HealthComponent.h"
+#include "Interfaces/UR_ActivatableInterface.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_Character)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer.SetDefaultSubobjectClass<UUR_CharacterMovementComponent>(ACharacter::CharacterMovementComponentName)),
-    FootstepTimestamp(0.f),
-    FootstepTimeIntervalBase(0.300f),
-    FallDamageScalar(0.15f),
-    FallDamageSpeedThreshold(2675.f),
-    CrouchTransitionSpeed(12.f)
+FSharedRepMovement::FSharedRepMovement()
 {
-    // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+    RepMovement.LocationQuantizationLevel = EVectorQuantization::RoundTwoDecimals;
+}
+
+bool FSharedRepMovement::NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
+{
+    bOutSuccess = true;
+    RepMovement.NetSerialize(Ar, Map, bOutSuccess);
+    Ar << RepMovementMode;
+    Ar << bProxyIsJumpForceApplied;
+    Ar << bIsCrouched;
+
+    // Timestamp, if non-zero.
+    uint8 bHasTimeStamp = (RepTimeStamp != 0.f);
+    Ar.SerializeBits(&bHasTimeStamp, 1);
+    if (bHasTimeStamp)
+    {
+        Ar << RepTimeStamp;
+    }
+    else
+    {
+        RepTimeStamp = 0.f;
+    }
+
+    return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer.SetDefaultSubobjectClass<UUR_CharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
+    , FootstepTimestamp(0.f)
+    , FootstepTimeIntervalBase(0.300f)
+    , FallDamageScalar(0.15f)
+    , FallDamageSpeedThreshold(2675.f)
+    , CrouchTransitionSpeed(12.f)
+{
     PrimaryActorTick.bCanEverTick = true;
 
     bReplicates = true;
@@ -122,6 +162,8 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
 
     // Create the attribute set, this replicates by default
     AttributeSet = CreateDefaultSubobject<UUR_AttributeSet>(TEXT("AttributeSet"));
+    HealthSet = CreateDefaultSubobject<UUR_HealthSet>(TEXT("HealthSet"));
+    CombatSet = CreateDefaultSubobject<UUR_CombatSet>(TEXT("CombatSet"));
 
     // Create the ASC
     AbilitySystemComponent = CreateDefaultSubobject<UUR_AbilitySystemComponent>("AbilitySystemComponent");
@@ -130,6 +172,16 @@ AUR_Character::AUR_Character(const FObjectInitializer& ObjectInitializer) :
     AIPerceptionStimuliSource = CreateDefaultSubobject<UAIPerceptionSourceNativeComp>("AIPerceptionStimuliSource");
     AIPerceptionStimuliSource->SetAutoRegisterAsSource(true);
     AIPerceptionStimuliSource->SetRegisterAsSourceForSenses({ UAISense_Sight::StaticClass() });
+
+    // Pawn Extension
+    PawnExtComponent = CreateDefaultSubobject<UUR_PawnExtensionComponent>(TEXT("PawnExtensionComponent"));
+    PawnExtComponent->OnAbilitySystemInitialized_RegisterAndCall(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &ThisClass::OnAbilitySystemInitialized));
+    PawnExtComponent->OnAbilitySystemUninitialized_Register(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &ThisClass::OnAbilitySystemUninitialized));
+
+    // Health
+    HealthComponent = CreateDefaultSubobject<UUR_HealthComponent>(TEXT("HealthComponent"));
+    HealthComponent->OnDeathStarted.AddDynamic(this, &ThisClass::OnDeathStarted);
+    HealthComponent->OnDeathFinished.AddDynamic(this, &ThisClass::OnDeathFinished);
 
     // Hair
     HairMesh = CreateDefaultSubobject<USkeletalMeshComponent>("HairMesh");
@@ -147,6 +199,8 @@ void AUR_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     DOREPLIFETIME(ThisClass, DodgeDirection);
     DOREPLIFETIME(ThisClass, InventoryComponent);
     DOREPLIFETIME(ThisClass, AbilitySystemComponent);
+    DOREPLIFETIME(ThisClass, AbilitySystemComponent);
+    DOREPLIFETIME(ThisClass, MyTeamID)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -156,12 +210,6 @@ void AUR_Character::BeginPlay()
     InitializeGameplayTagsManager();
 
     Super::BeginPlay();
-
-    AttributeSet->SetHealth(100.f);
-    AttributeSet->SetHealthMax(100.f);
-    AttributeSet->SetArmor(100.f);
-    AttributeSet->SetArmorMax(100.f);
-    AttributeSet->SetShieldMax(100.f);
 
     UUR_PaniniUtils::TogglePaniniProjection(GetMesh1P(), true, true);
 
@@ -193,24 +241,50 @@ void AUR_Character::Tick(float DeltaTime)
 
 UAbilitySystemComponent* AUR_Character::GetAbilitySystemComponent() const
 {
-    return AbilitySystemComponent;
+    if (PawnExtComponent == nullptr)
+    {
+        return nullptr;
+    }
+
+    return PawnExtComponent->GetGameAbilitySystemComponent();
 }
 
-UInputComponent* AUR_Character::CreatePlayerInputComponent()
+UUR_AbilitySystemComponent* AUR_Character::GetGameAbilitySystemComponent() const
 {
-    static const FName InputComponentName(TEXT("URCharacterInputComponent0"));
-    return NewObject<UUR_InputComponent>(this, InputComponentName);
+    return Cast<UUR_AbilitySystemComponent>(AbilitySystemComponent);
+}
+
+void AUR_Character::OnAbilitySystemInitialized()
+{
+    UUR_AbilitySystemComponent* ASC = GetGameAbilitySystemComponent();
+    check(ASC);
+
+    HealthComponent->InitializeWithAbilitySystem(ASC);
+
+    InitializeGameplayTags();
+}
+
+void AUR_Character::OnAbilitySystemUninitialized()
+{
+    HealthComponent->UninitializeFromAbilitySystem();
 }
 
 void AUR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AUR_Character::NextWeapon);
-    PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AUR_Character::PrevWeapon);
-    PlayerInputComponent->BindAction("DropWeapon", IE_Pressed, this, &AUR_Character::DropWeapon);
+    PawnExtComponent->SetupPlayerInputComponent();
 
-    SetupWeaponBindings();
+    //
+
+    // if (auto URInputComponent = Cast<UUR_InputComponent>(InputComponent))
+    // {
+    //     URInputComponent->BindAction(InputActionNextWeapon, ETriggerEvent::Triggered, this, &AUR_Character::NextWeapon);
+    //     URInputComponent->BindAction(InputActionPreviousWeapon, ETriggerEvent::Triggered, this, &AUR_Character::PrevWeapon);
+    //     URInputComponent->BindAction(InputActionDropWeapon, ETriggerEvent::Triggered, this, &AUR_Character::DropWeapon);
+    // }
+
+    // SetupWeaponBindings();
 
     // Voice
     // Ping
@@ -270,6 +344,15 @@ void AUR_Character::UpdateTeamColor_Implementation()
 
 void AUR_Character::UnPossessed()
 {
+    AController* const OldController = Controller;
+
+    // Stop listening for changes from the old controller
+    const FGenericTeamId OldTeamID = MyTeamID;
+    if (IUR_TeamAgentInterface* ControllerAsTeamProvider = Cast<IUR_TeamAgentInterface>(OldController))
+    {
+        ControllerAsTeamProvider->GetTeamChangedDelegateChecked().RemoveAll(this);
+    }
+
     Super::UnPossessed();
 
     // Force stop firing
@@ -278,8 +361,25 @@ void AUR_Character::UnPossessed()
         InventoryComponent->ActiveWeapon->Deactivate();
     }
     DesiredFireModeNum.Empty();
+
+    PawnExtComponent->HandleControllerChanged();
+
+    // Determine what the new team ID should be afterwards
+    //MyTeamID = DetermineNewTeamAfterPossessionEnds(OldTeamID);
+    //ConditionalBroadcastTeamChanged(this, OldTeamID, MyTeamID);
 }
 
+void AUR_Character::OnRep_Controller()
+{
+    Super::OnRep_Controller();
+    PawnExtComponent->HandleControllerChanged();
+}
+
+void AUR_Character::OnRep_PlayerState()
+{
+    Super::OnRep_PlayerState();
+    PawnExtComponent->HandlePlayerStateReplicated();
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Camera
@@ -398,6 +498,48 @@ void AUR_Character::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 
     UpdateMovementPhysicsGameplayTags(PrevMovementMode);
 
     Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+
+    UUR_CharacterMovementComponent* MovementComponent = CastChecked<UUR_CharacterMovementComponent>(GetCharacterMovement());
+
+    SetMovementModeTag(PrevMovementMode, PreviousCustomMode, false);
+    SetMovementModeTag(MovementComponent->MovementMode, MovementComponent->CustomMovementMode, true);
+}
+
+void AUR_Character::SetMovementModeTag(EMovementMode MovementMode, uint8 CustomMovementMode, bool bTagEnabled)
+{
+    if (UUR_AbilitySystemComponent* ASC = GetGameAbilitySystemComponent())
+    {
+        const FGameplayTag* MovementModeTag = nullptr;
+        if (MovementMode == MOVE_Custom)
+        {
+            MovementModeTag = URGameplayTags::CustomMovementModeTagMap.Find(CustomMovementMode);
+        }
+        else
+        {
+            MovementModeTag = URGameplayTags::MovementModeTagMap.Find(MovementMode);
+        }
+
+        if (MovementModeTag && MovementModeTag->IsValid())
+        {
+            ASC->SetLooseGameplayTagCount(*MovementModeTag, (bTagEnabled ? 1 : 0));
+        }
+    }
+}
+
+void AUR_Character::PossessedBy(AController* NewController)
+{
+    Super::PossessedBy(NewController);
+    PawnExtComponent->HandleControllerChanged();
+
+    const FGenericTeamId OldTeamID = MyTeamID;
+
+    // Grab the current team ID and listen for future changes
+    if (IUR_TeamAgentInterface* ControllerAsTeamProvider = Cast<IUR_TeamAgentInterface>(NewController))
+    {
+        MyTeamID = ControllerAsTeamProvider->GetGenericTeamId();
+        ControllerAsTeamProvider->GetTeamChangedDelegateChecked().AddDynamic(this, &ThisClass::OnControllerChangedTeam);
+    }
+    ConditionalBroadcastTeamChanged(this, OldTeamID, MyTeamID);
 }
 
 void AUR_Character::RegisterZoomInterface(TScriptInterface<IUR_ActivatableInterface> NewZoomInterface)
@@ -426,37 +568,6 @@ void AUR_Character::RegisterZoomInterface(TScriptInterface<IUR_ActivatableInterf
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Movement
-
-void AUR_Character::MoveForward(const float InValue)
-{
-    if (InValue != 0.0f)
-    {
-        const FRotator ControlRotation = GetControlRotation();
-        FRotator ForwardRotation = ControlRotation;
-
-        // If we aren't flying / swimming, our ForwardRotation should trim out pitch / roll values
-        if (URMovementComponent != nullptr && !URMovementComponent->Is3DMovementMode())
-        {
-            ForwardRotation = FRotator(0, ControlRotation.Yaw, 0);
-        }
-
-        // Move in the direction calculated by our ForwardRotation
-        AddMovementInput(FRotationMatrix(ForwardRotation).GetUnitAxis(EAxis::X), InValue);
-    }
-}
-
-void AUR_Character::MoveRight(const float InValue)
-{
-    if (InValue != 0.0f)
-    {
-        // Strafing needs no Pitch, so just take our Control Rotation's Yaw
-        const FRotator ControlRotation = GetControlRotation();
-        const FRotator ForwardRotation(0, ControlRotation.Yaw, 0);
-
-        // Add movement in the perpendicular Y axis
-        AddMovementInput(FRotationMatrix(ForwardRotation).GetUnitAxis(EAxis::Y), InValue);
-    }
-}
 
 void AUR_Character::MoveUp(const float InValue)
 {
@@ -496,22 +607,9 @@ void AUR_Character::SetupWeaponBindings()
 {
     if (auto URInputComponent = Cast<UUR_InputComponent>(InputComponent))
     {
-        for (const auto& Binding : WeaponBindings)
+        for (auto WeaponBinding : WeaponBindings)
         {
-            URInputComponent->RemoveKeyBinding(Binding);
-        }
-        WeaponBindings.Empty();
-
-        if (auto Settings = UUR_UserSettings::Get(this))
-        {
-            for (int32 Index = 0; Index < Settings->WeaponGroups.Num(); Index++)
-            {
-                const auto& Group = Settings->WeaponGroups[Index];
-                if (Group.Keybind.IsValidChord())
-                {
-                    //WeaponBindings.Add(URInputComponent->BindKeyParameterized<TDelegate<void(int32)>>(Group.Keybind, IE_Pressed, this, &AUR_Character::SelectWeapon, Index));
-                }
-            }
+            URInputComponent->BindAction(WeaponBinding.Value, ETriggerEvent::Triggered, this, &AUR_Character::SelectWeapon, WeaponBinding.Key);
         }
     }
 }
@@ -550,7 +648,7 @@ void AUR_Character::TickEyePosition(const float DeltaTime)
 
     // Crouch Stuff
     const float StandingBonus{ bIsCrouched ? CrouchTransitionSpeed : 0.f };
-    CrouchEyeOffsetZ =  FMath::FInterpTo(CrouchEyeOffsetZ, BaseEyeHeight, DeltaTime, CrouchTransitionSpeed + StandingBonus);
+    CrouchEyeOffsetZ = FMath::FInterpTo(CrouchEyeOffsetZ, BaseEyeHeight, DeltaTime, CrouchTransitionSpeed + StandingBonus);
 
     EyeOffset.X = FMath::FInterpTo(EyeOffset.X, TargetEyeOffset.X, DeltaTime, EyeOffsetToTargetInterpolationRate.X);
     EyeOffset.Y = FMath::FInterpTo(EyeOffset.Y, TargetEyeOffset.Y, DeltaTime, EyeOffsetToTargetInterpolationRate.Y);
@@ -584,7 +682,7 @@ void AUR_Character::LandedViewOffset()
         const float LandingBobAlpha = FMath::Clamp<float>(FallingVelocityZ / FallDamageSpeedThreshold, 0.f, 1.f);
 
         TargetEyeOffset.Z = -1.f * FMath::Lerp(EyeOffsetLandingBobMinimum, EyeOffsetLandingBobMaximum, LandingBobAlpha);
-        GAME_LOG(Game, Log, "Landing Bob EyeOffset.Z: %f", TargetEyeOffset.Z);
+        GAME_LOG(LogGame, Log, "Landing Bob EyeOffset.Z: %f", TargetEyeOffset.Z);
     }
 }
 
@@ -625,7 +723,7 @@ void AUR_Character::Landed(const FHitResult& Hit)
 
     TakeFallingDamage(Hit, GetCharacterMovement()->Velocity.Z);
 
-    GAME_LOG(Game, Log, "Updating OldLocationZ: %f (Old), %f (New)", OldLocationZ, GetActorLocation().Z);
+    GAME_LOG(LogGame, Log, "Updating OldLocationZ: %f (Old), %f (New)", OldLocationZ, GetActorLocation().Z);
     OldLocationZ = GetActorLocation().Z;
 
     FootstepTimestamp = GetWorld()->TimeSeconds;
@@ -656,8 +754,8 @@ void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
 
     if (FallingSpeed * -1.f > FallDamageSpeedThreshold)
     {
-        const float FallingDamage =  (-1.f * FallDamageScalar) * (FallDamageSpeedThreshold + FallingSpeed);
-        GAME_LOG(Game, Log, "Character received Fall Damage (%f)!", FallingDamage);
+        const float FallingDamage = (-1.f * FallDamageScalar) * (FallDamageSpeedThreshold + FallingSpeed);
+        GAME_LOG(LogGame, Log, "Character received Fall Damage (%f)!", FallingDamage);
 
         if (FallingDamage >= 1.0f)
         {
@@ -671,42 +769,58 @@ void AUR_Character::TakeFallingDamage(const FHitResult& Hit, float FallingSpeed)
 
 void AUR_Character::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
 {
+    if (UUR_AbilitySystemComponent* ASC = GetGameAbilitySystemComponent())
+    {
+        ASC->SetLooseGameplayTagCount(URGameplayTags::Status_Crouching, 1);
+    }
+
     OnStartCrouchEffects();
 
     Super::OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
 
     CrouchEyeOffset.Z += 64.f - BaseEyeHeight + HalfHeightAdjust; // @! TODO 64.f = StartingBaseEyeHeight
-
     OldLocationZ = GetActorLocation().Z;
-
-    UpdateGameplayTags(FGameplayTagContainer{}, FGameplayTagContainer{ GetMovementActionGameplayTag(EMovementAction::Crouching) });
-
-    // Anims, sounds
 }
 
 void AUR_Character::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
 {
+    if (UUR_AbilitySystemComponent* ASC = GetGameAbilitySystemComponent())
+    {
+        ASC->SetLooseGameplayTagCount(URGameplayTags::Status_Crouching, 0);
+    }
+
     OnEndCrouchEffects();
 
     Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
 
     CrouchEyeOffset.Z += 64.f - BaseEyeHeight + HalfHeightAdjust; // @! TODO 64.f = StartingBaseEyeHeight
-
     OldLocationZ = GetActorLocation().Z;
-
-    UpdateGameplayTags(FGameplayTagContainer{ GetMovementActionGameplayTag(EMovementAction::Crouching) }, FGameplayTagContainer{});
-
-    // Anims, sounds
 }
 
 void AUR_Character::OnStartCrouchEffects()
 {
+    // Anims, sounds
     UGameplayStatics::PlaySound2D(GetWorld(), CrouchTransitionSound, 1.0f, 1.f);
 }
 
 void AUR_Character::OnEndCrouchEffects()
 {
+    // Anims, sounds
     UGameplayStatics::PlaySound2D(GetWorld(), CrouchTransitionSound, 1.0f, 1.f);
+}
+
+void AUR_Character::ToggleCrouch()
+{
+    const UUR_CharacterMovementComponent* MovementComponent = CastChecked<UUR_CharacterMovementComponent>(GetCharacterMovement());
+
+    if (bIsCrouched || MovementComponent->bWantsToCrouch)
+    {
+        UnCrouch();
+    }
+    else if (MovementComponent->IsMovingOnGround())
+    {
+        Crouch();
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -735,7 +849,7 @@ bool AUR_Character::CanDodge() const
     return IsDodgeCapable() && IsDodgePermitted();
 }
 
-void AUR_Character::Dodge(FVector DodgeDir, FVector DodgeCross)
+void AUR_Character::Dodge(const FVector& DodgeDir, const FVector& DodgeCross)
 {
     if (CanDodge())
     {
@@ -754,19 +868,12 @@ void AUR_Character::Dodge(FVector DodgeDir, FVector DodgeCross)
     }
 }
 
-void AUR_Character::DodgeTest(const EDodgeDirection InDodgeDirection)
-{
-    // @! TODO Testing only...
-
-    SetDodgeDirection(InDodgeDirection);
-}
-
 void AUR_Character::OnDodge_Implementation(const FVector& DodgeLocation, const FVector& DodgeDir)
 {
     // @! TODO Effects
     if (CharacterVoice.DodgeSound != nullptr)
     {
-        if (GetLocalRole() == ROLE_Authority)
+        if (GetNetMode() != NM_DedicatedServer)
         {
             UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.DodgeSound, GetActorLocation(), GetActorRotation());
         }
@@ -778,7 +885,7 @@ void AUR_Character::OnWallDodge_Implementation(const FVector& DodgeLocation, con
     // @! TODO Effects
     if (CharacterVoice.DodgeSound != nullptr)
     {
-        if (GetLocalRole() == ROLE_Authority)
+        if (GetNetMode() != NM_DedicatedServer)
         {
             UGameplayStatics::PlaySoundAtLocation(this, CharacterVoice.DodgeSound, GetActorLocation(), GetActorRotation());
 
@@ -791,9 +898,11 @@ void AUR_Character::OnWallDodge_Implementation(const FVector& DodgeLocation, con
 
 float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+    // @! TODO: Deprecating most of this logic in favor of GameplayEffect modification...
+
     const float OriginalDamage = Damage;
 
-    GAME_LOG(Game, Log, "Damage Incoming (%f)", OriginalDamage);
+    GAME_LOG(LogGame, Log, "Damage Incoming (%f)", OriginalDamage);
 
     //NOTE:
     // Super() takes care of :
@@ -820,7 +929,7 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
         return 0.f;
     }
 
-    GAME_LOG(Game, Log, "Damage pre-hook = %f", Damage);
+    GAME_LOG(LogGame, Log, "Damage pre-hook = %f", Damage);
 
     const float Falloff = Damage / OriginalDamage;
 
@@ -839,7 +948,7 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
         }
     }
 
-    GAME_LOG(Game, Log, "Damage post-hook = %f", Damage);
+    GAME_LOG(LogGame, Log, "Damage post-hook = %f", Damage);
 
     ////////////////////////////////////////////////////////////
     // Apply Damage
@@ -849,36 +958,40 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     float DamageToHealth = 0.f;
     float DamageRemaining = Damage;
 
-    if (AttributeSet && AttributeSet->Health.GetCurrentValue() > 0.f)
-    {
-        const float CurrentShield = FMath::FloorToFloat(AttributeSet->Shield.GetCurrentValue());
-        if (CurrentShield > 0.f)
-        {
-            DamageToShield = FMath::Min(DamageRemaining, CurrentShield);
-            AttributeSet->SetShield(CurrentShield - DamageToShield);
-            DamageRemaining -= DamageToShield;
-        }
+    // @! TODO : This block should probably not be handled in our Character but instead via DamageExecution or GameplayEffect
+    // if (HealthComponent && !HealthComponent->IsDeadOrDying())
+    // {
+    //     if (AttributeSet)
+    //     {
+    //         const float CurrentShield = FMath::FloorToFloat(AttributeSet->Shield.GetCurrentValue());
+    //         if (CurrentShield > 0.f)
+    //         {
+    //             DamageToShield = FMath::Min(DamageRemaining, CurrentShield);
+    //             AttributeSet->SetShield(CurrentShield - DamageToShield);
+    //             DamageRemaining -= DamageToShield;
+    //         }
+    //
+    //         const float CurrentArmor = FMath::FloorToFloat(AttributeSet->Armor.GetCurrentValue());
+    //         const float ArmorAbsorption = AttributeSet->ArmorAbsorptionPercent.GetCurrentValue();
+    //         if (CurrentArmor > 0.f && DamageRemaining > 0.f)
+    //         {
+    //             DamageToArmor = FMath::Min(DamageRemaining * ArmorAbsorption, CurrentArmor);
+    //             DamageToArmor = FMath::FloorToFloat(DamageToArmor);
+    //             AttributeSet->SetArmor(CurrentArmor - DamageToArmor);
+    //             DamageRemaining -= DamageToArmor;
+    //         }
+    //     }
+    //
+    //     const float CurrentHealth = HealthComponent->GetHealth();
+    //     if (CurrentHealth > 0.f && DamageRemaining > 0.f)
+    //     {
+    //         DamageToHealth = FMath::Min(DamageRemaining, CurrentHealth);
+    //         // AttributeSet->SetHealth(CurrentHealth - DamageToHealth); // @! TODO HealthComponentFix
+    //         DamageRemaining -= DamageToHealth;
+    //     }
+    // }
 
-        const float CurrentArmor = FMath::FloorToFloat(AttributeSet->Armor.GetCurrentValue());
-        const float ArmorAbsorption = AttributeSet->ArmorAbsorptionPercent.GetCurrentValue();
-        if (CurrentArmor > 0.f && DamageRemaining > 0.f)
-        {
-            DamageToArmor = FMath::Min(DamageRemaining * ArmorAbsorption, CurrentArmor);
-            DamageToArmor = FMath::FloorToFloat(DamageToArmor);
-            AttributeSet->SetArmor(CurrentArmor - DamageToArmor);
-            DamageRemaining -= DamageToArmor;
-        }
-
-        const float CurrentHealth = AttributeSet->Health.GetCurrentValue();
-        if (CurrentHealth > 0.f && DamageRemaining > 0.f)
-        {
-            DamageToHealth = FMath::Min(DamageRemaining, CurrentHealth);
-            AttributeSet->SetHealth(CurrentHealth - DamageToHealth);
-            DamageRemaining -= DamageToHealth;
-        }
-    }
-
-    GAME_LOG(Game, Log, "Damage repartition: Shield(%f), Armor(%f), Health(%f), Extra(%f)", DamageToShield, DamageToArmor, DamageToHealth, DamageRemaining);
+    GAME_LOG(LogGame, Log, "Damage repartition: Shield(%f), Armor(%f), Health(%f), Extra(%f)", DamageToShield, DamageToArmor, DamageToHealth, DamageRemaining);
 
     ////////////////////////////////////////////////////////////
     // Knockback & replicated info
@@ -888,7 +1001,7 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     RepDamageEvent.Damage = Damage;
     RepDamageEvent.HealthDamage = DamageToHealth;
     RepDamageEvent.ArmorDamage = DamageToShield + DamageToArmor;
-    RepDamageEvent.DamageInstigator = EventInstigator ? EventInstigator->GetPawn() : NULL;
+    RepDamageEvent.DamageInstigator = EventInstigator ? EventInstigator->GetPawn() : nullptr;
     if (UKismetMathLibrary::ClassIsChildOf(DamageEvent.DamageTypeClass, UUR_DamageType::StaticClass()))
     {
         RepDamageEvent.DamType = GetDefault<UUR_DamageType>(DamageEvent.DamageTypeClass);
@@ -960,13 +1073,25 @@ float AUR_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
     ////////////////////////////////////////////////////////////
     // Death
 
-    if (AttributeSet && AttributeSet->Health.GetCurrentValue() <= 0)
+    if (HealthComponent && !HealthComponent->IsDeadOrDying())
     {
         // Can use DamageRemaining here to GIB
         Die(EventInstigator, DamageEvent, DamageCauser, RepDamageEvent);
     }
 
     return Damage;
+}
+
+void AUR_Character::FellOutOfWorld(const UDamageType& DamageType)
+{
+    if (HealthComponent)
+    {
+        HealthComponent->DamageSelfDestruct(/*bFellOutOfWorld=*/ true);
+    }
+    else
+    {
+        Super::FellOutOfWorld(DamageType);
+    }
 }
 
 void AUR_Character::MulticastDamageEvent_Implementation(const FReplicatedDamageEvent RepDamageEvent)
@@ -996,23 +1121,7 @@ void AUR_Character::Die(AController* Killer, const FDamageEvent& DamageEvent, AA
     if (URGameMode)
     {
         AController* Killed = GetController();
-
-        if (URGameMode->PreventDeath(Killed, Killer, DamageEvent, DamageCauser))
-        {
-            // Make sure we don't stay with <=0 health or IsAlive() would return false.
-            if (AttributeSet->Health.GetCurrentValue() <= 0)
-            {
-                AttributeSet->SetHealth(1);
-            }
-            return;
-        }
-
         URGameMode->PlayerKilled(Killed, Killer, DamageEvent, DamageCauser);
-    }
-
-    if (AttributeSet)
-    {
-        AttributeSet->SetHealth(0);
     }
 
     // Clear inventory
@@ -1096,6 +1205,60 @@ void AUR_Character::PlayDeath_Implementation(AController* Killer, const FReplica
     OnDeath.Broadcast(this, Killer);
 }
 
+void AUR_Character::OnDeathStarted(AActor*)
+{
+    DisableMovementAndCollision();
+}
+
+void AUR_Character::OnDeathFinished(AActor*)
+{
+    GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::DestroyDueToDeath);
+}
+
+void AUR_Character::DisableMovementAndCollision()
+{
+    if (Controller)
+    {
+        Controller->SetIgnoreMoveInput(true);
+    }
+
+    UCapsuleComponent* CapsuleComp = GetCapsuleComponent();
+    check(CapsuleComp);
+    CapsuleComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    CapsuleComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+
+    UUR_CharacterMovementComponent* GameMovementComponent = CastChecked<UUR_CharacterMovementComponent>(GetCharacterMovement());
+    GameMovementComponent->StopMovementImmediately();
+    GameMovementComponent->DisableMovement();
+}
+
+void AUR_Character::DestroyDueToDeath()
+{
+    K2_OnDeathFinished();
+
+    UninitAndDestroy();
+}
+
+void AUR_Character::UninitAndDestroy()
+{
+    if (GetLocalRole() == ROLE_Authority)
+    {
+        DetachFromControllerPendingDestroy();
+        SetLifeSpan(0.1f);
+    }
+
+    // Uninitialize the ASC if we're still the avatar actor (otherwise another pawn already did it when they became the avatar actor)
+    if (UUR_AbilitySystemComponent* GameASC = GetGameAbilitySystemComponent())
+    {
+        if (GameASC->GetAvatarActor() == this)
+        {
+            PawnExtComponent->UninitializeAbilitySystem();
+        }
+    }
+
+    SetActorHiddenInGame(true);
+}
+
 void AUR_Character::TornOff()
 {
     Super::TornOff();
@@ -1110,7 +1273,11 @@ bool AUR_Character::IsAlive() const
         return false;	// server link has been cut, health might not replicate anymore
     }
 
-    return AttributeSet->GetHealth() > 0;
+    if (IsValid(HealthComponent))
+    {
+        return !HealthComponent->IsDeadOrDying();
+    }
+    return false;
 }
 
 void AUR_Character::ServerSuicide_Implementation()
@@ -1129,6 +1296,11 @@ FName AUR_Character::GetWeaponAttachPoint() const
 USkeletalMeshComponent* AUR_Character::GetPawnMesh() const
 {
     return MeshFirstPerson;
+}
+
+UUR_InventoryComponent* AUR_Character::GetInventoryComponent()
+{
+    return InventoryComponent;
 }
 
 void AUR_Character::PawnStartFire(uint8 FireModeNum)
@@ -1209,12 +1381,16 @@ void AUR_Character::DropWeapon()
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool AUR_Character::Server_GiveAbility_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel) { return true; }
+bool AUR_Character::Server_GiveAbility_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel)
+{
+    return true;
+}
+
 void AUR_Character::Server_GiveAbility_Implementation(TSubclassOf<UUR_GameplayAbility> InAbility, const int32 InAbilityLevel)
 {
     if (InAbility == nullptr)
     {
-        GAME_LOG(Game, Error, "InAbilityClass was Null!");
+        GAME_LOG(LogGame, Error, "InAbilityClass was Null!");
         return;
     }
 
@@ -1230,12 +1406,16 @@ void AUR_Character::Server_GiveAbility_Implementation(TSubclassOf<UUR_GameplayAb
     }
 }
 
-bool AUR_Character::Server_RemoveAbility_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass) { return true; }
+bool AUR_Character::Server_RemoveAbility_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass)
+{
+    return true;
+}
+
 void AUR_Character::Server_RemoveAbility_Implementation(TSubclassOf<UUR_GameplayAbility> InAbilityClass) const
 {
     if (InAbilityClass == nullptr)
     {
-        GAME_LOG(Game, Error, "InAbilityClass was Null!");
+        GAME_LOG(LogGame, Error, "InAbilityClass was Null!");
         return;
     }
 
@@ -1277,7 +1457,11 @@ int32 AUR_Character::GetAbilityLevel(TSubclassOf<UUR_GameplayAbility> InAbilityC
     return OutLevel;
 }
 
-bool AUR_Character::Server_SetAbilityLevel_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel) { return true; }
+bool AUR_Character::Server_SetAbilityLevel_Validate(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel)
+{
+    return true;
+}
+
 void AUR_Character::Server_SetAbilityLevel_Implementation(TSubclassOf<UUR_GameplayAbility> InAbilityClass, const int32 InAbilityLevel)
 {
     if (AbilitySystemComponent)
@@ -1299,22 +1483,22 @@ void AUR_Character::Server_SetAbilityLevel_Implementation(TSubclassOf<UUR_Gamepl
 
 void AUR_Character::InitializeMovementActionGameplayTags()
 {
-    MovementActionGameplayTags.Add(EMovementAction::Jumping,    URGameplayTags::TAG_Character_States_Movement_Jumping);
-    MovementActionGameplayTags.Add(EMovementAction::Dodging,    URGameplayTags::TAG_Character_States_Movement_Dodging);
-    MovementActionGameplayTags.Add(EMovementAction::Crouching,  URGameplayTags::TAG_Character_States_Movement_Crouching);
-    MovementActionGameplayTags.Add(EMovementAction::Running,    URGameplayTags::TAG_Character_States_Movement_Running);
+    MovementActionGameplayTags.Add(EMovementAction::Jumping, URGameplayTags::TAG_Character_States_Movement_Jumping);
+    MovementActionGameplayTags.Add(EMovementAction::Dodging, URGameplayTags::TAG_Character_States_Movement_Dodging);
+    MovementActionGameplayTags.Add(EMovementAction::Crouching, URGameplayTags::TAG_Character_States_Movement_Crouching);
+    MovementActionGameplayTags.Add(EMovementAction::Running, URGameplayTags::TAG_Character_States_Movement_Running);
 }
 
 void AUR_Character::InitializeMovementModeGameplayTags()
 {
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_None, FGameplayTag{});
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Custom, FGameplayTag{});
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_MAX, FGameplayTag{});
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Walking,    URGameplayTags::TAG_Character_States_Physics_Walking);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_None, FGameplayTag{ });
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Custom, FGameplayTag{ });
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_MAX, FGameplayTag{ });
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Walking, URGameplayTags::TAG_Character_States_Physics_Walking);
     MovementModeGameplayTags.Add(EMovementMode::MOVE_NavWalking, URGameplayTags::TAG_Character_States_Physics_Walking);
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Falling,    URGameplayTags::TAG_Character_States_Physics_Falling);
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Swimming,   URGameplayTags::TAG_Character_States_Physics_Swimming);
-    MovementModeGameplayTags.Add(EMovementMode::MOVE_Flying,     URGameplayTags::TAG_Character_States_Physics_Flying);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Falling, URGameplayTags::TAG_Character_States_Physics_Falling);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Swimming, URGameplayTags::TAG_Character_States_Physics_Swimming);
+    MovementModeGameplayTags.Add(EMovementMode::MOVE_Flying, URGameplayTags::TAG_Character_States_Physics_Flying);
 }
 
 void AUR_Character::InitializeGameplayTags()
@@ -1322,6 +1506,29 @@ void AUR_Character::InitializeGameplayTags()
     InitializeMovementActionGameplayTags();
 
     InitializeMovementModeGameplayTags();
+
+    // Clear tags that may be lingering on the ability system from the previous pawn.
+    if (UUR_AbilitySystemComponent* ASC = GetGameAbilitySystemComponent())
+    {
+        for (const TPair<uint8, FGameplayTag>& TagMapping : URGameplayTags::MovementModeTagMap)
+        {
+            if (TagMapping.Value.IsValid())
+            {
+                ASC->SetLooseGameplayTagCount(TagMapping.Value, 0);
+            }
+        }
+
+        for (const TPair<uint8, FGameplayTag>& TagMapping : URGameplayTags::CustomMovementModeTagMap)
+        {
+            if (TagMapping.Value.IsValid())
+            {
+                ASC->SetLooseGameplayTagCount(TagMapping.Value, 0);
+            }
+        }
+
+        UUR_CharacterMovementComponent* MovementComponent = CastChecked<UUR_CharacterMovementComponent>(GetCharacterMovement());
+        SetMovementModeTag(MovementComponent->MovementMode, MovementComponent->CustomMovementMode, true);
+    }
 }
 
 void AUR_Character::InitializeGameplayTagsManager()
@@ -1341,9 +1548,9 @@ FGameplayTag AUR_Character::GetMovementActionGameplayTag(const EMovementAction I
 
 FGameplayTag AUR_Character::GetMovementModeGameplayTag(const EMovementMode InMovementMode)
 {
-    if (const UWorld* World{GetWorld()})
+    if (const UWorld* World{ GetWorld() })
     {
-        if (const AGameStateBase* GameState{World->GetGameState()})
+        if (const AGameStateBase* GameState{ World->GetGameState() })
         {
             if (GameState->HasMatchStarted())
             {
@@ -1352,7 +1559,46 @@ FGameplayTag AUR_Character::GetMovementModeGameplayTag(const EMovementMode InMov
         }
     }
 
-    return FGameplayTag{};
+    return FGameplayTag{ };
+}
+
+void AUR_Character::GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const
+{
+    if (const UUR_AbilitySystemComponent* ASC = GetGameAbilitySystemComponent())
+    {
+        ASC->GetOwnedGameplayTags(TagContainer);
+    }
+}
+
+
+bool AUR_Character::HasMatchingGameplayTag(FGameplayTag TagToCheck) const
+{
+    if (const UUR_AbilitySystemComponent* ASC = GetGameAbilitySystemComponent())
+    {
+        return ASC->HasMatchingGameplayTag(TagToCheck);
+    }
+
+    return false;
+}
+
+bool AUR_Character::HasAllMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const
+{
+    if (const UUR_AbilitySystemComponent* ASC = GetGameAbilitySystemComponent())
+    {
+        return ASC->HasAllMatchingGameplayTags(TagContainer);
+    }
+
+    return false;
+}
+
+bool AUR_Character::HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const
+{
+    if (const UUR_AbilitySystemComponent* ASC = GetGameAbilitySystemComponent())
+    {
+        return ASC->HasAnyMatchingGameplayTags(TagContainer);
+    }
+
+    return false;
 }
 
 void AUR_Character::UpdateMovementPhysicsGameplayTags(const EMovementMode PreviousMovementMode)
@@ -1367,12 +1613,12 @@ void AUR_Character::UpdateMovementPhysicsGameplayTags(const EMovementMode Previo
 void AUR_Character::UpdateGameplayTags(const FGameplayTagContainer& TagsToRemove, const FGameplayTagContainer& TagsToAdd)
 {
 #if WITH_EDITOR
-    FString TagsToPrint{};
+    FString TagsToPrint{ };
     for (const FGameplayTag& Tag : GameplayTags)
     {
         TagsToPrint.Append(Tag.ToString() + ", ");
     }
-    GAME_LOG(Game, Verbose, "Pre: Character (%s) has Tags: %s", *this->GetName(), *TagsToPrint);
+    GAME_LOG(LogGame, Verbose, "Pre: Character (%s) has Tags: %s", *this->GetName(), *TagsToPrint);
 #endif
 
     GameplayTags.RemoveTags(TagsToRemove);
@@ -1384,7 +1630,7 @@ void AUR_Character::UpdateGameplayTags(const FGameplayTagContainer& TagsToRemove
     {
         TagsToPrint.Append(Tag.ToString() + ", ");
     }
-    GAME_LOG(Game, Verbose, "Post: Character (%s) has Tags: %s", *this->GetName(), *TagsToPrint);
+    GAME_LOG(LogGame, Verbose, "Post: Character (%s) has Tags: %s", *this->GetName(), *TagsToPrint);
 #endif
 }
 
@@ -1405,4 +1651,16 @@ void AUR_Character::SetTeamIndex_Implementation(int32 NewTeamIndex)
     {
         IUR_TeamInterface::Execute_SetTeamIndex(PS, NewTeamIndex);
     }
+}
+
+void AUR_Character::OnControllerChangedTeam(UObject* TeamAgent, int32 OldTeam, int32 NewTeam)
+{
+    const FGenericTeamId MyOldTeamID = MyTeamID;
+    MyTeamID = IntegerToGenericTeamId(NewTeam);
+    ConditionalBroadcastTeamChanged(this, MyOldTeamID, MyTeamID);
+}
+
+void AUR_Character::OnRep_MyTeamID(FGenericTeamId OldTeamID)
+{
+    ConditionalBroadcastTeamChanged(this, OldTeamID, MyTeamID);
 }

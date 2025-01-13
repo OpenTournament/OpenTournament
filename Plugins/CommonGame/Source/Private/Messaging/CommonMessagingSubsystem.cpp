@@ -23,7 +23,8 @@ void UCommonMessagingSubsystem::Deinitialize()
 
 bool UCommonMessagingSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 {
-	if (!CastChecked<ULocalPlayer>(Outer)->GetGameInstance()->IsDedicatedServerInstance())
+	UGameInstance* GameInstance = CastChecked<ULocalPlayer>(Outer)->GetGameInstance();
+	if (GameInstance && !GameInstance->IsDedicatedServerInstance())
 	{
 		TArray<UClass*> ChildClasses;
 		GetDerivedClasses(GetClass(), ChildClasses, false);

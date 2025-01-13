@@ -1,15 +1,20 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_NavLinkGenerator_Falldown.h"
 
-#include "NavigationSystem.h"
 #include <KismetTraceUtils.h>
-#include "AI/NavigationSystemHelpers.h"
-#include "NavMesh/RecastNavMesh.h"
-#include "Components/BillboardComponent.h"
+#include <NavigationSystem.h>
+#include <AI/NavigationSystemHelpers.h>
+#include <NavMesh/RecastNavMesh.h>
+
+#if WITH_EDITORONLY_DATA
+#include <Components/BillboardComponent.h>
 #include "UObject/ConstructorHelpers.h"
+#endif
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_NavLinkGenerator_Falldown)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -79,14 +84,14 @@ void AUR_NavLinkGenerator_Falldown::Regenerate()
         return;
     }
 
-    auto NavData = NavSys->GetMainNavData();
+    const auto NavData = NavSys->GetMainNavData();
     if (!NavData)
     {
         UE_LOG(LogTemp, Warning, TEXT("NavData not available!"));
         return;
     }
 
-    auto NavMesh = Cast<ARecastNavMesh>(NavData);
+    const auto NavMesh = Cast<ARecastNavMesh>(NavData);
     if (!NavMesh)
     {
         UE_LOG(LogTemp, Warning, TEXT("NavMesh not available!"));
@@ -99,9 +104,10 @@ void AUR_NavLinkGenerator_Falldown::Regenerate()
     AgentRadius = NavMesh->AgentRadius;
 
     FRecastDebugGeometry Geometry;
+    FNavTileRef NavTile = FNavTileRef();
     Geometry.bGatherNavMeshEdges = 0;
     NavMesh->BeginBatchQuery();
-    NavMesh->GetDebugGeometryForTile(Geometry, -1);
+    NavMesh->GetDebugGeometryForTile(Geometry, NavTile);
     NavMesh->FinishBatchQuery();
 
     InternalRebuild(Geometry);
@@ -109,7 +115,9 @@ void AUR_NavLinkGenerator_Falldown::Regenerate()
     NumGeneratedLinks = PointLinks.Num();
 
     for (FNavigationLink& Link : PointLinks)
+    {
         Link.InitializeAreaClass(/*bForceRefresh=*/true);
+    }
 
     NavSys->UpdateActorInNavOctree(*this);
 }
@@ -119,7 +127,12 @@ struct FNavPoint
 {
     const FVector& Loc;
     float TracedMaxZ;    // cached trace max height above this point
-    FNavPoint(const FVector& V) : Loc(V), TracedMaxZ(0) {}
+
+    FNavPoint(const FVector& V)
+        : Loc(V)
+        , TracedMaxZ(0)
+    {
+    }
 };
 
 struct FEdgeSegment
@@ -128,8 +141,16 @@ struct FEdgeSegment
     FVector B;
     FVector Normal;
 
-    FEdgeSegment() {}
-    FEdgeSegment(const FVector& A, const FVector& B, const FVector& Normal) : A(A), B(B), Normal(Normal) {}
+    FEdgeSegment()
+    {
+    }
+
+    FEdgeSegment(const FVector& InA, const FVector& InB, const FVector& InNormal)
+        : A(InA)
+        , B(InB)
+        , Normal(InNormal)
+    {
+    }
 
     // Assume previous segment such that Prev.B == this.A
     void ComputeNormalFromPrevious(const FEdgeSegment& Prev)
@@ -147,8 +168,8 @@ void AUR_NavLinkGenerator_Falldown::InternalRebuild(FRecastDebugGeometry& Geomet
 
     while (Geometry.NavMeshEdges.Num() > 0)
     {
-        const FVector A = Geometry.NavMeshEdges.Pop(false);
-        const FVector B = Geometry.NavMeshEdges.Pop(false);
+        const FVector A = Geometry.NavMeshEdges.Pop(EAllowShrinking::No);
+        const FVector B = Geometry.NavMeshEdges.Pop(EAllowShrinking::No);
         const FVector& C = FindTriangleInGeometry(Geometry, A, B);
         const FVector& Normal = ComputeEdgeNormalFromTriangle(A, B, C);
         auto& Contour = AllContours.Emplace_GetRef();
@@ -201,18 +222,24 @@ void AUR_NavLinkGenerator_Falldown::InternalRebuild(FRecastDebugGeometry& Geomet
         {
             const FEdgeSegment& Seg = Contour[i];
             if (bDebugNavContours)
+            {
                 ::DrawDebugLine(GetWorld(), Seg.A, Seg.B, FColor::Green, false, DebugDuration, SDPG_World, 4.f);
+            }
 
             const FVector& Vertex = Seg.B;
             if (bDebugNavContours)
+            {
                 ::DrawDebugPoint(GetWorld(), Seg.B, 12.f, FColor::Blue, false, DebugDuration, SDPG_World);
+            }
 
             // Average vertex normal
             //TODO: Provide option to compute each vertex with both normals, with tolerance-based skipping
             const FEdgeSegment& Next = Contour[(i + 1) % Contour.Num()];
             const FVector& VertexNormal = ((Seg.Normal + Next.Normal) / 2).GetSafeNormal2D();
             if (bDebugNavContours)
+            {
                 ::DrawDebugLine(GetWorld(), Vertex, Vertex + 200 * VertexNormal, FColor::Red, false, DebugDuration, SDPG_World, 4.f);
+            }
 
             // First, test if we can fall of this edge.
             // To do that, we do a capsule trace from above this navmesh point, towards the normal (pointing outside nav mesh).
@@ -220,7 +247,9 @@ void AUR_NavLinkGenerator_Falldown::InternalRebuild(FRecastDebugGeometry& Geomet
             const FVector& CapsuleEnd = CapsuleStart + OutgoingTraceDist * VertexNormal;
             bool bHit = SweepTraceHelper(Hit, CapsuleStart, CapsuleEnd, Capsule, "NavLinkGen_CapsuleHorizontal", bDebugOutgoingCapsules);
             if (bHit)
+            {
                 continue;
+            }
 
             // We can go out, proceed...
             // Find all relevant potential destination points.
@@ -234,38 +263,53 @@ void AUR_NavLinkGenerator_Falldown::InternalRebuild(FRecastDebugGeometry& Geomet
             {
                 // Filter points outside of falling height range
                 if (Point.Loc.Z < DestinationMinZ || Point.Loc.Z > DestinationMaxZ)
+                {
                     continue;
+                }
 
                 // Filter if cached trace height doesn't reach high enough
                 if (Point.TracedMaxZ > 0 && (Point.Loc.Z + Point.TracedMaxZ) < CapsuleBottom.Z)
+                {
                     continue;
+                }
 
                 // Filter in front
                 if (VertexNormal.Dot((Point.Loc - Vertex).GetSafeNormal2D()) < MinLinkAngleDot)
+                {
                     continue;
+                }
 
                 // Filter by distance by height
                 const float MaxDist = DistanceByHeightMult * FMath::Pow(CapsuleBottom.Z - Point.Loc.Z, DistanceByHeightExp);
                 if (FVector::DistXY(Point.Loc, CapsuleBottom) > MaxDist)
+                {
                     continue;
+                }
 
                 KeepPoints.Emplace(&Point);
             }
 
             // Helper to test the viability of a potential destination point
-            const auto TestPoint = [&](FNavPoint& Point) {
+            const auto TestPoint = [&](FNavPoint& Point)
+            {
                 // Do the upward trace if we haven't yet
                 if (Point.TracedMaxZ == 0)
                 {
                     const FVector& TraceStart = Point.Loc + DestinationZOffset;
                     bool bHit = SweepTraceHelper(Hit, TraceStart, TraceStart + HeightTraceVector, Sphere, "NavLinkGen_SphereVertical", bDebugVerticalTraces);
                     if (bHit)
+                    {
                         Point.TracedMaxZ = FMath::Max(0.1f, Hit.Location.Z - TraceStart.Z);
+                    }
                     else
+                    {
                         Point.TracedMaxZ = HeightTraceVector.Z;
+                    }
 
                     if ((Point.Loc.Z + Point.TracedMaxZ) < CapsuleBottom.Z)
+                    {
                         return false;   // not good
+                    }
                 }
 
                 // Point seems good, do one last trace from capsule to that Z segment
@@ -277,7 +321,9 @@ void AUR_NavLinkGenerator_Falldown::InternalRebuild(FRecastDebugGeometry& Geomet
                     const FVector TraceEnd(Point.Loc.X, Point.Loc.Y, CapsuleEnd.Z - 0.5f * DistanceToSegment);  // heuristic Z
                     bool bHit = SweepTraceHelper(Hit, CapsuleEnd, TraceEnd, Capsule, "NavLinkGen_CapsuleDiagonal", bDebugDiagonalCapsules);
                     if (bHit)
+                    {
                         return false;
+                    }
                 }
 
                 // OK
@@ -287,7 +333,8 @@ void AUR_NavLinkGenerator_Falldown::InternalRebuild(FRecastDebugGeometry& Geomet
             // Find nearest viable point
 
             // Sort by 2D distance to capsule (furthest first)
-            KeepPoints.Sort([&](const FNavPoint& A, const FNavPoint& B) {
+            KeepPoints.Sort([&](const FNavPoint& A, const FNavPoint& B)
+            {
                 return FVector::DistSquaredXY(CapsuleBottom, A.Loc) > FVector::DistSquaredXY(CapsuleBottom, B.Loc);
             });
 
@@ -295,7 +342,7 @@ void AUR_NavLinkGenerator_Falldown::InternalRebuild(FRecastDebugGeometry& Geomet
             FNavPoint* FirstDestination = nullptr;
             while (KeepPoints.Num() > 0)
             {
-                FNavPoint* Point = KeepPoints.Pop(false);
+                FNavPoint* Point = KeepPoints.Pop(EAllowShrinking::No);
                 if (TestPoint(*Point))
                 {
                     FirstDestination = Point;
@@ -303,15 +350,19 @@ void AUR_NavLinkGenerator_Falldown::InternalRebuild(FRecastDebugGeometry& Geomet
                 }
             }
             if (FirstDestination == nullptr)
+            {
                 continue;
+            }
 
             // Cull points too close to first destination
-            KeepPoints.RemoveAll([&](const FNavPoint* Point) {
+            KeepPoints.RemoveAll([&](const FNavPoint* Point)
+            {
                 return FVector::DistSquared(FirstDestination->Loc, Point->Loc) < MinDistanceBetweenDestinationsSquared;
             });
 
             // Re-sort remaining points by 3D distance to the first destination (furthest first)
-            KeepPoints.Sort([&FirstDestination](const FNavPoint& A, const FNavPoint& B) {
+            KeepPoints.Sort([&FirstDestination](const FNavPoint& A, const FNavPoint& B)
+            {
                 return FVector::DistSquared(FirstDestination->Loc, A.Loc) > FVector::DistXY(FirstDestination->Loc, B.Loc);
             });
 
@@ -329,7 +380,9 @@ void AUR_NavLinkGenerator_Falldown::InternalRebuild(FRecastDebugGeometry& Geomet
             // We done!
             AddFalldownLink(Vertex, FirstDestination->Loc);
             if (SecondDestination != nullptr)
+            {
                 AddFalldownLink(Vertex, SecondDestination->Loc);
+            }
         }
     }
 }
@@ -344,11 +397,17 @@ const FVector& AUR_NavLinkGenerator_Falldown::FindTriangleInGeometry(const FReca
         for (int32 i = 0; i < Area.Num(); i += 3)
         {
             if ((Vertices[Area[i]] == A && Vertices[Area[i + 1]] == B) || (Vertices[Area[i]] == B && Vertices[Area[i + 1]] == A))
+            {
                 return Vertices[Area[i + 2]];
+            }
             if ((Vertices[Area[i]] == A && Vertices[Area[i + 2]] == B) || (Vertices[Area[i]] == B && Vertices[Area[i + 2]] == A))
+            {
                 return Vertices[Area[i + 1]];
+            }
             if ((Vertices[Area[i + 1]] == A && Vertices[Area[i + 2]] == B) || (Vertices[Area[i + 1]] == B && Vertices[Area[i + 2]] == A))
+            {
                 return Vertices[Area[i]];
+            }
         }
     }
     return FVector::ZeroVector;
@@ -360,7 +419,9 @@ FVector AUR_NavLinkGenerator_Falldown::ComputeEdgeNormalFromTriangle(const FVect
     const FVector& EdgeDir = (B - A).GetSafeNormal2D();
     FVector EdgeNormal(EdgeDir.Y, -EdgeDir.X, 0);
     if (EdgeNormal.Dot((C - A).GetSafeNormal2D()) > 0)
+    {
         EdgeNormal = -EdgeNormal;
+    }
     return EdgeNormal;
 }
 
@@ -390,12 +451,12 @@ void AUR_NavLinkGenerator_Falldown::GatherContour(TArray<FVector>& Edges, FEdgeC
         if ((i % 2) == 0)
         {
             Seg.B = Edges[i + 1];
-            Edges.RemoveAt(i, 2, false);
+            Edges.RemoveAt(i, 2, EAllowShrinking::No);
         }
         else
         {
             Seg.B = Edges[i - 1];
-            Edges.RemoveAt(i - 1, 2, false);
+            Edges.RemoveAt(i - 1, 2, EAllowShrinking::No);
         }
 
         Seg.ComputeNormalFromPrevious(Prev);
@@ -465,7 +526,9 @@ void AUR_NavLinkGenerator_Falldown::PostLoad()
 
     // not sure what this is for, copied from ANavLinkProxy
     for (FNavigationLink& Link : PointLinks)
+    {
         Link.InitializeAreaClass();
+    }
 }
 
 void AUR_NavLinkGenerator_Falldown::GetNavigationData(FNavigationRelevantData& Data) const

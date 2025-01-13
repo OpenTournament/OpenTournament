@@ -1,29 +1,30 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_TeamInfo.h"
 
-#include "Net/UnrealNetwork.h"
-//#include "Net/Core/PushModel/PushModel.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Net/UnrealNetwork.h"
 
 #include "UR_GameState.h"
 #include "UR_PlayerState.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_TeamInfo)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_TeamInfo::AUR_TeamInfo()
 {
-	// from PlayerState.cpp
-	SetRemoteRoleForBackwardsCompat(ROLE_SimulatedProxy);
-	bReplicates = true;
-	bAlwaysRelevant = true;
-	SetReplicatingMovement(false);
-	NetUpdateFrequency = 1;
-	bNetLoadOnClient = false;
+    // from PlayerState.cpp
+    SetRemoteRoleForBackwardsCompat(ROLE_SimulatedProxy);
+    bReplicates = true;
+    bAlwaysRelevant = true;
+    SetReplicatingMovement(false);
+    SetNetUpdateFrequency(1);
+    bNetLoadOnClient = false;
 }
 
 void AUR_TeamInfo::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -100,12 +101,12 @@ void AUR_TeamInfo::AddScore(const int32 Value)
 
 int32 AUR_TeamInfo::GetTeamIndex_Implementation()
 {
-	return TeamIndex;
+    return TeamIndex;
 }
 
 void AUR_TeamInfo::SetTeamIndex_Implementation(int32 NewTeamIndex)
 {
-	TeamIndex = NewTeamIndex;
+    TeamIndex = NewTeamIndex;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -125,5 +126,5 @@ AUR_TeamInfo* AUR_TeamInfo::GetTeamFromIndex(const UObject* WorldContextObject, 
             }
         }
     }
-    return NULL;
+    return nullptr;
 }

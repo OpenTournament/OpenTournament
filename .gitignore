@@ -51,6 +51,7 @@ Saved
 # =========================
 
 .idea
+OpenTournament.uproject.DotSettings.user
 Plugins/Developer/RiderLink/
 
 # =========================
@@ -65,6 +66,11 @@ Build/
 OpenTournament\.sln
 Source/LastSaved
 Config/DefaultEditorPerProjectUserSettings.ini
+
+#Allow Application Icons
+!Build/**/*.ico
+!Build/**/*.icns
+!Build/**/*.png
 
 # Ignore Source Files Installed from Asset Packs
 SourceFiles/InPlace
@@ -81,8 +87,8 @@ Source/UE4_MocapOnline_Tech_Notes.txt
 
 # Ignore These Asset Packs
 Content/*
-!Content/OpenTournament/*
-!Content/StarterContent/*
+!Content/OpenTournament
+!Content/StarterContent
 
 
 # Ignore Source File Formats
@@ -94,6 +100,7 @@ Content/*
 Binaries/*
 !Binaries/Win64
 Binaries/Win64/*
+Binaries/*/*DebugGame.dll
 !Binaries/Win64/OpenTournamentEditor.target
 !Binaries/Win64/UE4Editor.modules
 !Binaries/Win64/UnrealEditor.modules
@@ -109,5 +116,5 @@ Plugins/*/Binaries/Win64/*
 Plugins/*/Binaries/Win64/*-[0-9][0-9][0-9][0-9].dll
 !Plugins/*/Binaries/Win64/UE4Editor.modules
 !Plugins/*/Binaries/Win64/UnrealEditor.modules
-
+Plugins/*/Binaries/*/*DebugGame.dll
 

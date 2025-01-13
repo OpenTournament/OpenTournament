@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -19,6 +19,7 @@
 
 #include "OpenTournament.h"
 #include "UR_Character.h"
+#include "UR_LogChannels.h"
 #include "AI/UR_NavigationUtilities.h"
 
 #if WITH_EDITOR
@@ -29,24 +30,26 @@
 #include "Misc/AutomationTest.h"
 #endif
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_JumpPad)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer),
-    Destination(FTransform()),
-    bLockDestination(true),
-    bRetainHorizontalVelocity(false),
-    JumpActorClass(AUR_Character::StaticClass()),
-    JumpDuration(2.f),
-    JumpPadLaunchSound(nullptr),
-    JumpPadLaunchParticleClass(nullptr),
-    SplineProjectionDuration(2.f),
-    bRequiredTagsExact(false),
-    bExcludedTagsExact(true),
-    bUseJumpPadMaterialInstance(true),
-    JumpPadMaterialInstance(nullptr),
-    JumpPadMaterialIndex(0),
-    JumpPadMaterialParameterName("Color")
+AUR_JumpPad::AUR_JumpPad(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+    , Destination(FTransform())
+    , bLockDestination(true)
+    , bRetainHorizontalVelocity(false)
+    , JumpActorClass(AUR_Character::StaticClass())
+    , JumpDuration(2.f)
+    , JumpPadLaunchSound(nullptr)
+    , JumpPadLaunchParticleClass(nullptr)
+    , SplineProjectionDuration(2.f)
+    , bRequiredTagsExact(false)
+    , bExcludedTagsExact(true)
+    , bUseJumpPadMaterialInstance(true)
+    , JumpPadMaterialInstance(nullptr)
+    , JumpPadMaterialIndex(0)
+    , JumpPadMaterialParameterName("Color")
 {
     PrimaryActorTick.bCanEverTick = false;
     PrimaryActorTick.bStartWithTickEnabled = false;
@@ -111,7 +114,7 @@ void AUR_JumpPad::OnTriggerEnter(UPrimitiveComponent* HitComp, AActor* Other, UP
     {
         if (IsPermittedToJump(TargetCharacter))
         {
-            GAME_LOG(Game, Log, "Entered JumpPad (%s)", *GetName());
+            GAME_LOG(LogGame, Log, "Entered JumpPad (%s)", *GetName());
 
             TargetCharacter->LaunchCharacter(CalculateJumpVelocity(TargetCharacter), !bRetainHorizontalVelocity, true);
             PlayJumpPadEffects();
@@ -308,18 +311,3 @@ void AUR_JumpPad::EditorApplyScale(const FVector& DeltaScale, const FVector* Piv
     }
 }
 #endif
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-#if WITH_DEV_AUTOMATION_TESTS
-
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOpenTournamentJumpPadTest, "OpenTournament.Feature.Levels.LevelFeatures.Actor", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
-
-bool FOpenTournamentJumpPadTest::RunTest(const FString& Parameters)
-{
-    // TODO : Automated Tests
-
-    return true;
-}
-
-#endif // WITH_DEV_AUTOMATION_TESTS

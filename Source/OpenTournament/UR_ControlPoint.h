@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -25,14 +25,14 @@ class AUR_TriggerZone;
 * Ex. Domination Point, Onslaught Node, King of the Hill Point, Assault Hold-to-Capture Objectives, etc.
 */
 UCLASS(Abstract, BlueprintType, Blueprintable, HideCategories = (Tick, Rendering, Replication, Input, Actor, LOD, Cooking))
-class OPENTOURNAMENT_API AUR_ControlPoint : public AActor,
-    public IGameplayTagAssetInterface
+class OPENTOURNAMENT_API AUR_ControlPoint
+    : public AActor,
+      public IGameplayTagAssetInterface
 {
     GENERATED_BODY()
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 public:
-
     /**
     * TriggerZone ChildActor
     */
@@ -125,7 +125,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-    * Is this actor permitted to Control the Point? 
+    * Is this actor permitted to Control the Point?
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintPure, BlueprintCallable, Category = "ControlPoint")
     bool IsPermittedToControl(const AActor* TargetActor) const;
@@ -165,7 +165,10 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Gameplay Tags
 
-    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; }
+    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override
+    {
+        TagContainer = GameplayTags;
+    }
 
     /**
     * Gameplay Tags for this Actor

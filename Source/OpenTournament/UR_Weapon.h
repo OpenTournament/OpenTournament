@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -17,6 +17,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Forward Declarations
 
+class UUR_CrosshairData;
 class AUR_Character;
 class AUR_Projectile;
 class AUR_Ammo;
@@ -30,26 +31,6 @@ class UPaperSprite;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-UENUM(BlueprintType)
-enum class EWeaponState : uint8
-{
-    /** Weapon is not possessed */
-    Dropped,
-    /** Weapon is possessed but not equipped */
-    Holstered,
-    /** Weapon is currently being equipped, will be able to fire soon */
-    BringUp,
-    /** Weapon is equipped and can start firing anytime */
-    Idle,
-    /** Weapon is currently firing/charging/on cooldown - a FireMode is active */
-    Firing,
-    /** Generic state to prevent firing, can be used to implement eg. reloading */
-    Busy,
-    /** Weapon is currently being unequipped */
-    PutDown,
-
-    MAX             UMETA(Hidden)
-};
 
 USTRUCT(BlueprintType)
 struct FWeaponAmmoDefinition
@@ -62,8 +43,17 @@ struct FWeaponAmmoDefinition
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 AmmoAmount;
 
-    FWeaponAmmoDefinition() : AmmoClass(NULL), AmmoAmount(0) {}
-    FWeaponAmmoDefinition(TSubclassOf<AUR_Ammo> InClass, int32 InAmount) : AmmoClass(InClass), AmmoAmount(InAmount) {}
+    FWeaponAmmoDefinition()
+        : AmmoClass(NULL)
+        , AmmoAmount(0)
+    {
+    }
+
+    FWeaponAmmoDefinition(TSubclassOf<AUR_Ammo> InClass, int32 InAmount)
+        : AmmoClass(InClass)
+        , AmmoAmount(InAmount)
+    {
+    }
 };
 
 /**
@@ -78,24 +68,26 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponStateChangedSignature, AUR_W
  * Weapon Base Class
  */
 UCLASS(NotPlaceable)
-class OPENTOURNAMENT_API AUR_Weapon : public AActor
-    //, public IUR_FireModeBaseInterface
-    //, public IUR_FireModeBasicInterface
-    , public IUR_FireModeChargedInterface
-    , public IUR_FireModeContinuousInterface
+class OPENTOURNAMENT_API AUR_Weapon
+    : public AActor
+      //, public IUR_FireModeBaseInterface
+      //, public IUR_FireModeBasicInterface
+      , public IUR_FireModeChargedInterface
+      , public IUR_FireModeContinuousInterface
 {
     GENERATED_BODY()
 
-protected:	
+protected:
     AUR_Weapon(const FObjectInitializer& ObjectInitializer);
+
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
     virtual void PostInitializeComponents() override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Weapon possession
 
 public:
-
     UPROPERTY(BlueprintReadOnly)
     AUR_Character* URCharOwner;
 
@@ -103,14 +95,12 @@ public:
     void GiveTo(AUR_Character* NewOwner);
 
 protected:
-
     virtual void OnRep_Owner() override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // General properties
 
 protected:
-
     UPROPERTY(VisibleAnywhere, Category = "Weapon")
     USkeletalMeshComponent* Mesh1P;
 
@@ -121,7 +111,6 @@ protected:
     USoundBase* OutOfAmmoSound;
 
 public:
-
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
     USoundBase* PickupSound;
 
@@ -151,7 +140,7 @@ public:
     *
     * User settings should include weaponbar, grouping, keybindings, and crosshairs (to start with).
     * Might add per-weapon sensitivity, fov, and firemode remapping in the future as well.
-    * 
+    *
     * If unspecified, the game will fallback to parent weapon by default.
     * Specify this only if you want to target a different weapon for good reason.
     */
@@ -164,11 +153,16 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     UPaperSprite* WeaponSprite;
 
+    /**
+    * Default Crosshair Data
+    */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    UUR_CrosshairData* CrosshairData;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Some getters
 
 public:
-
     UFUNCTION(BlueprintPure, BlueprintNativeEvent, Category = "Weapon")
     int32 GetAmmoIndex(int32 ModeIndex = 0) const;
 
@@ -179,10 +173,16 @@ public:
     int32 GetCurrentAmmo(int32 ModeIndex = 0) const;
 
     UFUNCTION(BlueprintPure, Category = "Weapon")
-    FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+    FORCEINLINE USkeletalMeshComponent* GetMesh1P() const
+    {
+        return Mesh1P;
+    }
 
     UFUNCTION(BlueprintPure, Category = "Weapon")
-    FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
+    FORCEINLINE USkeletalMeshComponent* GetMesh3P() const
+    {
+        return Mesh3P;
+    }
 
     UFUNCTION(BlueprintPure, Category = "Weapon")
     USkeletalMeshComponent* GetVisibleMesh() const;
@@ -193,12 +193,10 @@ public:
     // Weapon Attachment
 
 public:
-
     UPROPERTY()
     bool bIsAttached;
 
 protected:
-
     /**
     * Verify if weapon is attached according to its current state.
     * in state Inactive, ensure weapon is detached and fully hidden.
@@ -220,7 +218,6 @@ protected:
     void DetachMeshFromPawn();
 
 public:
-
     /**
     * Update visibility of 1P and 3P meshes according to current view mode, keeping the right shadows.
     */
@@ -236,7 +233,6 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-
     //============================================================
     // Weapon animations & timings
     //============================================================
@@ -494,5 +490,4 @@ public:
     virtual void UpdateContinuousEffects_Implementation(UUR_FireModeContinuous* FireMode, float DeltaTime) override;
 
     virtual void StopContinuousEffects_Implementation(UUR_FireModeContinuous* FireMode) override;
-
 };

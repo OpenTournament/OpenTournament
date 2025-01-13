@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -7,6 +7,8 @@
 #include "GameFramework/InputSettings.h"
 
 #include "Engine/World.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_PlayerInput)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -67,7 +69,8 @@ void UUR_PlayerInput::SetupUserSettings()
     {
         if (AxisShouldGenerateTapAction(AxisMapping.AxisName, TapActionName))
         {
-            UserActionMappings.RemoveAll([TapActionName](const FInputActionKeyMapping& Other) {
+            UserActionMappings.RemoveAll([TapActionName](const FInputActionKeyMapping& Other)
+            {
                 return Other.ActionName.IsEqual(TapActionName);
             });
         }
@@ -103,7 +106,8 @@ void UUR_PlayerInput::RegenerateInternalBindings()
     {
         if (AxisShouldGenerateTapAction(AxisMapping.AxisName, TapActionName))
         {
-            ActionMappings.RemoveAll([TapActionName](const FInputActionKeyMapping& Other) {
+            ActionMappings.RemoveAll([TapActionName](const FInputActionKeyMapping& Other)
+            {
                 return Other.ActionName.IsEqual(TapActionName);
             });
         }

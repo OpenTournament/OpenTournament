@@ -1,20 +1,23 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "GameFramework/Actor.h"
-#include "AI/Navigation/NavRelevantInterface.h"
+#include <GameFramework/Actor.h>
+
+#include <AI/Navigation/NavRelevantInterface.h>
+
 #include "UR_NavLinkGenerator_Falldown.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+struct FNavigationLink;
 class UBillboardComponent;
 struct FRecastDebugGeometry;
 
 struct FEdgeSegment;
-typedef TArray<FEdgeSegment> FEdgeContour;
+using FEdgeContour = TArray<FEdgeSegment>;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,12 +25,13 @@ typedef TArray<FEdgeSegment> FEdgeContour;
  * TODO
  */
 UCLASS(Blueprintable, AutoExpandCategories = (Generator), HideCategories = (Transform, Replication, Collision, HLOD, Physics, Networking, Input, Actor, Cooking))
-class OPENTOURNAMENT_API AUR_NavLinkGenerator_Falldown : public AActor, public INavRelevantInterface
+class OPENTOURNAMENT_API AUR_NavLinkGenerator_Falldown
+    : public AActor
+    , public INavRelevantInterface
 {
     GENERATED_BODY()
 
 public:
-
     AUR_NavLinkGenerator_Falldown();
 
 #if WITH_EDITORONLY_DATA
@@ -122,7 +126,6 @@ public:
     virtual FBox GetNavigationBounds() const override;
     virtual bool IsNavigationRelevant() const override;
     // END INavRelevantInterface
-
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

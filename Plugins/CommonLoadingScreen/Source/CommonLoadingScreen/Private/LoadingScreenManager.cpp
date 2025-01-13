@@ -142,6 +142,9 @@ void ULoadingScreenManager::Deinitialize()
 
 	FCoreUObjectDelegates::PreLoadMap.RemoveAll(this);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
+
+	// We are done, so do not attempt to tick us again
+	SetTickableTickType(ETickableTickType::Never);
 }
 
 bool ULoadingScreenManager::ShouldCreateSubsystem(UObject* Outer) const
@@ -161,12 +164,18 @@ void ULoadingScreenManager::Tick(float DeltaTime)
 
 ETickableTickType ULoadingScreenManager::GetTickableTickType() const
 {
+	if (IsTemplate())
+	{
+		return ETickableTickType::Never;
+	}
 	return ETickableTickType::Conditional;
 }
 
 bool ULoadingScreenManager::IsTickable() const
 {
-	return !HasAnyFlags(RF_ClassDefaultObject);
+	// Don't tick if we don't have a game viewport client, this catches cases that ShouldCreateSubsystem does not
+	UGameInstance* GameInstance = GetGameInstance();
+	return (GameInstance && GameInstance->GetGameViewportClient());
 }
 
 TStatId ULoadingScreenManager::GetStatId() const
@@ -408,6 +417,13 @@ bool ULoadingScreenManager::ShouldShowLoadingScreen()
 		return false;
 	}
 #endif
+
+	// Can't show a loading screen if there's no game viewport
+	UGameInstance* LocalGameInstance = GetGameInstance();
+	if (LocalGameInstance->GetGameViewportClient() == nullptr)
+	{
+		return false;
+	}
 
 	// Check for a need to show the loading screen
 	const bool bNeedToShowLoadingScreen = CheckForAnyNeedToShowLoadingScreen();

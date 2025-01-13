@@ -1,18 +1,20 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_InventoryComponent.h"
 
-#include "Net/UnrealNetwork.h"
-#include "TimerManager.h"
 #include "Engine.h"
+#include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 
 #include "OpenTournament.h"
-#include "UR_Weapon.h"
 #include "UR_Ammo.h"
-#include "UR_UserSettings.h"
 #include "UR_Pickup_DroppedWeapon.h"
+#include "UR_UserSettings.h"
+#include "UR_Weapon.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_InventoryComponent)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -33,6 +35,11 @@ void UUR_InventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+AUR_Weapon* UUR_InventoryComponent::GetActiveWeapon() const
+{
+    return ActiveWeapon;
+}
 
 bool UUR_InventoryComponent::IsLocallyControlled() const
 {
@@ -145,7 +152,8 @@ void UUR_InventoryComponent::SelectWeapon(int32 Index)
 {
     if (WeaponGroups.IsValidIndex(Index))
     {
-        auto GroupWeapons = WeaponGroups[Index].Weapons.FilterByPredicate([&](AUR_Weapon* W) {
+        auto GroupWeapons = WeaponGroups[Index].Weapons.FilterByPredicate([&](AUR_Weapon* W)
+        {
             return W && (W->HasAnyAmmo() || W == DesiredWeapon);
         });
         if (GroupWeapons.Num() > 0)
@@ -176,58 +184,55 @@ bool UUR_InventoryComponent::NextWeapon()
     // Option 1 : prevent weapon from being present in multiple _visible_ groups.
 
     // Option 2 : build an array of weapons from visible groups, remove duplicates, then work with that.
-
-    TArray<AUR_Weapon*> WorkArray;
-    for (auto& Group : WeaponGroups)
-    {
-        if (Group.Visibility != EWeaponGroupVisibility::Hidden)
-        {
-            for (auto Weapon : Group.Weapons)
-            {
-                // Only include weappons with ammo, and also current weapon for reference
-                if (Weapon && (Weapon->HasAnyAmmo() || Weapon == DesiredWeapon))
-                {
-                    WorkArray.AddUnique(Weapon);
-                }
-            }
-        }
-    }
-    if (WorkArray.Num() > 0)
-    {
-        int32 SelectedIndex = WorkArray.Find(DesiredWeapon);
-        int32 DesiredIndex = (SelectedIndex + 1) % WorkArray.Num();
-        if (DesiredIndex != SelectedIndex)
-        {
-            SetDesiredWeapon(WorkArray[DesiredIndex]);
-            return true;
-        }
-    }
-    return false;
+    return CycleSwitchWeapon(1);
 }
 
 bool UUR_InventoryComponent::PrevWeapon()
 {
+    return CycleSwitchWeapon(-1);
+}
+
+TArray<AUR_Weapon*> UUR_InventoryComponent::GetEligibleWeapons()
+{
     TArray<AUR_Weapon*> WorkArray;
-    for (const auto& Group : WeaponGroups)
+    for (const auto& IterGroup : WeaponGroups)
     {
-        if (Group.Visibility != EWeaponGroupVisibility::Hidden)
+        if (IterGroup.Visibility != EWeaponGroupVisibility::Hidden)
         {
-            for (auto Weapon : Group.Weapons)
+            for (const auto& IterWeapon : IterGroup.Weapons)
             {
-                if (Weapon && (Weapon->HasAnyAmmo() || Weapon == DesiredWeapon))
+                // Only include weapons with ammo, and also current weapon for reference
+                if (IterWeapon && (IterWeapon->HasAnyAmmo() || IterWeapon == DesiredWeapon))
                 {
-                    WorkArray.AddUnique(Weapon);
+                    WorkArray.AddUnique(IterWeapon);
                 }
             }
         }
     }
-    if (WorkArray.Num() > 0)
+    return WorkArray;
+}
+
+int32 UUR_InventoryComponent::GetDesiredWeaponIndex(const TArray<AUR_Weapon*>& AvailableWeapons) const
+{
+    int32 Index = AvailableWeapons.Find(DesiredWeapon);
+    return Index == INDEX_NONE ? 0 : Index;
+}
+
+int32 UUR_InventoryComponent::CalculateNewIndex(int32 CurrentIndex, int32 Offset, int32 NumItems)
+{
+    return (CurrentIndex + Offset + NumItems) % NumItems;
+}
+
+bool UUR_InventoryComponent::CycleSwitchWeapon(int32 Offset)
+{
+    TArray<AUR_Weapon*> AvailableWeapons = GetEligibleWeapons();
+    if (AvailableWeapons.Num() > 0)
     {
-        int32 SelectedIndex = WorkArray.Find(DesiredWeapon);
-        int32 DesiredIndex = (WorkArray.Num() + (SelectedIndex != INDEX_NONE ? SelectedIndex : 0) - 1) % WorkArray.Num();
-        if (DesiredIndex != SelectedIndex)
+        int32 CurrentIndex = GetDesiredWeaponIndex(AvailableWeapons);
+        int32 NewIndex = CalculateNewIndex(CurrentIndex, Offset, AvailableWeapons.Num());
+        if (NewIndex != CurrentIndex)
         {
-            SetDesiredWeapon(WorkArray[DesiredIndex]);
+            SetDesiredWeapon(AvailableWeapons[NewIndex]);
             return true;
         }
     }
@@ -258,7 +263,7 @@ void UUR_InventoryComponent::SelectPreferredWeapon()
             return;
         }
     }
-    SetDesiredWeapon(NULL);
+    SetDesiredWeapon(nullptr);
 }
 
 void UUR_InventoryComponent::SetDesiredWeapon(AUR_Weapon* InWeapon)
@@ -502,7 +507,11 @@ AUR_Pickup_DroppedWeapon* UUR_InventoryComponent::DropWeapon(AUR_Weapon* WeaponT
     FTransform SpawnTransform(SpawnRot, SpawnLoc);
 
     // Spawn dropped pickup
-    auto DroppedWeapon = Cast<AUR_Pickup_DroppedWeapon>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, AUR_Pickup_DroppedWeapon::StaticClass(), SpawnTransform, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn, GetOwner()));
+    auto DroppedWeapon = Cast<AUR_Pickup_DroppedWeapon>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this,
+        AUR_Pickup_DroppedWeapon::StaticClass(),
+        SpawnTransform,
+        ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn,
+        GetOwner()));
     if (!DroppedWeapon)
     {
         return NULL;

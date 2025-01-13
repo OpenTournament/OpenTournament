@@ -1,51 +1,24 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_HUD.h"
 
-//UMG
-#include "SlateBasics.h"
-#include "Runtime/UMG/Public/UMG.h"
-#include "Runtime/UMG/Public/UMGStyle.h"
-#include "Runtime/UMG/Public/Slate/SObjectWidget.h"
-#include "Runtime/UMG/Public/IUMGModule.h"
-#include "Runtime/UMG/Public/Blueprint/UserWidget.h"
+#include <AbilitySystemComponent.h>
+#include <AbilitySystemGlobals.h>
+#include <Blueprint/UserWidget.h>
+#include <Blueprint/WidgetBlueprintLibrary.h>
+#include <Components/GameFrameworkComponentManager.h>
+#include <UObject/UObjectIterator.h>
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_HUD)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_HUD::AUR_HUD()
-    : CrosshairTex(nullptr)
+AUR_HUD::AUR_HUD(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
 {
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-void AUR_HUD::DrawHUD()
-{
-    Super::DrawHUD();
-
-    // Draw very simple crosshair
-    DrawCrosshair();
-}
-
-void AUR_HUD::DrawCrosshair()
-{
-    if (CrosshairTex == nullptr)
-    {
-        return;
-    }
-
-    // find center of the Canvas
-    const FVector2D Center(Canvas->ClipX * 0.5f, Canvas->ClipY * 0.5f);
-
-    // offset by half the texture's dimensions so that the center of the texture aligns with the center of the Canvas
-    const FVector2D CrosshairDrawPosition((Center.X), (Center.Y + 20.0f));
-
-    // draw the crosshair
-    FCanvasTileItem TileItem(CrosshairDrawPosition, CrosshairTex->GetResource(), FLinearColor::White);
-    TileItem.BlendMode = SE_BLEND_Translucent;
-    Canvas->DrawItem(TileItem);
+    PrimaryActorTick.bStartWithTickEnabled = false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,4 +26,74 @@ void AUR_HUD::DrawCrosshair()
 void AUR_HUD::Client_RestartHUD_Implementation()
 {
     OnHUDRestart();
+}
+
+void AUR_HUD::PreInitializeComponents()
+{
+    Super::PreInitializeComponents();
+
+    UGameFrameworkComponentManager::AddGameFrameworkComponentReceiver(this);
+}
+
+void AUR_HUD::BeginPlay()
+{
+    UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(this, UGameFrameworkComponentManager::NAME_GameActorReady);
+
+    Super::BeginPlay();
+}
+
+void AUR_HUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    UGameFrameworkComponentManager::RemoveGameFrameworkComponentReceiver(this);
+
+    Super::EndPlay(EndPlayReason);
+}
+
+void AUR_HUD::GetDebugActorList(TArray<AActor*>& InOutList)
+{
+    UWorld* World = GetWorld();
+
+    Super::GetDebugActorList(InOutList);
+
+    // Add all actors with an ability system component.
+    for (TObjectIterator<UAbilitySystemComponent> It; It; ++It)
+    {
+        if (UAbilitySystemComponent* ASC = *It)
+        {
+            if (!ASC->HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
+            {
+                AActor* AvatarActor = ASC->GetAvatarActor();
+                AActor* OwnerActor = ASC->GetOwnerActor();
+
+                if (AvatarActor && UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(AvatarActor))
+                {
+                    AddActorToDebugList(AvatarActor, InOutList, World);
+                }
+                else if (OwnerActor && UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OwnerActor))
+                {
+                    AddActorToDebugList(OwnerActor, InOutList, World);
+                }
+            }
+        }
+    }
+}
+
+void AUR_HUD::ShowHUD()
+{
+    Super::ShowHUD();
+
+    TArray<UUserWidget*> WidgetsToHide;
+    UWidgetBlueprintLibrary::GetAllWidgetsOfClass(this, WidgetsToHide, UUserWidget::StaticClass(), false);
+
+    for (UUserWidget* Widget : WidgetsToHide)
+    {
+        if (Widget && Widget->IsInViewport())
+        {
+            // @! TODO : Replace with behavior in UR_UIManagerSubsystem
+            // This will probably screw up any widgets that might actually be interactable,
+            // but this should only be relevant for HUD
+            auto VisibilityState = bShowHUD ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Hidden;
+            Widget->SetVisibility(VisibilityState);
+        }
+    }
 }

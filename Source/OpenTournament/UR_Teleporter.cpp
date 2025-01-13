@@ -1,9 +1,10 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Teleporter.h"
 
+#include "NavLinkComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -14,42 +15,45 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
-#include "NavLinkComponent.h"
 
 #include "OpenTournament.h"
 #include "UR_Character.h"
-#include "UR_CharacterMovementComponent.h"
+#include "Character/UR_CharacterMovementComponent.h"
+#include "UR_LogChannels.h"
+#include "UR_Logging.h"
 #include "AI/UR_NavigationUtilities.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #endif
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_Teleporter)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer),
-    DestinationActor(nullptr),
-    ExitRotationType(EExitRotation::Relative),
-    bKeepMomentum(true),
-    TeleportActorClass(ACharacter::StaticClass()),
-    TeleportOutSound(nullptr),
-    TeleportInSound(nullptr),
-    TeleporterEnabledSound(nullptr),
-    TeleporterDisabledSound(nullptr),
-    TeleportOutParticleSystemClass(nullptr),
-    TeleportInParticleSystemClass(nullptr),
-    TeleporterEnabledParticleSystemClass(nullptr),
-    TeleporterDisabledParticleSystemClass(nullptr),
-    bIsEnabled(true),
-    bRequiredTagsExact(false),
-    bExcludedTagsExact(true),
-    TeleporterMaterialInstance(nullptr),
-    TeleporterMaterialIndex(INDEX_NONE),
-    TeleporterMaterialParameterName("Color"),
-    TeleporterMaterialColorBase(FLinearColor(208.f, 160.f, 0.f, 1.f)),
-    TeleporterMaterialColorEvent(FLinearColor(250.f, 250.f, 25.f, 1.f)),
-    TeleporterMaterialColorInactive(FLinearColor(128.f, 128.f, 160.f, 1.f))
+AUR_Teleporter::AUR_Teleporter(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+    , DestinationActor(nullptr)
+    , ExitRotationType(EExitRotation::Relative)
+    , bKeepMomentum(true)
+    , TeleportActorClass(ACharacter::StaticClass())
+    , TeleportOutSound(nullptr)
+    , TeleportInSound(nullptr)
+    , TeleporterEnabledSound(nullptr)
+    , TeleporterDisabledSound(nullptr)
+    , TeleportOutParticleSystemClass(nullptr)
+    , TeleportInParticleSystemClass(nullptr)
+    , TeleporterEnabledParticleSystemClass(nullptr)
+    , TeleporterDisabledParticleSystemClass(nullptr)
+    , bIsEnabled(true)
+    , bRequiredTagsExact(false)
+    , bExcludedTagsExact(true)
+    , TeleporterMaterialInstance(nullptr)
+    , TeleporterMaterialIndex(INDEX_NONE)
+    , TeleporterMaterialParameterName("Color")
+    , TeleporterMaterialColorBase(FLinearColor(208.f, 160.f, 0.f, 1.f))
+    , TeleporterMaterialColorEvent(FLinearColor(250.f, 250.f, 25.f, 1.f))
+    , TeleporterMaterialColorInactive(FLinearColor(128.f, 128.f, 160.f, 1.f))
 {
     CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
     CapsuleComponent->SetCapsuleSize(45.f, 90.f, false);
@@ -133,15 +137,15 @@ void AUR_Teleporter::Teleport(AActor* Other)
 
     if (IsPermittedToTeleport(Other))
     {
-        GAME_LOG(Game, Verbose, "Teleporter (%s) Triggered", *GetName());
+        GAME_LOG(LogGame, Verbose, "Teleporter (%s) Triggered", *GetName());
 
         if (InternalTeleport(Other))
         {
-            GAME_LOG(Game, Log, "Teleport of Character (%s) succeeded", *Other->GetName());
+            GAME_LOG(LogGame, Log, "Teleport of Character (%s) succeeded", *Other->GetName());
         }
         else
         {
-            GAME_LOG(Game, Warning, "Teleport of Character (%s) failed", *Other->GetName());
+            GAME_LOG(LogGame, Warning, "Teleport of Character (%s) failed", *Other->GetName());
         }
     }
 }
@@ -366,7 +370,7 @@ void AUR_Teleporter::Enable()
     CapsuleComponent->GetOverlappingActors(OverlappingActors, TeleportActorClass);
     for (auto& OverlappingActor : OverlappingActors)
     {
-        GAME_LOG(Game, Log, "Overlapping Actor (%s)", *OverlappingActor->GetName());
+        GAME_LOG(LogGame, Log, "Overlapping Actor (%s)", *OverlappingActor->GetName());
         Teleport(OverlappingActor);
     }
 
@@ -438,7 +442,7 @@ void AUR_Teleporter::SetTeleportDestinationActor(AActor* InActor)
     }
     else
     {
-        GAME_LOG(Game, Warning, "Setting Teleporter (%s) DestinationActor to nullptr Actor!", *this->GetName());
+        GAME_LOG(LogGame, Warning, "Setting Teleporter (%s) DestinationActor to nullptr Actor!", *this->GetName());
     }
 }
 
@@ -450,7 +454,7 @@ void AUR_Teleporter::InitializeDynamicMaterialInstance()
     {
         if (UMaterialInterface* Material = MeshComponent->GetMaterial(TeleporterMaterialIndex))
         {
-            TeleporterMaterialInstance =  UMaterialInstanceDynamic::Create(Material, nullptr);
+            TeleporterMaterialInstance = UMaterialInstanceDynamic::Create(Material, nullptr);
             TeleporterMaterialInstance->SetVectorParameterValue(TeleporterMaterialParameterName, TeleporterMaterialColorBase);
             MeshComponent->SetMaterial(TeleporterMaterialIndex, TeleporterMaterialInstance);
         }
@@ -485,18 +489,3 @@ bool AUR_Teleporter::CanEditChange(const FProperty* InProperty) const
     return ParentVal;
 }
 #endif
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-#if WITH_DEV_AUTOMATION_TESTS
-
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOpenTournamentTeleporterTest, "OpenTournament.Feature.Levels.LevelFeatures.Actor", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
-
-bool FOpenTournamentTeleporterTest::RunTest(const FString& Parameters)
-{
-    // TODO : Automated Tests
-
-    return true;
-}
-
-#endif // WITH_DEV_AUTOMATION_TESTS

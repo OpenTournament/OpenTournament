@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Project, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -17,6 +17,8 @@
 #include "UR_FunctionLibrary.h"
 #include "UR_PlayerController.h"
 #include "UR_LocalMessage.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_PickupBase)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
