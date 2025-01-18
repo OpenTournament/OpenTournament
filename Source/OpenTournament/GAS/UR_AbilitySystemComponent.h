@@ -48,7 +48,7 @@ public:
     using TShouldCancelAbilityFunc = TFunctionRef<bool(const UUR_GameplayAbility* InGameAbility, FGameplayAbilitySpecHandle Handle)>;
     void CancelAbilitiesByFunc(TShouldCancelAbilityFunc ShouldCancelFunc, bool bReplicateCancelAbility);
 
-.    void CancelInputActivatedAbilities(bool bReplicateCancelAbility);
+    void CancelInputActivatedAbilities(bool bReplicateCancelAbility);
 
     void AbilityInputTagPressed(const FGameplayTag& InputTag);
     void AbilityInputTagReleased(const FGameplayTag& InputTag);
