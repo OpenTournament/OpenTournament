@@ -35,14 +35,6 @@
 			"Enabled": true
 		},
 		{
-			"Name": "SteamVR",
-			"Enabled": false
-		},
-		{
-			"Name": "OculusVR",
-			"Enabled": false
-		},
-		{
 			"Name": "GameplayAbilities",
 			"Enabled": true
 		},
@@ -65,22 +57,6 @@
 		{
 			"Name": "FunctionalTestingEditor",
 			"Enabled": true
-		},
-		{
-			"Name": "MagicLeapMedia",
-			"Enabled": false
-		},
-		{
-			"Name": "MagicLeap",
-			"Enabled": false
-		},
-		{
-			"Name": "MagicLeapPassableWorld",
-			"Enabled": false
-		},
-		{
-			"Name": "MLSDK",
-			"Enabled": false
 		},
 		{
 			"Name": "AlembicImporter",
@@ -163,15 +139,7 @@
 			"Enabled": false
 		},
 		{
-			"Name": "PostSplashScreen",
-			"Enabled": false
-		},
-		{
 			"Name": "DatasmithContent",
-			"Enabled": false
-		},
-		{
-			"Name": "EditableMesh",
 			"Enabled": false
 		},
 		{
@@ -211,19 +179,11 @@
 			"Enabled": false
 		},
 		{
-			"Name": "MatineeToLevelSequence",
-			"Enabled": false
-		},
-		{
 			"Name": "MovieRenderPipeline",
 			"Enabled": false
 		},
 		{
 			"Name": "LevelSequenceEditor",
-			"Enabled": false
-		},
-		{
-			"Name": "LightPropagationVolume",
 			"Enabled": false
 		},
 		{
@@ -256,10 +216,6 @@
 		},
 		{
 			"Name": "PerforceSourceControl",
-			"Enabled": false
-		},
-		{
-			"Name": "PhysXVehicles",
 			"Enabled": false
 		},
 		{
@@ -315,10 +271,6 @@
 			"Enabled": false
 		},
 		{
-			"Name": "NUTUnrealEngine4",
-			"Enabled": false
-		},
-		{
 			"Name": "NetcodeUnitTest",
 			"Enabled": false
 		},
@@ -328,10 +280,6 @@
 		},
 		{
 			"Name": "ActorSequence",
-			"Enabled": false
-		},
-		{
-			"Name": "RuntimePhysXCooking",
 			"Enabled": false
 		},
 		{
@@ -356,10 +304,6 @@
 		},
 		{
 			"Name": "TcpMessaging",
-			"Enabled": false
-		},
-		{
-			"Name": "UMods",
 			"Enabled": false
 		},
 		{
@@ -423,16 +367,16 @@
 			"Enabled": true
 		},
 		{
-			"Name": "BUIValidator",
-			"Enabled": false
-		},
-		{
 			"Name": "ControlFlows",
 			"Enabled": true
 		},
 		{
 			"Name": "OnlineFramework",
 			"Enabled": true
+		},
+		{
+			"Name": "BUIValidator",
+			"Enabled": false
 		},
 		{
 			"Name": "SignificanceManager",
@@ -462,7 +406,6 @@
 	],
 	"TargetPlatforms": [
 		"Win64",
-		"Linux",
-		"Windows"
+		"Linux"
 	]
 }
