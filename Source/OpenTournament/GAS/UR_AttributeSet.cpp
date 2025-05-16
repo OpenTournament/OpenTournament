@@ -4,11 +4,18 @@
 
 #include "UR_AttributeSet.h"
 
+#include "GameplayEffectExtension.h"
+#include "GameVerbMessage.h"
 #include "UR_AbilitySystemComponent.h"
 #include "UR_LogChannels.h"
+#include "UR_GameplayTags.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 #include "Net/UnrealNetwork.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_AttributeSet)
+
+UE_DEFINE_GAMEPLAY_TAG(TAG_Gameplay_Armor_Change, "Gameplay.Armor.Change");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Gameplay_MaxArmor_Change, "Gameplay.MaxArmor.Change");
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -71,9 +78,71 @@ void UUR_AttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, f
     }
 }
 
+void UUR_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) const
+{
+    Super::PostAttributeBaseChange(Attribute, OldValue, NewValue);
+
+    FGameplayTag RelevantTag = FGameplayTag::EmptyTag;
+    double Magnitude = 0;
+    if (Attribute == GetArmorMaxAttribute())
+    {
+        RelevantTag = TAG_Gameplay_MaxArmor_Change;
+        Magnitude = GetArmorMax();
+    }
+    else if (Attribute == GetArmorAttribute())
+    {
+        RelevantTag = TAG_Gameplay_Armor_Change;
+        Magnitude = GetArmor();
+    }
+
+    FGameVerbMessage Message;
+    Message.Verb = RelevantTag;
+    Message.Magnitude = Magnitude;
+
+    UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(GetWorld());
+    MessageSystem.BroadcastMessage(Message.Verb, Message);
+}
+
 void UUR_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
     Super::PostGameplayEffectExecute(Data);
+
+    FGameplayTag ReleventTag = FGameplayTag::EmptyTag;
+    double Magnitude = 0;
+
+    if (Data.EvaluatedData.Attribute == GetOverHealthAttribute())
+    {
+    }
+    else if (Data.EvaluatedData.Attribute == GetArmorAttribute())
+    {
+        ReleventTag = TAG_Gameplay_Armor_Change;
+        Magnitude = GetArmor();
+    }
+    else if (Data.EvaluatedData.Attribute == GetArmorMaxAttribute())
+    {
+        ReleventTag = TAG_Gameplay_MaxArmor_Change;
+        Magnitude = GetArmorMax();
+    }
+    else if (Data.EvaluatedData.Attribute == GetShieldAttribute())
+    {
+    }
+    else if (Data.EvaluatedData.Attribute == GetEnergyAttribute())
+    {
+    }
+    else if (Data.EvaluatedData.Attribute == GetEnergyMaxAttribute())
+    {
+    }
+
+    FGameVerbMessage Message;
+    Message.Verb = ReleventTag;
+    Message.Instigator = Data.EffectSpec.GetEffectContext().GetEffectCauser();
+    Message.InstigatorTags = *Data.EffectSpec.CapturedSourceTags.GetAggregatedTags();
+    Message.Target = Data.Target;
+    Message.TargetTags = *Data.EffectSpec.CapturedTargetTags.GetAggregatedTags();
+    Message.Magnitude = Magnitude;
+
+    UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(GetWorld());
+    MessageSystem.BroadcastMessage(Message.Verb, Message);
 }
 
 void UUR_AttributeSet::AdjustAttributeForMaxChange(FGameplayAttributeData& AffectedAttribute, const FGameplayAttributeData& MaxAttribute, float NewMaxValue, const FGameplayAttribute& AffectedAttributeProperty)
