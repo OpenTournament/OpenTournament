@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -26,7 +26,7 @@ FUR_GameplayEffectContext* FUR_GameplayEffectContext::ExtractEffectContext(struc
     FGameplayEffectContext* BaseEffectContext = Handle.Get();
     if (BaseEffectContext && BaseEffectContext->GetScriptStruct()->IsChildOf(FUR_GameplayEffectContext::StaticStruct()))
     {
-        return (FUR_GameplayEffectContext*)BaseEffectContext;
+        return static_cast<FUR_GameplayEffectContext*>(BaseEffectContext);
     }
 
     return nullptr;

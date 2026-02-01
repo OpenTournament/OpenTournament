@@ -3,13 +3,14 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_ExperienceActionSet.h"
-#include "GameFeatureAction.h"
+
+#include <GameFeatureAction.h>
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_ExperienceActionSet)
 
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
 #endif
-
-#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_ExperienceActionSet)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,8 +19,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_ExperienceActionSet::UUR_ExperienceActionSet()
-{
-}
+{}
 
 #if WITH_EDITOR
 EDataValidationResult UUR_ExperienceActionSet::IsDataValid(FDataValidationContext& Context) const

@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +41,7 @@ void UUR_FireModeZoom::RequestStartFire_Implementation()
     if (AUR_Character* URChar = GetInstigator<AUR_Character>())
     {
         bool bActivate = (URChar->CurrentZoomInterface != this);
-        URChar->RegisterZoomInterface(bActivate ? this : NULL);
+        URChar->RegisterZoomInterface(bActivate ? this : nullptr);
     }
 }
 
@@ -52,7 +52,7 @@ void UUR_FireModeZoom::Deactivate()
     // Deactivate zoom when the component is deactivated
     if (AUR_Character* URChar = GetInstigator<AUR_Character>())
     {
-        URChar->RegisterZoomInterface(NULL);
+        URChar->RegisterZoomInterface(nullptr);
     }
 }
 
@@ -104,7 +104,7 @@ void UUR_FireModeZoom::AIF_InternalDeactivate_Implementation()
     if (ZoomWidget)
     {
         ZoomWidget->RemoveFromParent();
-        ZoomWidget = NULL;
+        ZoomWidget = nullptr;
     }
 
     UGameplayStatics::PlaySound2D(this, ZoomOutSound);
@@ -206,8 +206,8 @@ void UUR_FireModeZoom::ServerSetZoomState_Implementation(bool bNewZooming)
 
 void UUR_FireModeZoom::OnRep_bZooming()
 {
-    if (AUR_Character* URChar = GetInstigator<AUR_Character>())
+    if (auto* URChar = GetInstigator<AUR_Character>())
     {
-        URChar->RegisterZoomInterface(bZooming ? this : NULL);
+        URChar->RegisterZoomInterface(bZooming ? this : nullptr);
     }
 }

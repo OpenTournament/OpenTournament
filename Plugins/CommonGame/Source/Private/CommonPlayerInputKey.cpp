@@ -395,18 +395,6 @@ void UCommonPlayerInputKey::NativeOnInitialized()
 	}
 }
 
-void UCommonPlayerInputKey::SetForcedHoldKeybind(bool InForcedHoldKeybind)
-{
-	if (InForcedHoldKeybind)
-	{
-		SetForcedHoldKeybindStatus(ECommonKeybindForcedHoldStatus::ForcedHold);
-	}
-	else
-	{
-		SetForcedHoldKeybindStatus(ECommonKeybindForcedHoldStatus::NoForcedHold);
-	}
-}
-
 void UCommonPlayerInputKey::SetForcedHoldKeybindStatus(ECommonKeybindForcedHoldStatus InForcedHoldKeybindStatus)
 {
 	ForcedHoldKeybindStatus = InForcedHoldKeybindStatus;

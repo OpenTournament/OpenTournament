@@ -48,3 +48,4 @@ struct FGameplayMessageListenerParams
 		};
 	}
 };
+

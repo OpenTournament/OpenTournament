@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include "AbilitySystemComponent.h"
-#include "NativeGameplayTags.h"
 #include "UR_AttributeSet.h"
+
+#include <AbilitySystemComponent.h>
+#include <NativeGameplayTags.h>
 
 #include "UR_HealthSet.generated.h"
 
@@ -17,8 +18,6 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Gameplay_DamageImmunity);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Gameplay_DamageSelfDestruct);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Gameplay_FellOutOfWorld);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Game_Damage_Message);
-UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Gameplay_Health_Change);
-UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Gameplay_MaxHealth_Change);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

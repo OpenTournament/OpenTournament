@@ -10,7 +10,7 @@
 #include "GAS/UR_GameplayEffectContext.h"
 #include "AbilitySystem/Attributes/UR_CombatSet.h"
 #include "AbilitySystem/Attributes/UR_HealthSet.h"
-//#include "Teams/UR_TeamSubsystem.h"
+#include "UR_TeamSubsystem.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_DamageExecution)
 
@@ -96,12 +96,11 @@ void UUR_DamageExecution::Execute_Implementation(const FGameplayEffectCustomExec
     float DamageInteractionAllowedMultiplier = 1.0f;
     if (HitActor)
     {
-        // @! TODO Add TeamSubsystem
-        //UUR_TeamSubsystem* TeamSubsystem = HitActor->GetWorld()->GetSubsystem<UUR_TeamSubsystem>();
-        //if (ensure(TeamSubsystem))
-        //{
-        //    DamageInteractionAllowedMultiplier = TeamSubsystem->CanCauseDamage(EffectCauser, HitActor) ? 1.0 : 0.0;
-        //}
+        const UUR_TeamSubsystem* TeamSubsystem = HitActor->GetWorld()->GetSubsystem<UUR_TeamSubsystem>();
+        if (ensure(TeamSubsystem))
+        {
+            DamageInteractionAllowedMultiplier = TeamSubsystem->CanCauseDamage(EffectCauser, HitActor) ? 1.0 : 0.0;
+        }
     }
 
     // Determine distance

@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -70,7 +70,7 @@ public:
 
     virtual void Deactivate() override;
 
-    virtual bool IsIndependentFireMode_Implementation()
+    virtual bool IsIndependentFireMode_Implementation() override
     {
         return true;
     }

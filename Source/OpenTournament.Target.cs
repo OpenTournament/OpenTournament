@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 using UnrealBuildTool;
 using System;
@@ -14,7 +14,7 @@ public class OpenTournamentTarget : TargetRules
     {
         Type = TargetType.Game;
 
-        ExtraModuleNames.Add("OpenTournament");
+        ExtraModuleNames.AddRange(new string[] { "OpenTournament" });
 
         OpenTournamentTarget.ApplySharedOpenTournamentTargetSettings(this);
     }
@@ -35,8 +35,8 @@ public class OpenTournamentTarget : TargetRules
         //LinkType = TargetLinkType.Modular; // @! Do we want this?
 
 		if (Target.BuildEnvironment == TargetBuildEnvironment.Unique)
-		{
-			Target.ShadowVariableWarningLevel = WarningLevel.Error;
+        {
+            Target.CppCompileWarningSettings.ShadowVariableWarningLevel = WarningLevel.Error;
 
 			Target.bUseLoggingInShipping = true;
 

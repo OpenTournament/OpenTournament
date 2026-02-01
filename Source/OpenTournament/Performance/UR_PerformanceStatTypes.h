@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -78,6 +78,15 @@ enum class EGameDisplayablePerformanceStat : uint8
 
     // The avg. size (in bytes) of packets sent
     PacketSize_Outgoing,
+
+    // The total latency in MS of the game
+    Latency_Total,
+
+    // Game simulation start to driver submission end
+    Latency_Game,
+
+    // OS render queue start to GPU render end
+    Latency_Render,
 
     // New stats should go above here
     Count UMETA(Hidden)

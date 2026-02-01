@@ -7,6 +7,8 @@
 
 #include "CommonGameDialog.generated.h"
 
+#define UE_API COMMONGAME_API
+
 USTRUCT(BlueprintType)
 struct FConfirmationDialogAction
 {
@@ -28,16 +30,16 @@ public:
 	}
 };
 
-UCLASS()
-class COMMONGAME_API UCommonGameDialogDescriptor : public UObject
+UCLASS(MinimalAPI)
+class UCommonGameDialogDescriptor : public UObject
 {
 	GENERATED_BODY()
 	
 public:
-	static UCommonGameDialogDescriptor* CreateConfirmationOk(const FText& Header, const FText& Body);
-	static UCommonGameDialogDescriptor* CreateConfirmationOkCancel(const FText& Header, const FText& Body);
-	static UCommonGameDialogDescriptor* CreateConfirmationYesNo(const FText& Header, const FText& Body);
-	static UCommonGameDialogDescriptor* CreateConfirmationYesNoCancel(const FText& Header, const FText& Body);
+	static UE_API UCommonGameDialogDescriptor* CreateConfirmationOk(const FText& Header, const FText& Body);
+	static UE_API UCommonGameDialogDescriptor* CreateConfirmationOkCancel(const FText& Header, const FText& Body);
+	static UE_API UCommonGameDialogDescriptor* CreateConfirmationYesNo(const FText& Header, const FText& Body);
+	static UE_API UCommonGameDialogDescriptor* CreateConfirmationYesNoCancel(const FText& Header, const FText& Body);
 
 public:
 	/** The header of the message to display */
@@ -54,15 +56,17 @@ public:
 };
 
 
-UCLASS(Abstract)
-class COMMONGAME_API UCommonGameDialog : public UCommonActivatableWidget
+UCLASS(MinimalAPI, Abstract)
+class UCommonGameDialog : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 	
 public:
-	UCommonGameDialog();
+	UE_API UCommonGameDialog();
 	
-	virtual void SetupDialog(UCommonGameDialogDescriptor* Descriptor, FCommonMessagingResultDelegate ResultCallback);
+	UE_API virtual void SetupDialog(UCommonGameDialogDescriptor* Descriptor, FCommonMessagingResultDelegate ResultCallback);
 
-	virtual void KillDialog();
+	UE_API virtual void KillDialog();
 };
+
+#undef UE_API

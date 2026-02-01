@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -28,14 +28,14 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     UPROPERTY(EditDefaultsOnly)
-    UCapsuleComponent* CollisionComponentX;
+    TObjectPtr<UCapsuleComponent> CollisionComponentX;
 
     UPROPERTY(EditDefaultsOnly)
-    UAudioComponent* AudioComponentX;
+    TObjectPtr<UAudioComponent> AudioComponentX;
 
     /** Pickup mesh: 3rd person view */
     UPROPERTY(VisibleDefaultsOnly, Category = "Pickup")
-    UStaticMeshComponent* StaticMeshComponentX;
+    TObjectPtr<UStaticMeshComponent> StaticMeshComponentX;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 

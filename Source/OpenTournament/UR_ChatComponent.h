@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -6,7 +6,14 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+
 #include "UR_ChatComponent.generated.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define UE_API OPENTOURNAMENT_API
+
+class APlayerController;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -77,24 +84,24 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FReceiveChatMessageSignature, cons
 * For example, a webadmin system could use it to interface chat,
 * without hacking in a fake spectator player/PRI like previous UT titles.
 */
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class OPENTOURNAMENT_API UUR_ChatComponent : public UActorComponent
+UCLASS(MinimalAPI, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+class UUR_ChatComponent : public UActorComponent
 {
     GENERATED_BODY()
 
     UUR_ChatComponent();
 
 public:
-    virtual void BeginPlay() override;
+    UE_API virtual void BeginPlay() override;
 
-    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+    UE_API virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
     /**
     * Cache to owner Controller if there is one.
     * May be NULL for non-player entities.
     */
     UPROPERTY(BlueprintReadOnly)
-    class AController* OwnerController;
+    TObjectPtr<AController> OwnerController;
 
     /**
     * Sender name to use when we cannot resolve to a PlayerState object.
@@ -212,3 +219,5 @@ public:
     UFUNCTION(BlueprintPure, Category = "Chat", Meta = (WorldContext = "WorldContextObject"))
     static FColor GetChatMessageColor(UObject* WorldContextObject, int32 TeamIndex);
 };
+
+#undef UE_API

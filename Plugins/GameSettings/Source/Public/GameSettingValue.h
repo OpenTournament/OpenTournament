@@ -6,6 +6,8 @@
 
 #include "GameSettingValue.generated.h"
 
+#define UE_API GAMESETTINGS_API
+
 class UObject;
 
 //--------------------------------------
@@ -16,13 +18,13 @@ class UObject;
  * The base class for all settings that are conceptually a value, that can be 
  * changed, and thus reset or restored to their initial value.
  */
-UCLASS(Abstract)
-class GAMESETTINGS_API UGameSettingValue : public UGameSetting
+UCLASS(MinimalAPI, Abstract)
+class UGameSettingValue : public UGameSetting
 {
 	GENERATED_BODY()
 
 public:
-	UGameSettingValue();
+	UE_API UGameSettingValue();
 
 	/** Stores an initial value for the setting.  This will be called on initialize, but should also be called if you 'apply' the setting. */
 	virtual void StoreInitial() PURE_VIRTUAL(, );
@@ -34,5 +36,7 @@ public:
 	virtual void RestoreToInitial() PURE_VIRTUAL(, );
 
 protected:
-	virtual void OnInitialized() override;
+	UE_API virtual void OnInitialized() override;
 };
+
+#undef UE_API

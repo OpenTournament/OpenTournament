@@ -70,9 +70,9 @@ void UUR_Widget_ControlsListEntry::NativeOnListItemObjectSet(UObject* InObject)
     UpdateEntry();
 }
 
-void UUR_Widget_ControlsListEntry::UpdateEntry()
+void UUR_Widget_ControlsListEntry::UpdateEntry() const
 {
-    if (UUR_Object_KeyBind* KeyBind = Cast<UUR_Object_KeyBind>(Item))
+    if (const UUR_Object_KeyBind* KeyBind = Cast<UUR_Object_KeyBind>(Item.Get()))
     {
         // TODO: Use proper localization instead
         EntryName->SetText(FText::FromName(KeyBind->Name));

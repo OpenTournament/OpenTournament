@@ -6,6 +6,8 @@
 
 #include "GameSettingVisualData.generated.h"
 
+#define UE_API GAMESETTINGS_API
+
 class FName;
 class UGameSetting;
 class UGameSettingDetailExtension;
@@ -38,18 +40,18 @@ public:
 /**
  * 
  */
-UCLASS(BlueprintType)
-class GAMESETTINGS_API UGameSettingVisualData : public UDataAsset
+UCLASS(MinimalAPI, BlueprintType)
+class UGameSettingVisualData : public UDataAsset
 {
 	GENERATED_BODY()
 
 public:
-	TSubclassOf<UGameSettingListEntryBase> GetEntryForSetting(UGameSetting* InSetting);
+	UE_API TSubclassOf<UGameSettingListEntryBase> GetEntryForSetting(UGameSetting* InSetting);
 
-	virtual TArray<TSoftClassPtr<UGameSettingDetailExtension>> GatherDetailExtensions(UGameSetting* InSetting);
+	UE_API virtual TArray<TSoftClassPtr<UGameSettingDetailExtension>> GatherDetailExtensions(UGameSetting* InSetting);
 	
 protected:
-	virtual TSubclassOf<UGameSettingListEntryBase> GetCustomEntryForSetting(UGameSetting* InSetting);
+	UE_API virtual TSubclassOf<UGameSettingListEntryBase> GetCustomEntryForSetting(UGameSetting* InSetting);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = ListEntries, meta = (AllowAbstract))
@@ -64,3 +66,5 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Extensions)
 	TMap<FName, FGameSettingNameExtensions> ExtensionsForName;
 };
+
+#undef UE_API

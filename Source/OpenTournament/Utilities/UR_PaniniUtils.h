@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -19,8 +19,8 @@ class UInterface;
 /**
  *
  */
-UCLASS()
-class OPENTOURNAMENT_API UUR_PaniniUtils : public UBlueprintFunctionLibrary
+UCLASS(MinimalAPI)
+class UUR_PaniniUtils : public UBlueprintFunctionLibrary
 {
     GENERATED_BODY()
 
@@ -30,9 +30,11 @@ public:
     * We cannot change static switch parameters at runtime so we'll have to use scalar.
     */
     UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Material|Panini")
-    static FORCEINLINE FName PaniniParameterName()
+    static FName PaniniParameterName()
     {
-        return FName(TEXT("sPanini"));
+        static const FName CachedName(TEXT("sPanini"));
+
+        return CachedName;
     }
 
     /**

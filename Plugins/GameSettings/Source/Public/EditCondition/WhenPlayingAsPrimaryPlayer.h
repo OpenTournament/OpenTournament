@@ -4,13 +4,17 @@
 
 #include "GameSettingFilterState.h"
 
+#define UE_API GAMESETTINGS_API
+
 class ULocalPlayer;
 
 
-class GAMESETTINGS_API FWhenPlayingAsPrimaryPlayer : public FGameSettingEditCondition
+class FWhenPlayingAsPrimaryPlayer : public FGameSettingEditCondition
 {
 public:
-	static TSharedRef<FWhenPlayingAsPrimaryPlayer> Get();
+	static UE_API TSharedRef<FWhenPlayingAsPrimaryPlayer> Get();
 
-	virtual void GatherEditState(const ULocalPlayer* InLocalPlayer, FGameSettingEditableState& InOutEditState) const override;
+	UE_API virtual void GatherEditState(const ULocalPlayer* InLocalPlayer, FGameSettingEditableState& InOutEditState) const override;
 };
+
+#undef UE_API

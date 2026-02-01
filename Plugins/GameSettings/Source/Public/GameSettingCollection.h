@@ -6,25 +6,27 @@
 
 #include "GameSettingCollection.generated.h"
 
+#define UE_API GAMESETTINGS_API
+
 struct FGameSettingFilterState;
 
 //--------------------------------------
 // UGameSettingCollection
 //--------------------------------------
 
-UCLASS()
-class GAMESETTINGS_API UGameSettingCollection : public UGameSetting
+UCLASS(MinimalAPI)
+class UGameSettingCollection : public UGameSetting
 {
 	GENERATED_BODY()
 
 public:
-	UGameSettingCollection();
+	UE_API UGameSettingCollection();
 
 	virtual TArray<UGameSetting*> GetChildSettings() override { return Settings; }
-	TArray<UGameSettingCollection*> GetChildCollections() const;
+	UE_API TArray<UGameSettingCollection*> GetChildCollections() const;
 
-	void AddSetting(UGameSetting* Setting);
-	virtual void GetSettingsForFilter(const FGameSettingFilterState& FilterState, TArray<UGameSetting*>& InOutSettings) const;
+	UE_API void AddSetting(UGameSetting* Setting);
+	UE_API virtual void GetSettingsForFilter(const FGameSettingFilterState& FilterState, TArray<UGameSetting*>& InOutSettings) const;
 
 	virtual bool IsSelectable() const { return false; }
 
@@ -38,8 +40,8 @@ protected:
 // UGameSettingCollectionPage
 //--------------------------------------
 
-UCLASS()
-class GAMESETTINGS_API UGameSettingCollectionPage : public UGameSettingCollection
+UCLASS(MinimalAPI)
+class UGameSettingCollectionPage : public UGameSettingCollection
 {
 	GENERATED_BODY()
 
@@ -49,7 +51,7 @@ public:
 	FOnExecuteNavigation OnExecuteNavigationEvent;
 
 public:
-	UGameSettingCollectionPage();
+	UE_API UGameSettingCollectionPage();
 
 	FText GetNavigationText() const { return NavigationText; }
 	void SetNavigationText(FText Value) { NavigationText = Value; }
@@ -57,13 +59,15 @@ public:
 	void SetNavigationText(const FString& Value) { SetNavigationText(FText::FromString(Value)); }
 #endif
 	
-	virtual void OnInitialized() override;
-	virtual void GetSettingsForFilter(const FGameSettingFilterState& FilterState, TArray<UGameSetting*>& InOutSettings) const override;
+	UE_API virtual void OnInitialized() override;
+	UE_API virtual void GetSettingsForFilter(const FGameSettingFilterState& FilterState, TArray<UGameSetting*>& InOutSettings) const override;
 	virtual bool IsSelectable() const override { return true; }
 
 	/**  */
-	void ExecuteNavigation();
+	UE_API void ExecuteNavigation();
 
 private:
 	FText NavigationText;
 };
+
+#undef UE_API

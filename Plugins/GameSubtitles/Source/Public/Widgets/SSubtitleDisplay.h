@@ -9,13 +9,15 @@
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/Accessibility/SlateWidgetAccessibleTypes.h"
 
+#define UE_API GAMESUBTITLES_API
+
 class FText;
 struct FSlateBrush;
 
 /**
  * A widget that's used for displaying a subtitle somewhere on the viewport
  */
-class GAMESUBTITLES_API SSubtitleDisplay : public SCompoundWidget
+class SSubtitleDisplay : public SCompoundWidget
 {
 public:
 
@@ -34,20 +36,20 @@ public:
 
 	SLATE_END_ARGS()
 
-	~SSubtitleDisplay();
+	UE_API ~SSubtitleDisplay();
 
-	void Construct( const FArguments& InArgs );
+	UE_API void Construct( const FArguments& InArgs );
 
-	void SetTextStyle(const FTextBlockStyle& InTextStyle);
+	UE_API void SetTextStyle(const FTextBlockStyle& InTextStyle);
 
-	void SetBackgroundBrush(const FSlateBrush* InSlateBrush);
+	UE_API void SetBackgroundBrush(const FSlateBrush* InSlateBrush);
 
-	void SetCurrentSubtitleText(const FText& SubtitleText);
+	UE_API void SetCurrentSubtitleText(const FText& SubtitleText);
 
-	bool HasSubtitles() const;
+	UE_API bool HasSubtitles() const;
 
 	/** See WrapTextAt attribute */
-	void SetWrapTextAt(const TAttribute<float>& InWrapTextAt);
+	UE_API void SetWrapTextAt(const TAttribute<float>& InWrapTextAt);
 
 private:
 	void HandleSubtitleChanged(const FText& SubtitleText);
@@ -59,3 +61,5 @@ private:
 	/** The actual widget that will display the subtitle text */
 	TSharedPtr<class SRichTextBlock> TextDisplay;
 };
+
+#undef UE_API

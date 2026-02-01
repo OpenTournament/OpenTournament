@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +36,7 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    bool OnPickup_Implementation(AUR_Character* PickupCharacter) override;
+    virtual bool OnPickup_Implementation(AUR_Character* PickupCharacter) override;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<AUR_Ammo> AmmoClass_Internal;

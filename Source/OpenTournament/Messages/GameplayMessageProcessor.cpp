@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -13,49 +13,45 @@
 
 void UGameplayMessageProcessor::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-	StartListening();
+    StartListening();
 }
 
 void UGameplayMessageProcessor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
+    Super::EndPlay(EndPlayReason);
 
-	StopListening();
+    StopListening();
 
-	// Remove any listener handles
-	UGameplayMessageSubsystem& MessageSubsystem = UGameplayMessageSubsystem::Get(this);
-	for (FGameplayMessageListenerHandle& Handle : ListenerHandles)
-	{
-		MessageSubsystem.UnregisterListener(Handle);
-	}
-	ListenerHandles.Empty();
+    // Remove any listener handles
+    UGameplayMessageSubsystem& MessageSubsystem = UGameplayMessageSubsystem::Get(this);
+    for (FGameplayMessageListenerHandle& Handle : ListenerHandles)
+    {
+        MessageSubsystem.UnregisterListener(Handle);
+    }
+    ListenerHandles.Empty();
 }
 
 void UGameplayMessageProcessor::StartListening()
-{
-
-}
+{}
 
 void UGameplayMessageProcessor::StopListening()
-{
-}
+{}
 
 void UGameplayMessageProcessor::AddListenerHandle(FGameplayMessageListenerHandle&& Handle)
 {
-	ListenerHandles.Add(MoveTemp(Handle));
+    ListenerHandles.Add(MoveTemp(Handle));
 }
 
 double UGameplayMessageProcessor::GetServerTime() const
 {
-	if (const AGameStateBase* GameState = GetWorld()->GetGameState())
-	{
-		return GameState->GetServerWorldTimeSeconds();
-	}
-	else
-	{
-		return 0.0;
-	}
+    if (AGameStateBase* GameState = GetWorld()->GetGameState())
+    {
+        return GameState->GetServerWorldTimeSeconds();
+    }
+    else
+    {
+        return 0.0;
+    }
 }
-

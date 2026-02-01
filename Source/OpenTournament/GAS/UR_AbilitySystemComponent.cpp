@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -17,6 +17,8 @@
 #include "Animation/UR_AnimInstance.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_AbilitySystemComponent)
+
+#pragma optimize("", off)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +50,7 @@ void UUR_AbilitySystemComponent::EndPlay(const EEndPlayReason::Type EndPlayReaso
 
 void UUR_AbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor)
 {
-    FGameplayAbilityActorInfo* ActorInfo = AbilityActorInfo.Get();
+    const FGameplayAbilityActorInfo* ActorInfo = AbilityActorInfo.Get();
     check(ActorInfo);
     check(InOwnerActor);
 
@@ -61,9 +63,7 @@ void UUR_AbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AAct
         // Notify all abilities that a new pawn avatar has been set
         for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
         {
-            PRAGMA_DISABLE_DEPRECATION_WARNINGS
-                        ensureMsgf(AbilitySpec.Ability && AbilitySpec.Ability->GetInstancingPolicy() != EGameplayAbilityInstancingPolicy::NonInstanced, TEXT("InitAbilityActorInfo: All Abilities should be Instanced (NonInstanced is being deprecated due to usability issues)."));
-            PRAGMA_ENABLE_DEPRECATION_WARNINGS
+            ensureMsgf(AbilitySpec.Ability && AbilitySpec.Ability->GetInstancingPolicy() != EGameplayAbilityInstancingPolicy::InstancedPerActor, TEXT("InitAbilityActorInfo: All Abilities should be Instanced (NonInstanced is being deprecated due to usability issues)."));
 
             TArray<UGameplayAbility*> Instances = AbilitySpec.GetAbilityInstances();
             for (UGameplayAbility* AbilityInstance : Instances)
@@ -92,7 +92,7 @@ void UUR_AbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AAct
     }
 }
 
-void UUR_AbilitySystemComponent::CancelAbilitiesByFunc(TShouldCancelAbilityFunc ShouldCancelFunc, bool bReplicateCancelAbility)
+void UUR_AbilitySystemComponent::CancelAbilitiesByFunc(const TShouldCancelAbilityFunc& ShouldCancelFunc, bool bReplicateCancelAbility)
 {
     ABILITYLIST_SCOPE_LOCK();
     for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
@@ -102,20 +102,18 @@ void UUR_AbilitySystemComponent::CancelAbilitiesByFunc(TShouldCancelAbilityFunc 
             continue;
         }
 
-        UUR_GameplayAbility* AbilityCDO = Cast<UUR_GameplayAbility>(AbilitySpec.Ability);
+        const auto* AbilityCDO = Cast<UUR_GameplayAbility>(AbilitySpec.Ability);
         if (!AbilityCDO)
         {
             UE_LOG(LogGameAbilitySystem, Error, TEXT("CancelAbilitiesByFunc: Non-URGameplayAbility %s was Granted to ASC. Skipping."), *AbilitySpec.Ability.GetName());
             continue;
         }
 
-        PRAGMA_DISABLE_DEPRECATION_WARNINGS
-        ensureMsgf(AbilitySpec.Ability->GetInstancingPolicy() != EGameplayAbilityInstancingPolicy::NonInstanced, TEXT("CancelAbilitiesByFunc: All Abilities should be Instanced (NonInstanced is being deprecated due to usability issues)."));
-        PRAGMA_ENABLE_DEPRECATION_WARNINGS
+        ensureMsgf(AbilitySpec.Ability->GetInstancingPolicy() != EGameplayAbilityInstancingPolicy::InstancedPerActor, TEXT("CancelAbilitiesByFunc: All Abilities should be Instanced (NonInstanced is being deprecated due to usability issues)."));
 
         // Cancel all the spawned instances.
         TArray<UGameplayAbility*> Instances = AbilitySpec.GetAbilityInstances();
-        for (UGameplayAbility* AbilityInstance : Instances)
+        for (auto* AbilityInstance : Instances)
         {
             UUR_GameplayAbility* GameAbilityInstance = CastChecked<UUR_GameplayAbility>(AbilityInstance);
 
@@ -149,10 +147,17 @@ void UUR_AbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Inpu
 {
     if (InputTag.IsValid())
     {
-        for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
+        for (FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
         {
             if (AbilitySpec.Ability && (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag)))
             {
+                // Store the InputTag in the EventData
+                TSharedPtr<FGameplayEventData> EventData = MakeShareable(new FGameplayEventData());
+                EventData->EventTag = InputTag;
+                EventData->Instigator = GetAvatarActor();
+                EventData->Target = GetAvatarActor();
+                AbilitySpec.GameplayEventData = EventData;
+
                 InputPressedSpecHandles.AddUnique(AbilitySpec.Handle);
                 InputHeldSpecHandles.AddUnique(AbilitySpec.Handle);
             }
@@ -177,99 +182,89 @@ void UUR_AbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& Inp
 
 void UUR_AbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGamePaused)
 {
-	if (HasMatchingGameplayTag(TAG_Gameplay_AbilityInputBlocked))
-	{
-		ClearAbilityInput();
-		return;
-	}
+    if (HasMatchingGameplayTag(TAG_Gameplay_AbilityInputBlocked))
+    {
+        ClearAbilityInput();
+        return;
+    }
 
-	static TArray<FGameplayAbilitySpecHandle> AbilitiesToActivate;
-	AbilitiesToActivate.Reset();
+    static TArray<FGameplayAbilitySpecHandle> AbilitiesToActivate;
+    AbilitiesToActivate.Reset();
 
-	//@TODO: See if we can use FScopedServerAbilityRPCBatcher ScopedRPCBatcher in some of these loops
+    //@TODO: See if we can use FScopedServerAbilityRPCBatcher ScopedRPCBatcher in some of these loops
 
-	//
-	// Process all abilities that activate when the input is held.
-	//
-	for (const FGameplayAbilitySpecHandle& SpecHandle : InputHeldSpecHandles)
-	{
-		if (const FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
-		{
-			if (AbilitySpec->Ability && !AbilitySpec->IsActive())
-			{
-				const UUR_GameplayAbility* AbilityCDO = Cast<UUR_GameplayAbility>(AbilitySpec->Ability);
-				if (AbilityCDO && AbilityCDO->GetActivationPolicy() == EGameAbilityActivationPolicy::WhileInputActive)
-				{
-					AbilitiesToActivate.AddUnique(AbilitySpec->Handle);
-				}
-			}
-		}
-	}
+    // Process all abilities that activate when the input is held.
+    for (const FGameplayAbilitySpecHandle& SpecHandle : InputHeldSpecHandles)
+    {
+        if (const FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
+        {
+            if (AbilitySpec->Ability && !AbilitySpec->IsActive())
+            {
+                const UUR_GameplayAbility* AbilityCDO = Cast<UUR_GameplayAbility>(AbilitySpec->Ability);
+                if (AbilityCDO && AbilityCDO->GetActivationPolicy() == EGameAbilityActivationPolicy::WhileInputActive)
+                {
+                    AbilitiesToActivate.AddUnique(AbilitySpec->Handle);
+                }
+            }
+        }
+    }
 
-	//
-	// Process all abilities that had their input pressed this frame.
-	//
-	for (const FGameplayAbilitySpecHandle& SpecHandle : InputPressedSpecHandles)
-	{
-		if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
-		{
-			if (AbilitySpec->Ability)
-			{
-				AbilitySpec->InputPressed = true;
+    // Process all abilities that had their input pressed this frame.
+    for (const FGameplayAbilitySpecHandle& SpecHandle : InputPressedSpecHandles)
+    {
+        if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
+        {
+            if (AbilitySpec->Ability)
+            {
+                AbilitySpec->InputPressed = true;
 
-				if (AbilitySpec->IsActive())
-				{
-					// Ability is active so pass along the input event.
-					AbilitySpecInputPressed(*AbilitySpec);
-				}
-				else
-				{
-					const UUR_GameplayAbility* AbilityCDO = Cast<UUR_GameplayAbility>(AbilitySpec->Ability);
+                if (AbilitySpec->IsActive())
+                {
+                    // Ability is active so pass along the input event.
+                    AbilitySpecInputPressed(*AbilitySpec);
+                }
+                else
+                {
+                    const UUR_GameplayAbility* AbilityCDO = Cast<UUR_GameplayAbility>(AbilitySpec->Ability);
 
-					if (AbilityCDO && AbilityCDO->GetActivationPolicy() == EGameAbilityActivationPolicy::OnInputTriggered)
-					{
-						AbilitiesToActivate.AddUnique(AbilitySpec->Handle);
-					}
-				}
-			}
-		}
-	}
+                    if (AbilityCDO && AbilityCDO->GetActivationPolicy() == EGameAbilityActivationPolicy::OnInputTriggered)
+                    {
+                        AbilitiesToActivate.AddUnique(AbilitySpec->Handle);
+                    }
+                }
+            }
+        }
+    }
 
-	//
-	// Try to activate all the abilities that are from presses and holds.
-	// We do it all at once so that held inputs don't activate the ability
-	// and then also send a input event to the ability because of the press.
-	//
-	for (const FGameplayAbilitySpecHandle& AbilitySpecHandle : AbilitiesToActivate)
-	{
-		TryActivateAbility(AbilitySpecHandle);
-	}
+    // Try to activate all the abilities that are from presses and holds.
+    // We do it all at once so that held inputs don't activate the ability
+    // and then also send a input event to the ability because of the press.
+    for (const FGameplayAbilitySpecHandle& AbilitySpecHandle : AbilitiesToActivate)
+    {
+        TryActivateAbility(AbilitySpecHandle);
+    }
 
-	//
-	// Process all abilities that had their input released this frame.
-	//
-	for (const FGameplayAbilitySpecHandle& SpecHandle : InputReleasedSpecHandles)
-	{
-		if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
-		{
-			if (AbilitySpec->Ability)
-			{
-				AbilitySpec->InputPressed = false;
+    // Process all abilities that had their input released this frame.
+    for (const FGameplayAbilitySpecHandle& SpecHandle : InputReleasedSpecHandles)
+    {
+        if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
+        {
+            if (AbilitySpec->Ability)
+            {
+                AbilitySpec->InputPressed = false;
 
-				if (AbilitySpec->IsActive())
-				{
-					// Ability is active so pass along the input event.
-					AbilitySpecInputReleased(*AbilitySpec);
-				}
-			}
-		}
-	}
+                if (AbilitySpec->IsActive())
+                {
+                    // Ability is active so pass along the input event.
+                    AbilitySpecInputReleased(*AbilitySpec);
+                }
+            }
+        }
+    }
 
-	//
-	// Clear the cached ability handles.
-	//
-	InputPressedSpecHandles.Reset();
-	InputReleasedSpecHandles.Reset();
+    // Clear the cached ability handles.
+    InputPressedSpecHandles.Reset();
+    InputReleasedSpecHandles.Reset();
 }
 
 void UUR_AbilitySystemComponent::ClearAbilityInput()
@@ -286,19 +281,23 @@ bool UUR_AbilitySystemComponent::IsActivationGroupBlocked(EGameAbilityActivation
     switch (InGroup)
     {
         case EGameAbilityActivationGroup::Independent:
+        {
             // Independent abilities are never blocked.
-                bBlocked = false;
-        break;
-
+            bBlocked = false;
+            break;
+        }
         case EGameAbilityActivationGroup::Exclusive_Replaceable:
         case EGameAbilityActivationGroup::Exclusive_Blocking:
+        {
             // Exclusive abilities can activate if nothing is blocking.
             bBlocked = (ActivationGroupCounts[static_cast<uint8>(EGameAbilityActivationGroup::Exclusive_Blocking)] > 0);
-        break;
-
+            break;
+        }
         default:
+        {
             checkf(false, TEXT("IsActivationGroupBlocked: Invalid ActivationGroup [%d]\n"), static_cast<uint8>(InGroup));
-        break;
+            break;
+        }
     }
 
     return bBlocked;
@@ -316,17 +315,21 @@ void UUR_AbilitySystemComponent::AddAbilityToActivationGroup(EGameAbilityActivat
     switch (InGroup)
     {
         case EGameAbilityActivationGroup::Independent:
+        {
             // Independent abilities do not cancel any other abilities.
-                break;
-
+            break;
+        }
         case EGameAbilityActivationGroup::Exclusive_Replaceable:
         case EGameAbilityActivationGroup::Exclusive_Blocking:
+        {
             CancelActivationGroupAbilities(EGameAbilityActivationGroup::Exclusive_Replaceable, InGameAbility, bReplicateCancelAbility);
-        break;
-
+            break;
+        }
         default:
+        {
             checkf(false, TEXT("AddAbilityToActivationGroup: Invalid ActivationGroup [%d]\n"), static_cast<uint8>(InGroup));
-        break;
+            break;
+        }
     }
 
     const int32 ExclusiveCount = ActivationGroupCounts[static_cast<uint8>(EGameAbilityActivationGroup::Exclusive_Replaceable)] + ActivationGroupCounts[static_cast<uint8>(EGameAbilityActivationGroup::Exclusive_Blocking)];
@@ -336,7 +339,7 @@ void UUR_AbilitySystemComponent::AddAbilityToActivationGroup(EGameAbilityActivat
     }
 }
 
-void UUR_AbilitySystemComponent::RemoveAbilityFromActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InAbility)
+void UUR_AbilitySystemComponent::RemoveAbilityFromActivationGroup(EGameAbilityActivationGroup InGroup, const UUR_GameplayAbility* InAbility)
 {
     check(InAbility);
     check(ActivationGroupCounts[static_cast<uint8>(InGroup)] > 0);
@@ -344,7 +347,7 @@ void UUR_AbilitySystemComponent::RemoveAbilityFromActivationGroup(EGameAbilityAc
     ActivationGroupCounts[static_cast<uint8>(InGroup)]--;
 }
 
-void UUR_AbilitySystemComponent::CancelActivationGroupAbilities(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InIgnoreGameAbility, bool bReplicateCancelAbility)
+void UUR_AbilitySystemComponent::CancelActivationGroupAbilities(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InIgnoreGameAbility, const bool bReplicateCancelAbility)
 {
     auto ShouldCancelFunc = [this, InGroup, InIgnoreGameAbility](const UUR_GameplayAbility* InGameAbility, FGameplayAbilitySpecHandle Handle)
     {
@@ -395,9 +398,9 @@ void UUR_AbilitySystemComponent::RemoveDynamicTagGameplayEffect(const FGameplayT
     RemoveActiveEffects(Query);
 }
 
-void UUR_AbilitySystemComponent::GetAbilityTargetData(const FGameplayAbilitySpecHandle AbilityHandle, FGameplayAbilityActivationInfo ActivationInfo, FGameplayAbilityTargetDataHandle& OutTargetDataHandle)
+void UUR_AbilitySystemComponent::GetAbilityTargetData(const FGameplayAbilitySpecHandle AbilityHandle, const FGameplayAbilityActivationInfo& ActivationInfo, FGameplayAbilityTargetDataHandle& OutTargetDataHandle)
 {
-    TSharedPtr<FAbilityReplicatedDataCache> ReplicatedData = AbilityTargetDataMap.Find(FGameplayAbilitySpecHandleAndPredictionKey(AbilityHandle, ActivationInfo.GetActivationPredictionKey()));
+    const TSharedPtr<FAbilityReplicatedDataCache> ReplicatedData = AbilityTargetDataMap.Find(FGameplayAbilitySpecHandleAndPredictionKey(AbilityHandle, ActivationInfo.GetActivationPredictionKey()));
     if (ReplicatedData.IsValid())
     {
         OutTargetDataHandle = ReplicatedData->TargetData;
@@ -439,10 +442,8 @@ void UUR_AbilitySystemComponent::AbilitySpecInputPressed(FGameplayAbilitySpec& S
     // Use replicated events instead so that the WaitInputPress ability task works.
     if (Spec.IsActive())
     {
-        PRAGMA_DISABLE_DEPRECATION_WARNINGS
         const UGameplayAbility* Instance = Spec.GetPrimaryInstance();
-        FPredictionKey OriginalPredictionKey = Instance ? Instance->GetCurrentActivationInfo().GetActivationPredictionKey() : Spec.ActivationInfo.GetActivationPredictionKey();
-        PRAGMA_ENABLE_DEPRECATION_WARNINGS
+        FPredictionKey OriginalPredictionKey = Instance ? Instance->GetCurrentActivationInfo().GetActivationPredictionKey() : Instance->GetCurrentActivationInfo().GetActivationPredictionKey();
 
         // Invoke the InputPressed event. This is not replicated here. If someone is listening, they may replicate the InputPressed event to the server.
         InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, Spec.Handle, OriginalPredictionKey);
@@ -457,10 +458,8 @@ void UUR_AbilitySystemComponent::AbilitySpecInputReleased(FGameplayAbilitySpec& 
     // Use replicated events instead so that the WaitInputRelease ability task works.
     if (Spec.IsActive())
     {
-        PRAGMA_DISABLE_DEPRECATION_WARNINGS
         const UGameplayAbility* Instance = Spec.GetPrimaryInstance();
-        FPredictionKey OriginalPredictionKey = Instance ? Instance->GetCurrentActivationInfo().GetActivationPredictionKey() : Spec.ActivationInfo.GetActivationPredictionKey();
-        PRAGMA_ENABLE_DEPRECATION_WARNINGS
+        const FPredictionKey OriginalPredictionKey = Instance ? Instance->GetCurrentActivationInfo().GetActivationPredictionKey() : Instance->GetCurrentActivationInfo().GetActivationPredictionKey();
 
         // Invoke the InputReleased event. This is not replicated here. If someone is listening, they may replicate the InputReleased event to the server.
         InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, Spec.Handle, OriginalPredictionKey);
@@ -481,7 +480,7 @@ void UUR_AbilitySystemComponent::NotifyAbilityFailed(const FGameplayAbilitySpecH
 {
     Super::NotifyAbilityFailed(Handle, Ability, FailureReason);
 
-    if (APawn* Avatar = Cast<APawn>(GetAvatarActor()))
+    if (const auto* Avatar = Cast<APawn>(GetAvatarActor()))
     {
         if (!Avatar->IsLocallyControlled() && Ability->IsSupportedForNetworking())
         {
@@ -540,5 +539,7 @@ void UUR_AbilitySystemComponent::HandleAbilityFailed(const UGameplayAbility* Abi
         GameplayAbility->OnAbilityFailedToActivate(FailureReason);
     }
 }
+
+#pragma optimize("", on)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

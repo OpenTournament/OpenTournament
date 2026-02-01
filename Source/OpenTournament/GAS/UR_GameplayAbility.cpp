@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -7,8 +7,8 @@
 #include <AbilitySystemBlueprintLibrary.h>
 #include <AbilitySystemLog.h>
 #include <NativeGameplayTags.h>
+#include <AbilitySystemGlobals.h>
 
-#include "AbilitySystemGlobals.h"
 #include "UR_AbilitySourceInterface.h"
 #include "UR_AbilitySystemComponent.h"
 #include "UR_Character.h"
@@ -219,6 +219,11 @@ void UUR_GameplayAbility::OnAbilityFailedToActivate(const FGameplayTagContainer&
     ScriptOnAbilityFailedToActivate(FailedReason);
 }
 
+TArray<FAbilityTriggerData> UUR_GameplayAbility::GetAbilityTriggers() const
+{
+    return AbilityTriggers;
+}
+
 void UUR_GameplayAbility::NativeOnAbilityFailedToActivate(const FGameplayTagContainer& FailedReason) const
 {
     bool bSimpleFailureFound = false;
@@ -309,6 +314,15 @@ void UUR_GameplayAbility::OnRemoveAbility(const FGameplayAbilityActorInfo* Actor
 
 void UUR_GameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
+    if (true)
+    {
+        if (TriggerEventData)
+        {
+            auto TagString = TriggerEventData->EventTag.ToString();
+            GAME_LOG(LogGame, Log, "Tag: %s", *TagString);
+        }
+    }
+
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 }
 
@@ -600,7 +614,7 @@ FUR_GameplayEffectContainerSpec UUR_GameplayAbility::MakeEffectContainerSpecFrom
 
 FUR_GameplayEffectContainerSpec UUR_GameplayAbility::MakeEffectContainerSpec(FGameplayTag ContainerTag, const FGameplayEventData& EventData, int32 OverrideGameplayLevel)
 {
-    const FUR_GameplayEffectContainer* FoundContainer = EffectContainerMap.Find(ContainerTag);
+    //const FUR_GameplayEffectContainer* FoundContainer = EffectContainerMap.Find(ContainerTag);
 
     // if (FoundContainer)
     // {

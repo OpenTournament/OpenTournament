@@ -6,6 +6,8 @@
 
 #include "CommonMessagingSubsystem.generated.h"
 
+#define UE_API COMMONGAME_API
+
 class FSubsystemCollectionBase;
 class UCommonGameDialogDescriptor;
 class UObject;
@@ -30,21 +32,23 @@ DECLARE_DELEGATE_OneParam(FCommonMessagingResultDelegate, ECommonMessagingResult
 /**
  * 
  */
-UCLASS(config = Game)
-class COMMONGAME_API UCommonMessagingSubsystem : public ULocalPlayerSubsystem
+UCLASS(MinimalAPI, config = Game)
+class UCommonMessagingSubsystem : public ULocalPlayerSubsystem
 {
 	GENERATED_BODY()
 
 public:
 	UCommonMessagingSubsystem() { }
 
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	virtual void Deinitialize() override;
-	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
+	UE_API virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	UE_API virtual void Deinitialize() override;
+	UE_API virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
-	virtual void ShowConfirmation(UCommonGameDialogDescriptor* DialogDescriptor, FCommonMessagingResultDelegate ResultCallback = FCommonMessagingResultDelegate());
-	virtual void ShowError(UCommonGameDialogDescriptor* DialogDescriptor, FCommonMessagingResultDelegate ResultCallback = FCommonMessagingResultDelegate());
+	UE_API virtual void ShowConfirmation(UCommonGameDialogDescriptor* DialogDescriptor, FCommonMessagingResultDelegate ResultCallback = FCommonMessagingResultDelegate());
+	UE_API virtual void ShowError(UCommonGameDialogDescriptor* DialogDescriptor, FCommonMessagingResultDelegate ResultCallback = FCommonMessagingResultDelegate());
 
 private:
 
 };
+
+#undef UE_API

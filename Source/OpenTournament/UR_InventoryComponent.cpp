@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -105,7 +105,7 @@ void UUR_InventoryComponent::AddWeapon(AUR_Weapon* InWeapon)
     // In standalone or listen host, call OnRep next tick so we can pick amongst new weapons what to swap to.
     if (IsLocallyControlled())
     {
-        GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UUR_InventoryComponent::OnRep_WeaponArray);
+        GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::OnRep_WeaponArray);
     }
 }
 
@@ -143,7 +143,7 @@ AUR_Ammo* UUR_InventoryComponent::GetAmmoByClass(TSubclassOf<AUR_Ammo> InAmmoCla
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -345,7 +345,7 @@ void UUR_InventoryComponent::SetActiveWeapon(AUR_Weapon* InWeapon)
             ActiveWeapon->SetWeaponState(EWeaponState::Holstered);
         }
 
-        ActiveWeapon = NULL;
+        ActiveWeapon = nullptr;
     }
 
     //NOTE: Weapons array is not replicated for non-owning clients
@@ -373,7 +373,7 @@ void UUR_InventoryComponent::OnRep_WeaponArray()
     // Check if active weapon might have been removed from inventory
     if (!WeaponArray.Contains(ActiveWeapon))
     {
-        SetActiveWeapon(NULL);
+        SetActiveWeapon(nullptr);
     }
 
     // Check also desired weapon - cancel swap
@@ -462,12 +462,12 @@ AUR_Pickup_DroppedWeapon* UUR_InventoryComponent::DropWeapon(AUR_Weapon* WeaponT
 {
     if (!WeaponToDrop)
     {
-        return NULL;
+        return nullptr;
     }
     if (!WeaponArray.Contains(WeaponToDrop))
     {
         UE_LOG(LogTemp, Warning, TEXT("DropWeapon: WeaponToDrop is not in inventory (%s)"), *WeaponToDrop->GetName());
-        return NULL;
+        return nullptr;
     }
 
     //TODO: drop only if droppable (add property in weapon)
@@ -501,7 +501,7 @@ AUR_Pickup_DroppedWeapon* UUR_InventoryComponent::DropWeapon(AUR_Weapon* WeaponT
     else
     {
         UE_LOG(LogTemp, Warning, TEXT("DropWeapon: Cannot find any viable spawn transform (%s)"), *WeaponToDrop->GetName());
-        return NULL;
+        return nullptr;
     }
 
     FTransform SpawnTransform(SpawnRot, SpawnLoc);
@@ -514,7 +514,7 @@ AUR_Pickup_DroppedWeapon* UUR_InventoryComponent::DropWeapon(AUR_Weapon* WeaponT
         GetOwner()));
     if (!DroppedWeapon)
     {
-        return NULL;
+        return nullptr;
     }
 
     // Change weapon immediately
@@ -522,14 +522,14 @@ AUR_Pickup_DroppedWeapon* UUR_InventoryComponent::DropWeapon(AUR_Weapon* WeaponT
     {
         if (DesiredWeapon == WeaponToDrop)
         {
-            DesiredWeapon = NULL;   // Client will pick new desired weapon once removal has replicated
+            DesiredWeapon = nullptr;   // Client will pick new desired weapon once removal has replicated
         }
         SetActiveWeapon(DesiredWeapon);
     }
 
     // Remove weapon from inventory
     WeaponArray.Remove(WeaponToDrop);
-    WeaponToDrop->GiveTo(NULL);
+    WeaponToDrop->GiveTo(nullptr);
 
     // Drop proper amount of ammo
     for (int32 i = 0; i < WeaponToDrop->AmmoDefinitions.Num(); i++)

@@ -6,6 +6,8 @@
 
 #include "GameSettingValueDiscreteDynamic.generated.h"
 
+#define UE_API GAMESETTINGS_API
+
 class FGameSettingDataSource;
 enum class EGameSettingChangeReason : uint8;
 
@@ -15,48 +17,48 @@ struct FContentControlsRules;
 // UGameSettingValueDiscreteDynamic
 //////////////////////////////////////////////////////////////////////////
 
-UCLASS()
-class GAMESETTINGS_API UGameSettingValueDiscreteDynamic : public UGameSettingValueDiscrete
+UCLASS(MinimalAPI)
+class UGameSettingValueDiscreteDynamic : public UGameSettingValueDiscrete
 {
 	GENERATED_BODY()
 	
 public:
-	UGameSettingValueDiscreteDynamic();
+	UE_API UGameSettingValueDiscreteDynamic();
 
 	/** UGameSettingValue */
-	virtual void Startup() override;
-	virtual void StoreInitial() override;
-	virtual void ResetToDefault() override;
-	virtual void RestoreToInitial() override;
+	UE_API virtual void Startup() override;
+	UE_API virtual void StoreInitial() override;
+	UE_API virtual void ResetToDefault() override;
+	UE_API virtual void RestoreToInitial() override;
 
 	/** UGameSettingValueDiscrete */
-	virtual void SetDiscreteOptionByIndex(int32 Index) override;
-	virtual int32 GetDiscreteOptionIndex() const override;
-	virtual int32 GetDiscreteOptionDefaultIndex() const override;
-	virtual TArray<FText> GetDiscreteOptions() const override;
+	UE_API virtual void SetDiscreteOptionByIndex(int32 Index) override;
+	UE_API virtual int32 GetDiscreteOptionIndex() const override;
+	UE_API virtual int32 GetDiscreteOptionDefaultIndex() const override;
+	UE_API virtual TArray<FText> GetDiscreteOptions() const override;
 
 	/** UGameSettingValueDiscreteDynamic */
-	void SetDynamicGetter(const TSharedRef<FGameSettingDataSource>& InGetter);
-	void SetDynamicSetter(const TSharedRef<FGameSettingDataSource>& InSetter);
-	void SetDefaultValueFromString(FString InOptionValue);
-	void AddDynamicOption(FString InOptionValue, FText InOptionText);
-	void RemoveDynamicOption(FString InOptionValue);
-	const TArray<FString>& GetDynamicOptions();
+	UE_API void SetDynamicGetter(const TSharedRef<FGameSettingDataSource>& InGetter);
+	UE_API void SetDynamicSetter(const TSharedRef<FGameSettingDataSource>& InSetter);
+	UE_API void SetDefaultValueFromString(FString InOptionValue);
+	UE_API void AddDynamicOption(FString InOptionValue, FText InOptionText);
+	UE_API void RemoveDynamicOption(FString InOptionValue);
+	UE_API const TArray<FString>& GetDynamicOptions();
 
-	bool HasDynamicOption(const FString& InOptionValue);
+	UE_API bool HasDynamicOption(const FString& InOptionValue);
 
-	FString GetValueAsString() const;
-	void SetValueFromString(FString InStringValue);
+	UE_API FString GetValueAsString() const;
+	UE_API void SetValueFromString(FString InStringValue);
 
 protected:
-	void SetValueFromString(FString InStringValue, EGameSettingChangeReason Reason);
+	UE_API void SetValueFromString(FString InStringValue, EGameSettingChangeReason Reason);
 
 	/** UGameSettingValue */
-	virtual void OnInitialized() override;
+	UE_API virtual void OnInitialized() override;
 
-	void OnDataSourcesReady();
+	UE_API void OnDataSourcesReady();
 
-	bool AreOptionsEqual(const FString& InOptionA, const FString& InOptionB) const;
+	UE_API bool AreOptionsEqual(const FString& InOptionA, const FString& InOptionB) const;
 
 protected:
 	TSharedPtr<FGameSettingDataSource> Getter;
@@ -73,19 +75,19 @@ protected:
 // UGameSettingValueDiscreteDynamic_Bool
 //////////////////////////////////////////////////////////////////////////
 
-UCLASS()
-class GAMESETTINGS_API UGameSettingValueDiscreteDynamic_Bool : public UGameSettingValueDiscreteDynamic
+UCLASS(MinimalAPI)
+class UGameSettingValueDiscreteDynamic_Bool : public UGameSettingValueDiscreteDynamic
 {
 	GENERATED_BODY()
 
 public:
-	UGameSettingValueDiscreteDynamic_Bool();
+	UE_API UGameSettingValueDiscreteDynamic_Bool();
 
 public:
-	void SetDefaultValue(bool Value);
+	UE_API void SetDefaultValue(bool Value);
 
-	void SetTrueText(const FText& InText);
-	void SetFalseText(const FText& InText);
+	UE_API void SetTrueText(const FText& InText);
+	UE_API void SetFalseText(const FText& InText);
 
 #if !UE_BUILD_SHIPPING
 	void SetTrueText(const FString& Value) { SetTrueText(FText::FromString(Value)); }
@@ -97,13 +99,13 @@ public:
 // UGameSettingValueDiscreteDynamic_Number
 //////////////////////////////////////////////////////////////////////////
 
-UCLASS()
-class GAMESETTINGS_API UGameSettingValueDiscreteDynamic_Number : public UGameSettingValueDiscreteDynamic
+UCLASS(MinimalAPI)
+class UGameSettingValueDiscreteDynamic_Number : public UGameSettingValueDiscreteDynamic
 {
 	GENERATED_BODY()
 
 public:
-	UGameSettingValueDiscreteDynamic_Number();
+	UE_API UGameSettingValueDiscreteDynamic_Number();
 
 public:
 	template<typename NumberType>
@@ -137,20 +139,20 @@ public:
 
 protected:
 	/** UGameSettingValue */
-	virtual void OnInitialized() override;
+	UE_API virtual void OnInitialized() override;
 };
 
 //////////////////////////////////////////////////////////////////////////
 // UGameSettingValueDiscreteDynamic_Enum
 //////////////////////////////////////////////////////////////////////////
 
-UCLASS()
-class GAMESETTINGS_API UGameSettingValueDiscreteDynamic_Enum : public UGameSettingValueDiscreteDynamic
+UCLASS(MinimalAPI)
+class UGameSettingValueDiscreteDynamic_Enum : public UGameSettingValueDiscreteDynamic
 {
 	GENERATED_BODY()
 
 public:
-	UGameSettingValueDiscreteDynamic_Enum();
+	UE_API UGameSettingValueDiscreteDynamic_Enum();
 
 public:
 	template<typename EnumType>
@@ -183,20 +185,20 @@ public:
 
 protected:
 	/** UGameSettingValue */
-	virtual void OnInitialized() override;
+	UE_API virtual void OnInitialized() override;
 };
 
 //////////////////////////////////////////////////////////////////////////
 // UGameSettingValueDiscreteDynamic_Color
 //////////////////////////////////////////////////////////////////////////
 
-UCLASS()
-class GAMESETTINGS_API UGameSettingValueDiscreteDynamic_Color : public UGameSettingValueDiscreteDynamic
+UCLASS(MinimalAPI)
+class UGameSettingValueDiscreteDynamic_Color : public UGameSettingValueDiscreteDynamic
 {
 	GENERATED_BODY()
 
 public:
-	UGameSettingValueDiscreteDynamic_Color();
+	UE_API UGameSettingValueDiscreteDynamic_Color();
 
 public:
 	void SetDefaultValue(FLinearColor InColor)
@@ -231,8 +233,8 @@ public:
 // UGameSettingValueDiscreteDynamic_Vector2D
 //////////////////////////////////////////////////////////////////////////
 
-UCLASS()
-class GAMESETTINGS_API UGameSettingValueDiscreteDynamic_Vector2D : public UGameSettingValueDiscreteDynamic
+UCLASS(MinimalAPI)
+class UGameSettingValueDiscreteDynamic_Vector2D : public UGameSettingValueDiscreteDynamic
 {
 	GENERATED_BODY()
 
@@ -257,3 +259,5 @@ public:
 		SetValueFromString(InValue.ToString());
 	}
 };
+
+#undef UE_API

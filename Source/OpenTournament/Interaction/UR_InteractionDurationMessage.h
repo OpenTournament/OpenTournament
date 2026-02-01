@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -19,12 +19,12 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_INTERACTION_DURATION_MESSAGE);
 USTRUCT(BlueprintType)
 struct FUR_InteractionDurationMessage
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadWrite)
-	TObjectPtr<AActor> Instigator = nullptr;
+    UPROPERTY(BlueprintReadWrite)
+    TObjectPtr<AActor> Instigator = nullptr;
 
-	UPROPERTY(BlueprintReadWrite)
-	float Duration = 0;
+    UPROPERTY(BlueprintReadWrite)
+    float Duration = 0;
 };

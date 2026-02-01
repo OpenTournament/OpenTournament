@@ -16,6 +16,7 @@
 #include "UR_ExperienceDefinition.h"
 #include "UR_ExperienceManager.h"
 #include "UR_LogChannels.h"
+#include "Settings/UR_SettingsLocal.h"
 #include "System/UR_AssetManager.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_ExperienceManagerComponent)
@@ -387,7 +388,10 @@ void UUR_ExperienceManagerComponent::OnExperienceFullLoadCompleted()
     OnExperienceLoaded_LowPriority.Broadcast(CurrentExperience);
     OnExperienceLoaded_LowPriority.Clear();
 
-    // @! TODO : Apply scalability settings (See: Lyra)
+	// Apply any necessary scalability settings
+#if !UE_SERVER
+    UUR_SettingsLocal::Get()->OnExperienceLoaded();
+#endif
 }
 
 void UUR_ExperienceManagerComponent::OnActionDeactivationCompleted()

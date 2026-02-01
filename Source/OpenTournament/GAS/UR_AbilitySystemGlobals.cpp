@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -13,11 +13,6 @@
 struct FGameplayEffectContext;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
-UUR_AbilitySystemGlobals::UUR_AbilitySystemGlobals(const FObjectInitializer& ObjectInitializer)
-    : Super(ObjectInitializer)
-{
-}
 
 FGameplayEffectContext* UUR_AbilitySystemGlobals::AllocGameplayEffectContext() const
 {

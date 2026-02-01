@@ -42,19 +42,21 @@ namespace URLogging
 
     void LogToScreenInternal(FString inText, FColor inColor = FColor::White, float inTimeToDisplay = 5.0f, int32 inKey = -1);
 
-    template <typename FmtType, typename... Types>
-    static void LogInternal(const FmtType& inFormat, bool inLogToConsole, bool inLogToScreen, FColor inColor, float inTimeToDisplay, int32 inKey, Types... inArgs)
-    {
-        auto text = FString::Printf(inFormat, inArgs...);
-
-        if (inLogToConsole)
-        {
-            LogToConsoleInternal(text);
-        }
-
-        if (inLogToScreen)
-        {
-            LogToScreenInternal(text, inColor, inTimeToDisplay, inKey);
-        }
-    }
+    //template <typename... Types>
+    //static void LogInternal(const TCHAR* Fmt, bool inLogToConsole, bool inLogToScreen, FColor inColor, float inTimeToDisplay, int32 inKey, Types&&... inArgs)
+    //{
+        // // Let FString::Printf handle the format validation directly
+        // FString text;
+        // text = FString::Printf(Fmt, std::forward<Types>(inArgs)...);
+        //
+        // if (inLogToConsole)
+        // {
+        //     LogToConsoleInternal(text);
+        // }
+        //
+        // if (inLogToScreen)
+        // {
+        //     LogToScreenInternal(text, inColor, inTimeToDisplay, inKey);
+        // }
+    //}
 }

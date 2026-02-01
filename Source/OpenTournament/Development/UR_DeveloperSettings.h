@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -12,9 +12,11 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_ExperienceDefinition;
+
 struct FPropertyChangedEvent;
 
-class UUR_ExperienceDefinition;
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 UENUM()
 enum class ECheatExecutionTime
@@ -43,9 +45,8 @@ struct FUR_CheatToRun
 /**
  * Developer settings / editor cheats
  */
-UCLASS(config=EditorPerProjectUserSettings, MinimalAPI, DisplayName = "Open Tournament Developer Settings")
+UCLASS(MinimalAPI, Config=EditorPerProjectUserSettings, DisplayName = ".Developer Settings")
 class UUR_DeveloperSettings : public UDeveloperSettingsBackedByCVars
-    //UDeveloperSettingsBackedByCVars
 {
     GENERATED_BODY()
 
@@ -54,7 +55,6 @@ public:
 
     //~UDeveloperSettings interface
     virtual FName GetCategoryName() const override;
-
     //~End of UDeveloperSettings interface
 
 public:
@@ -91,13 +91,17 @@ public:
     TArray<FUR_CheatToRun> CheatsToRun;
 
     // Should messages broadcast through the gameplay message subsystem be logged?
-    UPROPERTY(config, EditAnywhere, Category = "GameplayMessages") //meta=(ConsoleVariable="GameplayMessageSubsystem.LogMessages")
+    UPROPERTY(config, EditAnywhere, Category = "GameplayMessages", meta=(ConsoleVariable="GameplayMessageSubsystem.LogMessages"))
     bool LogGameplayMessages = false;
 
 #if WITH_EDITORONLY_DATA
-    /** A list of common maps that will be accessible via the editor detoolbar */
+    /** A list of common maps that will be accessible via the game's editor menus */
     UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Maps", meta=(AllowedClasses="/Script/Engine.World"))
-    TArray<FSoftObjectPath> CommonEditorMaps;
+    TArray<FSoftObjectPath> GameReferenceMaps;
+
+    /** A list of common maps that will be accessible via the game's editor menus */
+    UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Maps", meta=(AllowedClasses="/Script/Engine.World"))
+    TArray<FSoftObjectPath> GameFavoriteMaps;
 #endif
 
 #if WITH_EDITOR

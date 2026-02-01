@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -45,19 +45,19 @@ public:
     * Collision Component of Pickup
     */
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Pickup")
-    UCapsuleComponent* CollisionComponent;
+    TObjectPtr<UCapsuleComponent> CollisionComponent;
 
     /**
     * Mesh Representation of Pickup
     */
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Pickup")
-    UStaticMeshComponent* StaticMesh;
+    TObjectPtr<UStaticMeshComponent> StaticMesh;
 
     /*
     * ParticleSystem Component
     */
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Pickup")
-    UParticleSystemComponent* ParticleSystemComponent;
+    TObjectPtr<UParticleSystemComponent> ParticleSystemComponent;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -115,13 +115,13 @@ public:
     * Sound played on Pickup
     */
     UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Pickup")
-    USoundBase* PickupSound;
+    TObjectPtr<USoundBase> PickupSound;
 
     /**
     * Effect played on Pickup
     */
     UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Pickup")
-    UFXSystemAsset* PickupEffect;
+    TObjectPtr<UFXSystemAsset> PickupEffect;
 
     /**
     * Display Name of Pickup

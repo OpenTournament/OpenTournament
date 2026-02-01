@@ -1,16 +1,18 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_GameplayAbility_Jump.h"
 
-#include "GAS/UR_GameplayAbility.h"
 #include "UR_Character.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_GameplayAbility_Jump)
 
-struct FGameplayTagContainer;
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
+//struct FGameplayTagContainer;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_GameplayAbility_Jump::UUR_GameplayAbility_Jump(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)

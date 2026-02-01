@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -6,12 +6,12 @@
 
 #include "Components/MeshComponent.h"
 #include "Components/WidgetComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "Materials/MaterialInstanceConstant.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
 #include "UR_MPC_Global.h"
 #include "Camera/UR_PlayerCameraManager.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_PaniniUtils)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -70,8 +70,8 @@ FVector UUR_PaniniUtils::CalcPaniniProjection(const UObject* WorldContext, const
     {
         FVector NewPos = CalcMFShrinkWeapon(CameraManager, WorldPos);
 
-        FVector CamLoc;
-        FRotator CamRot;
+        FVector CamLoc(0,0,0);
+        FRotator CamRot(0,0,0);
         CameraManager->GetCameraViewPoint_Direct(CamLoc, CamRot);
         const FTransform CameraTransform(CamRot, CamLoc);
 
@@ -92,8 +92,8 @@ FVector UUR_PaniniUtils::CalcMFShrinkWeapon(const UObject* WorldContext, const F
     {
         const FPaniniMaterialParameters& Params = UUR_MPC_Global::GetPaniniParameters(CameraManager);
 
-        FVector CamLoc;
-        FRotator CamRot;
+        FVector CamLoc(0,0,0);
+        FRotator CamRot(0,0,0);
         CameraManager->GetCameraViewPoint_Direct(CamLoc, CamRot);
 
         FVector Offset = WorldPos - CamLoc;

@@ -6,6 +6,8 @@
 
 #include "GameSettingListView.generated.h"
 
+#define UE_API GAMESETTINGS_API
+
 class STableViewBase;
 
 class UGameSettingCollection;
@@ -15,23 +17,23 @@ class UGameSettingVisualData;
 /**
  * List of game settings.  Every entry widget needs to extend from GameSettingListEntryBase.
  */
-UCLASS(meta = (EntryClass = GameSettingListEntryBase))
-class GAMESETTINGS_API UGameSettingListView : public UListView
+UCLASS(MinimalAPI, meta = (EntryClass = GameSettingListEntryBase))
+class UGameSettingListView : public UListView
 {
 	GENERATED_BODY()
 
 public:
-	UGameSettingListView(const FObjectInitializer& ObjectInitializer);
+	UE_API UGameSettingListView(const FObjectInitializer& ObjectInitializer);
 
-	void AddNameOverride(const FName& DevName, const FText& OverrideName);
+	UE_API void AddNameOverride(const FName& DevName, const FText& OverrideName);
 
 #if WITH_EDITOR
-	virtual void ValidateCompiledDefaults(IWidgetCompilerLog& InCompileLog) const override;
+	UE_API virtual void ValidateCompiledDefaults(IWidgetCompilerLog& InCompileLog) const override;
 #endif
 
 protected:
-	virtual UUserWidget& OnGenerateEntryWidgetInternal(UObject* Item, TSubclassOf<UUserWidget> DesiredEntryClass, const TSharedRef<STableViewBase>& OwnerTable) override;
-	virtual bool OnIsSelectableOrNavigableInternal(UObject* SelectedItem) override;
+	UE_API virtual UUserWidget& OnGenerateEntryWidgetInternal(UObject* Item, TSubclassOf<UUserWidget> DesiredEntryClass, const TSharedRef<STableViewBase>& OwnerTable) override;
+	UE_API virtual bool OnIsSelectableOrNavigableInternal(UObject* SelectedItem) override;
 
 protected:
 	UPROPERTY(EditAnywhere)
@@ -40,3 +42,5 @@ protected:
 private:
 	TMap<FName, FText> NameOverrides;
 };
+
+#undef UE_API

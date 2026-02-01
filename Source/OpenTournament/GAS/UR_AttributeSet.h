@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -53,7 +53,6 @@ class OPENTOURNAMENT_API UUR_AttributeSet : public UAttributeSet
 public:
     UUR_AttributeSet();
     virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
-    virtual void PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) const override;
     virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 

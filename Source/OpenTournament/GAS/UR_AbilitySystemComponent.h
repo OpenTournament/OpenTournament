@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -9,18 +9,18 @@
 
 #include <NativeGameplayTags.h>
 
-#include "UR_Ability_GameActivationGroup.h"
-
 #include "UR_AbilitySystemComponent.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define UE_API OPENTOURNAMENT_API
 
 class UUR_GameplayAbility;
 class UUR_AbilityTagRelationshipMapping;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-OPENTOURNAMENT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Gameplay_AbilityInputBlocked);
+UE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Gameplay_AbilityInputBlocked);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -28,78 +28,75 @@ OPENTOURNAMENT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Gameplay_AbilityInputBlock
  * Subclass of ability system component with game-specific data
  * Game-specific subclass to provide utility functions
  */
-UCLASS()
-class OPENTOURNAMENT_API UUR_AbilitySystemComponent : public UAbilitySystemComponent
+UCLASS(MinimalAPI)
+class UUR_AbilitySystemComponent : public UAbilitySystemComponent
 {
     GENERATED_BODY()
 
 public:
+    // ReSharper disable CppUE4CodingStandardNamingViolationWarning
+    using TShouldCancelAbilityFunc = TFunctionRef<bool(const UUR_GameplayAbility* InGameAbility, FGameplayAbilitySpecHandle Handle)>;
+    // ReSharper restore CppUE4CodingStandardNamingViolationWarning
 
-    UUR_AbilitySystemComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+    UE_API UUR_AbilitySystemComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 #pragma region UActorComponentInterface
-
-    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
+    UE_API virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 #pragma endregion // UActorComponentInterface
 
-    virtual void InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor) override;
+    UE_API virtual void InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor) override;
 
-    using TShouldCancelAbilityFunc = TFunctionRef<bool(const UUR_GameplayAbility* InGameAbility, FGameplayAbilitySpecHandle Handle)>;
-    void CancelAbilitiesByFunc(TShouldCancelAbilityFunc ShouldCancelFunc, bool bReplicateCancelAbility);
+    UE_API void CancelAbilitiesByFunc(const TShouldCancelAbilityFunc& ShouldCancelFunc, bool bReplicateCancelAbility);
 
-    void CancelInputActivatedAbilities(bool bReplicateCancelAbility);
+    UE_API void CancelInputActivatedAbilities(bool bReplicateCancelAbility);
 
-    void AbilityInputTagPressed(const FGameplayTag& InputTag);
-    void AbilityInputTagReleased(const FGameplayTag& InputTag);
+    UE_API void AbilityInputTagPressed(const FGameplayTag& InputTag);
+    UE_API void AbilityInputTagReleased(const FGameplayTag& InputTag);
 
-    void ProcessAbilityInput(float DeltaTime, bool bGamePaused);
-    void ClearAbilityInput();
+    UE_API void ProcessAbilityInput(float DeltaTime, bool bGamePaused);
+    UE_API void ClearAbilityInput();
 
-    bool IsActivationGroupBlocked(EGameAbilityActivationGroup InGroup) const;
-    void AddAbilityToActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InGameAbility);
-    void RemoveAbilityFromActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InAbility);
-    void CancelActivationGroupAbilities(EGameAbilityActivationGroup Group, UUR_GameplayAbility* IgnoreGameAbility, bool bReplicateCancelAbility);
+    UE_API bool IsActivationGroupBlocked(EGameAbilityActivationGroup InGroup) const;
+    UE_API void AddAbilityToActivationGroup(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InGameAbility);
+    UE_API void RemoveAbilityFromActivationGroup(EGameAbilityActivationGroup InGroup, const UUR_GameplayAbility* InAbility);
+    UE_API void CancelActivationGroupAbilities(EGameAbilityActivationGroup InGroup, UUR_GameplayAbility* InIgnoreGameAbility, const bool bReplicateCancelAbility);
 
     // Uses a gameplay effect to add the specified dynamic granted tag.
-    void AddDynamicTagGameplayEffect(const FGameplayTag& Tag);
+    UE_API void AddDynamicTagGameplayEffect(const FGameplayTag& Tag);
 
     // Removes all active instances of the gameplay effect that was used to add the specified dynamic granted tag.
-    void RemoveDynamicTagGameplayEffect(const FGameplayTag& Tag);
+    UE_API void RemoveDynamicTagGameplayEffect(const FGameplayTag& Tag);
 
     /** Gets the ability target data associated with the given ability handle and activation info */
-    void GetAbilityTargetData(const FGameplayAbilitySpecHandle AbilityHandle, FGameplayAbilityActivationInfo ActivationInfo, FGameplayAbilityTargetDataHandle& OutTargetDataHandle);
+    UE_API void GetAbilityTargetData(const FGameplayAbilitySpecHandle AbilityHandle, const FGameplayAbilityActivationInfo& ActivationInfo, FGameplayAbilityTargetDataHandle& OutTargetDataHandle);
 
     /** Sets the current tag relationship mapping, if null it will clear it out */
-    void SetTagRelationshipMapping(UUR_AbilityTagRelationshipMapping* NewMapping);
+    UE_API void SetTagRelationshipMapping(UUR_AbilityTagRelationshipMapping* NewMapping);
 
     /** Looks at ability tags and gathers additional required and blocking tags */
-    void GetAdditionalActivationTagRequirements(const FGameplayTagContainer& AbilityTags, FGameplayTagContainer& OutActivationRequired, FGameplayTagContainer& OutActivationBlocked) const;
+    UE_API void GetAdditionalActivationTagRequirements(const FGameplayTagContainer& AbilityTags, FGameplayTagContainer& OutActivationRequired, FGameplayTagContainer& OutActivationBlocked) const;
 
+    UE_API void TryActivateAbilitiesOnSpawn();
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 protected:
+    UE_API virtual void AbilitySpecInputPressed(FGameplayAbilitySpec& Spec) override;
+    UE_API virtual void AbilitySpecInputReleased(FGameplayAbilitySpec& Spec) override;
 
-    void TryActivateAbilitiesOnSpawn();
-
-    virtual void AbilitySpecInputPressed(FGameplayAbilitySpec& Spec) override;
-    virtual void AbilitySpecInputReleased(FGameplayAbilitySpec& Spec) override;
-
-    virtual void NotifyAbilityActivated(const FGameplayAbilitySpecHandle Handle, UGameplayAbility* Ability) override;
-    virtual void NotifyAbilityFailed(const FGameplayAbilitySpecHandle Handle, UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason) override;
-    virtual void NotifyAbilityEnded(FGameplayAbilitySpecHandle Handle, UGameplayAbility* Ability, bool bWasCancelled) override;
-    virtual void ApplyAbilityBlockAndCancelTags(const FGameplayTagContainer& AbilityTags, UGameplayAbility* RequestingAbility, bool bEnableBlockTags, const FGameplayTagContainer& BlockTags, bool bExecuteCancelTags, const FGameplayTagContainer& CancelTags) override;
-    virtual void HandleChangeAbilityCanBeCanceled(const FGameplayTagContainer& AbilityTags, UGameplayAbility* RequestingAbility, bool bCanBeCanceled) override;
+    UE_API virtual void NotifyAbilityActivated(const FGameplayAbilitySpecHandle Handle, UGameplayAbility* Ability) override;
+    UE_API virtual void NotifyAbilityFailed(const FGameplayAbilitySpecHandle Handle, UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason) override;
+    UE_API virtual void NotifyAbilityEnded(FGameplayAbilitySpecHandle Handle, UGameplayAbility* Ability, bool bWasCancelled) override;
+    UE_API virtual void ApplyAbilityBlockAndCancelTags(const FGameplayTagContainer& AbilityTags, UGameplayAbility* RequestingAbility, bool bEnableBlockTags, const FGameplayTagContainer& BlockTags, bool bExecuteCancelTags, const FGameplayTagContainer& CancelTags) override;
+    UE_API virtual void HandleChangeAbilityCanBeCanceled(const FGameplayTagContainer& AbilityTags, UGameplayAbility* RequestingAbility, bool bCanBeCanceled) override;
 
     /** Notify client that an ability failed to activate */
     UFUNCTION(Client, Unreliable)
-    void ClientNotifyAbilityFailed(const UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason);
+    UE_API void ClientNotifyAbilityFailed(const UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason);
 
-    void HandleAbilityFailed(const UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason);
+    UE_API void HandleAbilityFailed(const UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 protected:
-
     // If set, this table is used to look up tag relationships for activate and cancel
     UPROPERTY()
     TObjectPtr<UUR_AbilityTagRelationshipMapping> TagRelationshipMapping;
@@ -118,3 +115,5 @@ protected:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 };
+
+#undef UE_API

@@ -5,6 +5,8 @@
 #include "Containers/Ticker.h"
 #include "UObject/SoftObjectPtr.h"
 
+#define UE_API ASYNCMIXIN_API
+
 class FAsyncCondition;
 class FName;
 class UPrimaryDataAsset;
@@ -67,13 +69,13 @@ DECLARE_DELEGATE_OneParam(FStreamableHandleDelegate, TSharedPtr<FStreamableHandl
  * 
  * NOTE: For debugging and understanding what's going on, you should add -LogCmds="LogAsyncMixin Verbose" to the command line.
  */
-class ASYNCMIXIN_API FAsyncMixin : public FNoncopyable
+class FAsyncMixin : public FNoncopyable
 {
 protected:
-	FAsyncMixin();
+	UE_API FAsyncMixin();
 
 public:
-	virtual ~FAsyncMixin();
+	UE_API virtual ~FAsyncMixin();
 
 protected:
 	/** Called when loading starts. */
@@ -133,7 +135,7 @@ protected:
 	}
 
 	/** Async load a FSoftObjectPath, call the Callback when complete. */
-	void AsyncLoad(FSoftObjectPath SoftObjectPath, const FSimpleDelegate& Callback = FSimpleDelegate());
+	UE_API void AsyncLoad(FSoftObjectPath SoftObjectPath, const FSimpleDelegate& Callback = FSimpleDelegate());
 
 	/** Async load an array of FSoftObjectPath, call the Callback when complete. */
 	void AsyncLoad(const TArray<FSoftObjectPath>& SoftObjectPaths, TFunction<void()>&& Callback)
@@ -142,7 +144,7 @@ protected:
 	}
 
 	/** Async load an array of FSoftObjectPath, call the Callback when complete. */
-	void AsyncLoad(const TArray<FSoftObjectPath>& SoftObjectPaths, const FSimpleDelegate& Callback = FSimpleDelegate());
+	UE_API void AsyncLoad(const TArray<FSoftObjectPath>& SoftObjectPaths, const FSimpleDelegate& Callback = FSimpleDelegate());
 
 	/** Given an array of primary assets, it loads all of the bundles referenced by properties of these assets specified in the LoadBundles array. */
 	template<typename T = UPrimaryDataAsset>
@@ -164,10 +166,10 @@ protected:
 	}
 
 	/** Given an array of primary asset ids, it loads all of the bundles referenced by properties of these assets specified in the LoadBundles array. */
-	void AsyncPreloadPrimaryAssetsAndBundles(const TArray<FPrimaryAssetId>& AssetIds, const TArray<FName>& LoadBundles, const FSimpleDelegate& Callback = FSimpleDelegate());
+	UE_API void AsyncPreloadPrimaryAssetsAndBundles(const TArray<FPrimaryAssetId>& AssetIds, const TArray<FName>& LoadBundles, const FSimpleDelegate& Callback = FSimpleDelegate());
 
 	/** Add a future condition that must be true before we move forward. */
-	void AsyncCondition(TSharedRef<FAsyncCondition> Condition, const FSimpleDelegate& Callback = FSimpleDelegate());
+	UE_API void AsyncCondition(TSharedRef<FAsyncCondition> Condition, const FSimpleDelegate& Callback = FSimpleDelegate());
 
 	/**
 	 * Rather than load anything, this callback is just inserted into the callback sequence so that when async loading 
@@ -184,16 +186,16 @@ protected:
 	 * completes this event will be called at the same point in the sequence.  Super useful if you don't want a step to be
 	 * tied to a particular asset in case some of the assets are optional.
 	 */
-	void AsyncEvent(const FSimpleDelegate& Callback);
+	UE_API void AsyncEvent(const FSimpleDelegate& Callback);
 
 	/** Flushes any async loading requests. */
-	void StartAsyncLoading();
+	UE_API void StartAsyncLoading();
 
 	/** Cancels any pending async loads. */
-	void CancelAsyncLoading();
+	UE_API void CancelAsyncLoading();
 
 	/** Is async loading current in progress? */
-	bool IsAsyncLoadingInProgress() const;
+	UE_API bool IsAsyncLoadingInProgress() const;
 
 private:
 	/**
@@ -284,16 +286,16 @@ private:
 		FTSTicker::FDelegateHandle DestroyMemoryDelegate;
 	};
 
-	const FLoadingState& GetLoadingStateConst() const;
+	UE_API const FLoadingState& GetLoadingStateConst() const;
 	
-	FLoadingState& GetLoadingState();
+	UE_API FLoadingState& GetLoadingState();
 
-	bool HasLoadingState() const;
+	UE_API bool HasLoadingState() const;
 
-	bool IsLoadingInProgressOrPending() const;
+	UE_API bool IsLoadingInProgressOrPending() const;
 
 private:
-	static TMap<FAsyncMixin*, TSharedRef<FLoadingState>> Loading;
+	static UE_API TMap<FAsyncMixin*, TSharedRef<FLoadingState>> Loading;
 };
 
 /**
@@ -303,7 +305,7 @@ private:
  * This class is a standalone Async dependency handler so that you can fire off several load jobs and always handle them
  * in the proper order, just like with combining FAsyncMixin with your class.
  */
-class ASYNCMIXIN_API FAsyncScope : public FAsyncMixin
+class FAsyncScope : public FAsyncMixin
 {
 public:
 	using FAsyncMixin::AsyncLoad;
@@ -355,3 +357,5 @@ private:
 
 	friend FAsyncMixin;
 };
+
+#undef UE_API

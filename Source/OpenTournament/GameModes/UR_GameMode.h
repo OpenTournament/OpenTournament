@@ -1,15 +1,16 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "UR_GameModeBase.h"
+
 #include "UR_GameMode.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class AUR_Character;
 class AUR_PlayerState;
 class UUR_PawnData;
 class UUR_ExperienceDefinition;
@@ -34,29 +35,15 @@ struct FStartingWeaponEntry
 
     FStartingWeaponEntry()
         : Ammo(0)
-    {
-    }
+    {}
 };
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnGameModePlayerInitialized, AGameModeBase* /*GameMode*/, AController* /*NewPlayer*/);
 
 namespace ETeamsFillMode
 {
     static const FString Even = TEXT("Even");
     static const FString Squads = TEXT("Squads");
-};
-
-/**
-* Sub-states for the InProgress match state.
-*
-* We don't want to mess with the existing framework provided for MatchState.
-* GameMode.h specifically states the following :
-* MatchState::InProgress = Normal gameplay is occurring. Specific games will have their own state machine inside this state
-*/
-namespace MatchSubState
-{
-    extern OPENTOURNAMENT_API const FName Warmup;
-    extern OPENTOURNAMENT_API const FName Countdown;
-    extern OPENTOURNAMENT_API const FName Match;
-    extern OPENTOURNAMENT_API const FName Overtime;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,6 +81,9 @@ public:
 
     // Agnostic version of PlayerCanRestart that can be used for both player bots and players
     virtual bool ControllerCanRestart(AController* Controller);
+
+    // Delegate called on player initialization, described above
+    FOnGameModePlayerInitialized OnGameModePlayerInitialized;
 
     UFUNCTION(BlueprintCallable, Category = "OT|Pawn")
     const UUR_PawnData* GetPawnDataForController(const AController* InController) const;
@@ -281,7 +271,7 @@ public:
 
     //
 
-    void OnExperienceLoaded(const UUR_ExperienceDefinition* CurrentExperience);
+    virtual void OnExperienceLoaded(const UUR_ExperienceDefinition* CurrentExperience) override;
 
-    bool IsExperienceLoaded() const;
+    virtual bool IsExperienceLoaded() const override;
 };

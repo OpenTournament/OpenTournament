@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +44,7 @@ struct FWeaponAmmoDefinition
     int32 AmmoAmount;
 
     FWeaponAmmoDefinition()
-        : AmmoClass(NULL)
+        : AmmoClass(nullptr)
         , AmmoAmount(0)
     {
     }
@@ -67,7 +67,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponStateChangedSignature, AUR_W
 /**
  * Weapon Base Class
  */
-UCLASS(NotPlaceable)
+UCLASS(NotPlaceable, meta=(ChildCanTick))
 class OPENTOURNAMENT_API AUR_Weapon
     : public AActor
       //, public IUR_FireModeBaseInterface

@@ -1,24 +1,8 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "OpenTournament.h"
-#include "Modules/ModuleManager.h"
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-class FOpenTournamentGameModule : public FDefaultGameModuleImpl
-{
-	virtual void StartupModule() override
-	{
-	}
-
-	virtual void ShutdownModule() override
-	{
-	}
-};
-
-IMPLEMENT_PRIMARY_GAME_MODULE( FOpenTournamentGameModule, OpenTournament, "OpenTournament" );
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -6,16 +6,18 @@
 
 #include "GameSettingValueDiscrete.generated.h"
 
+#define UE_API GAMESETTINGS_API
+
 class UObject;
 struct FFrame;
 
-UCLASS(Abstract)
-class GAMESETTINGS_API UGameSettingValueDiscrete : public UGameSettingValue
+UCLASS(MinimalAPI, Abstract)
+class UGameSettingValueDiscrete : public UGameSettingValue
 {
 	GENERATED_BODY()
 
 public:
-	UGameSettingValueDiscrete();
+	UE_API UGameSettingValueDiscrete();
 
 	/** UGameSettingValueDiscrete */
 	virtual void SetDiscreteOptionByIndex(int32 Index) PURE_VIRTUAL(,);
@@ -30,5 +32,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual TArray<FText> GetDiscreteOptions() const PURE_VIRTUAL(,return TArray<FText>(););
 
-	virtual FString GetAnalyticsValue() const;
+	UE_API virtual FString GetAnalyticsValue() const;
 };
+
+#undef UE_API

@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -928,7 +928,7 @@ int32 AUR_Weapon::GetAmmoIndex_Implementation(int32 ModeIndex) const
 AUR_Ammo* AUR_Weapon::GetAmmoObject(int32 ModeIndex) const
 {
     int32 i = GetAmmoIndex(ModeIndex);
-    return AmmoRefs.IsValidIndex(i) ? AmmoRefs[i] : NULL;
+    return AmmoRefs.IsValidIndex(i) ? AmmoRefs[i] : nullptr;
 }
 
 int32 AUR_Weapon::GetCurrentAmmo(int32 ModeIndex) const

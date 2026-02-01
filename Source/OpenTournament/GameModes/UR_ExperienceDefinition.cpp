@@ -1,15 +1,16 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_ExperienceDefinition.h"
-#include "GameFeatureAction.h"
+
+#include <GameFeatureAction.h>
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_ExperienceDefinition)
 
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
 #endif
-
-#include UE_INLINE_GENERATED_CPP_BY_NAME(UR_ExperienceDefinition)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

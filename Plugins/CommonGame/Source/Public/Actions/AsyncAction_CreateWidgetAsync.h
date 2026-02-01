@@ -7,6 +7,8 @@
 
 #include "AsyncAction_CreateWidgetAsync.generated.h"
 
+#define UE_API COMMONGAME_API
+
 class APlayerController;
 class UGameInstance;
 class UUserWidget;
@@ -19,18 +21,18 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCreateWidgetAsyncDelegate, UUserWid
 /**
  * Load the widget class asynchronously, the instance the widget after the loading completes, and return it on OnComplete.
  */
-UCLASS(BlueprintType)
-class COMMONGAME_API UAsyncAction_CreateWidgetAsync : public UCancellableAsyncAction
+UCLASS(MinimalAPI, BlueprintType)
+class UAsyncAction_CreateWidgetAsync : public UCancellableAsyncAction
 {
 	GENERATED_UCLASS_BODY()
 
 public:
-	virtual void Cancel() override;
+	UE_API virtual void Cancel() override;
 
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic, meta=(WorldContext = "WorldContextObject", BlueprintInternalUseOnly="true"))
-	static UAsyncAction_CreateWidgetAsync* CreateWidgetAsync(UObject* WorldContextObject, TSoftClassPtr<UUserWidget> UserWidgetSoftClass, APlayerController* OwningPlayer, bool bSuspendInputUntilComplete = true);
+	static UE_API UAsyncAction_CreateWidgetAsync* CreateWidgetAsync(UObject* WorldContextObject, TSoftClassPtr<UUserWidget> UserWidgetSoftClass, APlayerController* OwningPlayer, bool bSuspendInputUntilComplete = true);
 
-	virtual void Activate() override;
+	UE_API virtual void Activate() override;
 
 public:
 
@@ -49,3 +51,5 @@ private:
 	TSoftClassPtr<UUserWidget> UserWidgetSoftClass;
 	TSharedPtr<FStreamableHandle> StreamingHandle;
 };
+
+#undef UE_API

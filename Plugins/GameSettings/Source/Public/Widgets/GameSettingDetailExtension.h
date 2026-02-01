@@ -6,6 +6,8 @@
 
 #include "GameSettingDetailExtension.generated.h"
 
+#define UE_API GAMESETTINGS_API
+
 enum class EGameSettingChangeReason : uint8;
 
 class UGameSetting;
@@ -14,25 +16,27 @@ class UObject;
 /**
  * 
  */
-UCLASS(Abstract, meta = (Category = "Settings", DisableNativeTick))
-class GAMESETTINGS_API UGameSettingDetailExtension : public UUserWidget
+UCLASS(MinimalAPI, Abstract, meta = (Category = "Settings", DisableNativeTick))
+class UGameSettingDetailExtension : public UUserWidget
 {
 	GENERATED_BODY()
 
 public:
-	void SetSetting(UGameSetting* InSetting);
+	UE_API void SetSetting(UGameSetting* InSetting);
 	
 protected:
-	virtual void NativeSettingAssigned(UGameSetting* InSetting);
-	virtual void NativeSettingValueChanged(UGameSetting* InSetting, EGameSettingChangeReason Reason);
+	UE_API virtual void NativeSettingAssigned(UGameSetting* InSetting);
+	UE_API virtual void NativeSettingValueChanged(UGameSetting* InSetting, EGameSettingChangeReason Reason);
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnSettingAssigned(UGameSetting* InSetting);
+	UE_API void OnSettingAssigned(UGameSetting* InSetting);
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnSettingValueChanged(UGameSetting* InSetting);
+	UE_API void OnSettingValueChanged(UGameSetting* InSetting);
 
 protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UGameSetting> Setting;
 };
+
+#undef UE_API

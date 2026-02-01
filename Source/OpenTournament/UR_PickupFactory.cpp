@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -227,7 +227,9 @@ void AUR_PickupFactory::SpawnPickup()
 
     auto ClassToSpawn = GetPickupClass();
     if (!ClassToSpawn)
+    {
         return;
+    }
 
     FTransform Transform = AttachComponent ? AttachComponent->GetComponentTransform() : GetTransform();
 
@@ -272,6 +274,11 @@ void AUR_PickupFactory::SpawnPickup()
 
     // Blueprint do scene adjustements here
     PostInitializePickup(Pickup);
+}
+
+TSubclassOf<AUR_Pickup> AUR_PickupFactory::GetPickupClass_Implementation()
+{
+    return PickupClass_Internal;
 }
 
 void AUR_PickupFactory::OnRep_PickupClass()

@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -69,10 +69,15 @@ void FUR_AbilitySet_GrantedHandles::TakeFromAbilitySystem(UUR_AbilitySystemCompo
     GrantedAttributeSets.Reset();
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 UUR_AbilitySet::UUR_AbilitySet(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
+    // Noop
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_AbilitySet::GiveToAbilitySystem(UUR_AbilitySystemComponent* InASC, FUR_AbilitySet_GrantedHandles* OutGrantedHandles, UObject* SourceObject) const
 {

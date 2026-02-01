@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -174,4 +174,14 @@ void AUR_GameModeBase::OnMatchAssignmentGiven(FPrimaryAssetId ExperienceId, cons
     {
         UE_LOG(LogGameExperience, Error, TEXT("Failed to identify experience, loading screen will stay up forever"));
     }
+}
+
+void AUR_GameModeBase::OnExperienceLoaded(const UUR_ExperienceDefinition* CurrentExperience)
+{
+    // Noop
+}
+
+bool AUR_GameModeBase::IsExperienceLoaded() const
+{
+    return true;
 }

@@ -7,6 +7,8 @@
 
 #include "AsyncAction_CommonUserInitialize.generated.h"
 
+#define UE_API COMMONUSER_API
+
 enum class ECommonUserOnlineContext : uint8;
 enum class ECommonUserPrivilege : uint8;
 struct FInputDeviceId;
@@ -18,8 +20,8 @@ struct FFrame;
 /**
  * Async action to handle different functions for initializing users
  */
-UCLASS()
-class COMMONUSER_API UAsyncAction_CommonUserInitialize : public UCancellableAsyncAction
+UCLASS(MinimalAPI)
+class UAsyncAction_CommonUserInitialize : public UCancellableAsyncAction
 {
 	GENERATED_BODY()
 
@@ -33,7 +35,7 @@ public:
 	 * @param bCanUseGuestLogin	If true, this player can be a guest without a real system net id
 	 */
 	UFUNCTION(BlueprintCallable, Category = CommonUser, meta = (BlueprintInternalUseOnly = "true"))
-	static UAsyncAction_CommonUserInitialize* InitializeForLocalPlay(UCommonUserSubsystem* Target, int32 LocalPlayerIndex, FInputDeviceId PrimaryInputDevice, bool bCanUseGuestLogin);
+	static UE_API UAsyncAction_CommonUserInitialize* InitializeForLocalPlay(UCommonUserSubsystem* Target, int32 LocalPlayerIndex, FInputDeviceId PrimaryInputDevice, bool bCanUseGuestLogin);
 
 	/**
 	 * Attempts to log an existing user into the platform-specific online backend to enable full online play
@@ -42,23 +44,25 @@ public:
 	 * @param LocalPlayerIndex	Index of existing LocalPlayer in Game Instance
 	 */
 	UFUNCTION(BlueprintCallable, Category = CommonUser, meta = (BlueprintInternalUseOnly = "true"))
-	static UAsyncAction_CommonUserInitialize* LoginForOnlinePlay(UCommonUserSubsystem* Target, int32 LocalPlayerIndex);
+	static UE_API UAsyncAction_CommonUserInitialize* LoginForOnlinePlay(UCommonUserSubsystem* Target, int32 LocalPlayerIndex);
 
 	/** Call when initialization succeeds or fails */
 	UPROPERTY(BlueprintAssignable)
 	FCommonUserOnInitializeCompleteMulticast OnInitializationComplete;
 
 	/** Fail and send callbacks if needed */
-	void HandleFailure();
+	UE_API void HandleFailure();
 
 	/** Wrapper delegate, will pass on to OnInitializationComplete if appropriate */
 	UFUNCTION()
-	virtual void HandleInitializationComplete(const UCommonUserInfo* UserInfo, bool bSuccess, FText Error, ECommonUserPrivilege RequestedPrivilege, ECommonUserOnlineContext OnlineContext);
+	UE_API virtual void HandleInitializationComplete(const UCommonUserInfo* UserInfo, bool bSuccess, FText Error, ECommonUserPrivilege RequestedPrivilege, ECommonUserOnlineContext OnlineContext);
 
 protected:
 	/** Actually start the initialization */
-	virtual void Activate() override;
+	UE_API virtual void Activate() override;
 
 	TWeakObjectPtr<UCommonUserSubsystem> Subsystem;
 	FCommonUserInitializeParams Params;
 };
+
+#undef UE_API

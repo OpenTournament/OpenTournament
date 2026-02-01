@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -25,13 +25,11 @@ struct FUR_GameplayEffectContext : public FGameplayEffectContext
 
     FUR_GameplayEffectContext()
         : FGameplayEffectContext()
-    {
-    }
+    {}
 
     FUR_GameplayEffectContext(AActor* InInstigator, AActor* InEffectCauser)
         : FGameplayEffectContext(InInstigator, InEffectCauser)
-    {
-    }
+    {}
 
     /** Returns the wrapped FUR_GameplayEffectContext from the handle, or nullptr if it doesn't exist or is the wrong type */
     static OPENTOURNAMENT_API FUR_GameplayEffectContext* ExtractEffectContext(struct FGameplayEffectContextHandle Handle);

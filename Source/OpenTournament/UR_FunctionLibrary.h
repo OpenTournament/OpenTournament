@@ -1,15 +1,16 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
+
+#include "Kismet/BlueprintFunctionLibrary.h"
 
 #include <Engine/Engine.h>
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "InputCoreTypes.h"
-#include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "UR_FunctionLibrary.generated.h"
 
@@ -62,26 +63,6 @@ public:
      */
     UFUNCTION(BlueprintPure, Category = "Utility", Meta = (WorldContext = "WorldContextObject"))
     static AUR_GameModeBase* GetGameModeDefaultObject(const UObject* WorldContextObject);
-
-
-    /**
-     * Utility to retrieve the String value of a given Enum
-     */
-    template <typename TEnum>
-    static FORCEINLINE FString GetEnumValueAsString(const UObject* WorldContextObject, const FString& Name, TEnum Value)
-    {
-        if (const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
-        {
-            // ANY_PACKAGE
-            const UEnum* EnumPtr = FindObject<UEnum>(World->GetOuter(), *Name, true);
-            if (!EnumPtr)
-            {
-                return FString("Invalid");
-            }
-            return EnumPtr->GetNameByValue(static_cast<int64>(Value)).ToString();
-        }
-    }
-
 
     /**
     * Resolve the text color a player should be written with.
@@ -293,7 +274,7 @@ public:
         }
         else
         {
-            OutDerived.SetObject(NULL);
+            OutDerived.SetObject(nullptr);
             //OutDerived.SetInterface(NULL); //unnecessary
         }
     }
@@ -314,16 +295,16 @@ public:
 
     /** Returns true if A is between B and C (B <= A <= C) */
     UFUNCTION(BlueprintPure, meta = (DisplayName = "integer between", CompactNodeTitle = "<=>"), Category = "Math|Integer")
-    static bool Between_IntInt(int32 A, int32 B, int32 C)
+    static bool Between_IntInt(const int32 A, const int32 Min, const int32 Max)
     {
-        return A >= B && A <= C;
+        return A >= Min && A <= Max;
     }
 
     /** Returns true if A is between B and C (B <= A <= C) */
     UFUNCTION(BlueprintPure, meta = (DisplayName = "float between", CompactNodeTitle = "<=>"), Category = "Math|Float")
-    static bool Between_FloatFloat(float A, float B, float C)
+    static bool Between_FloatFloat(const float A, const float Min, const float Max)
     {
-        return A >= B && A <= C;
+        return A >= Min && A <= Max;
     }
 
     UFUNCTION(BlueprintPure, Category = "Game Options", meta = (BlueprintThreadSafe))
@@ -356,7 +337,7 @@ public:
     {
         // Retrieve the target array
         Stack.MostRecentProperty = nullptr;
-        Stack.StepCompiledIn<FArrayProperty>(NULL);
+        Stack.StepCompiledIn<FArrayProperty>(nullptr);
         void* SourceArrayAddr = Stack.MostRecentPropertyAddress;
         FArrayProperty* SourceArrayProp = CastField<FArrayProperty>(Stack.MostRecentProperty);
         if (!SourceArrayProp)
@@ -366,7 +347,7 @@ public:
         }
         // Retrieve the result array
         Stack.MostRecentProperty = nullptr;
-        Stack.StepCompiledIn<FArrayProperty>(NULL);
+        Stack.StepCompiledIn<FArrayProperty>(nullptr);
         void* ResultArrayAddr = Stack.MostRecentPropertyAddress;
         FArrayProperty* ResultArrayProp = CastField<FArrayProperty>(Stack.MostRecentProperty);
         if (!ResultArrayProp)

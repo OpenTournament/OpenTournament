@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -42,11 +42,17 @@ void AUR_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     DOREPLIFETIME(ThisClass, ClockReferencePoint);
     DOREPLIFETIME(ThisClass, MatchStateTag);
     DOREPLIFETIME(ThisClass, Winner);
+	DOREPLIFETIME(ThisClass, ServerFPS);
 }
 
 UAbilitySystemComponent* AUR_GameState::GetAbilitySystemComponent() const
 {
     return AbilitySystemComponent;
+}
+
+float AUR_GameState::GetServerFPS() const
+{
+    return ServerFPS;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -26,7 +26,7 @@ class UUR_AbilitySourceInterface : public UInterface
 class IUR_AbilitySourceInterface
 {
     GENERATED_IINTERFACE_BODY()
-    
+
     /**
      * Compute the multiplier for effect falloff with distance
      *

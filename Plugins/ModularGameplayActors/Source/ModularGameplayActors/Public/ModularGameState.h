@@ -6,38 +6,42 @@
 
 #include "ModularGameState.generated.h"
 
+#define UE_API MODULARGAMEPLAYACTORS_API
+
 class UObject;
 
 /** Pair this with a ModularGameModeBase */
-UCLASS(Blueprintable)
-class MODULARGAMEPLAYACTORS_API AModularGameStateBase : public AGameStateBase
+UCLASS(MinimalAPI, Blueprintable)
+class AModularGameStateBase : public AGameStateBase
 {
 	GENERATED_BODY()
 
 public:
 	//~ Begin AActor interface
-	virtual void PreInitializeComponents() override;
-	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	UE_API virtual void PreInitializeComponents() override;
+	UE_API virtual void BeginPlay() override;
+	UE_API virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	//~ End AActor interface
 };
 
 
 /** Pair this with a ModularGameState */
-UCLASS(Blueprintable)
-class MODULARGAMEPLAYACTORS_API AModularGameState : public AGameState
+UCLASS(MinimalAPI, Blueprintable)
+class AModularGameState : public AGameState
 {
 	GENERATED_BODY()
 
 public:
 	//~ Begin AActor interface
-	virtual void PreInitializeComponents() override;
-	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	UE_API virtual void PreInitializeComponents() override;
+	UE_API virtual void BeginPlay() override;
+	UE_API virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	//~ End AActor interface
 
 protected:
 	//~ Begin AGameState interface
-	virtual void HandleMatchHasStarted() override;
+	UE_API virtual void HandleMatchHasStarted() override;
 	//~ Begin AGameState interface
 };
+
+#undef UE_API
