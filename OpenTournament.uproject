@@ -417,16 +417,16 @@
 			]
 		},
 		{
-			"Name": "BUIValidator",
-			"Enabled": false
-		},
-		{
 			"Name": "ControlFlows",
 			"Enabled": true
 		},
 		{
 			"Name": "OnlineFramework",
 			"Enabled": true
+		},
+		{
+			"Name": "BUIValidator",
+			"Enabled": false
 		},
 		{
 			"Name": "SignificanceManager",
