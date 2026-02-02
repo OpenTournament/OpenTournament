@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -6,18 +6,16 @@
 
 #include "EnhancedInputSubsystems.h"
 #include "UR_LocalPlayer.h"
-//#include "Settings/UR_SettingsLocal.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_InputComponent)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-//class UUR_InputConfig;
-
 UUR_InputComponent::UUR_InputComponent(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
-{
-}
+{}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_InputComponent::AddInputMappings(const UUR_InputConfig* InputConfig, const UEnhancedInputLocalPlayerSubsystem* InputSubsystem) const
 {

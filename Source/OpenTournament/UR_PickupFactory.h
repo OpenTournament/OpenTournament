@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -60,12 +60,15 @@ public:
     /**
     * Rotates AttachComponent at a fixed rate.
     */
+    // meta = (DeprecatedProperty)
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
     float RotationRate;
 
+    // meta = (DeprecatedProperty)
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
     float BobbingHeight;
 
+    // meta = (DeprecatedProperty)
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
     float BobbingSpeed;
 
@@ -75,6 +78,7 @@ public:
     *
     * If your base uses bobbing and you change AttachComponent relative location, make sure to update this.
     */
+    // meta = (DeprecatedProperty)
     UPROPERTY(BlueprintReadWrite)
     FVector InitialRelativeLocation;
 
@@ -108,6 +112,7 @@ public:
     * Can be used on client for cosmetic purposes (holo...)
     * Replicated initial-only to let gamemode replace pickups on startup.
     */
+    // @! TODO : Should this be visible to BP?
     UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_PickupClass)
     TSubclassOf<AUR_Pickup> PickupClass_Internal;
 
@@ -170,10 +175,6 @@ public:
     */
     UFUNCTION(BlueprintNativeEvent, BlueprintPure)
     TSubclassOf<AUR_Pickup> GetPickupClass();
-    virtual TSubclassOf<AUR_Pickup> GetPickupClass_Implementation()
-    {
-        return PickupClass_Internal;
-    }
 
     UFUNCTION(BlueprintCallable)
     virtual void SetPickupClass(TSubclassOf<AUR_Pickup> NewClass)

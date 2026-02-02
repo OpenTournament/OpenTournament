@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -46,6 +46,24 @@ namespace URGameplayTags
     UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Crouch, "InputTag.Crouch", "Crouch input.");
     UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_AutoRun, "InputTag.AutoRun", "Auto-run input.");
 
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Ability, "InputTag.Ability", "");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Ability_Dash, "InputTag.Ability.Dash", "");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Ability_Dash_Axis, "InputTag.Ability.Dash.Axis", "");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Ability_Jump, "InputTag.Ability.Jump", "");
+
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Weapon_Drop, "InputTag.Weapon.Drop", "Drop Weapon (Passive).");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Weapon_Fire, "InputTag.Weapon.Fire", "Fire Weapon (Category).");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Weapon_Fire_1, "InputTag.Weapon.Fire.1", "Fire Weapon 1.");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Weapon_Fire_2, "InputTag.Weapon.Fire.2", "Fire Weapon 2.");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Weapon_Fire_3, "InputTag.Weapon.Fire.3", "Fire Weapon 3.");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Weapon_Reload, "InputTag.Weapon.Reload", "Reload Weapon.");
+
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Weapon_Switch, "InputTag.Weapon.Switch", "Switch Weapon (Category).");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Weapon_Switch_Next, "InputTag.Weapon.Switch.Next", "Switch Weapon - Next.");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Weapon_Switch_Previous, "InputTag.Weapon.Switch.Previous", "Switch Weapon - Previous.");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Weapon_Switch_Select, "InputTag.Weapon.Switch.Select", "Select Weapon.");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Weapon_Switch_Throw, "InputTag.Weapon.Throw", "Throw Weapon (Active).");
+
     UE_DEFINE_GAMEPLAY_TAG_COMMENT(Cheat_GodMode, "Cheat.GodMode", "GodMode cheat is active on the owner.");
     UE_DEFINE_GAMEPLAY_TAG_COMMENT(Cheat_UnlimitedHealth, "Cheat.UnlimitedHealth", "UnlimitedHealth cheat is active on the owner.");
 
@@ -71,6 +89,19 @@ namespace URGameplayTags
     UE_DEFINE_GAMEPLAY_TAG_COMMENT(Crosshair_Enable, "Crosshair.Enable", "Crosshair is Enabled");
     UE_DEFINE_GAMEPLAY_TAG_COMMENT(Crosshair_Disable, "Crosshair.Disable", "Crosshair is Disabled");
     UE_DEFINE_GAMEPLAY_TAG_COMMENT(Crosshair_HitRegister, "Crosshair.HitRegister", "Crosshair Registers a Hit");
+
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(Announcement_Accolade_EliminationChord_2x, "Announcement.Accolade.EliminationChord.2x", "");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(Announcement_Accolade_EliminationChord_3x, "Announcement.Accolade.EliminationChord.3x", "");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(Announcement_Accolade_EliminationChord_4x, "Announcement.Accolade.EliminationChord.4x", "");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(Announcement_Accolade_EliminationChord_5x, "Announcement.Accolade.EliminationChord.5x", "");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(Announcement_Accolade_EliminationChord_6x, "Announcement.Accolade.EliminationChord.6x", "");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(Announcement_Accolade_EliminationStreak_5, "Announcement.Accolade.EliminationStreak.5", "");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(Announcement_Accolade_EliminationStreak_10, "Announcement.Accolade.EliminationStreak.10", "");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(Announcement_Accolade_EliminationStreak_15, "Announcement.Accolade.EliminationStreak.15", "");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(Announcement_Accolade_EliminationStreak_20, "Announcement.Accolade.EliminationStreak.20", "");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(Announcement_Accolade_EliminationStreak_25, "Announcement.Accolade.EliminationStreak.25", "");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(Announcement_Accolade_EliminationStreak_30, "Announcement.Accolade.EliminationStreak.30", "");
+    UE_DEFINE_GAMEPLAY_TAG_COMMENT(Announcement_Accolade_EliminationStreak_Ended, "Announcement.Accolade.EliminationStreak.Ended", "");
 
     // These are mapped to the movement modes inside GetMovementModeTagMap()
     UE_DEFINE_GAMEPLAY_TAG_COMMENT(Movement_Mode_Walking, "Movement.Mode.Walking", "Default Character movement tag");

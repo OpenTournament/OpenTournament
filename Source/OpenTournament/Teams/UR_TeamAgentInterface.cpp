@@ -4,14 +4,18 @@
 
 #include "Teams/UR_TeamAgentInterface.h"
 
+#include <UObject/ScriptInterface.h>
+
 #include "UR_LogChannels.h"
-#include "UObject/ScriptInterface.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_TeamAgentInterface)
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 UUR_TeamAgentInterface::UUR_TeamAgentInterface(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
+    // Noop
 }
 
 void IUR_TeamAgentInterface::ConditionalBroadcastTeamChanged(TScriptInterface<IUR_TeamAgentInterface> This, FGenericTeamId OldTeamID, FGenericTeamId NewTeamID)

@@ -13,67 +13,70 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 AUR_PlayerStart::AUR_PlayerStart(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-{
-}
+    : Super(ObjectInitializer)
+{}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+const FGameplayTagContainer& AUR_PlayerStart::GetGameplayTags() const
+{
+    return StartPointTags;
+}
+
 EGamePlayerStartLocationOccupancy AUR_PlayerStart::GetLocationOccupancy(AController* const ControllerPawnToFit) const
 {
-	UWorld* const World = GetWorld();
-	if (HasAuthority() && World)
-	{
-		if (AGameModeBase* AuthGameMode = World->GetAuthGameMode())
-		{
+    UWorld* const World = GetWorld();
+    if (HasAuthority() && World)
+    {
+        if (AGameModeBase* AuthGameMode = World->GetAuthGameMode())
+        {
             const TSubclassOf<APawn> PawnClass = AuthGameMode->GetDefaultPawnClassForController(ControllerPawnToFit);
-			const APawn* const PawnToFit = PawnClass ? GetDefault<APawn>(PawnClass) : nullptr;
+            const APawn* const PawnToFit = PawnClass ? GetDefault<APawn>(PawnClass) : nullptr;
 
-			FVector ActorLocation = GetActorLocation();
-			const FRotator ActorRotation = GetActorRotation();
+            FVector ActorLocation = GetActorLocation();
+            const FRotator ActorRotation = GetActorRotation();
 
-			if (!World->EncroachingBlockingGeometry(PawnToFit, ActorLocation, ActorRotation, nullptr))
-			{
-				return EGamePlayerStartLocationOccupancy::Empty;
-			}
-			else if (World->FindTeleportSpot(PawnToFit, ActorLocation, ActorRotation))
-			{
-				return EGamePlayerStartLocationOccupancy::Partial;
-			}
-		}
-	}
+            if (!World->EncroachingBlockingGeometry(PawnToFit, ActorLocation, ActorRotation, nullptr))
+            {
+                return EGamePlayerStartLocationOccupancy::Empty;
+            }
+            else if (World->FindTeleportSpot(PawnToFit, ActorLocation, ActorRotation))
+            {
+                return EGamePlayerStartLocationOccupancy::Partial;
+            }
+        }
+    }
 
-	return EGamePlayerStartLocationOccupancy::Full;
+    return EGamePlayerStartLocationOccupancy::Full;
 }
 
 bool AUR_PlayerStart::IsClaimed() const
 {
-	return ClaimingController != nullptr;
+    return ClaimingController != nullptr;
 }
 
 bool AUR_PlayerStart::TryClaim(AController* OccupyingController)
 {
-	if (OccupyingController != nullptr && !IsClaimed())
-	{
-		ClaimingController = OccupyingController;
-		if (const UWorld* World = GetWorld())
-		{
-			World->GetTimerManager().SetTimer(ExpirationTimerHandle, FTimerDelegate::CreateUObject(this, &AUR_PlayerStart::CheckUnclaimed), ExpirationCheckInterval, true);
-		}
-		return true;
-	}
-	return false;
+    if (OccupyingController != nullptr && !IsClaimed())
+    {
+        ClaimingController = OccupyingController;
+        if (const UWorld* World = GetWorld())
+        {
+            World->GetTimerManager().SetTimer(ExpirationTimerHandle, FTimerDelegate::CreateUObject(this, &AUR_PlayerStart::CheckUnclaimed), ExpirationCheckInterval, true);
+        }
+        return true;
+    }
+    return false;
 }
 
 void AUR_PlayerStart::CheckUnclaimed()
 {
-	if (ClaimingController != nullptr && ClaimingController->GetPawn() != nullptr && GetLocationOccupancy(ClaimingController) == EGamePlayerStartLocationOccupancy::Empty)
-	{
-		ClaimingController = nullptr;
-		if (const UWorld* World = GetWorld())
-		{
-			World->GetTimerManager().ClearTimer(ExpirationTimerHandle);
-		}
-	}
+    if (ClaimingController != nullptr && ClaimingController->GetPawn() != nullptr && GetLocationOccupancy(ClaimingController) == EGamePlayerStartLocationOccupancy::Empty)
+    {
+        ClaimingController = nullptr;
+        if (const UWorld* World = GetWorld())
+        {
+            World->GetTimerManager().ClearTimer(ExpirationTimerHandle);
+        }
+    }
 }
-

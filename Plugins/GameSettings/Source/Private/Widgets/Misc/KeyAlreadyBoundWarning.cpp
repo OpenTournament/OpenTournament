@@ -3,6 +3,8 @@
 #include "Widgets/Misc/KeyAlreadyBoundWarning.h"
 #include "Components/TextBlock.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(KeyAlreadyBoundWarning)
+
 void UKeyAlreadyBoundWarning::SetWarningText(const FText& InText)
 {
 	WarningText->SetText(InText);

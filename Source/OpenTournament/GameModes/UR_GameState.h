@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -11,6 +11,8 @@
 #include "UR_GameState.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define UE_API OPENTOURNAMENT_API
 
 class UUR_AbilitySystemComponent;
 class UUR_ExperienceManagerComponent;
@@ -38,20 +40,30 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWinnerAssignedSignature, AUR_GameSt
  *
  */
 UCLASS()
-class OPENTOURNAMENT_API AUR_GameState
+class AUR_GameState
     : public AModularGameState
     , public IAbilitySystemInterface
 {
     GENERATED_BODY()
 
-protected:
-    AUR_GameState(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+public:
+    UE_API AUR_GameState(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
     //~IAbilitySystemInterface
-    virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+    UE_API virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
     //~End of IAbilitySystemInterface
+
+    // Gets the ability system component used for game wide things
+    UFUNCTION(BlueprintCallable, Category = "OT|GameState")
+    UUR_AbilitySystemComponent* GetGameAbilitySystemComponent() const { return AbilitySystemComponent; }
+
+    // Gets the server's FPS, replicated to clients
+    UE_API float GetServerFPS() const;
+
+protected:
+    UPROPERTY(Replicated)
+    float ServerFPS;
+
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Match state
@@ -295,3 +307,5 @@ public:
     UPROPERTY()
     TObjectPtr<UUR_ExperienceManagerComponent> ExperienceManagerComponent;
 };
+
+#undef UE_API

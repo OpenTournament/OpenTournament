@@ -28,9 +28,9 @@ class OPENTOURNAMENT_API UUR_Widget_ControlsListEntry : public UUserWidget, publ
 public:
     UUR_Widget_ControlsListEntry(const FObjectInitializer& ObjectInitializer);
 
-    void NativeConstruct() override;
+    virtual void NativeConstruct() override;
 
-    void NativeOnListItemObjectSet(UObject* InObject) override;
+    virtual void NativeOnListItemObjectSet(UObject* InObject) override;
 
     UPROPERTY(meta = (BindWidget))
     UTextBlock* EntryName;
@@ -38,7 +38,8 @@ public:
     UPROPERTY(meta = (BindWidget))
     UInputKeySelector* EntryKeySelector;
 
-    UObject* Item;
+    UPROPERTY()
+    TWeakObjectPtr<UObject> Item;
 
     UFUNCTION()
     void OnEntryKeySelectorKeyChanged(FInputChord SelectedKey);
@@ -47,7 +48,7 @@ public:
     void OnEntryKeySelectorIsSelectingKeyChanged();
 
 private:
-    void UpdateEntry();
+    void UpdateEntry() const;
 
     bool IsSelectingKey;
 };

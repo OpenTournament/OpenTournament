@@ -7,6 +7,8 @@
 
 #include "CommonPlayerInputKey.generated.h"
 
+#define UE_API COMMONGAME_API
+
 enum class ECommonInputType : uint8;
 
 class APlayerController;
@@ -47,37 +49,33 @@ private:
 	mutable bool bTextDirty = true;
 };
 
-UCLASS(Abstract, BlueprintType, Blueprintable, meta = (DisableNativeTick))
-class COMMONGAME_API UCommonPlayerInputKey : public UCommonUserWidget
+UCLASS(MinimalAPI, Abstract, BlueprintType, Blueprintable, meta = (DisableNativeTick))
+class UCommonPlayerInputKey : public UCommonUserWidget
 {
 	GENERATED_BODY()
 
 public:
-	UCommonPlayerInputKey(const FObjectInitializer& ObjectInitializer);
+	UE_API UCommonPlayerInputKey(const FObjectInitializer& ObjectInitializer);
 
 	/** Update the key and associated display based on our current Boundaction */
 	UFUNCTION(BlueprintCallable, Category = "Keybind Widget")
-	void UpdateKeybindWidget();
+	UE_API void UpdateKeybindWidget();
 
 	/** Set the bound key for our keybind */
 	UFUNCTION(BlueprintCallable, Category = "Keybind Widget")
-	void SetBoundKey(FKey NewBoundAction);
+	UE_API void SetBoundKey(FKey NewBoundAction);
 
 	/** Set the bound action for our keybind */
 	UFUNCTION(BlueprintCallable, Category = "Keybind Widget")
-	void SetBoundAction(FName NewBoundAction);
-
-	/** Force this keybind to be a hold keybind */
-	UFUNCTION(BlueprintCallable, Category = "Keybind Widget", meta=(DeprecatedFunction, DeprecationMessage = "Use SetForcedHoldKeybindStatus instead"))
-	void SetForcedHoldKeybind(bool InForcedHoldKeybind);
+	UE_API void SetBoundAction(FName NewBoundAction);
 
 	/** Force this keybind to be a hold keybind */
 	UFUNCTION(BlueprintCallable, Category = "Keybind Widget")
-	void SetForcedHoldKeybindStatus(ECommonKeybindForcedHoldStatus InForcedHoldKeybindStatus);
+	UE_API void SetForcedHoldKeybindStatus(ECommonKeybindForcedHoldStatus InForcedHoldKeybindStatus);
 
 	/** Force this keybind to be a hold keybind */
 	UFUNCTION(BlueprintCallable, Category = "Keybind Widget")
-	void SetShowProgressCountDown(bool bShow);
+	UE_API void SetShowProgressCountDown(bool bShow);
 
 	/** Set the axis scale value for this keybind */
 	UFUNCTION(BlueprintCallable, Category = "Keybind Widget")
@@ -113,11 +111,11 @@ public:
 
 	/** Called through a delegate when we start hold progress */
 	UFUNCTION()
-	void StartHoldProgress(FName HoldActionName, float HoldDuration);
+	UE_API void StartHoldProgress(FName HoldActionName, float HoldDuration);
 
 	/** Called through a delegate when we stop hold progress */
 	UFUNCTION()
-	void StopHoldProgress(FName HoldActionName, bool bCompletedSuccessfully);
+	UE_API void StopHoldProgress(FName HoldActionName, bool bCompletedSuccessfully);
 
 	/** Get whether this keybind is a hold action. */
 	UFUNCTION(BlueprintCallable, Category = "Keybind Widget")
@@ -127,13 +125,13 @@ public:
 	bool IsBoundKeyValid() const { return BoundKey.IsValid(); }
 
 protected:
-	virtual void NativePreConstruct() override;
-	virtual void NativeConstruct() override;
-	virtual int32 NativePaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
-	void RecalculateDesiredSize();
+	UE_API virtual void NativePreConstruct() override;
+	UE_API virtual void NativeConstruct() override;
+	UE_API virtual int32 NativePaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
+	UE_API void RecalculateDesiredSize();
 
 	/** Overridden to destroy our MID */
-	virtual void NativeDestruct() override;
+	UE_API virtual void NativeDestruct() override;
 
 	/** Whether or not this keybind widget is currently set to be a hold keybind */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Keybind Widget", meta=(ScriptName = "IsHoldKeybindValue"))
@@ -193,24 +191,24 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> ProgressPercentageMID;
 
-	virtual void NativeOnInitialized() override;
+	UE_API virtual void NativeOnInitialized() override;
 
 private:
 	/**
 	 * Synchronizes the hold progress to whatever is currently set in the
 	 * owning player controller.
 	 */
-	void SyncHoldProgress();
+	UE_API void SyncHoldProgress();
 
 	/** Called for updating the HoldKeybindImage during a hold keybind */
-	void UpdateHoldProgress();
+	UE_API void UpdateHoldProgress();
 
 	/** Called when we want to set up this keybind widget as a hold keybind */
-	void SetupHoldKeybind();
+	UE_API void SetupHoldKeybind();
 
-	void ShowHoldBackPlate();
+	UE_API void ShowHoldBackPlate();
 
-	void HandlePlayerControllerSet(UCommonLocalPlayer* LocalPlayer, APlayerController* PlayerController);
+	UE_API void HandlePlayerControllerSet(UCommonLocalPlayer* LocalPlayer, APlayerController* PlayerController);
 
 	/** Time when we started using a hold keybind */
 	float HoldKeybindStartTime = 0;
@@ -226,3 +224,5 @@ private:
 	UPROPERTY(Transient)
 	FSlateBrush CachedKeyBrush;
 };
+
+#undef UE_API

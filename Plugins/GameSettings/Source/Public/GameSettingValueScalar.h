@@ -7,18 +7,20 @@
 
 #include "GameSettingValueScalar.generated.h"
 
+#define UE_API GAMESETTINGS_API
+
 class UObject;
 
-UCLASS(abstract)
-class GAMESETTINGS_API UGameSettingValueScalar : public UGameSettingValue
+UCLASS(MinimalAPI, abstract)
+class UGameSettingValueScalar : public UGameSettingValue
 {
 	GENERATED_BODY()
 
 public:
-	UGameSettingValueScalar();
+	UE_API UGameSettingValueScalar();
 
-	void SetValueNormalized(double NormalizedValue);
-	double GetValueNormalized() const;
+	UE_API void SetValueNormalized(double NormalizedValue);
+	UE_API double GetValueNormalized() const;
 
 	TOptional<double> GetDefaultValueNormalized() const
 	{
@@ -49,3 +51,5 @@ public:
 
 protected:
 };
+
+#undef UE_API

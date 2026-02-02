@@ -6,6 +6,8 @@
 
 #include "GameSettingPressAnyKey.generated.h"
 
+#define UE_API GAMESETTINGS_API
+
 struct FKey;
 
 class UObject;
@@ -13,13 +15,13 @@ class UObject;
 /**
  * 
  */
-UCLASS(Abstract)
-class GAMESETTINGS_API UGameSettingPressAnyKey : public UCommonActivatableWidget
+UCLASS(MinimalAPI, Abstract)
+class UGameSettingPressAnyKey : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 
 public:
-	UGameSettingPressAnyKey(const FObjectInitializer& Initializer);
+	UE_API UGameSettingPressAnyKey(const FObjectInitializer& Initializer);
 
 	DECLARE_EVENT_OneParam(UGameSettingPressAnyKey, FOnKeySelected, FKey);
 	FOnKeySelected OnKeySelected;
@@ -28,15 +30,17 @@ public:
 	FOnKeySelectionCanceled OnKeySelectionCanceled;
 
 protected:
-	virtual void NativeOnActivated() override;
-	virtual void NativeOnDeactivated() override;
+	UE_API virtual void NativeOnActivated() override;
+	UE_API virtual void NativeOnDeactivated() override;
 
-	void HandleKeySelected(FKey InKey);
-	void HandleKeySelectionCanceled();
+	UE_API void HandleKeySelected(FKey InKey);
+	UE_API void HandleKeySelectionCanceled();
 
-	void Dismiss(TFunction<void()> PostDismissCallback);
+	UE_API void Dismiss(TFunction<void()> PostDismissCallback);
 
 private:
 	bool bKeySelected = false;
 	TSharedPtr<class FSettingsPressAnyKeyInputPreProcessor> InputProcessor;
 };
+
+#undef UE_API

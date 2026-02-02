@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -19,7 +19,7 @@ UUR_PlatformSpecificRenderingSettings::UUR_PlatformSpecificRenderingSettings()
 
 const UUR_PlatformSpecificRenderingSettings* UUR_PlatformSpecificRenderingSettings::Get()
 {
-    UUR_PlatformSpecificRenderingSettings* Result = UPlatformSettingsManager::Get().GetSettingsForPlatform<ThisClass>();
+    const UUR_PlatformSpecificRenderingSettings* Result = UPlatformSettingsManager::Get().GetSettingsForPlatform<ThisClass>();
     check(Result);
     return Result;
 }

@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -17,7 +17,7 @@ class UUR_ExperienceDefinition;
 /**
  * Base GameMode class for all OpenTournament GameModes
  */
-UCLASS()
+UCLASS(Config = Game, Abstract, HideCategories = (Tick, LOD, Cooking))
 class OPENTOURNAMENT_API AUR_GameModeBase
     : public AModularGameMode
 {
@@ -52,9 +52,9 @@ public:
     UPROPERTY(Config, EditDefaultsOnly, BlueprintReadOnly)
     FName DefaultGameExperienceName;
 
-    void OnExperienceLoaded(const UUR_ExperienceDefinition* CurrentExperience);
+    virtual void OnExperienceLoaded(const UUR_ExperienceDefinition* CurrentExperience);
 
-    bool IsExperienceLoaded() const;
+    virtual bool IsExperienceLoaded() const;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 };

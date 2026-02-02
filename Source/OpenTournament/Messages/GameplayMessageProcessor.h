@@ -1,17 +1,27 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "Components/ActorComponent.h"
+
 #include "GameFramework/GameplayMessageSubsystem.h"
 
 #include "GameplayMessageProcessor.generated.h"
 
-namespace EEndPlayReason { enum Type : int; }
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define UE_API OPENTOURNAMENT_API
+
+namespace EEndPlayReason
+{
+    enum Type : int;
+}
 
 class UObject;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * UGameplayMessageProcessor
@@ -22,24 +32,26 @@ class UObject;
  * Note that these processors are spawned on the server once (not per player)
  * and should do their own internal filtering if only relevant for some players.
  */
-UCLASS(BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
-class OPENTOURNAMENT_API UGameplayMessageProcessor : public UActorComponent
+UCLASS(MinimalAPI, BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
+class UGameplayMessageProcessor : public UActorComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	//~UActorComponent interface
-	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	//~End of UActorComponent interface
+    //~UActorComponent interface
+    UE_API virtual void BeginPlay() override;
+    UE_API virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+    //~End of UActorComponent interface
 
-	virtual void StartListening();
-	virtual void StopListening();
+    UE_API virtual void StartListening();
+    UE_API virtual void StopListening();
 
 protected:
-	void AddListenerHandle(FGameplayMessageListenerHandle&& Handle);
-	double GetServerTime() const;
+    UE_API void AddListenerHandle(FGameplayMessageListenerHandle&& Handle);
+    UE_API double GetServerTime() const;
 
 private:
-	TArray<FGameplayMessageListenerHandle> ListenerHandles;
+    TArray<FGameplayMessageListenerHandle> ListenerHandles;
 };
+
+#undef UE_API

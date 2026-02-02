@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -43,16 +43,15 @@ struct FPaniniMaterialParameters
 
     FPaniniMaterialParameters()
         : bInitialized(false)
-        , DistanceBias(0)
-        , DistanceNormalize(0)
-        , PushMin(0)
-        , PushMax(0)
-        , Scale(0)
-        , Depth(0)
-        , Skew(0)
-        , Projection(0)
-    {
-    }
+      , DistanceBias(0)
+      , DistanceNormalize(0)
+      , PushMin(0)
+      , PushMax(0)
+      , Scale(0)
+      , Depth(0)
+      , Skew(0)
+      , Projection(0)
+    {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,8 +65,8 @@ struct FPaniniMaterialParameters
  *
  * https://docs.unrealengine.com/en-US/Engine/Rendering/Materials/ParameterCollections/index.html
  */
-UCLASS()
-class OPENTOURNAMENT_API UUR_MPC_Global : public UBlueprintFunctionLibrary
+UCLASS(MinimalAPI)
+class UUR_MPC_Global : public UBlueprintFunctionLibrary
 {
     GENERATED_BODY()
 

@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -21,6 +21,7 @@
 /**
  * GameMode for Menus
  */
+//UCLASS(Deprecated, meta = (DeprecationMessage="This class to be deprecated"))
 UCLASS()
 class OPENTOURNAMENT_API AUR_GameModeMenu
     : public AUR_GameModeBase

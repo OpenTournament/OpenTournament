@@ -45,7 +45,7 @@ public:
 
     virtual FOnGameTeamIndexChangedDelegate* GetOnTeamIndexChangedDelegate() override;
 
-    ETeamAttitude::Type GetTeamAttitudeTowards(const AActor& Other) const override;
+    virtual ETeamAttitude::Type GetTeamAttitudeTowards(const AActor& Other) const override;
 
     //~End of IUR_TeamAgentInterface interface
 

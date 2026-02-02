@@ -1,11 +1,12 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "GameplayTagContainer.h"
 #include "Engine/DeveloperSettingsBackedByCVars.h"
+
+#include "GameplayTagContainer.h"
 #include "Engine/PlatformSettings.h"
 
 #include "UR_PerformanceSettings.generated.h"
@@ -120,7 +121,7 @@ public:
     // Potential frame rates to display for mobile
     // Note: This is further limited by OT.DeviceProfile.Mobile.MaxFrameRate from the
     // platform-specific device profile and what the platform frame pacer reports as supported
-    UPROPERTY(EditAnywhere, Config, Category=VideoSettings, meta=(EditCondition="FramePacingMode==EGameFramePacingMode::MobileStyle", ForceUnits=Hz))
+    UPROPERTY(EditAnywhere, Config, Category=VideoSettings, meta=(EditCondition="FramePacingMode == EGameFramePacingMode::MobileStyle", ForceUnits=Hz))
     TArray<int32> MobileFrameRateLimits;
 };
 

@@ -6,6 +6,8 @@
 
 #include "GameSettingDetailView.generated.h"
 
+#define UE_API GAMESETTINGS_API
+
 class UCommonRichTextBlock;
 class UCommonTextBlock;
 class UGameSetting;
@@ -18,24 +20,24 @@ struct FStreamableHandle;
 /**
  * 
  */
-UCLASS(Abstract)
-class GAMESETTINGS_API UGameSettingDetailView : public UUserWidget
+UCLASS(MinimalAPI, Abstract)
+class UGameSettingDetailView : public UUserWidget
 {
 	GENERATED_BODY()
 public:
-	UGameSettingDetailView(const FObjectInitializer& ObjectInitializer);
+	UE_API UGameSettingDetailView(const FObjectInitializer& ObjectInitializer);
 
-	void FillSettingDetails(UGameSetting* InSetting);
+	UE_API void FillSettingDetails(UGameSetting* InSetting);
 
 	//UVisual interface
-	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
+	UE_API virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 	//~ End UVisual Interface
 
 protected:
-	virtual void NativeConstruct() override;
-	virtual void NativeOnInitialized() override;
+	UE_API virtual void NativeConstruct() override;
+	UE_API virtual void NativeOnInitialized() override;
 
-	void CreateDetailsExtension(UGameSetting* InSetting, TSubclassOf<UGameSettingDetailExtension> ExtensionClass);
+	UE_API void CreateDetailsExtension(UGameSetting* InSetting, TSubclassOf<UGameSettingDetailExtension> ExtensionClass);
 
 protected:
 	UPROPERTY(EditAnywhere)
@@ -68,3 +70,5 @@ private:	// Bound Widgets
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional, BlueprintProtected = true, AllowPrivateAccess = true))
 	TObjectPtr<UVerticalBox> Box_DetailsExtension;
 };
+
+#undef UE_API

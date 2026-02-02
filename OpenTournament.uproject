@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.5",
+	"EngineAssociation": "5.7",
 	"Category": "",
 	"Description": "opentournamentgame.com",
 	"Modules": [
@@ -8,16 +8,20 @@
 			"Name": "OpenTournament",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
-            "AdditionalDependencies": [
-                "Engine",
-                "AIModule",
-                "DeveloperSettings",
-                "GameplayAbilities",
-                "UMG"
-            ]
+			"AdditionalDependencies": [
+				"Engine",
+				"AIModule",
+				"DeveloperSettings",
+				"GameplayAbilities",
+				"UMG"
+			]
 		}
 	],
 	"Plugins": [
+		{
+			"Name": "Metasound",
+			"Enabled": true
+		},
 		{
 			"Name": "ReplicationGraph",
 			"Enabled": true
@@ -48,15 +52,43 @@
 		},
 		{
 			"Name": "EditorTests",
-			"Enabled": true
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
 		},
 		{
 			"Name": "Gauntlet",
-			"Enabled": true
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
+		},
+		{
+			"Name": "NNEDenoiser",
+			"Enabled": false,
+			"TargetAllowList": [
+				"Editor"
+			],
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
 		},
 		{
 			"Name": "FunctionalTestingEditor",
-			"Enabled": true
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
+		},
+		{
+			"Name": "SkeletalReduction",
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
 		},
 		{
 			"Name": "AlembicImporter",
@@ -148,7 +180,10 @@
 		},
 		{
 			"Name": "MeshPainting",
-			"Enabled": true
+			"Enabled": false,
+			"TargetAllowList": [
+				"Editor"
+			]
 		},
 		{
 			"Name": "GoogleCloudMessaging",
@@ -228,10 +263,6 @@
 		},
 		{
 			"Name": "ProxyLODPlugin",
-			"Enabled": false
-		},
-		{
-			"Name": "SkeletalReduction",
 			"Enabled": false
 		},
 		{
@@ -336,22 +367,38 @@
 		},
 		{
 			"Name": "GeometryScripting",
-			"Enabled": true
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
 		},
 		{
 			"Name": "ModelingToolsEditorMode",
-			"Enabled": true
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
 		},
 		{
 			"Name": "StaticMeshEditorModeling",
-			"Enabled": true
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
 		},
 		{
 			"Name": "GeometryCollectionPlugin",
-			"Enabled": true
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
 		},
 		{
 			"Name": "AbilitySystemGameFeatureActions",
+			"Enabled": true
+		},
+		{
+			"Name": "CommonLoadingScreen",
 			"Enabled": true
 		},
 		{
@@ -364,7 +411,10 @@
 		},
 		{
 			"Name": "AssetSearch",
-			"Enabled": true
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
 		},
 		{
 			"Name": "ControlFlows",
@@ -401,10 +451,80 @@
 				"Win64",
 				"Mac",
 				"Linux"
+			],
+			"TargetAllowList": [
+				"Editor"
 			]
+		},
+		{
+			"Name": "ModelViewViewModel",
+			"Enabled": true
+		},
+		{
+			"Name": "ModelViewViewModelPreview",
+			"Enabled": true
+		},
+		{
+			"Name": "NiagaraFluids",
+			"Enabled": true
+		},
+		{
+			"Name": "Bridge",
+			"Enabled": false
+		},
+		{
+			"Name": "MetaHumanSDK",
+			"Enabled": false
+		},
+		{
+			"Name": "MassInsights",
+			"Enabled": false
+		},
+		{
+			"Name": "ChaosInsights",
+			"Enabled": false
+		},
+		{
+			"Name": "NFORDenoise",
+			"Enabled": false,
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Linux"
+			]
+		},
+		{
+			"Name": "GLTFExporter",
+			"Enabled": false
+		},
+		{
+			"Name": "InterchangeEditor",
+			"Enabled": false,
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "InterchangeTests",
+			"Enabled": false
+		},
+		{
+			"Name": "Interchange",
+			"Enabled": false,
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "InterchangeAssets",
+			"Enabled": false
 		}
 	],
 	"TargetPlatforms": [
+		"Windows",
 		"Win64",
 		"Linux"
 	]

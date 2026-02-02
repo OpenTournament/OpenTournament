@@ -49,7 +49,11 @@ void UUR_LocalPlayer::SwitchController(APlayerController* PC)
 
 bool UUR_LocalPlayer::SpawnPlayActor(const FString& URL, FString& OutError, UWorld* InWorld)
 {
-    return Super::SpawnPlayActor(URL, OutError, InWorld);
+	const bool bResult = Super::SpawnPlayActor(URL, OutError, InWorld);
+
+    OnPlayerControllerChanged(PlayerController);
+
+    return bResult;
 }
 
 void UUR_LocalPlayer::InitOnlineSession()
@@ -61,12 +65,19 @@ void UUR_LocalPlayer::InitOnlineSession()
 
 void UUR_LocalPlayer::SetGenericTeamId(const FGenericTeamId& NewTeamID)
 {
-    IUR_TeamAgentInterface::SetGenericTeamId(NewTeamID);
+    // Do nothing, we merely observe the team of our associated player controller
 }
 
 FGenericTeamId UUR_LocalPlayer::GetGenericTeamId() const
 {
-    return IUR_TeamAgentInterface::GetGenericTeamId();
+    if (IUR_TeamAgentInterface* ControllerAsTeamProvider = Cast<IUR_TeamAgentInterface>(PlayerController))
+    {
+        return ControllerAsTeamProvider->GetGenericTeamId();
+    }
+    else
+    {
+        return FGenericTeamId::NoTeam;
+    }
 }
 
 FOnGameTeamIndexChangedDelegate* UUR_LocalPlayer::GetOnTeamIndexChangedDelegate()
@@ -76,7 +87,6 @@ FOnGameTeamIndexChangedDelegate* UUR_LocalPlayer::GetOnTeamIndexChangedDelegate(
 
 UUR_SettingsLocal* UUR_LocalPlayer::GetLocalSettings() const
 {
-   // return Cast<UUR_SettingsLocal>(GEngine->GetGameUserSettings());
     return UUR_SettingsLocal::Get();
 }
 

@@ -9,6 +9,8 @@
 
 #include "GameSetting.generated.h"
 
+#define UE_API GAMESETTINGS_API
+
 class ULocalPlayer;
 class UGameSettingRegistry;
 
@@ -21,8 +23,8 @@ DECLARE_DELEGATE_RetVal_OneParam(FText, FGetGameSettingsDetails, ULocalPlayer& /
 /**
  * 
  */
-UCLASS(Abstract, BlueprintType)
-class GAMESETTINGS_API UGameSetting : public UObject
+UCLASS(MinimalAPI, Abstract, BlueprintType)
+class UGameSetting : public UObject
 {
 	GENERATED_BODY()
 
@@ -76,10 +78,10 @@ public:
 	void SetRegistry(UGameSettingRegistry* InOwningRegistry) { OwningRegistry = InOwningRegistry; }
 
 	/** Gets the searchable plain text for the description. */
-	const FString& GetDescriptionPlainText() const;
+	UE_API const FString& GetDescriptionPlainText() const;
 
 	/** Initializes the setting, giving it the owning local player.  Containers automatically initialize settings added to them. */
-	void Initialize(ULocalPlayer* InLocalPlayer);
+	UE_API void Initialize(ULocalPlayer* InLocalPlayer);
 
 	/** Gets the owning local player for this setting - which all initialized settings will have. */
 	ULocalPlayer* GetOwningLocalPlayer() const { return LocalPlayer; }
@@ -92,7 +94,7 @@ public:
 	 * on their account, or the account number.
 	 */
 	UFUNCTION(BlueprintCallable)
-	FText GetDynamicDetails() const;
+	UE_API FText GetDynamicDetails() const;
 
 	UFUNCTION(BlueprintCallable)
 	FText GetWarningRichText() const { return WarningRichText; }
@@ -109,13 +111,13 @@ public:
 	const FGameSettingEditableState& GetEditState() const { return EditableStateCache; }
 
 	/** Adds a new edit condition to this setting, allowing you to control the visibility and edit-ability of this setting. */
-	void AddEditCondition(const TSharedRef<FGameSettingEditCondition>& InEditCondition);
+	UE_API void AddEditCondition(const TSharedRef<FGameSettingEditCondition>& InEditCondition);
 
 	/** Add setting dependency, if these settings change, we'll re-evaluate edit conditions for this setting. */
-	void AddEditDependency(UGameSetting* DependencySetting);
+	UE_API void AddEditDependency(UGameSetting* DependencySetting);
 
 	/** The parent object that owns the setting, in most cases the collection, but for top level settings the registry. */
-	void SetSettingParent(UGameSetting* InSettingParent);
+	UE_API void SetSettingParent(UGameSetting* InSettingParent);
 	UGameSetting* GetSettingParent() const { return SettingParent; }
 
 	/** Should this setting be reported to analytics. */
@@ -143,49 +145,49 @@ public:
 	 * Refresh the editable state of the setting and notify that the state has changed so that any UI currently
 	 * examining this setting is updated with the new options, or whatever.
 	 */
-	void RefreshEditableState(bool bNotifyEditConditionsChanged = true);
+	UE_API void RefreshEditableState(bool bNotifyEditConditionsChanged = true);
 
 	/**
 	 * We expect settings to change the live value immediately, but occasionally there are special settings
 	 * that go are immediately stored to a temporary location but we don't actually apply them until later
 	 * like selecting a new resolution.
 	 */
-	void Apply();
+	UE_API void Apply();
 
 	/** Gets the current world of the local player that owns these settings. */
-	virtual UWorld* GetWorld() const override;
+	UE_API virtual UWorld* GetWorld() const override;
 
 protected:
 	/**  */
-	virtual void Startup();
-	void StartupComplete();
+	UE_API virtual void Startup();
+	UE_API void StartupComplete();
 
-	virtual void OnInitialized();
-	virtual void OnApply();
-	virtual void OnGatherEditState(FGameSettingEditableState& InOutEditState) const;
-	virtual void OnDependencyChanged();
+	UE_API virtual void OnInitialized();
+	UE_API virtual void OnApply();
+	UE_API virtual void OnGatherEditState(FGameSettingEditableState& InOutEditState) const;
+	UE_API virtual void OnDependencyChanged();
 
 	/**  */
-	virtual FText GetDynamicDetailsInternal() const;
+	UE_API virtual FText GetDynamicDetailsInternal() const;
 
 	/** */
-	void HandleEditDependencyChanged(UGameSetting* DependencySetting, EGameSettingChangeReason Reason);
-	void HandleEditDependencyChanged(UGameSetting* DependencySetting);
+	UE_API void HandleEditDependencyChanged(UGameSetting* DependencySetting, EGameSettingChangeReason Reason);
+	UE_API void HandleEditDependencyChanged(UGameSetting* DependencySetting);
 
 	/** Regenerates the plain searchable text if it has been dirtied. */
-	void RefreshPlainText() const;
+	UE_API void RefreshPlainText() const;
 	void InvalidateSearchableText() { bRefreshPlainSearchableText = true; }
 
 	/** Notify that the setting changed */
-	void NotifySettingChanged(EGameSettingChangeReason Reason);
-	virtual void OnSettingChanged(EGameSettingChangeReason Reason);
+	UE_API void NotifySettingChanged(EGameSettingChangeReason Reason);
+	UE_API virtual void OnSettingChanged(EGameSettingChangeReason Reason);
 
 	/** Notify that the settings edit conditions changed.  This may mean it's now invisible, or disabled, or possibly that the options have changed in some meaningful way. */
-	void NotifyEditConditionsChanged();
-	virtual void OnEditConditionsChanged();
+	UE_API void NotifyEditConditionsChanged();
+	UE_API virtual void OnEditConditionsChanged();
 
 	/**  */
-	FGameSettingEditableState ComputeEditableState() const;
+	UE_API FGameSettingEditableState ComputeEditableState() const;
 
 protected:
 
@@ -251,3 +253,5 @@ private:
 	/** We cache the editable state of a setting when it changes rather than reprocessing it any time it's needed.  */
 	FGameSettingEditableState EditableStateCache;
 };
+
+#undef UE_API

@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,9 +18,9 @@ struct FGameplayEffectContext;
 UCLASS(Config=Game)
 class UUR_AbilitySystemGlobals : public UAbilitySystemGlobals
 {
-    GENERATED_UCLASS_BODY()
+    GENERATED_BODY()
+
     //~UAbilitySystemGlobals interface
     virtual FGameplayEffectContext* AllocGameplayEffectContext() const override;
-
     //~End of UAbilitySystemGlobals interface
 };

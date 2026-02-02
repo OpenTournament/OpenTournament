@@ -1,6 +1,7 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
 #pragma once
 
 #include <Camera/CameraComponent.h>

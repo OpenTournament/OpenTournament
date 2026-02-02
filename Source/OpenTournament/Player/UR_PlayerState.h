@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -8,9 +8,9 @@
 
 #include <AbilitySystemInterface.h>
 #include <GameplayTagContainer.h>
-#include <GameFramework/PlayerState.h>
 
-#include "Enums/UR_PlayerConnectionType.h"
+#include "GameplayTagStack.h"
+#include "UR_TeamAgentInterface.h"
 #include "Character/UR_CharacterCustomization.h"
 #include "Interfaces/UR_TeamInterface.h"
 
@@ -39,6 +39,7 @@ UCLASS(Config = Game)
 class OPENTOURNAMENT_API AUR_PlayerState
     : public AModularPlayerState
     , public IAbilitySystemInterface
+    , public IUR_TeamAgentInterface
     , public IUR_TeamInterface
 {
     GENERATED_BODY()
@@ -55,7 +56,6 @@ public:
 
     //~APlayerState interface
     virtual void BeginPlay() override;
-
     //~APlayerState interface
 
     //~AbilitySystem interface
@@ -68,7 +68,7 @@ public:
 
 public:
 
-    UFUNCTION(BlueprintCallable, Category = "OT|PlayerState")
+    UFUNCTION(BlueprintPure, Category = "OT|PlayerState")
     UUR_AbilitySystemComponent* GetGameAbilitySystemComponent() const { return AbilitySystemComponent; }
 
     template <class T>
@@ -78,9 +78,19 @@ public:
 
     static const FName NAME_GameAbilityReady;
 
-    void SetPlayerConnectionType(EPlayerConnectionType NewType);
-    EPlayerConnectionType GetPlayerConnectionType() const { return MyPlayerConnectionType; }
+    /** Returns the Squad ID of the squad the player belongs to. */
+    UFUNCTION(BlueprintPure)
+    int32 GetSquadId() const
+    {
+        return MySquadID;
+    }
 
+    /** Returns the Team ID of the team the player belongs to. */
+    UFUNCTION(BlueprintPure)
+    int32 GetTeamId() const
+    {
+        return GenericTeamIdToInteger(MyTeamID);
+    }
 
 private:
     void OnExperienceLoaded(const UUR_ExperienceDefinition* CurrentExperience);
@@ -153,7 +163,6 @@ public:
     virtual int32 GetTeamIndex_Implementation() override;
 
     virtual void SetTeamIndex_Implementation(int32 NewTeamIndex) override;
-
     //~ End TeamInterface
 
     UPROPERTY(BlueprintAssignable)
@@ -202,6 +211,25 @@ public:
     UPROPERTY()
     TObjectPtr<const class UUR_CombatSet> CombatSet;
 
+    UPROPERTY()
+    FOnGameTeamIndexChangedDelegate OnTeamChangedDelegate;
+
+    UPROPERTY(ReplicatedUsing=OnRep_MyTeamID)
+    FGenericTeamId MyTeamID;
+
+    UPROPERTY(ReplicatedUsing=OnRep_MySquadID)
+    int32 MySquadID;
+
     UPROPERTY(Replicated)
-    EPlayerConnectionType MyPlayerConnectionType;
+    FGameplayTagStackContainer StatTags;
+
+    UPROPERTY(Replicated)
+    FRotator ReplicatedViewRotation;
+
+private:
+    UFUNCTION()
+    void OnRep_MyTeamID(FGenericTeamId OldTeamID);
+
+    UFUNCTION()
+    void OnRep_MySquadID();
 };

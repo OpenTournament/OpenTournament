@@ -18,6 +18,7 @@ UUR_CombatSet::UUR_CombatSet()
     : BaseDamage(0.0f)
     , BaseHeal(0.0f)
 {
+    // Noop
 }
 
 void UUR_CombatSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -27,6 +28,8 @@ void UUR_CombatSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     DOREPLIFETIME_CONDITION_NOTIFY(UUR_CombatSet, BaseDamage, COND_OwnerOnly, REPNOTIFY_Always);
     DOREPLIFETIME_CONDITION_NOTIFY(UUR_CombatSet, BaseHeal, COND_OwnerOnly, REPNOTIFY_Always);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_CombatSet::OnRep_BaseDamage(const FGameplayAttributeData& OldValue)
 {

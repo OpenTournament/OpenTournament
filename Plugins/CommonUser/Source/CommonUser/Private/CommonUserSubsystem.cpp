@@ -2288,7 +2288,7 @@ FText UCommonUserSubsystem::GetPrivilegeDescription(ECommonUserPrivilege Privile
 	case ECommonUserPrivilege::CanUseCrossPlay:
 		return NSLOCTEXT("CommonUser", "PrivilegeCanUseCrossPlay", "play with other platforms");
 	default:
-		return NSLOCTEXT("CommonUser", "PrivilegeInvalid", "");
+		return NSLOCTEXT("CommonUser", "PrivilegeInvalid", "Invalid");
 	}
 }
 
@@ -2318,7 +2318,7 @@ FText UCommonUserSubsystem::GetPrivilegeResultDescription(ECommonUserPrivilegeRe
 	case ECommonUserPrivilegeResult::PlatformFailure:
 		return NSLOCTEXT("CommonUser", "ResultPlatformFailure", "Not allowed");
 	default:
-		return NSLOCTEXT("CommonUser", "ResultInvalid", "");
+		return NSLOCTEXT("CommonUser", "ResultInvalid", "Invalid");
 
 	}
 }
@@ -2677,7 +2677,7 @@ void UCommonUserSubsystem::HandleInputDeviceConnectionChanged(EInputDeviceConnec
 {
 	FString InputDeviceIDString = FString::Printf(TEXT("%d"), InputDeviceId.GetId());
 	const bool bIsConnected = NewConnectionState == EInputDeviceConnectionState::Connected;
-	UE_LOG(LogCommonUser, Log, TEXT("Controller connection changed - UserIdx:%d, UserID:%s, Connected:%d"), *InputDeviceIDString, *PlatformUserIdToString(PlatformUserId), bIsConnected ? 1 : 0);
+	UE_LOG(LogCommonUser, Log, TEXT("Controller connection changed - UserIdx:%s, UserID:%s, Connected:%d"), *InputDeviceIDString, *PlatformUserIdToString(PlatformUserId), bIsConnected ? 1 : 0);
 
 	// TODO Implement for platforms that support this
 }

@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -66,7 +66,7 @@ public:
     UUR_SettingsShared();
 
     //~ULocalPlayerSaveGame interface
-    int32 GetLatestDataVersion() const override;
+    virtual int32 GetLatestDataVersion() const override;
     //~End of ULocalPlayerSaveGame interface
 
     bool IsDirty() const

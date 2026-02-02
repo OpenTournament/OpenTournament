@@ -6,10 +6,11 @@
 #include "Containers/Ticker.h"
 #include "GameSettingFilterState.h"
 #include "GameplayTagContainer.h"
+#include "Misc/ExpressionParserTypesFwd.h"
 
 #include "GameSettingPanel.generated.h"
 
-struct FCompiledToken;
+#define UE_API GAMESETTINGS_API
 
 class UGameSetting;
 class UGameSettingDetailView;
@@ -21,60 +22,60 @@ struct FGeometry;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnFocusedSettingChanged, UGameSetting*)
 
-UCLASS(Abstract)
-class GAMESETTINGS_API UGameSettingPanel : public UCommonUserWidget
+UCLASS(MinimalAPI, Abstract)
+class UGameSettingPanel : public UCommonUserWidget
 {
 	GENERATED_BODY()
 
 public:
 
-	UGameSettingPanel();
-	virtual void NativeOnInitialized() override;
-	virtual void NativeConstruct() override;
-	virtual void NativeDestruct() override;
+	UE_API UGameSettingPanel();
+	UE_API virtual void NativeOnInitialized() override;
+	UE_API virtual void NativeConstruct() override;
+	UE_API virtual void NativeDestruct() override;
 
 	// Focus transitioning to subwidgets for the gamepad
-	virtual FReply NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent) override;
+	UE_API virtual FReply NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent) override;
 
 	/**  */
-	void SetRegistry(UGameSettingRegistry* InRegistry);
+	UE_API void SetRegistry(UGameSettingRegistry* InRegistry);
 
 	/** Sets the filter for this panel, restricting which settings are available currently. */
-	void SetFilterState(const FGameSettingFilterState& InFilterState, bool bClearNavigationStack = true);
+	UE_API void SetFilterState(const FGameSettingFilterState& InFilterState, bool bClearNavigationStack = true);
 
 	/** Gets the currently visible and available settings based on the filter state. */
 	TArray<UGameSetting*> GetVisibleSettings() const { return VisibleSettings; }
 
 	/** Can we pop the current navigation stack */
-	bool CanPopNavigationStack() const;
+	UE_API bool CanPopNavigationStack() const;
 
 	/** Pop the navigation stack */
-	void PopNavigationStack();
+	UE_API void PopNavigationStack();
 
 	/**
 	 * Gets the set of settings that are potentially available on this screen.
 	 * MAY CONTAIN INVISIBLE SETTINGS.
 	 * DOES NOT INCLUDED NESTED PAGES.
 	 */
-	TArray<UGameSetting*> GetSettingsWeCanResetToDefault() const;
+	UE_API TArray<UGameSetting*> GetSettingsWeCanResetToDefault() const;
 
-	void SelectSetting(const FName& SettingDevName);
-	UGameSetting* GetSelectedSetting() const;
+	UE_API void SelectSetting(const FName& SettingDevName);
+	UE_API UGameSetting* GetSelectedSetting() const;
 
-	void RefreshSettingsList();
+	UE_API void RefreshSettingsList();
 
 	FOnFocusedSettingChanged OnFocusedSettingChanged;
 
 protected:
-	void RegisterRegistryEvents();
-	void UnregisterRegistryEvents();
+	UE_API void RegisterRegistryEvents();
+	UE_API void UnregisterRegistryEvents();
 	
-	void HandleSettingItemHoveredChanged(UObject* Item, bool bHovered);
-	void HandleSettingItemSelectionChanged(UObject* Item);
-	void FillSettingDetails(UGameSetting* InSetting);
-	void HandleSettingNamedAction(UGameSetting* Setting, FGameplayTag GameSettings_Action_Tag);
-	void HandleSettingNavigation(UGameSetting* Setting);
-	void HandleSettingEditConditionsChanged(UGameSetting* Setting);
+	UE_API void HandleSettingItemHoveredChanged(UObject* Item, bool bHovered);
+	UE_API void HandleSettingItemSelectionChanged(UObject* Item);
+	UE_API void FillSettingDetails(UGameSetting* InSetting);
+	UE_API void HandleSettingNamedAction(UGameSetting* Setting, FGameplayTag GameSettings_Action_Tag);
+	UE_API void HandleSettingNavigation(UGameSetting* Setting);
+	UE_API void HandleSettingEditConditionsChanged(UGameSetting* Setting);
 
 private:
 
@@ -112,3 +113,5 @@ private:
 private:
 	FTSTicker::FDelegateHandle RefreshHandle;
 };
+
+#undef UE_API

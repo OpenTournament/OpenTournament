@@ -1,0 +1,18 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Open Tournament Base Content",
+	"Description": "Open Tournament Base Content",
+	"Category": "Game",
+	"CreatedBy": "Open Tournament Games",
+	"CreatedByURL": "https://opentournamentgame.com",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"EnabledByDefault": true,
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"IsExperimentalVersion": false
+}

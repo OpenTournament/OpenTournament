@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,9 +18,10 @@
 #include "GenericPlatform/GenericPlatformFramePacer.h"
 #include "HAL/PlatformFramePacer.h"
 #include "Misc/App.h"
+#include "Performance/LatencyMarkerModule.h"
 #include "Widgets/Layout/SSafeZone.h"
 
-//#include "Development/UR_PlatformEmulationSettings.h"
+#include "Development/UR_PlatformEmulationSettings.h"
 #include "Audio/UR_AudioMixEffectsSubsystem.h"
 #include "Audio/UR_AudioSettings.h"
 #include "Performance/UR_PerformanceSettings.h"
@@ -31,6 +32,12 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_Platform_Trait_BinauralSettingControlledByOS, "Platform.Trait.BinauralSettingControlledByOS");
+
+namespace PerfStatTags
+{
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_Platform_Trait_SupportsLatencyStats, "Platform.Trait.SupportsLatencyStats");
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_Platform_Trait_SupportsLatencyMarkers, "Platform.Trait.SupportsLatencyMarkers");
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -167,8 +174,7 @@ public:
     TMobileQualityWrapper(T InDefaultValue, TAutoConsoleVariable<FString>& InWatchedVar)
         : DefaultValue(InDefaultValue)
       , WatchedVar(InWatchedVar)
-    {
-    }
+    {}
 
     T Query(int32 TestValue)
     {
@@ -376,6 +382,8 @@ UUR_SettingsLocal::UUR_SettingsLocal()
     {
         OnApplicationActivationStateChangedHandle = FSlateApplication::Get().OnApplicationActivationStateChanged().AddUObject(this, &ThisClass::OnAppActivationStateChanged);
     }
+
+	bEnableScalabilitySettings = UUR_PlatformSpecificRenderingSettings::Get()->bSupportsGranularVideoQualitySettings;
 
     SetToDefaults();
 }
@@ -594,9 +602,9 @@ bool UUR_SettingsLocal::ShouldUseFrontendPerformanceSettings() const
 
 EGameStatDisplayMode UUR_SettingsLocal::GetPerfStatDisplayState(EGameDisplayablePerformanceStat Stat) const
 {
-    if (const EGameStatDisplayMode* pMode = DisplayStatList.Find(Stat))
+    if (const EGameStatDisplayMode* PMode = DisplayStatList.Find(Stat))
     {
-        return *pMode;
+        return *PMode;
     }
     else
     {
@@ -615,6 +623,67 @@ void UUR_SettingsLocal::SetPerfStatDisplayState(EGameDisplayablePerformanceStat 
         DisplayStatList.FindOrAdd(Stat) = DisplayMode;
     }
     PerfStatSettingsChangedEvent.Broadcast();
+}
+
+bool UUR_SettingsLocal::DoesPlatformSupportLatencyMarkers()
+{
+    return ICommonUIModule::GetSettings().GetPlatformTraits().HasTag(PerfStatTags::TAG_Platform_Trait_SupportsLatencyMarkers);
+}
+
+void UUR_SettingsLocal::SetEnableLatencyFlashIndicators(const bool bNewVal)
+{
+    if (bNewVal != bEnableLatencyFlashIndicators)
+    {
+        bEnableLatencyFlashIndicators = bNewVal;
+        LatencyFlashIndicatorSettingsChangedEvent.Broadcast();
+    }
+}
+
+void UUR_SettingsLocal::SetEnableLatencyTrackingStats(const bool bNewVal)
+{
+    if (bNewVal != bEnableLatencyTrackingStats)
+    {
+        bEnableLatencyTrackingStats = bNewVal;
+
+        ApplyLatencyTrackingStatSetting();
+
+        LatencyStatIndicatorSettingsChangedEvent.Broadcast();
+    }
+}
+
+void UUR_SettingsLocal::ApplyLatencyTrackingStatSetting()
+{
+    // Since this function will be called on load of the settings, we check if the slate app is initialized.
+    // If it isn't then we are not in a target which can even have latency stats (like a headless cooker) so we
+    // will exit early and do nothing.
+    if (!FSlateApplication::IsInitialized())
+    {
+        return;
+    }
+
+    // Don't bother doing anything if the platform doesn't even support tracking stats.
+    if (!DoesPlatformSupportLatencyTrackingStats())
+    {
+        return;
+    }
+
+    // Actually enable or disable the latency marker modules based on this setting
+    TArray<ILatencyMarkerModule*> LatencyMarkerModules = IModularFeatures::Get().GetModularFeatureImplementations<ILatencyMarkerModule>(ILatencyMarkerModule::GetModularFeatureName());
+    for (ILatencyMarkerModule* LatencyMarkerModule : LatencyMarkerModules)
+    {
+        LatencyMarkerModule->SetEnabled(bEnableLatencyTrackingStats);
+    }
+
+    UE_CLOG(!LatencyMarkerModules.IsEmpty(),
+        LogConsoleResponse,
+        Log,
+        TEXT("%s %d Latency Marker Module(s)"),
+        bEnableLatencyTrackingStats ? TEXT("Enabled") : TEXT("Disabled"), LatencyMarkerModules.Num());
+}
+
+bool UUR_SettingsLocal::DoesPlatformSupportLatencyTrackingStats()
+{
+    return ICommonUIModule::GetSettings().GetPlatformTraits().HasTag(PerfStatTags::TAG_Platform_Trait_SupportsLatencyStats);
 }
 
 float UUR_SettingsLocal::GetDisplayGamma() const
@@ -1472,19 +1541,19 @@ void UUR_SettingsLocal::UpdateGameModeDeviceProfileAndFps()
     const bool bHadUserSuffix = !EffectiveUserSuffix.IsEmpty();
     const bool bHadExperienceSuffix = !ExperienceSuffix.IsEmpty();
 
-    const FString BasePlatformName = UDeviceProfileManager::GetPlatformDeviceProfileName();
-    const FName PlatformName; // Default unless in editor
+    FString BasePlatformName = UDeviceProfileManager::GetPlatformDeviceProfileName();
+    FName PlatformName; // Default unless in editor
 #if WITH_EDITOR
     if (GIsEditor)
     {
-        // const UUR_PlatformEmulationSettings* Settings = GetDefault<UUR_PlatformEmulationSettings>();
-        // const FName PretendBaseDeviceProfile = Settings->GetPretendBaseDeviceProfile();
-        // if (PretendBaseDeviceProfile != NAME_None)
-        // {
-        // 	BasePlatformName = PretendBaseDeviceProfile.ToString();
-        // }
-        //
-        // PlatformName = Settings->GetPretendPlatformName();
+        const UUR_PlatformEmulationSettings* Settings = GetDefault<UUR_PlatformEmulationSettings>();
+        const FName PretendBaseDeviceProfile = Settings->GetPretendBaseDeviceProfile();
+        if (PretendBaseDeviceProfile != NAME_None)
+        {
+            BasePlatformName = PretendBaseDeviceProfile.ToString();
+        }
+
+        PlatformName = Settings->GetPretendPlatformName();
     }
 #endif
 
@@ -1654,7 +1723,7 @@ void UUR_SettingsLocal::UpdateMobileFramePacing()
 
     ClampMobileQuality();
 
-    UpdateDynamicResFrameTime((float)TargetFPS);
+    UpdateDynamicResFrameTime(static_cast<float>(TargetFPS));
 }
 
 void UUR_SettingsLocal::UpdateDynamicResFrameTime(const float TargetFPS)

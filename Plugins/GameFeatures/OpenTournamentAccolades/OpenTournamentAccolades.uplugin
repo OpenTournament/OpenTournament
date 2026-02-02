@@ -1,0 +1,45 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "OpenTournamentAccolades",
+	"Description": "Accolade System",
+	"Category": "Game Features",
+	"CreatedBy": "Open Tournament Games",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"EnabledByDefault": false,
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "OpenTournamentAccoladesRuntime",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+    "Plugins": [
+        {
+            "Name": "AsyncMixin",
+            "Enabled": true
+        },
+        {
+            "Name": "CommonUI",
+            "Enabled": true
+        },
+        {
+            "Name": "DataRegistry",
+            "Enabled": true
+        },
+        {
+            "Name": "GameplayMessageRouter",
+            "Enabled": true
+        }
+    ],
+	"ExplicitlyLoaded": true,
+	"BuiltInInitialFeatureState": "Active"
+}

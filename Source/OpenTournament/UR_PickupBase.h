@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -118,8 +118,6 @@ protected:
     virtual void BeginPlay() override;
     UFUNCTION()
     virtual void OnRep_bRepInitialPickupAvailable();
-    virtual void Tick(float DeltaTime) override;
-    virtual bool ShouldSkipTick();
 
 public:
 

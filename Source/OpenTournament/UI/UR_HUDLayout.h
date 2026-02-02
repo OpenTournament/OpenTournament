@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -28,7 +28,7 @@ class UUR_HUDLayout : public UUR_ActivatableWidget
 public:
     UUR_HUDLayout(const FObjectInitializer& ObjectInitializer);
 
-    void NativeOnInitialized() override;
+    virtual void NativeOnInitialized() override;
 
 protected:
     void HandleEscapeAction();

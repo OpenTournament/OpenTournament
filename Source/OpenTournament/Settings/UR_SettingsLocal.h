@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -107,13 +107,70 @@ public:
         return PerfStatSettingsChangedEvent;
     }
 
+    // Latency flash indicators
+    static bool DoesPlatformSupportLatencyMarkers();
+
+    DECLARE_EVENT(UUR_SettingsLocal, FLatencyFlashInidicatorSettingChanged);
+
+    UFUNCTION()
+    void SetEnableLatencyFlashIndicators(const bool bNewVal);
+
+    UFUNCTION()
+    bool GetEnableLatencyFlashIndicators() const
+    {
+        return bEnableLatencyFlashIndicators;
+    }
+
+    FLatencyFlashInidicatorSettingChanged& OnLatencyFlashIndicatorSettingsChangedEvent()
+    {
+        return LatencyFlashIndicatorSettingsChangedEvent;
+    }
+
+    // Latency tracking stats
+    static bool DoesPlatformSupportLatencyTrackingStats();
+
+    DECLARE_EVENT(UUR_SettingsLocal, FLatencyStatEnabledSettingChanged);
+
+    FLatencyStatEnabledSettingChanged& OnLatencyStatIndicatorSettingsChangedEvent()
+    {
+        return LatencyStatIndicatorSettingsChangedEvent;
+    }
+
+    UFUNCTION()
+    void SetEnableLatencyTrackingStats(const bool bNewVal);
+
+    UFUNCTION()
+    bool GetEnableLatencyTrackingStats() const
+    {
+        return bEnableLatencyTrackingStats;
+    }
+
 private:
+    void ApplyLatencyTrackingStatSetting();
+
     // List of stats to display in the HUD
     UPROPERTY(Config)
     TMap<EGameDisplayablePerformanceStat, EGameStatDisplayMode> DisplayStatList;
 
     // Event for display stat widget containers to bind to
     FPerfStatSettingsChanged PerfStatSettingsChangedEvent;
+
+    // If true, enable latency flash markers which can be used to measure input latency.
+    UPROPERTY(Config)
+    bool bEnableLatencyFlashIndicators = false;
+
+
+    // Event for when the latency flash indicator setting had changed for player input to bind to.
+    FLatencyFlashInidicatorSettingChanged LatencyFlashIndicatorSettingsChangedEvent;
+
+    // Event for when the latency stats being toggled on or off has changed
+    FLatencyStatEnabledSettingChanged LatencyStatIndicatorSettingsChangedEvent;
+
+    // If true, then the game will track latency stats via ILatencyMarkerModule modules.
+    // This enables you to view some more latency oriented performance stats.
+    // The default value is set to true if the platform supports it, false otherwise.
+    UPROPERTY(Config)
+    bool bEnableLatencyTrackingStats;
 
     //////////////////////////////////////////////////////////////////
     // Brightness/Gamma
@@ -163,8 +220,10 @@ protected:
 private:
     UPROPERTY(Config)
     float FrameRateLimit_OnBattery;
+
     UPROPERTY(Config)
     float FrameRateLimit_InMenu;
+
     UPROPERTY(Config)
     float FrameRateLimit_WhenBackgrounded;
 

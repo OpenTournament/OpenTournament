@@ -7,6 +7,8 @@
 
 #include "GameSettingListEntry.generated.h"
 
+#define UE_API GAMESETTINGS_API
+
 class FGameSettingEditableState;
 enum class EGameSettingChangeReason : uint8;
 
@@ -31,27 +33,27 @@ struct FGeometry;
 // UAthenaChallengeListEntry
 //////////////////////////////////////////////////////////////////////////
 
-UCLASS(Abstract, NotBlueprintable, meta = (Category = "Settings", DisableNativeTick))
-class GAMESETTINGS_API UGameSettingListEntryBase : public UCommonUserWidget, public IUserObjectListEntry
+UCLASS(MinimalAPI, Abstract, NotBlueprintable, meta = (Category = "Settings", DisableNativeTick))
+class UGameSettingListEntryBase : public UCommonUserWidget, public IUserObjectListEntry
 {
 	GENERATED_BODY()
 
 public:
-	virtual void SetSetting(UGameSetting* InSetting);
-	virtual void SetDisplayNameOverride(const FText& OverrideName);
+	UE_API virtual void SetSetting(UGameSetting* InSetting);
+	UE_API virtual void SetDisplayNameOverride(const FText& OverrideName);
 
 protected:
-	virtual void NativeOnEntryReleased() override;
-	virtual void OnSettingChanged();
-	virtual void HandleEditConditionChanged(UGameSetting* InSetting);
-	virtual void RefreshEditableState(const FGameSettingEditableState& InEditableState);
+	UE_API virtual void NativeOnEntryReleased() override;
+	UE_API virtual void OnSettingChanged();
+	UE_API virtual void HandleEditConditionChanged(UGameSetting* InSetting);
+	UE_API virtual void RefreshEditableState(const FGameSettingEditableState& InEditableState);
 	
 protected:
 	// Focus transitioning to subwidgets for the gamepad
-	virtual FReply NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent) override;
+	UE_API virtual FReply NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent) override;
 
 	UFUNCTION(BlueprintImplementableEvent)
-	UWidget* GetPrimaryGamepadFocusWidget();
+	UE_API UWidget* GetPrimaryGamepadFocusWidget();
 
 protected:
 	bool bSuspendChangeUpdates = false;
@@ -73,13 +75,13 @@ private:
 // UGameSettingListEntry_Setting
 //////////////////////////////////////////////////////////////////////////
 
-UCLASS(Abstract, Blueprintable, meta = (Category = "Settings", DisableNativeTick))
-class GAMESETTINGS_API UGameSettingListEntry_Setting : public UGameSettingListEntryBase
+UCLASS(MinimalAPI, Abstract, Blueprintable, meta = (Category = "Settings", DisableNativeTick))
+class UGameSettingListEntry_Setting : public UGameSettingListEntryBase
 {
 	GENERATED_BODY()
 
 public:
-	virtual void SetSetting(UGameSetting* InSetting) override;
+	UE_API virtual void SetSetting(UGameSetting* InSetting) override;
 	
 private:	// Bound Widgets
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = true, AllowPrivateAccess = true))
@@ -91,26 +93,26 @@ private:	// Bound Widgets
 // UGameSettingListEntrySetting_Discrete
 //////////////////////////////////////////////////////////////////////////
 
-UCLASS(Abstract, Blueprintable, meta = (Category = "Settings", DisableNativeTick))
-class GAMESETTINGS_API UGameSettingListEntrySetting_Discrete : public UGameSettingListEntry_Setting
+UCLASS(MinimalAPI, Abstract, Blueprintable, meta = (Category = "Settings", DisableNativeTick))
+class UGameSettingListEntrySetting_Discrete : public UGameSettingListEntry_Setting
 {
 	GENERATED_BODY()
 
 public:
-	virtual void SetSetting(UGameSetting* InSetting) override;
+	UE_API virtual void SetSetting(UGameSetting* InSetting) override;
 	
 protected:
-	virtual void NativeOnInitialized() override;
-	virtual void NativeOnEntryReleased() override;
+	UE_API virtual void NativeOnInitialized() override;
+	UE_API virtual void NativeOnEntryReleased() override;
 
-	void HandleOptionDecrease();
-	void HandleOptionIncrease();
-	void HandleRotatorChangedValue(int32 Value, bool bUserInitiated);
+	UE_API void HandleOptionDecrease();
+	UE_API void HandleOptionIncrease();
+	UE_API void HandleRotatorChangedValue(int32 Value, bool bUserInitiated);
 
-	void Refresh();
-	virtual void OnSettingChanged() override;
-	virtual void HandleEditConditionChanged(UGameSetting* InSetting) override;
-	virtual void RefreshEditableState(const FGameSettingEditableState& InEditableState) override;
+	UE_API void Refresh();
+	UE_API virtual void OnSettingChanged() override;
+	UE_API virtual void HandleEditConditionChanged(UGameSetting* InSetting) override;
+	UE_API virtual void RefreshEditableState(const FGameSettingEditableState& InEditableState) override;
 
 protected:
 	UPROPERTY()
@@ -134,32 +136,32 @@ private:	// Bound Widgets
 // UGameSettingListEntrySetting_Scalar
 //////////////////////////////////////////////////////////////////////////
 
-UCLASS(Abstract, Blueprintable, meta = (Category = "Settings", DisableNativeTick))
-class GAMESETTINGS_API UGameSettingListEntrySetting_Scalar : public UGameSettingListEntry_Setting
+UCLASS(MinimalAPI, Abstract, Blueprintable, meta = (Category = "Settings", DisableNativeTick))
+class UGameSettingListEntrySetting_Scalar : public UGameSettingListEntry_Setting
 {
 	GENERATED_BODY()
 
 public:
-	virtual void SetSetting(UGameSetting* InSetting) override;
+	UE_API virtual void SetSetting(UGameSetting* InSetting) override;
 
 protected:
-	void Refresh();
-	virtual void NativeOnInitialized() override;
-	virtual void NativeOnEntryReleased() override;
-	virtual void OnSettingChanged() override;
+	UE_API void Refresh();
+	UE_API virtual void NativeOnInitialized() override;
+	UE_API virtual void NativeOnEntryReleased() override;
+	UE_API virtual void OnSettingChanged() override;
 
 	UFUNCTION()
-	void HandleSliderValueChanged(float Value);
+	UE_API void HandleSliderValueChanged(float Value);
 	UFUNCTION()
-	void HandleSliderCaptureEnded();
+	UE_API void HandleSliderCaptureEnded();
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnValueChanged(float Value);
+	UE_API void OnValueChanged(float Value);
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnDefaultValueChanged(float DefaultValue);
+	UE_API void OnDefaultValueChanged(float DefaultValue);
 
-	virtual void RefreshEditableState(const FGameSettingEditableState& InEditableState) override;
+	UE_API virtual void RefreshEditableState(const FGameSettingEditableState& InEditableState) override;
 
 protected:
 	UPROPERTY()
@@ -181,23 +183,23 @@ private:	// Bound Widgets
 // UGameSettingListEntrySetting_Action
 //////////////////////////////////////////////////////////////////////////
 
-UCLASS(Abstract, Blueprintable, meta = (Category = "Settings", DisableNativeTick))
-class GAMESETTINGS_API UGameSettingListEntrySetting_Action : public UGameSettingListEntry_Setting
+UCLASS(MinimalAPI, Abstract, Blueprintable, meta = (Category = "Settings", DisableNativeTick))
+class UGameSettingListEntrySetting_Action : public UGameSettingListEntry_Setting
 {
 	GENERATED_BODY()
 
 public:
-	virtual void SetSetting(UGameSetting* InSetting) override;
+	UE_API virtual void SetSetting(UGameSetting* InSetting) override;
 
 protected:
-	virtual void NativeOnInitialized() override;
-	virtual void NativeOnEntryReleased() override;
-	virtual void RefreshEditableState(const FGameSettingEditableState& InEditableState) override;
+	UE_API virtual void NativeOnInitialized() override;
+	UE_API virtual void NativeOnEntryReleased() override;
+	UE_API virtual void RefreshEditableState(const FGameSettingEditableState& InEditableState) override;
 
-	void HandleActionButtonClicked();
+	UE_API void HandleActionButtonClicked();
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnSettingAssigned(const FText& ActionText);
+	UE_API void OnSettingAssigned(const FText& ActionText);
 
 protected:
 	UPROPERTY()
@@ -213,23 +215,23 @@ private:	// Bound Widgets
 // UGameSettingListEntrySetting_Navigation
 //////////////////////////////////////////////////////////////////////////
 
-UCLASS(Abstract, Blueprintable, meta = (Category = "Settings", DisableNativeTick))
-class GAMESETTINGS_API UGameSettingListEntrySetting_Navigation : public UGameSettingListEntry_Setting
+UCLASS(MinimalAPI, Abstract, Blueprintable, meta = (Category = "Settings", DisableNativeTick))
+class UGameSettingListEntrySetting_Navigation : public UGameSettingListEntry_Setting
 {
 	GENERATED_BODY()
 
 public:
-	virtual void SetSetting(UGameSetting* InSetting) override;
+	UE_API virtual void SetSetting(UGameSetting* InSetting) override;
 
 protected:
-	virtual void NativeOnInitialized() override;
-	virtual void NativeOnEntryReleased() override;
-	virtual void RefreshEditableState(const FGameSettingEditableState& InEditableState) override;
+	UE_API virtual void NativeOnInitialized() override;
+	UE_API virtual void NativeOnEntryReleased() override;
+	UE_API virtual void RefreshEditableState(const FGameSettingEditableState& InEditableState) override;
 
-	void HandleNavigationButtonClicked();
+	UE_API void HandleNavigationButtonClicked();
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnSettingAssigned(const FText& ActionText);
+	UE_API void OnSettingAssigned(const FText& ActionText);
 
 protected:
 	UPROPERTY()
@@ -240,3 +242,5 @@ private:	// Bound Widgets
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = true, AllowPrivateAccess = true))
 	TObjectPtr<UCommonButtonBase> Button_Navigate;
 };
+
+#undef UE_API

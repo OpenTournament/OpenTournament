@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -78,10 +78,11 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "JumpPad")
     UNavLinkComponent* NavLink;
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
     /*
     * Spline Component
     */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "JumpPad")
     USplineComponent* SplineComponent;
 #endif
 
@@ -145,7 +146,7 @@ public:
 
     virtual void OnConstruction(const FTransform& Transform) override;
 
-    void BeginPlay() override;
+    virtual void BeginPlay() override;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 

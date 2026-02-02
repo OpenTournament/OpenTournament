@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -17,6 +17,10 @@ class USoundControlBusMix;
 class USoundEffectSubmixPreset;
 class USoundSubmix;
 class UWorld;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define UE_API OPENTOURNAMENT_API
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -43,36 +47,35 @@ struct FGameAudioSubmixEffectsChain
  * based on the user's preference for HDR Audio. Submix Effect Chain Overrides are defined in the
  * Game Audio Settings.
  */
-UCLASS()
-class OPENTOURNAMENT_API UUR_AudioMixEffectsSubsystem : public UWorldSubsystem
+UCLASS(MinimalAPI)
+class UUR_AudioMixEffectsSubsystem : public UWorldSubsystem
 {
     GENERATED_BODY()
 
 public:
     // USubsystem implementation Begin
-    virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-
-    virtual void Deinitialize() override;
+    UE_API virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+    UE_API virtual void Deinitialize() override;
     // USubsystem implementation End
 
-    virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
+    UE_API virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
     /** Called once all UWorldSubsystems have been initialized */
-    virtual void PostInitialize() override;
+    UE_API virtual void PostInitialize() override;
 
     /** Called when world is ready to start gameplay before the game mode transitions to the correct state and call BeginPlay on all actors */
-    virtual void OnWorldBeginPlay(UWorld& InWorld) override;
+    UE_API virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 
     /** Set whether the HDR Audio Submix Effect Chain Override settings are applied */
-    void ApplyDynamicRangeEffectsChains(bool bHDRAudio);
+    UE_API void ApplyDynamicRangeEffectsChains(bool bHDRAudio);
 
 protected:
-    void OnLoadingScreenStatusChanged(bool bShowingLoadingScreen);
+    UE_API void OnLoadingScreenStatusChanged(bool bShowingLoadingScreen);
 
-    void ApplyOrRemoveLoadingScreenMix(bool bWantsLoadingScreenMix);
+    UE_API void ApplyOrRemoveLoadingScreenMix(bool bWantsLoadingScreenMix);
 
     // Called when determining whether to create this Subsystem
-    virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override;
+    UE_API virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override;
 
     // Default Sound Control Bus Mix retrieved from the Game Audio Settings
     UPROPERTY(Transient)
@@ -116,3 +119,5 @@ protected:
 
     bool bAppliedLoadingScreenMix = false;
 };
+
+#undef UE_API

@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +43,8 @@ public:
     FVector GoalAimPoint;
 
     // Cache this to detect changes
-    const AActor* LastAimActor;
+    UPROPERTY(BlueprintReadOnly)
+    TWeakObjectPtr<AActor> LastAimActor;
 
     // Max remaining lifetime of current GoalAimPoint
     float GoalAimPointTime;

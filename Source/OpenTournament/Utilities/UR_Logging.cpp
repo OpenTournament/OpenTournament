@@ -10,7 +10,7 @@
 
 void URLogging::Log(FString inText, bool inLogToConsole, bool inLogToScreen, FColor inColor, float inTimeToDisplay, int32 inKey)
 {
-    LogInternal(TEXT("%s"), inLogToConsole, inLogToScreen, inColor, inTimeToDisplay, inKey, *inText);
+    //LogInternal(TEXT("%s"), inLogToConsole, inLogToScreen, inColor, inTimeToDisplay, inKey, *inText);
 }
 
 void URLogging::LogToConsoleInternal(FString inText)

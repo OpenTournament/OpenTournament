@@ -8,6 +8,8 @@
 
 #include "AsyncAction_ListenForGameplayMessage.generated.h"
 
+#define UE_API GAMEPLAYMESSAGERUNTIME_API
+
 class UScriptStruct;
 class UWorld;
 struct FFrame;
@@ -19,8 +21,8 @@ struct FFrame;
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAsyncGameplayMessageDelegate, UAsyncAction_ListenForGameplayMessage*, ProxyObject, FGameplayTag, ActualChannel);
 
-UCLASS(BlueprintType, meta=(HasDedicatedAsyncNode))
-class GAMEPLAYMESSAGERUNTIME_API UAsyncAction_ListenForGameplayMessage : public UCancellableAsyncAction
+UCLASS(MinimalAPI, BlueprintType, meta=(HasDedicatedAsyncNode))
+class UAsyncAction_ListenForGameplayMessage : public UCancellableAsyncAction
 {
 	GENERATED_BODY()
 
@@ -33,7 +35,7 @@ public:
 	 * @param MatchType			The rule used for matching the channel with broadcasted messages
 	 */
 	UFUNCTION(BlueprintCallable, Category = Messaging, meta = (WorldContext = "WorldContextObject", BlueprintInternalUseOnly = "true"))
-	static UAsyncAction_ListenForGameplayMessage* ListenForGameplayMessages(UObject* WorldContextObject, FGameplayTag Channel, UScriptStruct* PayloadType, EGameplayMessageMatch MatchType = EGameplayMessageMatch::ExactMatch);
+	static UE_API UAsyncAction_ListenForGameplayMessage* ListenForGameplayMessages(UObject* WorldContextObject, FGameplayTag Channel, UScriptStruct* PayloadType, EGameplayMessageMatch MatchType = EGameplayMessageMatch::ExactMatch);
 
 	/**
 	 * Attempt to copy the payload received from the broadcasted gameplay message into the specified wildcard.
@@ -43,12 +45,12 @@ public:
 	 * @return				If the copy was a success
 	 */
 	UFUNCTION(BlueprintCallable, CustomThunk, Category = "Messaging", meta = (CustomStructureParam = "OutPayload"))
-	bool GetPayload(UPARAM(ref) int32& OutPayload);
+	UE_API bool GetPayload(UPARAM(ref) int32& OutPayload);
 
 	DECLARE_FUNCTION(execGetPayload);
 
-	virtual void Activate() override;
-	virtual void SetReadyToDestroy() override;
+	UE_API virtual void Activate() override;
+	UE_API virtual void SetReadyToDestroy() override;
 
 public:
 	/** Called when a message is broadcast on the specified channel. Use GetPayload() to request the message payload. */
@@ -68,3 +70,5 @@ private:
 
 	FGameplayMessageListenerHandle ListenerHandle;
 };
+
+#undef UE_API

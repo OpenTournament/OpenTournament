@@ -1,14 +1,11 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include <ModularPlayerController.h>
+#include <CommonPlayerController.h>
 
-#include "CoreMinimal.h"
-#include "CommonPlayerController.h"
-#include "GameFramework/PlayerController.h"
 #include "UR_BasePlayerController.generated.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,18 +57,21 @@ public:
     * Reference to the global-game MaterialParameterCollection.
     */
     UPROPERTY(EditDefaultsOnly)
-    UMaterialParameterCollection* MPC_GlobalGame;
+    TObjectPtr<UMaterialParameterCollection> MPC_GlobalGame;
+
+    UPROPERTY(VisibleDefaultsOnly)
+    TObjectPtr<UMaterialParameterCollection> MPC_GlobalGamePtr = nullptr;
 
     /**
     * Need to store an instance of this because modifying CDO causes side effects.
     */
     UPROPERTY(Transient)
-    UUR_MPC_Global* UR_MPC_Global_Ref;
+    TObjectPtr<UUR_MPC_Global> UR_MPC_Global_Ref;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
     UPROPERTY(Transient)
-    UUR_UserSettings* UserSettings;
+    TObjectPtr<UUR_UserSettings> UserSettings;
 
     UFUNCTION(BlueprintCosmetic)
     virtual void InitUserSettings();

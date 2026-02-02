@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -6,10 +6,9 @@ using UnrealBuildTool;
 
 public class OpenTournament : ModuleRules
 {
-    public OpenTournament(ReadOnlyTargetRules target) : base(target)
+    public OpenTournament(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-        ShadowVariableWarningLevel = WarningLevel.Error;
         IWYUSupport = IWYUSupport.KeepAsIs;
 
         // Reference:
@@ -38,6 +37,7 @@ public class OpenTournament : ModuleRules
                 //"OpenTournament/Settings",
                 "OpenTournament/Slate",
                 "OpenTournament/System",
+                "OpenTournament/Tags",
                 "OpenTournament/Teams",
                 "OpenTournament/UI",
                 "OpenTournament/Utilities",
@@ -99,32 +99,34 @@ public class OpenTournament : ModuleRules
         (
             new []
             {
-                "InputCore",
-                "Slate",
-                "SlateCore",
-                "RenderCore",
-                "DeveloperSettings",
-                "EnhancedInput",
-                "RHI",
-                "Projects",
-                "Gauntlet",
-                "UMG",
-				"AudioMixer",
-                "CommonUI",
-                "CommonInput",
+                //AudioModulation
+                "AudioMixer",
+                "AudioModulation",
+                "ClientPilot",
                 "CommonGame",
+                "CommonInput",
+                "CommonUI",
                 "CommonUser",
+                "DeveloperSettings",
+                "DTLSHandlerComponent",
+                "EngineSettings",
+                "EnhancedInput",
+                "GameFeatures",
+                "GameplayMessageRuntime",
                 "GameSettings",
                 "GameSubtitles",
-                "GameplayMessageRuntime",
-				"Json",
-				"NetCore",
+                "Json",
+                "ModularGameplay",
+                "ModularGameplayActors",
+                "NetCore",
                 "NetworkReplayStreaming",
+                "Projects",
+                "RenderCore",
+                "RHI",
+                "Slate",
+                "SlateCore",
                 "UIExtension",
-                "ClientPilot",
-                "AudioModulation",
-                "EngineSettings",
-                "DTLSHandlerComponent",
+                "UMG"
             }
         );
 
@@ -138,31 +140,6 @@ public class OpenTournament : ModuleRules
 				}
 			);
 		}
-
-        PrivateDependencyModuleNames.AddRange(
-            new []
-            {
-                //"AudioModulation",
-                "CommonGame",
-                "CommonInput",
-                "CommonLoadingScreen",
-                "CommonUI",
-                "CommonUser",
-                "DTLSHandlerComponent",
-                "EnhancedInput",
-                "GameFeatures",
-                "GameSettings",
-                "GameSubtitles",
-                "GameplayMessageRuntime",
-                "Gauntlet",
-                "ModularGameplay",
-                "ModularGameplayActors",
-                "NetworkReplayStreaming",
-                "Projects",
-                "RHI",
-                "RenderCore"
-            }
-        );
 
         SetupGameplayDebuggerSupport(Target);
         SetupIrisSupport(Target);

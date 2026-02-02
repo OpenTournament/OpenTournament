@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -39,9 +39,9 @@ FVector UUR_AIAimComp::ApplyAimCorrectionForTargetActor(const AController* MyCon
     if (!TargetActor || !MyController || !MyController->GetPawn())
         return FAISystem::InvalidLocation;
 
-    float dt = bUseTimeDilation ? GetWorld()->GetDeltaSeconds() : GetWorld()->DeltaRealTimeSeconds;
+    const float DT = bUseTimeDilation ? GetWorld()->GetDeltaSeconds() : GetWorld()->DeltaRealTimeSeconds;
 
-    GoalAimPointTime -= dt;
+    GoalAimPointTime -= DT;
 
     // If our target changed, or if we reached our aim point, or if this is taking too long
     if (TargetActor != LastAimActor || CurrentAimPoint.Equals(GoalAimPoint, GoalTolerance) || GoalAimPointTime < 0.f)
@@ -51,9 +51,9 @@ FVector UUR_AIAimComp::ApplyAimCorrectionForTargetActor(const AController* MyCon
         GoalAimPointTime = FMath::FRandRange(PointDuration.X, PointDuration.Y);
     }
 
-    LastAimActor = TargetActor;
+    LastAimActor = const_cast<AActor*>(TargetActor);
 
-    CurrentAimPoint = FMath::VInterpTo(CurrentAimPoint, GoalAimPoint, dt, InterpSpeed);
+    CurrentAimPoint = FMath::VInterpTo(CurrentAimPoint, GoalAimPoint, DT, InterpSpeed);
 
     return CurrentAimPoint;
 }

@@ -7,12 +7,14 @@
 
 #include "SubtitleDisplaySubsystem.generated.h"
 
+#define UE_API GAMESUBTITLES_API
+
 class FSubsystemCollectionBase;
 class ULocalPlayer;
 class UObject;
 
 USTRUCT(BlueprintType)
-struct GAMESUBTITLES_API FSubtitleFormat
+struct FSubtitleFormat
 {
 	GENERATED_BODY()
 
@@ -39,8 +41,8 @@ public:
 	ESubtitleDisplayBackgroundOpacity SubtitleBackgroundOpacity;
 };
 
-UCLASS(DisplayName = "Subtitle Display")
-class GAMESUBTITLES_API USubtitleDisplaySubsystem : public UGameInstanceSubsystem
+UCLASS(MinimalAPI, DisplayName = "Subtitle Display")
+class USubtitleDisplaySubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
@@ -49,20 +51,22 @@ public:
 	FDisplayFormatChangedEvent DisplayFormatChangedEvent;
 
 public:
-	static USubtitleDisplaySubsystem* Get(const ULocalPlayer* LocalPlayer);
+	static UE_API USubtitleDisplaySubsystem* Get(const ULocalPlayer* LocalPlayer);
 
 public:
-	USubtitleDisplaySubsystem();
+	UE_API USubtitleDisplaySubsystem();
 
 	// Begin USubsystem
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	virtual void Deinitialize() override;
+	UE_API virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	UE_API virtual void Deinitialize() override;
 	// End USubsystem
 
-	void SetSubtitleDisplayOptions(const FSubtitleFormat& InOptions);
-	const FSubtitleFormat& GetSubtitleDisplayOptions() const;
+	UE_API void SetSubtitleDisplayOptions(const FSubtitleFormat& InOptions);
+	UE_API const FSubtitleFormat& GetSubtitleDisplayOptions() const;
 
 private:
 	UPROPERTY()
 	FSubtitleFormat SubtitleFormat;
 };
+
+#undef UE_API

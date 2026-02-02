@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -152,9 +152,9 @@ APawn* AUR_GameMode::SpawnDefaultPawnAtTransform_Implementation(AController* New
                     check(ExperienceComponent);
                     ExperienceComponent->CallOrRegister_OnExperienceLoaded_HighPriority(FOnGameExperienceLoaded::FDelegate::CreateWeakLambda(this, [this, NewPlayer, PawnExtComp](const auto* Experience)
                     {
-                        if (const UUR_PawnData* PawnData = GetPawnDataForController(NewPlayer))
+                        if (const UUR_PawnData* LambdaPawnData = GetPawnDataForController(NewPlayer))
                         {
-                            PawnExtComp->SetPawnData(PawnData);
+                            PawnExtComp->SetPawnData(LambdaPawnData);
                         }
                     }));
 
@@ -532,7 +532,7 @@ void AUR_GameMode::AddBot()
     if (auto BotController = GetWorld()->SpawnActor<AController>(BotControllerClass))
     {
         GenericPlayerInitialization(BotController);
-        DispatchPostLogin(BotController);
+        OnPostLogin(BotController);
         RestartPlayer(BotController);
     }
 }
@@ -545,7 +545,9 @@ void AUR_GameMode::RemoveBot()
         for (auto PS : GS->PlayerArray)
         {
             if (PS->IsABot() && PS->GetOwner<AController>() && (!Best || PS->CreationTime > Best->CreationTime))
+            {
                 Best = PS;
+            }
         }
         if (Best)
         {
@@ -564,8 +566,7 @@ void AUR_GameMode::HandleMatchHasStarted()
     // WARNING: Parent starts recording replay here. We don't want that when we have Warmup first.
     Super::HandleMatchHasStarted();
 
-    AUR_GameState* GS = GetGameState<AUR_GameState>();
-    if (GS)
+    if (AUR_GameState* GS = GetGameState<AUR_GameState>())
     {
         // TODO: Here we would do Warmup first
         GS->SetMatchStateTag(FGameplayTag::RequestGameplayTag(FName(TEXT("MatchState.InProgress.Match"))));
@@ -759,8 +760,7 @@ void AUR_GameMode::RegisterKill(AController* Victim, AController* Killer, const 
 
 bool AUR_GameMode::CheckEndGame(AActor* Focus)
 {
-    AActor* Winner = IsThereAWinner();
-    if (Winner)
+    if (AActor* Winner = IsThereAWinner())
     {
         if (Focus)
         {
@@ -776,14 +776,14 @@ bool AUR_GameMode::CheckEndGame(AActor* Focus)
         TriggerEndMatch(Winner, Focus);
         return true;
     }
+
     return false;
 }
 
 AActor* AUR_GameMode::IsThereAWinner_Implementation()
 {
     // By default return the highest scorer..?
-    AUR_GameState* GS = GetGameState<AUR_GameState>();
-    if (GS)
+    if (AUR_GameState* GS = GetGameState<AUR_GameState>())
     {
         if (GS->Teams.Num() > 1)
         {
@@ -848,7 +848,7 @@ AActor* AUR_GameMode::ResolveEndGameFocus_Implementation(AActor* Winner)
     if (AUR_TeamInfo* Team = Cast<AUR_TeamInfo>(Winner))
     {
         AUR_PlayerState* TopPlayerState = nullptr;
-        for (AUR_PlayerState* PS : Team->Players)
+        for (const auto& PS : Team->Players)
         {
             if (PS && PS->GetPawn() && (!TopPlayerState || PS->GetScore() > TopPlayerState->GetScore()))
             {
@@ -868,12 +868,16 @@ void AUR_GameMode::TriggerEndMatch_Implementation(AActor* Winner, AActor* Focus)
     if (AUR_GameState* GS = GetGameState<AUR_GameState>())
     {
         // Winner needs to be replicated. Should never be a controller!
-        if (AController* Controller = Cast<AController>(Winner))
+        if (const auto* Controller = Cast<AController>(Winner))
         {
             if (IsValid(Controller->PlayerState))
+            {
                 GS->Winner = Controller->PlayerState;
+            }
             else
+            {
                 GS->Winner = Controller->GetPawn();
+            }
         }
         else
         {
@@ -929,7 +933,8 @@ void AUR_GameMode::HandleMatchHasEnded()
 void AUR_GameMode::AnnounceWinner_Implementation(AActor* Winner)
 {
     APlayerState* WinnerPS = nullptr;
-    if (APlayerState* PS = Cast<APlayerState>(Winner))
+
+    if (const auto PS = Cast<APlayerState>(Winner))
     {
         WinnerPS = PS;
     }
@@ -947,8 +952,7 @@ void AUR_GameMode::OnEndGameTimeUp(AUR_GameState* GS)
 {
     if (GetNetMode() != NM_DedicatedServer)
     {
-        AUR_PlayerController* LocalPC = GetWorld()->GetFirstPlayerController<AUR_PlayerController>();
-        if (LocalPC)
+        if (const auto LocalPC = GetWorld()->GetFirstPlayerController<AUR_PlayerController>())
         {
             LocalPC->ReturnToMainMenu();
             return;
@@ -971,9 +975,6 @@ void AUR_GameMode::OnExperienceLoaded(const UUR_ExperienceDefinition* CurrentExp
     // Spawn any players that are already attached
     //@TODO: Here we're handling only *player* controllers, but in GetDefaultPawnClassForController_Implementation we skipped all controllers
     // GetDefaultPawnClassForController_Implementation might only be getting called for players anyways
-
-    auto NumControllers = GetWorld()->GetNumControllers();
-
     for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
     {
         APlayerController* PC = Cast<APlayerController>(*Iterator);

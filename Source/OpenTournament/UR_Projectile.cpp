@@ -1,20 +1,21 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_Projectile.h"
 
+#include <NiagaraComponent.h>
+#include <NiagaraFunctionLibrary.h>
+#include <Components/AudioComponent.h>
+#include <Components/SphereComponent.h>
+#include <Components/StaticMeshComponent.h>
 #include <Engine/World.h>
+#include <GameFramework/DamageType.h>
 #include <GameFramework/Pawn.h>
-
-#include "Components/AudioComponent.h"
-#include "Components/SphereComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "GameFramework/DamageType.h"
-#include "GameFramework/ProjectileMovementComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "Net/UnrealNetwork.h"
-#include "Particles/ParticleSystemComponent.h"
+#include <GameFramework/ProjectileMovementComponent.h>
+#include <Kismet/GameplayStatics.h>
+#include <Net/UnrealNetwork.h>
+#include <Particles/ParticleSystemComponent.h>
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_Projectile)
 
@@ -46,12 +47,17 @@ AUR_Projectile::AUR_Projectile(const FObjectInitializer& ObjectInitializer)
     StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
     StaticMeshComponent->SetupAttachment(RootComponent);
     StaticMeshComponent->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+    StaticMeshComponent->SetSimulatePhysics(false);
+    StaticMeshComponent->SetAbsolute(false, false, false);
 
     AudioComponent = ObjectInitializer.CreateDefaultSubobject<UAudioComponent>(this, TEXT("AudioComponent"));
     AudioComponent->SetupAttachment(RootComponent);
 
     Particles = ObjectInitializer.CreateDefaultSubobject<UParticleSystemComponent>(this, TEXT("Particles"));
     Particles->SetupAttachment(RootComponent);
+
+    ParticleComponent = ObjectInitializer.CreateDefaultSubobject<UNiagaraComponent>(this, TEXT("ParticleComponent"));
+    ParticleComponent->SetupAttachment(RootComponent);
 
     SetCanBeDamaged(false);
 
@@ -89,6 +95,17 @@ void AUR_Projectile::BeginPlay()
     if (ProjectileMovementComponent->bShouldBounce)
     {
         ProjectileMovementComponent->OnProjectileBounce.AddDynamic(this, &ThisClass::OnBounceInternal);
+    }
+}
+
+void AUR_Projectile::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+    if (ProjectileMovementComponent->bRotationFollowsVelocity)
+    {
+        StaticMeshComponent->SetWorldRotation(ProjectileMovementComponent->Velocity.Rotation());
+        Particles->SetWorldRotation(ProjectileMovementComponent->Velocity.Rotation());
     }
 }
 
@@ -199,7 +216,8 @@ void AUR_Projectile::DealSplashDamage()
     TArray<AActor*> IgnoreActors;
     IgnoreActors.Add(this);
 
-    UGameplayStatics::ApplyRadialDamageWithFalloff(
+    UGameplayStatics::ApplyRadialDamageWithFalloff
+    (
         this,
         BaseDamage,
         SplashMinimumDamage,
@@ -302,10 +320,18 @@ void AUR_Projectile::PlayImpactEffects_Implementation(const FVector& HitLocation
         //TODO: attenuation & concurrency settings, unless we do that in BP/SoundCue?
         UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, HitLocation);
 
-        UGameplayStatics::SpawnEmitterAtLocation(
-            GetWorld(),
-            ImpactTemplate,
-            FTransform(HitNormal.Rotation(), HitLocation, GetActorScale3D())
-        );
+        if (UParticleSystem* CascadeTemplate = Cast<UParticleSystem>(ImpactTemplate))
+        {
+            UGameplayStatics::SpawnEmitterAtLocation
+            (
+                GetWorld(),
+                CascadeTemplate,
+                FTransform(HitNormal.Rotation(), HitLocation, GetActorScale3D())
+            );
+        }
+        else if (UNiagaraSystem* NS = Cast<UNiagaraSystem>(ImpactTemplate))
+        {
+            UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NS, HitLocation, HitNormal.Rotation(), GetActorScale3D());
+        }
     }
 }

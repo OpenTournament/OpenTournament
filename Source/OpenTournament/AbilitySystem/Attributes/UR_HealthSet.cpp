@@ -1,13 +1,13 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_HealthSet.h"
 
-#include "GameplayEffectExtension.h"
-#include "Engine/World.h"
-#include "GameFramework/GameplayMessageSubsystem.h"
-#include "Net/UnrealNetwork.h"
+#include <GameplayEffectExtension.h>
+#include <Engine/World.h>
+#include <GameFramework/GameplayMessageSubsystem.h>
+#include <Net/UnrealNetwork.h>
 
 #include "UR_AbilitySystemComponent.h"
 #include "UR_AttributeSet.h"
@@ -43,15 +43,15 @@ void UUR_HealthSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME_CONDITION_NOTIFY(UUR_HealthSet, Health, COND_None, REPNOTIFY_Always);
-    DOREPLIFETIME_CONDITION_NOTIFY(UUR_HealthSet, MaxHealth, COND_None, REPNOTIFY_Always);
+    DOREPLIFETIME_CONDITION_NOTIFY(ThisClass, Health, COND_None, REPNOTIFY_Always);
+    DOREPLIFETIME_CONDITION_NOTIFY(ThisClass, MaxHealth, COND_None, REPNOTIFY_Always);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UUR_HealthSet::OnRep_Health(const FGameplayAttributeData& OldValue)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_HealthSet, Health, OldValue);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(ThisClass, Health, OldValue);
 
     // Call the change callback, but without an instigator
     // This could be changed to an explicit RPC in the future
@@ -72,7 +72,7 @@ void UUR_HealthSet::OnRep_Health(const FGameplayAttributeData& OldValue)
 
 void UUR_HealthSet::OnRep_MaxHealth(const FGameplayAttributeData& OldValue)
 {
-    GAMEPLAYATTRIBUTE_REPNOTIFY(UUR_HealthSet, MaxHealth, OldValue);
+    GAMEPLAYATTRIBUTE_REPNOTIFY(ThisClass, MaxHealth, OldValue);
 
     // Call the change callback, but without an instigator
     // This could be changed to an explicit RPC in the future
@@ -183,7 +183,7 @@ void UUR_HealthSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackDa
         Message.Verb = TAG_Gameplay_MaxHealth_Change;
         Message.Instigator = Data.EffectSpec.GetEffectContext().GetEffectCauser();
         Message.InstigatorTags = *Data.EffectSpec.CapturedSourceTags.GetAggregatedTags();
-        Message.Target = Data.Target;
+        Message.Target = &Data.Target;
         Message.TargetTags = *Data.EffectSpec.CapturedTargetTags.GetAggregatedTags();
         Message.Magnitude = GetMaxHealth();
 
@@ -201,7 +201,7 @@ void UUR_HealthSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackDa
         Message.Verb = TAG_Gameplay_Health_Change;
         Message.Instigator = Data.EffectSpec.GetEffectContext().GetEffectCauser();
         Message.InstigatorTags = *Data.EffectSpec.CapturedSourceTags.GetAggregatedTags();
-        Message.Target = Data.Target;
+        Message.Target = &Data.Target;
         Message.TargetTags = *Data.EffectSpec.CapturedTargetTags.GetAggregatedTags();
         Message.Magnitude = CurrentHealth;
 

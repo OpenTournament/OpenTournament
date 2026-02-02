@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -10,17 +10,41 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class UUR_UICameraManagerComponent;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 #define OT_CAMERA_DEFAULT_FOV		(90.0f)
 #define OT_CAMERA_DEFAULT_PITCH_MIN	(-89.0f)
 #define OT_CAMERA_DEFAULT_PITCH_MAX	(89.0f)
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  *
  */
-UCLASS(notplaceable)
-class OPENTOURNAMENT_API AUR_PlayerCameraManager : public APlayerCameraManager
+UCLASS(NotPlaceable, MinimalAPI)
+class AUR_PlayerCameraManager : public APlayerCameraManager
 {
     GENERATED_BODY()
+
+public:
+    AUR_PlayerCameraManager(const FObjectInitializer& ObjectInitializer);
+
+    UUR_UICameraManagerComponent* GetUICameraComponent() const;
+
+protected:
+    virtual void UpdateViewTarget(FTViewTarget& OutVT, float DeltaTime) override;
+
+    virtual void DisplayDebug(UCanvas* Canvas, const FDebugDisplayInfo& DebugDisplay, float& LineHeight, float& YPos) override;
+
+private:
+    /** The UI Camera Component, controls the camera when UI is doing something important that gameplay doesn't get priority over. */
+    UPROPERTY(Transient)
+    TObjectPtr<UUR_UICameraManagerComponent> UICamera;
+
+
+    //// ---- ////
 
 public:
     virtual void AssignViewTarget(AActor* NewTarget, FTViewTarget& VT, struct FViewTargetTransitionParams TransitionParams = FViewTargetTransitionParams()) override;
@@ -41,7 +65,7 @@ public:
     * - Experimentation showed that RPCs happen during TG_NewlySpawned (whatever that is)
     * Problem here is that for first-person-view, we need to adjust the effect location to account for Panini Projection,
     * which depends on the vector (WeaponMuzzle - CameraLocation).
-    * Therefore we get different results based on when stuff is triggered :
+    * Therefore, we get different results based on when stuff is triggered :
     * - In this specific case, PrePhysics is ok because both locations have not been updated yet (last frame) but that vector doesn't really change between frames.
     * - However PostUpdateWork is not ok because Muzzle has been updated but Camera hasn't. Vector is wrong, panini correction is wrong, effect location is wrong.
     *

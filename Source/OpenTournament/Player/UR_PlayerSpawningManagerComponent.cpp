@@ -3,10 +3,15 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_PlayerSpawningManagerComponent.h"
-#include "GameFramework/PlayerState.h"
-#include "EngineUtils.h"
-#include "Engine/PlayerStartPIE.h"
+
+#include <GameFramework/PlayerState.h>
+#include <EngineUtils.h>
+
 #include "UR_PlayerStart.h"
+
+#if WITH_EDITOR
+#include <Engine/PlayerStartPIE.h>
+#endif
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_PlayerSpawningManagerComponent)
 
@@ -47,29 +52,66 @@ void UUR_PlayerSpawningManagerComponent::InitializeComponent()
     }
 }
 
-void UUR_PlayerSpawningManagerComponent::OnLevelAdded(ULevel* InLevel, UWorld* InWorld)
+void UUR_PlayerSpawningManagerComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-    if (InWorld == GetWorld())
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
+APlayerStart* UUR_PlayerSpawningManagerComponent::GetFirstRandomUnoccupiedPlayerStart(AController* Controller, const TArray<AUR_PlayerStart*>& StartPoints) const
+{
+    if (Controller)
     {
-        for (AActor* Actor : InLevel->Actors)
+        TArray<AUR_PlayerStart*> UnOccupiedStartPoints;
+        TArray<AUR_PlayerStart*> OccupiedStartPoints;
+
+        for (AUR_PlayerStart* StartPoint : StartPoints)
         {
-            if (AUR_PlayerStart* PlayerStart = Cast<AUR_PlayerStart>(Actor))
+            EGamePlayerStartLocationOccupancy State = StartPoint->GetLocationOccupancy(Controller);
+
+            switch (State)
             {
-                ensure(!CachedPlayerStarts.Contains(PlayerStart));
-                CachedPlayerStarts.Add(PlayerStart);
+                case EGamePlayerStartLocationOccupancy::Empty:
+                {
+                    UnOccupiedStartPoints.Add(StartPoint);
+                    break;
+                }
+                case EGamePlayerStartLocationOccupancy::Partial:
+                {
+                    OccupiedStartPoints.Add(StartPoint);
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
             }
         }
+
+        if (UnOccupiedStartPoints.Num() > 0)
+        {
+            return UnOccupiedStartPoints[FMath::RandRange(0, UnOccupiedStartPoints.Num() - 1)];
+        }
+
+        if (OccupiedStartPoints.Num() > 0)
+        {
+            return OccupiedStartPoints[FMath::RandRange(0, OccupiedStartPoints.Num() - 1)];
+        }
     }
+
+    return nullptr;
 }
 
-void UUR_PlayerSpawningManagerComponent::HandleOnActorSpawned(AActor* SpawnedActor)
+AActor* UUR_PlayerSpawningManagerComponent::OnChoosePlayerStart(AController* Player, TArray<AUR_PlayerStart*>& PlayerStarts)
 {
-    if (AUR_PlayerStart* PlayerStart = Cast<AUR_PlayerStart>(SpawnedActor))
-    {
-        CachedPlayerStarts.Add(PlayerStart);
-    }
+    return nullptr;
 }
 
+void UUR_PlayerSpawningManagerComponent::OnFinishRestartPlayer(AController* Player, const FRotator& StartRotation)
+{
+    // Noop
+}
+
+//======================================================================
 // AUR_GameMode Proxied Calls - Need to handle when someone chooses
 // to restart a player the normal way in the engine.
 //======================================================================
@@ -88,7 +130,7 @@ AActor* UUR_PlayerSpawningManagerComponent::ChoosePlayerStart(AController* Playe
         TArray<AUR_PlayerStart*> StarterPoints;
         for (auto StartIt = CachedPlayerStarts.CreateIterator(); StartIt; ++StartIt)
         {
-            if (AUR_PlayerStart* Start = (*StartIt).Get())
+            if (AUR_PlayerStart* Start = StartIt->Get())
             {
                 StarterPoints.Add(Start);
             }
@@ -130,6 +172,47 @@ AActor* UUR_PlayerSpawningManagerComponent::ChoosePlayerStart(AController* Playe
     return nullptr;
 }
 
+bool UUR_PlayerSpawningManagerComponent::ControllerCanRestart(AController* Player)
+{
+    bool bCanRestart = true;
+
+    // TODO Can they restart?
+
+    return bCanRestart;
+}
+
+void UUR_PlayerSpawningManagerComponent::FinishRestartPlayer(AController* NewPlayer, const FRotator& StartRotation)
+{
+    OnFinishRestartPlayer(NewPlayer, StartRotation);
+    K2_OnFinishRestartPlayer(NewPlayer, StartRotation);
+}
+
+//================================================================
+
+
+void UUR_PlayerSpawningManagerComponent::OnLevelAdded(ULevel* InLevel, UWorld* InWorld)
+{
+    if (InWorld == GetWorld())
+    {
+        for (AActor* Actor : InLevel->Actors)
+        {
+            if (AUR_PlayerStart* PlayerStart = Cast<AUR_PlayerStart>(Actor))
+            {
+                ensure(!CachedPlayerStarts.Contains(PlayerStart));
+                CachedPlayerStarts.Add(PlayerStart);
+            }
+        }
+    }
+}
+
+void UUR_PlayerSpawningManagerComponent::HandleOnActorSpawned(AActor* SpawnedActor)
+{
+    if (AUR_PlayerStart* PlayerStart = Cast<AUR_PlayerStart>(SpawnedActor))
+    {
+        CachedPlayerStarts.Add(PlayerStart);
+    }
+}
+
 #if WITH_EDITOR
 APlayerStart* UUR_PlayerSpawningManagerComponent::FindPlayFromHereStart(AController* Player)
 {
@@ -154,61 +237,4 @@ APlayerStart* UUR_PlayerSpawningManagerComponent::FindPlayFromHereStart(AControl
 
     return nullptr;
 }
-#endif
-
-bool UUR_PlayerSpawningManagerComponent::ControllerCanRestart(AController* Player)
-{
-    bool bCanRestart = true;
-
-    // TODO Can they restart?
-
-    return bCanRestart;
-}
-
-void UUR_PlayerSpawningManagerComponent::FinishRestartPlayer(AController* NewPlayer, const FRotator& StartRotation)
-{
-    OnFinishRestartPlayer(NewPlayer, StartRotation);
-    K2_OnFinishRestartPlayer(NewPlayer, StartRotation);
-}
-
-//================================================================
-
-void UUR_PlayerSpawningManagerComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-}
-
-APlayerStart* UUR_PlayerSpawningManagerComponent::GetFirstRandomUnoccupiedPlayerStart(AController* Controller, const TArray<AUR_PlayerStart*>& StartPoints) const
-{
-    if (Controller)
-    {
-        TArray<AUR_PlayerStart*> UnOccupiedStartPoints;
-        TArray<AUR_PlayerStart*> OccupiedStartPoints;
-
-        for (AUR_PlayerStart* StartPoint : StartPoints)
-        {
-            EGamePlayerStartLocationOccupancy State = StartPoint->GetLocationOccupancy(Controller);
-
-            switch (State)
-            {
-                case EGamePlayerStartLocationOccupancy::Empty:
-                    UnOccupiedStartPoints.Add(StartPoint);
-                    break;
-                case EGamePlayerStartLocationOccupancy::Partial:
-                    OccupiedStartPoints.Add(StartPoint);
-                    break;
-            }
-        }
-
-        if (UnOccupiedStartPoints.Num() > 0)
-        {
-            return UnOccupiedStartPoints[FMath::RandRange(0, UnOccupiedStartPoints.Num() - 1)];
-        }
-        else if (OccupiedStartPoints.Num() > 0)
-        {
-            return OccupiedStartPoints[FMath::RandRange(0, OccupiedStartPoints.Num() - 1)];
-        }
-    }
-
-    return nullptr;
-}
+#endif //WITH_EDITOR

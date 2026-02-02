@@ -1,21 +1,82 @@
-// Copyright (c)  Open Tournament Project, All Rights Reserved.
+// Copyright (c)  Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_PlayerCameraManager.h"
 
+#include "Async/TaskGraphInterfaces.h"
 #include <Camera/CameraActor.h>
 #include <Camera/CameraComponent.h>
 #include <Engine/World.h>
-#include <Kismet/GameplayStatics.h>
+#include "Engine/Canvas.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
 
 #include "UR_BasePlayerController.h"
+#include "UR_CameraComponent.h"
 #include "UR_Character.h"
 #include "UR_FunctionLibrary.h"
+#include "UR_UICameraManagerComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UR_PlayerCameraManager)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+static FName UICameraComponentName(TEXT("UICamera"));
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+AUR_PlayerCameraManager::AUR_PlayerCameraManager(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+{
+    DefaultFOV = OT_CAMERA_DEFAULT_FOV;
+    ViewPitchMin = OT_CAMERA_DEFAULT_PITCH_MIN;
+    ViewPitchMax = OT_CAMERA_DEFAULT_PITCH_MAX;
+
+    UICamera = CreateDefaultSubobject<UUR_UICameraManagerComponent>(UICameraComponentName);
+}
+
+UUR_UICameraManagerComponent* AUR_PlayerCameraManager::GetUICameraComponent() const
+{
+    return UICamera;
+}
+
+void AUR_PlayerCameraManager::UpdateViewTarget(FTViewTarget& OutVT, float DeltaTime)
+{
+    // If the UI Camera is looking at something, let it have priority.
+    if (UICamera->NeedsToUpdateViewTarget())
+    {
+        Super::UpdateViewTarget(OutVT, DeltaTime);
+        UICamera->UpdateViewTarget(OutVT, DeltaTime);
+        return;
+    }
+
+    Super::UpdateViewTarget(OutVT, DeltaTime);
+}
+
+void AUR_PlayerCameraManager::DisplayDebug(UCanvas* Canvas, const FDebugDisplayInfo& DebugDisplay, float& LineHeight, float& YPos)
+{
+    check(Canvas);
+
+    FDisplayDebugManager& DisplayDebugManager = Canvas->DisplayDebugManager;
+
+    DisplayDebugManager.SetFont(GEngine->GetSmallFont());
+    DisplayDebugManager.SetDrawColor(FColor::Yellow);
+    DisplayDebugManager.DrawString(FString::Printf(TEXT("UR_PlayerCameraManager: %s"), *GetNameSafe(this)));
+
+    Super::DisplayDebug(Canvas, DebugDisplay, LineHeight, YPos);
+
+    const APawn* Pawn = (PCOwner ? PCOwner->GetPawn() : nullptr);
+
+    if (const UUR_CameraComponent* CameraComponent = UUR_CameraComponent::FindCameraComponent(Pawn))
+    {
+        CameraComponent->DrawDebug(Canvas);
+    }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_PlayerCameraManager::AssignViewTarget(AActor* NewTarget, FTViewTarget& VT, struct FViewTargetTransitionParams TransitionParams)
 {

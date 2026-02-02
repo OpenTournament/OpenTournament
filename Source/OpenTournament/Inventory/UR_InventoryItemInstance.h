@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include "System/GameplayTagStack.h"
-#include "Templates/SubclassOf.h"
+#include "GameplayTagStack.h"
+
+#include <Templates/SubclassOf.h>
 
 #include "UR_InventoryItemInstance.generated.h"
 

@@ -1,29 +1,28 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "UR_PlayerState.h"
 
-#include "Net/UnrealNetwork.h"
 //#include "Net/Core/PushModel/PushModel.h"
 #include <AbilitySystemComponent.h>
 #include <Components/GameFrameworkComponentManager.h>
+#include <Kismet/KismetSystemLibrary.h>
+#include <Net/UnrealNetwork.h>
 
-#include "Engine/World.h"
-#include "Kismet/KismetSystemLibrary.h"
-
-#include "UR_TeamInfo.h"
-#include "UR_GameState.h"
-#include "UR_MPC_Global.h"
-#include "UR_FunctionLibrary.h"
-#include "UR_Character.h"
-#include "UR_UserSettings.h"
-#include "UR_AbilitySystemComponent.h"
-#include "UR_ExperienceManagerComponent.h"
-#include "UR_GameMode.h"
-#include "UR_LogChannels.h"
-#include "UR_PawnData.h"
 #include "UR_AbilitySet.h"
+#include "UR_AbilitySystemComponent.h"
+#include "UR_Character.h"
+#include "UR_ExperienceManagerComponent.h"
+#include "UR_FunctionLibrary.h"
+#include "UR_GameMode.h"
+#include "UR_GameplayTags.h"
+#include "UR_GameState.h"
+#include "UR_LogChannels.h"
+#include "UR_MPC_Global.h"
+#include "UR_PawnData.h"
+#include "UR_TeamInfo.h"
+#include "UR_UserSettings.h"
 #include "Attributes/UR_CombatSet.h"
 #include "Attributes/UR_HealthSet.h"
 
@@ -35,10 +34,8 @@ const FName AUR_PlayerState::NAME_GameAbilityReady("GameAbilitiesReady");
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 AUR_PlayerState::AUR_PlayerState(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
-    , MyPlayerConnectionType(EPlayerConnectionType::Player)
 {
     TeamIndex = -1;
     ReplicatedTeamIndex = -1;
@@ -60,6 +57,8 @@ AUR_PlayerState::AUR_PlayerState(const FObjectInitializer& ObjectInitializer)
     SetNetUpdateFrequency(100.0);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 void AUR_PlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -78,14 +77,13 @@ void AUR_PlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 
     DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, PawnData, SharedParams);
-    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, MyPlayerConnectionType, SharedParams)
     //DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, MyTeamID, SharedParams);
     //DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, MySquadID, SharedParams);
 
     SharedParams.Condition = ELifetimeCondition::COND_SkipOwner;
     //DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ReplicatedViewRotation, SharedParams);
 
-    //DOREPLIFETIME(ThisClass, StatTags);
+    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, StatTags, SharedParams);
 }
 
 void AUR_PlayerState::PreInitializeComponents()
@@ -100,10 +98,10 @@ void AUR_PlayerState::PostInitializeComponents()
     check(AbilitySystemComponent);
     AbilitySystemComponent->InitAbilityActorInfo(this, GetPawn());
 
-    UWorld* World = GetWorld();
+    const UWorld* World = GetWorld();
     if (World && World->IsGameWorld() && World->GetNetMode() != NM_Client)
     {
-        AGameStateBase* GameState = GetWorld()->GetGameState();
+        const AGameStateBase* GameState = GetWorld()->GetGameState();
         check(GameState);
         UUR_ExperienceManagerComponent* ExperienceComponent = GameState->FindComponentByClass<UUR_ExperienceManagerComponent>();
         check(ExperienceComponent);
@@ -117,7 +115,7 @@ void AUR_PlayerState::BeginPlay()
     Super::BeginPlay();
 
     // NOTE: Don't know if PlayerState can actually replicate before PC
-    if (auto PC = GetOwner<APlayerController>())
+    if (const auto PC = GetOwner<APlayerController>())
     {
         if (PC->IsLocalController())
         {
@@ -157,12 +155,15 @@ void AUR_PlayerState::OnExperienceLoaded(const UUR_ExperienceDefinition* /*Curre
 
 void AUR_PlayerState::OnRep_PawnData()
 {
+    // Noop
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void AUR_PlayerState::RegisterKill(AController* Victim, FGameplayTagContainer& OutTags)
 {
+    // @! TODO : Probably deprecate this behavior here
+
     // TODO: might want to check teams here.
     // Although including teamkills in multikills & sprees might not be a bad thing.
 
@@ -179,16 +180,16 @@ void AUR_PlayerState::RegisterKill(AController* Victim, FGameplayTagContainer& O
     }
     LastKillTime = GetWorld()->TimeSeconds;
 
-    AUR_GameState* GS = GetWorld()->GetGameState<AUR_GameState>();
-
     if (MultiKillCount > 1)
     {
-        static TArray<FGameplayTag> MultiKillTags = {
-            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Double"))),
-            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Triple"))),
-            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Mega"))),
-            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Ultra"))),
-            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.MultiKill.Monster"))),
+        // @! TODO: Deprecate
+        static TArray<FGameplayTag> MultiKillTags =
+        {
+            URGameplayTags::Announcement_Accolade_EliminationChord_2x,
+            URGameplayTags::Announcement_Accolade_EliminationChord_3x,
+            URGameplayTags::Announcement_Accolade_EliminationChord_4x,
+            URGameplayTags::Announcement_Accolade_EliminationChord_5x,
+            URGameplayTags::Announcement_Accolade_EliminationChord_6x
         };
         OutTags.AddTag(MultiKillTags[FMath::Min(MultiKillCount - 2, MultiKillTags.Num() - 1)]);
     }
@@ -198,17 +199,22 @@ void AUR_PlayerState::RegisterKill(AController* Victim, FGameplayTagContainer& O
     {
         SpreeLevel = SpreeCount / 5;
 
-        static TArray<FGameplayTag> SpreeTags = {
-            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.KillingSpree"))),
-            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.Rampage"))),
-            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.Unstoppable"))),
-            FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Spree.Godlike"))),
+        // @! TODO: Deprecate
+        static TArray<FGameplayTag> SpreeTags =
+        {
+            URGameplayTags::Announcement_Accolade_EliminationStreak_5,
+            URGameplayTags::Announcement_Accolade_EliminationStreak_10,
+            URGameplayTags::Announcement_Accolade_EliminationStreak_15,
+            URGameplayTags::Announcement_Accolade_EliminationStreak_20,
+            URGameplayTags::Announcement_Accolade_EliminationStreak_25,
+            URGameplayTags::Announcement_Accolade_EliminationStreak_30,
         };
         OutTags.AddTag(SpreeTags[FMath::Min(SpreeLevel - 1, SpreeTags.Num() - 1)]);
     }
 
     if (LastKiller && Victim && Victim->GetPawn() == LastKiller)
     {
+        // @! TODO: Deprecate
         OutTags.AddTag(FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Reward.Kill.Revenge"))));
     }
 
@@ -222,7 +228,7 @@ void AUR_PlayerState::RegisterDeath(AController* Killer, FGameplayTagContainer& 
 
     if (SpreeLevel > 0)
     {
-        OutTags.AddTag(FGameplayTag::RequestGameplayTag(FName(TEXT("Announcement.Death.EndSpree"))));
+        OutTags.AddTag(URGameplayTags::Announcement_Accolade_EliminationStreak_Ended);
     }
 
     SpreeLevel = 0;
@@ -348,12 +354,6 @@ void AUR_PlayerState::SetPawnData(const UUR_PawnData* InPawnData)
     ForceNetUpdate();
 }
 
-void AUR_PlayerState::SetPlayerConnectionType(EPlayerConnectionType NewType)
-{
-    MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, MyPlayerConnectionType, this);
-    MyPlayerConnectionType = NewType;
-}
-
 void AUR_PlayerState::InternalOnTeamChanged(AUR_PlayerState* PS, int32 OldTeamIndex, int32 NewTeamIndex)
 {
     // When local player changes team, update MPC's TeamColor# mappings accordingly
@@ -475,4 +475,14 @@ void AUR_PlayerState::InternalOnPawnSet(APlayerState* PS, APawn* NewPawn, APawn*
         URChar->ApplyCustomization(CharacterCustomization);
         //URChar->UpdateTeamColor();    // ApplyCustomization already has to call this because it needs to reset the materials when changing meshes
     }
+}
+
+void AUR_PlayerState::OnRep_MyTeamID(FGenericTeamId OldTeamID)
+{
+    ConditionalBroadcastTeamChanged(this, OldTeamID, MyTeamID);
+}
+
+void AUR_PlayerState::OnRep_MySquadID()
+{
+    //@TODO: Let the squad subsystem know (once that exists)
 }

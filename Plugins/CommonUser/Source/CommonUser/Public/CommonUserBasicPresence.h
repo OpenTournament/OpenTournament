@@ -4,6 +4,8 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "CommonUserBasicPresence.generated.h"
 
+#define UE_API COMMONUSER_API
+
 class UCommonSessionSubsystem;
 enum class ECommonSessionInformationState : uint8;
 
@@ -15,20 +17,20 @@ enum class ECommonSessionInformationState : uint8;
  * It is not intended to be a full featured rich presence implementation, but can be used as a proof-of-concept
  * for pushing information from the session subsystem to the presence system
  */
-UCLASS(BlueprintType, Config = Engine)
-class COMMONUSER_API UCommonUserBasicPresence : public UGameInstanceSubsystem
+UCLASS(MinimalAPI, BlueprintType, Config = Engine)
+class UCommonUserBasicPresence : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
 public:
-	UCommonUserBasicPresence();
+	UE_API UCommonUserBasicPresence();
 
 
 	/** Implement this for initialization of instances of the system */
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	UE_API virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	/** Implement this for deinitialization of instances of the system */
-	virtual void Deinitialize() override;
+	UE_API virtual void Deinitialize() override;
 
 	/** False is a general purpose killswitch to stop this class from pushing presence*/
 	UPROPERTY(Config)
@@ -54,6 +56,8 @@ public:
 	UPROPERTY(Config)
 	FString PresenceKeyMapName;
 
-	void OnNotifySessionInformationChanged(ECommonSessionInformationState SessionStatus, const FString& GameMode, const FString& MapName);
-	FString SessionStateToBackendKey(ECommonSessionInformationState SessionStatus);
+	UE_API void OnNotifySessionInformationChanged(ECommonSessionInformationState SessionStatus, const FString& GameMode, const FString& MapName);
+	UE_API FString SessionStateToBackendKey(ECommonSessionInformationState SessionStatus);
 };
+
+#undef UE_API

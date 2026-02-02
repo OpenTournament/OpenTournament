@@ -5,6 +5,8 @@
 #include "UObject/ObjectKey.h"
 #include "UObject/WeakObjectPtrTemplates.h"
 
+#define UE_API GAMESETTINGS_API
+
 enum class EGameSettingChangeReason : uint8;
 
 class UGameSetting;
@@ -14,26 +16,26 @@ struct FObjectKey;
 /**
  * 
  */
-class GAMESETTINGS_API FGameSettingRegistryChangeTracker : public FNoncopyable
+class FGameSettingRegistryChangeTracker : public FNoncopyable
 {
 public:
-	FGameSettingRegistryChangeTracker();
-	~FGameSettingRegistryChangeTracker();
+	UE_API FGameSettingRegistryChangeTracker();
+	UE_API ~FGameSettingRegistryChangeTracker();
 
-	void WatchRegistry(UGameSettingRegistry* InRegistry);
-	void StopWatchingRegistry();
+	UE_API void WatchRegistry(UGameSettingRegistry* InRegistry);
+	UE_API void StopWatchingRegistry();
 
-	void ApplyChanges();
+	UE_API void ApplyChanges();
 
-	void RestoreToInitial();
+	UE_API void RestoreToInitial();
 
-	void ClearDirtyState();
+	UE_API void ClearDirtyState();
 
 	bool IsRestoringSettings() const { return bRestoringSettings; }
 	bool HaveSettingsBeenChanged() const { return bSettingsChanged; }
 
 private:
-	void HandleSettingChanged(UGameSetting* Setting, EGameSettingChangeReason Reason);
+	UE_API void HandleSettingChanged(UGameSetting* Setting, EGameSettingChangeReason Reason);
 
 	bool bSettingsChanged = false;
 	bool bRestoringSettings = false;
@@ -41,3 +43,5 @@ private:
 	TWeakObjectPtr<UGameSettingRegistry> Registry;
 	TMap<FObjectKey, TWeakObjectPtr<UGameSetting>> DirtySettings;
 };
+
+#undef UE_API

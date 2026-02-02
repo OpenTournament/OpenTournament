@@ -1,14 +1,15 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
+#include "Engine/DataAsset.h"
+
 #include "ActiveGameplayEffectHandle.h"
 #include "AttributeSet.h"
 #include "GameplayAbilitySpecHandle.h"
 #include "GameplayTagContainer.h"
-#include "Engine/DataAsset.h"
 
 #include "UR_AbilitySet.generated.h"
 

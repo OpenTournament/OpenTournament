@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -24,6 +24,11 @@ class OPENTOURNAMENT_API UUR_FireModeCharged : public UUR_FireModeBasic
 
 public:
     UUR_FireModeCharged()
+      : HitscanDamageMin(0)
+      , HitscanDamageMax(0)
+      , ChargeLevel(0)
+      , LocalStartChargeTime(0)
+      , ChargePausedAt(0)
     {
         MaxChargeLevel = 5;
         ChargeInterval = 0.25f;
@@ -110,7 +115,7 @@ public:
     virtual void BlockNextCharge(float MaxHoldTime);
 
     // Override to avoid calling StopFire() which would release the charge.
-    virtual void SetRequestIdle_Implementation(bool bNewRequestIdle)
+    virtual void SetRequestIdle_Implementation(bool bNewRequestIdle) override
     {
         bRequestedIdle = bNewRequestIdle;
     }
@@ -192,6 +197,6 @@ public:
     * Called when a shot is about to autofire due to overcharge.
     * SimulateShot will be called right after in the same frame.
     */
-    UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic, BlueprintCallable)
+    UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic, BlueprintCallable, meta = (DeprecatedFunction))
     void Overcharged(UUR_FireModeCharged* FireMode);
 };

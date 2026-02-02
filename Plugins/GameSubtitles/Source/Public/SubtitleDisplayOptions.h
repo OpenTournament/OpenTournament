@@ -52,8 +52,8 @@ enum class ESubtitleDisplayBackgroundOpacity : uint8
 /**
  * 
  */
-UCLASS(BlueprintType)
-class GAMESUBTITLES_API USubtitleDisplayOptions : public UDataAsset
+UCLASS(MinimalAPI, BlueprintType)
+class USubtitleDisplayOptions : public UDataAsset
 {
 	GENERATED_BODY()
 

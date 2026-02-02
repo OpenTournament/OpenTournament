@@ -8,6 +8,8 @@
 
 #include "GameSettingScreen.generated.h"
 
+#define UE_API GAMESETTINGS_API
+
 class UGameSetting;
 class UGameSettingCollection;
 class UGameSettingPanel;
@@ -20,33 +22,33 @@ enum class EGameSettingChangeReason : uint8;
 /**
  * 
  */
-UCLASS(Abstract, meta = (Category = "Settings", DisableNativeTick))
-class GAMESETTINGS_API UGameSettingScreen : public UCommonActivatableWidget
+UCLASS(MinimalAPI, Abstract, meta = (Category = "Settings", DisableNativeTick))
+class UGameSettingScreen : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 public:
 
 protected:
-	virtual void NativeOnInitialized() override;
-	virtual void NativeOnActivated() override;
-	virtual void NativeOnDeactivated() override;
-	virtual UWidget* NativeGetDesiredFocusTarget() const override;
+	UE_API virtual void NativeOnInitialized() override;
+	UE_API virtual void NativeOnActivated() override;
+	UE_API virtual void NativeOnDeactivated() override;
+	UE_API virtual UWidget* NativeGetDesiredFocusTarget() const override;
 
 	UFUNCTION(BlueprintCallable)
-	void NavigateToSetting(FName SettingDevName);
+	UE_API void NavigateToSetting(FName SettingDevName);
 	
 	UFUNCTION(BlueprintCallable)
-	void NavigateToSettings(const TArray<FName>& SettingDevNames);
+	UE_API void NavigateToSettings(const TArray<FName>& SettingDevNames);
 
 	UFUNCTION(BlueprintNativeEvent)
-	void OnSettingsDirtyStateChanged(bool bSettingsDirty);
+	UE_API void OnSettingsDirtyStateChanged(bool bSettingsDirty);
 	virtual void OnSettingsDirtyStateChanged_Implementation(bool bSettingsDirty) { }
 
 	UFUNCTION(BlueprintCallable)
-	bool AttemptToPopNavigation();
+	UE_API bool AttemptToPopNavigation();
 
 	UFUNCTION(BlueprintCallable)
-	UGameSettingCollection* GetSettingCollection(FName SettingDevName, bool& HasAnySettings); 
+	UE_API UGameSettingCollection* GetSettingCollection(FName SettingDevName, bool& HasAnySettings); 
 
 protected:
 	virtual UGameSettingRegistry* CreateRegistry() PURE_VIRTUAL(, return nullptr;);
@@ -55,22 +57,22 @@ protected:
 	GameSettingRegistryT* GetRegistry() const { return Cast<GameSettingRegistryT>(const_cast<UGameSettingScreen*>(this)->GetOrCreateRegistry()); }
 
 	UFUNCTION(BlueprintCallable)
-	virtual void CancelChanges();
+	UE_API virtual void CancelChanges();
 
 	UFUNCTION(BlueprintCallable)
-	virtual void ApplyChanges();
+	UE_API virtual void ApplyChanges();
 
 	UFUNCTION(BlueprintCallable)
 	bool HaveSettingsBeenChanged() const { return ChangeTracker.HaveSettingsBeenChanged(); }
 
-	void ClearDirtyState();
+	UE_API void ClearDirtyState();
 
-	void HandleSettingChanged(UGameSetting* Setting, EGameSettingChangeReason Reason);
+	UE_API void HandleSettingChanged(UGameSetting* Setting, EGameSettingChangeReason Reason);
 
 	FGameSettingRegistryChangeTracker ChangeTracker;
 
 private:
-	UGameSettingRegistry* GetOrCreateRegistry();
+	UE_API UGameSettingRegistry* GetOrCreateRegistry();
 
 private:	// Bound Widgets
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = true, AllowPrivateAccess = true))
@@ -79,3 +81,5 @@ private:	// Bound Widgets
 	UPROPERTY(Transient)
 	mutable TObjectPtr<UGameSettingRegistry> Registry;
 };
+
+#undef UE_API

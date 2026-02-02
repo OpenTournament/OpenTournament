@@ -1,10 +1,10 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include "Components/GameStateComponent.h"
+#include <Components/GameStateComponent.h>
 
 #include "UR_PlayerSpawningManagerComponent.generated.h"
 
@@ -41,14 +41,9 @@ protected:
     // Utility
     APlayerStart* GetFirstRandomUnoccupiedPlayerStart(AController* Controller, const TArray<AUR_PlayerStart*>& FoundStartPoints) const;
 
-    virtual AActor* OnChoosePlayerStart(AController* Player, TArray<AUR_PlayerStart*>& PlayerStarts)
-    {
-        return nullptr;
-    }
+    virtual AActor* OnChoosePlayerStart(AController* Player, TArray<AUR_PlayerStart*>& PlayerStarts);
 
-    virtual void OnFinishRestartPlayer(AController* Player, const FRotator& StartRotation)
-    {
-    }
+    virtual void OnFinishRestartPlayer(AController* Player, const FRotator& StartRotation);
 
     UFUNCTION(BlueprintImplementableEvent, meta=(DisplayName=OnFinishRestartPlayer))
     void K2_OnFinishRestartPlayer(AController* Player, const FRotator& StartRotation);
@@ -56,15 +51,10 @@ protected:
 private:
     /** We proxy these calls from AUR_GameMode, to this component so that each experience can more easily customize the respawn system they want. */
 #pragma region AUR_GameMode
-
     AActor* ChoosePlayerStart(AController* Player);
-
     bool ControllerCanRestart(AController* Player);
-
     void FinishRestartPlayer(AController* NewPlayer, const FRotator& StartRotation);
-
     friend class AUR_GameMode;
-
 #pragma endregion AUR_GameMode
 
     UPROPERTY(Transient)

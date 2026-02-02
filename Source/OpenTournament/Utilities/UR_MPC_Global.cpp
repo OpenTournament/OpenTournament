@@ -1,4 +1,4 @@
-// Copyright (c) Open Tournament Project, All Rights Reserved.
+// Copyright (c) Open Tournament Games, All Rights Reserved.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +38,7 @@ UUR_MPC_Global* UUR_MPC_Global::Get(UObject* WorldContext, bool bFallbackToCDO)
     }
 
     // Provide default as fallback for access to parameters in BP construct/design
-    return bFallbackToCDO ? GetMutableDefault<UUR_MPC_Global>() : NULL;
+    return bFallbackToCDO ? GetMutableDefault<UUR_MPC_Global>() : nullptr;
 }
 
 

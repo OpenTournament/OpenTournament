@@ -10,7 +10,7 @@ class ULocalPlayer;
 // FGameSettingDataSource
 //--------------------------------------
 
-class GAMESETTINGS_API FGameSettingDataSource : public TSharedFromThis<FGameSettingDataSource>
+class FGameSettingDataSource : public TSharedFromThis<FGameSettingDataSource>
 {
 public:
 	virtual ~FGameSettingDataSource() { }
